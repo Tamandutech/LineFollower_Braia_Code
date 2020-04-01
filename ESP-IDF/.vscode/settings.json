@@ -1,0 +1,12 @@
+{
+  "C_Cpp.clang_format_style": "LLVM",
+  "editor.formatOnSave": false,
+  "[cpp]": {
+    "editor.quickSuggestions": true
+  },
+  "[c]": {
+    "editor.quickSuggestions": true
+  },
+  "C_Cpp.intelliSenseEngineFallback": "Enabled",
+  "C_Cpp.clang_format_fallbackStyle": "LLVM"
+}
