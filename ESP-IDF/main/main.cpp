@@ -17,6 +17,58 @@ ESP32Encoder enc_dir;
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
+ESP32MotorControl motdrv;
+
+TaskHandle_t xTaskMotors;
+TaskHandle_t xTaskEncoders;
+
+void vTaskMotors(void *pvParameters) {
+  motdrv.setSTBY(DRIVER_STBY);
+
+  motdrv.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN1,
+                      DRIVER_BIN2, DRIVER_PWMB);
+
+  for (;;) {
+    motdrv.motorForward(0);
+    motdrv.motorForward(1);
+
+    for (float i = 0; i < 101; i += 0.5) {
+      motdrv.motorSpeed(0, i);
+      motdrv.motorSpeed(1, i);
+      vTaskDelay(50 / portTICK_PERIOD_MS);
+    }
+
+    motdrv.motorsStop();
+
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    motdrv.motorReverse(0);
+    motdrv.motorReverse(1);
+
+    for (float i = 0; i < 101; i += 0.5) {
+      motdrv.motorSpeed(0, i);
+      motdrv.motorSpeed(1, i);
+      vTaskDelay(50 / portTICK_PERIOD_MS);
+    }
+
+    motdrv.motorsStop();
+
+    vTaskSuspend(xTaskMotors);
+  }
+}
+
+void vTaskEncoders(void *pvParameters) {
+  // Anexa os IOs a instancia do contador dos encoders
+  enc_dir.attachHalfQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
+  enc_esq.attachHalfQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  for (;;) {
+    ESP_LOGD("Encoders", "esq: %d\tdir: %d", enc_esq.getCount(),
+             enc_dir.getCount());
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+  }
+}
+
 void app_main(void) {
   // Inicializa o Driver do MCP3008
   qtr.setTypeMCP3008();
@@ -24,11 +76,13 @@ void app_main(void) {
                     GPIO_NUM_19, GPIO_NUM_23, GPIO_NUM_18, GPIO_NUM_22, 1350000,
                     VSPI_HOST);
 
-  // Anexa os IOs a instancia do contador dos encoders
-  enc_dir.attachHalfQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
-  enc_esq.attachHalfQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
-
   gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
+  gpio_set_level(GPIO_NUM_2, 1);
+
+  xTaskCreate(vTaskEncoders, "TaskEncoders", 10000, NULL, 2, &xTaskEncoders);
+  xTaskCreate(vTaskMotors, "TaskMotors", 10000, NULL, 2, &xTaskMotors);
+
+  /* gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
   gpio_set_level(GPIO_NUM_2, 1);
 
   for (uint16_t i = 0; i < 400; i++) {
@@ -52,15 +106,5 @@ void app_main(void) {
   printf("\n");
 
   vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-  while (1) {
-
-    printf("%d", enc_dir.getCount());
-    printf("\t");
-    printf("%d", enc_esq.getCount());
-    printf("\t");
-    printf("\n");
-
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
+*/
 }

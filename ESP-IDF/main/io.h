@@ -5,11 +5,14 @@
 #define SL3 32
 #define SL4 33
 
-// Motores
-#define MOT_ESQ_F 27
-#define MOT_ESQ_R 13
-#define MOT_DIR_F 25
-#define MOT_DIR_R 26
+// TB6612FNG Driver
+#define DRIVER_PWMA 21
+#define DRIVER_AIN1 26
+#define DRIVER_AIN2 25
+#define DRIVER_PWMB 14
+#define DRIVER_BIN2 27
+#define DRIVER_BIN1 13
+#define DRIVER_STBY 15
 
 // Encoders Motores
 #define ENC_MOT_ESQ_A 34
