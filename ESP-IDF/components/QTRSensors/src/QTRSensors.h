@@ -4,6 +4,7 @@
 
 #include <driver/gpio.h>
 #include <esp_heap_caps.h>
+#include <driver/adc.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <mcp3008_driver.h>
@@ -52,7 +53,7 @@ enum class QTRReadMode : uint8_t {
 };
 
 /// Sensor types.
-enum class QTRType : uint8_t { Undefined, RC, Analog, MCP3008 };
+enum class QTRType : uint8_t { Undefined, RC, Analog, AnalogESP, MCP3008 };
 
 /// Emitters selected to turn on or off.
 enum class QTREmitters : uint8_t { All, Odd, Even, None };
@@ -89,6 +90,8 @@ public:
   ///
   /// Call this function to set up A-type sensors.
   void setTypeAnalog();
+
+  void setTypeAnalogESP();
 
   /// \brief Specifies that the sensor type is analog.
   ///
@@ -129,6 +132,8 @@ public:
   /// called (it sets `calibrationOn.initialized` and
   /// `calibrationOff.initialized` to false).
   void setSensorPins(const uint8_t *pins, uint8_t sensorCount);
+
+  void setSensorPins(const adc1_channel_t *pins, uint8_t sensorCount);
 
   void setSensorPins(const uint8_t *pins, uint8_t sensorCount, gpio_num_t miso,
                      gpio_num_t mosi, gpio_num_t sck, gpio_num_t cs, int freq,
@@ -567,6 +572,7 @@ private:
   QTRType _type = QTRType::Undefined;
 
   uint8_t *_sensorPins = nullptr;
+  adc1_channel_t *_sensorPinsESP = nullptr;
   uint8_t _sensorCount = 0;
 
   uint16_t _timeout = QTRRCDefaultTimeout; // only used for RC sensors

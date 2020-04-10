@@ -1,9 +1,9 @@
 
 // Sensores laterais
-#define SL1 39
-#define SL2 36
-#define SL3 32
-#define SL4 33
+#define SL1 ADC1_CHANNEL_3 // GPIO39
+#define SL2 ADC1_CHANNEL_0 // GPIO36
+#define SL3 ADC1_CHANNEL_4 // GPIO32
+#define SL4 ADC1_CHANNEL_5 // GPIO33
 
 // TB6612FNG Driver
 #define DRIVER_PWMA 21
