@@ -1,8 +1,15 @@
 #include "stdbool.h"
 
+#include "Arduino.h"
+#include <WiFi.h>
+#include "SPIFFS.h"
+#include <ESP8266FtpServer.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 
 #include "ESP32Encoder.h"
 #include "ESP32MotorControl.h"
@@ -17,7 +24,8 @@
 #define LINE_WHITE < 2000
 #define LINE_BLACK < 2000
 
-#define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+const char *ssid = "RFREITAS";
+const char *password = "941138872";
 
 extern "C"
 {
@@ -98,6 +106,9 @@ struct valuesCar
 TaskHandle_t xTaskMotors;
 TaskHandle_t xTaskPID;
 TaskHandle_t xTaskSensors;
+TaskHandle_t xTaskFTP;
+
+FtpServer ftpSrv; //set #define FTP_DEBUG in ESP8266FtpServer.h to see ftp verbose on serial
 
 ////////////////START FUNÇÕES////////////////
 
@@ -321,11 +332,36 @@ void vTaskPID(void *pvParameters)
   }
 }
 
+void vTaskFTP(void *pvParameters)
+{
+  if (SPIFFS.begin(true))
+  {
+    ESP_LOGD("SPIFFS", "SPIFFS Iniciada!");
+    ftpSrv.begin("Braia", "W2knaft@123"); //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
+  }
+
+  for (;;)
+  {
+    ftpSrv.handleFTP();
+    vTaskDelay(1);
+  }
+}
+
 ////////////////END TASKS////////////////
 
 void app_main(void)
 {
+  initArduino();
   gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
+
+  ESP_LOGD("WiFi", "Conectando na rede");
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED)
+    ESP_LOGD("WiFi", ".");
+  ESP_LOGD("WiFi", "Conetado!, IP: %s", WiFi.localIP().toString().c_str());
+
+  WiFi.setSleep(false);
 
   // Instancia o carro
   valuesCar braiaVal;
@@ -339,20 +375,11 @@ void app_main(void)
   xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braiaVal, 10, &xTaskSensors);
   xTaskCreate(vTaskPID, "TaskPID", 10000, &braiaVal, 9, &xTaskPID);
   xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braiaVal, 8, &xTaskMotors);
-
-  /* char bufferTask[1000];
-  char bufferTaskstat[1000]; */
+  xTaskCreate(vTaskFTP, "TaskFTP", 10000, &braiaVal, 4, &xTaskFTP);
 
   for (;;)
   {
     vTaskDelay(500 / portTICK_PERIOD_MS);
-
     ESP_LOGD("Braia", "Linha: %.lf\tEncs: %d\tSpeedL: %.2lf\tSpeedR: %.2lf", braiaVal.sArray.line, braiaVal.motEncs.media, braiaVal.speed.leftActual, braiaVal.speed.rightActual);
-
-    /* vTaskGetRunTimeStats(bufferTask);
-    ESP_LOGD("RunTime", "\n%s\n", bufferTask);
-
-    vTaskList(bufferTaskstat);
-    ESP_LOGD("List", "\n%s\n", bufferTaskstat); */
   }
 }

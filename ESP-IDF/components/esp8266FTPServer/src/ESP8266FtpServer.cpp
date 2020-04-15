@@ -222,7 +222,6 @@ boolean FtpServer::processCommand()
   //
   else if( ! strcmp( command, "CWD" ))
   {
-    char path[ FTP_CWD_SIZE ];
     if( strcmp( parameters, "." ) == 0 )  // 'CWD .' is the same as PWD command
       client.println( "257 \"" + String(cwdName) + "\" is your current directory");
     else 
@@ -602,7 +601,6 @@ boolean FtpServer::processCommand()
   else if( ! strcmp( command, "RNTO" ))
   {  
     char path[ FTP_CWD_SIZE ];
-    char dir[ FTP_FIL_SIZE ];
     if( strlen( buf ) == 0 || ! rnfrCmd )
       client.println( "503 Need RNFR before RNTO");
     else if( strlen( parameters ) == 0 )
