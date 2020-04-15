@@ -1,5 +1,7 @@
 #include "ESP32MotorControl.h"
 
+static const char* TAG = "ESP32MotorControl";
+
 void ESP32MotorControl::setSTBY(uint8_t _gpioSTBY) {
   gpioSTBY = _gpioSTBY;
   gpio_set_direction((gpio_num_t)gpioSTBY, GPIO_MODE_OUTPUT);
@@ -27,7 +29,7 @@ void ESP32MotorControl::attachMotors(uint8_t _gpioAIN1, uint8_t _gpioAIN2,
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
   gpio_config(&io_conf);
 
-  ESP_LOGD("ESP32MotorControl", "init MCPWM Motor 0");
+  ESP_LOGD(TAG, "init MCPWM Motor 0");
 
   // Set MCPWM unit 0
 
@@ -36,7 +38,7 @@ void ESP32MotorControl::attachMotors(uint8_t _gpioAIN1, uint8_t _gpioAIN2,
   //gpio_set_direction((gpio_num_t)gpioAIN2, GPIO_MODE_OUTPUT);
 
   this->mMotorAttached[0] = true;
-  ESP_LOGD("ESP32MotorControl", "init MCPWM Motor 1");
+  ESP_LOGD(TAG, "init MCPWM Motor 1");
 
   // Set MCPWM unit 1
 
@@ -45,7 +47,7 @@ void ESP32MotorControl::attachMotors(uint8_t _gpioAIN1, uint8_t _gpioAIN2,
   //gpio_set_direction((gpio_num_t)gpioBIN2, GPIO_MODE_OUTPUT);
 
   this->mMotorAttached[1] = true;
-  ESP_LOGD("ESP32MotorControl", "Configuring Initial Parameters of MCPWM...");
+  ESP_LOGD(TAG, "Configuring Initial Parameters of MCPWM...");
 
   mcpwm_config_t pwm_config;
   pwm_config.frequency = PWM_FREQ; // frequency,
@@ -59,7 +61,7 @@ void ESP32MotorControl::attachMotors(uint8_t _gpioAIN1, uint8_t _gpioAIN2,
   mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_1,
              &pwm_config); // Configure PWM1A & PWM1B with above settings
 
-  ESP_LOGD("ESP32MotorControl", "MCPWM initialized");
+  ESP_LOGD(TAG, "MCPWM initialized");
 }
 
 void ESP32MotorControl::motorSpeed(uint8_t motor, float speed) {
@@ -83,7 +85,7 @@ void ESP32MotorControl::motorSpeed(uint8_t motor, float speed) {
   }
 
   mMotorSpeed[motor] = speed;
-  ESP_LOGD("ESP32MotorControl", "Motor %u speed %f", motor, speed);
+  ESP_LOGD(TAG, "Motor %u speed %f", motor, speed);
 }
 
 void ESP32MotorControl::motorForward(uint8_t motor) {
@@ -104,7 +106,7 @@ void ESP32MotorControl::motorForward(uint8_t motor) {
 
   mMotorForward[motor] = true;
 
-  ESP_LOGD("ESP32MotorControl", "Motor %u set to forward", motor);
+  ESP_LOGD(TAG, "Motor %u set to forward", motor);
 }
 
 void ESP32MotorControl::motorReverse(uint8_t motor) {
@@ -125,7 +127,7 @@ void ESP32MotorControl::motorReverse(uint8_t motor) {
 
   mMotorForward[motor] = false;
 
-  ESP_LOGD("ESP32MotorControl", "Motor %u set to forward", motor);
+  ESP_LOGD(TAG, "Motor %u set to forward", motor);
 }
 
 void ESP32MotorControl::motorStop(uint8_t motor) {
@@ -147,14 +149,14 @@ void ESP32MotorControl::motorStop(uint8_t motor) {
   mMotorSpeed[motor] = 0;      // Save it
   mMotorForward[motor] = true; // For stop
 
-  ESP_LOGD("ESP32MotorControl", "Motor %u stop", motor);
+  ESP_LOGD(TAG, "Motor %u stop", motor);
 }
 
 void ESP32MotorControl::motorsStop() {
   motorStop(0);
   motorStop(1);
 
-  ESP_LOGD("ESP32MotorControl", "Motors stop");
+  ESP_LOGD(TAG, "Motors stop");
 }
 
 uint8_t ESP32MotorControl::getMotorSpeed(uint8_t motor) {

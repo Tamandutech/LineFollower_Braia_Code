@@ -1,4 +1,9 @@
 #include "stdbool.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+
 #include "ESP32Encoder.h"
 #include "ESP32MotorControl.h"
 #include "QTRSensors.h"
@@ -238,6 +243,7 @@ void vTaskMotors(void *pvParameters)
   for (;;)
   {
     MotorControlFunc(&motdrv, ((valuesCar *)pvParameters));
+    vTaskDelay(1);
   }
 }
 
@@ -274,8 +280,8 @@ void vTaskSensors(void *pvParameters)
   {
     GetData(&array, &s_laterais, &enc_dir, &enc_esq, ((valuesCar *)pvParameters));
     processSLat(((valuesCar *)pvParameters));
-
-    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+    vTaskDelay(1);
+    //vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
   }
 }
 
@@ -290,8 +296,8 @@ void vTaskPID(void *pvParameters)
   for (;;)
   {
     PIDFollow(&PIDVal, ((valuesCar *)pvParameters));
-
-    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+    vTaskDelay(1);
+    //vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
   }
 }
 
@@ -299,17 +305,33 @@ void vTaskPID(void *pvParameters)
 
 void app_main(void)
 {
-  // Instancia o carro
-  valuesCar braiaVal;
-
   gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
   gpio_set_level(GPIO_NUM_2, 1);
 
-  xTaskCreate(vTaskPID, "TaskPID", 10000, &braiaVal, 2, &xTaskPID);
-  xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braiaVal, 2, &xTaskMotors);
-  xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braiaVal, 2, &xTaskSensors);
+  // Instancia o carro
+  valuesCar braiaVal;
+
+  // Alocando espaço de memória para salvar os valores dos canais do array e dos sensores laterais
+  braiaVal.sArray.channel = (uint16_t *)heap_caps_calloc(8, sizeof(uint16_t), MALLOC_CAP_8BIT);
+  braiaVal.sLat.channel = (uint16_t *)heap_caps_calloc(2, sizeof(uint16_t), MALLOC_CAP_8BIT);
+
+  esp_log_level_set("ESP32MotorControl", ESP_LOG_ERROR);
+
+  xTaskCreate(vTaskPID, "TaskPID", 10000, &braiaVal, 9, &xTaskPID);
+  xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braiaVal, 8, &xTaskMotors);
+  xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braiaVal, 10, &xTaskSensors);
+
+  char bufferTask[1000];
+  char bufferTaskstat[1000];
 
   for (;;)
   {
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    vTaskGetRunTimeStats(bufferTask);
+    ESP_LOGD("RunTime", "\n%s\n", bufferTask);
+
+    vTaskList(bufferTaskstat);
+    ESP_LOGD("List", "\n%s\n", bufferTaskstat);
   }
 }
