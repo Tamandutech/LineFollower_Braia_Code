@@ -27,7 +27,7 @@ extern "C"
 struct valuesS
 {
   uint16_t *channel;
-  float line;
+  double line;
 };
 
 struct valuesEnc
@@ -58,8 +58,8 @@ struct paramSpeed
   int max = 80;
   int min = 5;
 
-  int rightBase = 19;
-  int leftBase = 19;
+  int rightBase = 40;
+  int leftBase = 40;
   double rightActual = 0;
   double leftActual = 0;
 };
@@ -67,14 +67,14 @@ struct paramSpeed
 struct valuesPID
 {
   // Parâmetros
-  double input = 0;
+  double *input = NULL;
   double setpoint = 3500;
   double output = 0;
   double outputMin = -100;
   double outputMax = +100;
-  double Kp = 0.0093;
+  double Kp = 0.01;
   double Ki = 0.00;
-  double Kd = 0.093;
+  double Kd = 0.10;
 
   // Variaveis de calculo
   float P = 0, I = 0, D = 0;
@@ -122,6 +122,7 @@ void GetData(QTRSensors *array, QTRSensors *s_laterais, ESP32Encoder *enc_dir, E
   // Update dos encoders dos motores
   carVal->motEncs.encDir = enc_dir->getCount() * -1;
   carVal->motEncs.encEsq = enc_esq->getCount();
+  carVal->motEncs.media = (carVal->motEncs.encDir + carVal->motEncs.encEsq) / 2;
 }
 
 void SerialSend()
@@ -168,8 +169,8 @@ void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal)
   {
     MotorControl->motorForward(0);
     MotorControl->motorForward(1);
-    MotorControl->motorSpeed(0, constrain(carVal->speed.leftActual, carVal->speed.min, carVal->speed.max));
-    MotorControl->motorSpeed(1, constrain(carVal->speed.rightActual, carVal->speed.min, carVal->speed.max));
+    MotorControl->motorSpeed(1, constrain(carVal->speed.leftActual, carVal->speed.min, carVal->speed.max));
+    MotorControl->motorSpeed(0, constrain(carVal->speed.rightActual, carVal->speed.min, carVal->speed.max));
   }
   else
   {
@@ -210,7 +211,7 @@ void verifyState(valuesCar *carVal)
 void PIDFollow(valuesPID *PIDVal, valuesCar *carVal)
 {
   // Calculo de valor lido
-  PIDVal->proportional = PIDVal->input - 3500;
+  PIDVal->proportional = (*PIDVal->input) - 3500;
   PIDVal->derivative = PIDVal->proportional - PIDVal->last_proportional;
   PIDVal->integral = PIDVal->integral + PIDVal->proportional;
   PIDVal->last_proportional = PIDVal->proportional;
@@ -240,10 +241,14 @@ void vTaskMotors(void *pvParameters)
   motdrv.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN1,
                       DRIVER_BIN2, DRIVER_PWMB);
 
+  vTaskSuspend(xTaskMotors);
+
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
     MotorControlFunc(&motdrv, ((valuesCar *)pvParameters));
-    vTaskDelay(1);
+    //vTaskDelay(1);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -271,17 +276,30 @@ void vTaskSensors(void *pvParameters)
   s_laterais.setTypeAnalogESP();
   s_laterais.setSensorPins((const adc1_channel_t[]){SL1, SL3}, 2);
 
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+  gpio_set_level(GPIO_NUM_2, 1);
 
   calibSensor(&array);
+
+  for (uint8_t i = 2; i < 12; i++)
+  {
+    gpio_set_level(GPIO_NUM_2, i % 2);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
+  }
+
   calibSensor(&s_laterais);
 
+  gpio_set_level(GPIO_NUM_2, 0);
+
+  vTaskResume(xTaskMotors);
+  vTaskResume(xTaskPID);
+
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
     GetData(&array, &s_laterais, &enc_dir, &enc_esq, ((valuesCar *)pvParameters));
     processSLat(((valuesCar *)pvParameters));
-    vTaskDelay(1);
-    //vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+    //vTaskDelay(1);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -290,14 +308,16 @@ void vTaskPID(void *pvParameters)
   // PID configs
 
   valuesPID PIDVal;
+  PIDVal.input = &(((valuesCar *)pvParameters)->sArray.line);
+
+  vTaskSuspend(xTaskPID);
 
   TickType_t xLastWakeTime = xTaskGetTickCount();
-
   for (;;)
   {
     PIDFollow(&PIDVal, ((valuesCar *)pvParameters));
-    vTaskDelay(1);
-    //vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+    //vTaskDelay(1);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -306,7 +326,6 @@ void vTaskPID(void *pvParameters)
 void app_main(void)
 {
   gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
-  gpio_set_level(GPIO_NUM_2, 1);
 
   // Instancia o carro
   valuesCar braiaVal;
@@ -317,21 +336,23 @@ void app_main(void)
 
   esp_log_level_set("ESP32MotorControl", ESP_LOG_ERROR);
 
+  xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braiaVal, 10, &xTaskSensors);
   xTaskCreate(vTaskPID, "TaskPID", 10000, &braiaVal, 9, &xTaskPID);
   xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braiaVal, 8, &xTaskMotors);
-  xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braiaVal, 10, &xTaskSensors);
 
-  char bufferTask[1000];
-  char bufferTaskstat[1000];
+  /* char bufferTask[1000];
+  char bufferTaskstat[1000]; */
 
   for (;;)
   {
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
 
-    vTaskGetRunTimeStats(bufferTask);
+    ESP_LOGD("Braia", "Linha: %.lf\tEncs: %d\tSpeedL: %.2lf\tSpeedR: %.2lf", braiaVal.sArray.line, braiaVal.motEncs.media, braiaVal.speed.leftActual, braiaVal.speed.rightActual);
+
+    /* vTaskGetRunTimeStats(bufferTask);
     ESP_LOGD("RunTime", "\n%s\n", bufferTask);
 
     vTaskList(bufferTaskstat);
-    ESP_LOGD("List", "\n%s\n", bufferTaskstat);
+    ESP_LOGD("List", "\n%s\n", bufferTaskstat); */
   }
 }
