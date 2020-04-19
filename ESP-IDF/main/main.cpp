@@ -32,6 +32,12 @@ extern "C"
   void app_main(void);
 }
 
+enum CarStatus
+{
+  IN_CURVE = 0,
+  IN_LINE = 1
+};
+
 struct valuesS
 {
   uint16_t *channel;
@@ -40,8 +46,8 @@ struct valuesS
 
 struct valuesEnc
 {
-  int32_t encDir = 0;
-  int32_t encEsq = 0;
+  uint32_t encDir = 0;
+  uint32_t encEsq = 0;
   uint32_t media = 0;
 };
 
@@ -61,28 +67,11 @@ struct valuesSamples
   unsigned long time;
 };
 
-struct paramSpeed
-{
-  int max = 80;
-  int min = 5;
-
-  int rightBase = 40;
-  int leftBase = 40;
-  double rightActual = 0;
-  double leftActual = 0;
-};
-
 struct valuesPID
 {
   // Parâmetros
   double *input = NULL;
-  double setpoint = 3500;
   double output = 0;
-  double outputMin = -100;
-  double outputMax = +100;
-  double Kp = 0.01;
-  double Ki = 0.00;
-  double Kd = 0.10;
 
   // Variaveis de calculo
   float P = 0, I = 0, D = 0;
@@ -92,10 +81,34 @@ struct valuesPID
   float integral = 0;
 };
 
+struct valuesSpeed
+{
+  double right = 0;
+  double left = 0;
+};
+
+struct paramSpeed
+{
+  uint8_t max = 80;
+  uint8_t min = 5;
+  uint8_t base = 40;
+};
+
+struct paramPID
+{
+  double setpoint = 3500;
+  double outputMin = -100;
+  double outputMax = +100;
+  double Kp = 0.01;
+  double Ki = 0.00;
+  double Kd = 0.10;
+};
+
 struct valuesCar
 {
   int state = 1; // 0: parado, 1: linha, 2: curva
-  paramSpeed speed;
+  valuesSpeed speed;
+  valuesPID PID;
   valuesSamples *marksTrack;
   valuesMarks latMarks;
   valuesEnc motEncs;
@@ -103,9 +116,20 @@ struct valuesCar
   valuesS sArray;
 };
 
+struct paramsCar{
+  paramSpeed speed;
+  paramPID PID;
+};
+
+struct dataCar{
+  valuesCar values;
+  paramsCar params;
+};
+
 TaskHandle_t xTaskMotors;
 TaskHandle_t xTaskPID;
 TaskHandle_t xTaskSensors;
+TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskFTP;
 
 FtpServer ftpSrv; //set #define FTP_DEBUG in ESP8266FtpServer.h to see ftp verbose on serial
@@ -174,14 +198,14 @@ void SerialSend()
   Serial.printf("---------\n"); */
 }
 
-void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal)
+void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal, paramsCar *carParam)
 {
   if (carVal->state != 0)
   {
     MotorControl->motorForward(0);
     MotorControl->motorForward(1);
-    MotorControl->motorSpeed(1, constrain(carVal->speed.leftActual, carVal->speed.min, carVal->speed.max));
-    MotorControl->motorSpeed(0, constrain(carVal->speed.rightActual, carVal->speed.min, carVal->speed.max));
+    MotorControl->motorSpeed(1, constrain(carVal->speed.left, carParam->speed.min, carParam->speed.max));
+    MotorControl->motorSpeed(0, constrain(carVal->speed.right, carParam->speed.min, carParam->speed.max));
   }
   else
   {
@@ -197,14 +221,27 @@ void processSLat(valuesCar *carVal)
   {
     if (carVal->sLat.line < -250)
     {
+      // Debounce
+      if (!(carVal->latMarks.sLatEsq))
+        carVal->sLat.channel[0]++;
+
       carVal->latMarks.sLatEsq = true;
       carVal->latMarks.sLatDir = false;
     }
     else
     {
+      // Debounce
+      if (!(carVal->latMarks.sLatDir))
+        carVal->sLat.channel[1]++;
+
       carVal->latMarks.sLatEsq = false;
       carVal->latMarks.sLatDir = true;
     }
+  }
+  else
+  {
+    carVal->latMarks.sLatEsq = false;
+    carVal->latMarks.sLatDir = false;
   }
 }
 
@@ -219,24 +256,24 @@ void verifyState(valuesCar *carVal)
     carVal->state = 0;
 }
 
-void PIDFollow(valuesPID *PIDVal, valuesCar *carVal)
+void PIDFollow(valuesCar *carVal, paramsCar *carParam)
 {
   // Calculo de valor lido
-  PIDVal->proportional = (*PIDVal->input) - 3500;
-  PIDVal->derivative = PIDVal->proportional - PIDVal->last_proportional;
-  PIDVal->integral = PIDVal->integral + PIDVal->proportional;
-  PIDVal->last_proportional = PIDVal->proportional;
+  carVal->PID.proportional = (*carVal->PID.input) - 3500;
+  carVal->PID.derivative = carVal->PID.proportional - carVal->PID.last_proportional;
+  carVal->PID.integral = carVal->PID.integral + carVal->PID.proportional;
+  carVal->PID.last_proportional = carVal->PID.proportional;
 
-  PIDVal->P = PIDVal->proportional * PIDVal->Kp;
-  PIDVal->D = PIDVal->derivative * PIDVal->Kd;
-  PIDVal->I = PIDVal->integral * PIDVal->Ki;
+  carVal->PID.P = carVal->PID.proportional * carParam->PID.Kp;
+  carVal->PID.D = carVal->PID.derivative * carParam->PID.Kd;
+  carVal->PID.I = carVal->PID.integral * carParam->PID.Ki;
 
   // PID
-  PIDVal->output = PIDVal->P + PIDVal->I + PIDVal->D;
+  carVal->PID.output = carVal->PID.P + carVal->PID.I + carVal->PID.D;
 
   // Calculo de velocidade do motor
-  carVal->speed.rightActual = carVal->speed.rightBase - PIDVal->output;
-  carVal->speed.leftActual = carVal->speed.leftBase + PIDVal->output;
+  carVal->speed.right = carParam->speed.base - carVal->PID.output;
+  carVal->speed.left = carParam->speed.base + carVal->PID.output;
 }
 
 ////////////////END FUNÇÕES////////////////
@@ -257,8 +294,8 @@ void vTaskMotors(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    MotorControlFunc(&motdrv, ((valuesCar *)pvParameters));
-    //vTaskDelay(1);
+    MotorControlFunc(&motdrv, &((dataCar *)pvParameters)->values, &((dataCar *)pvParameters)->params);
+
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
@@ -307,9 +344,9 @@ void vTaskSensors(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    GetData(&array, &s_laterais, &enc_dir, &enc_esq, ((valuesCar *)pvParameters));
-    processSLat(((valuesCar *)pvParameters));
-    //vTaskDelay(1);
+    GetData(&array, &s_laterais, &enc_dir, &enc_esq, &((dataCar *)pvParameters)->values);
+    processSLat(&((dataCar *)pvParameters)->values);
+
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
@@ -317,18 +354,24 @@ void vTaskSensors(void *pvParameters)
 void vTaskPID(void *pvParameters)
 {
   // PID configs
-
-  valuesPID PIDVal;
-  PIDVal.input = &(((valuesCar *)pvParameters)->sArray.line);
+  ((dataCar *)pvParameters)->values.PID.input = &((dataCar *)pvParameters)->values.sArray.line;
 
   vTaskSuspend(xTaskPID);
 
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    PIDFollow(&PIDVal, ((valuesCar *)pvParameters));
-    //vTaskDelay(1);
+    PIDFollow(&((dataCar *)pvParameters)->values, &((dataCar *)pvParameters)->params);
+
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
+  }
+}
+
+void vTaskCarStatus(void *pvParameters)
+{
+
+  for (;;)
+  {
   }
 }
 
@@ -364,22 +407,24 @@ void app_main(void)
   WiFi.setSleep(false);
 
   // Instancia o carro
-  valuesCar braiaVal;
+  dataCar braia;
 
   // Alocando espaço de memória para salvar os valores dos canais do array e dos sensores laterais
-  braiaVal.sArray.channel = (uint16_t *)heap_caps_calloc(8, sizeof(uint16_t), MALLOC_CAP_8BIT);
-  braiaVal.sLat.channel = (uint16_t *)heap_caps_calloc(2, sizeof(uint16_t), MALLOC_CAP_8BIT);
+  braia.values.sArray.channel = (uint16_t *)heap_caps_calloc(8, sizeof(uint16_t), MALLOC_CAP_8BIT);
+  braia.values.sLat.channel = (uint16_t *)heap_caps_calloc(2, sizeof(uint16_t), MALLOC_CAP_8BIT);
 
   esp_log_level_set("ESP32MotorControl", ESP_LOG_ERROR);
 
-  xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braiaVal, 10, &xTaskSensors);
-  xTaskCreate(vTaskPID, "TaskPID", 10000, &braiaVal, 9, &xTaskPID);
-  xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braiaVal, 8, &xTaskMotors);
-  xTaskCreate(vTaskFTP, "TaskFTP", 10000, &braiaVal, 4, &xTaskFTP);
+  xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braia, 10, &xTaskSensors);
+  xTaskCreate(vTaskPID, "TaskPID", 10000, &braia, 9, &xTaskPID);
+  xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braia, 8, &xTaskMotors);
+  xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, &braia, 4, &xTaskCarStatus);
+  xTaskCreate(vTaskFTP, "TaskFTP", 10000, &braia, 4, &xTaskFTP);
 
   for (;;)
   {
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    ESP_LOGD("Braia", "Linha: %.lf\tEncs: %d\tSpeedL: %.2lf\tSpeedR: %.2lf", braiaVal.sArray.line, braiaVal.motEncs.media, braiaVal.speed.leftActual, braiaVal.speed.rightActual);
+    ESP_LOGD("Braia", "Linha: %.lf\tEncs: %d\tSpeedL: %.2lf\tSpeedR: %.2lf", braia.values.sArray.line, braia.values.motEncs.media, braia.values.speed.left, braia.values.speed.right);
   }
+
 }
