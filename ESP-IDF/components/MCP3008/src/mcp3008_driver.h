@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+#include <string.h>
 #include <vector>
 #include <driver/spi_master.h>
 #include <driver/gpio.h>

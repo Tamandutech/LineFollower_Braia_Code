@@ -16,9 +16,6 @@
 #define TRACK_LEFT_MARKS 57
 #define TRACK_RIGHT_MARKS 12
 
-#define LINE_WHITE < 2000
-#define LINE_BLACK < 2000
-
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 extern "C"
