@@ -1,10 +1,5 @@
 #include "stdbool.h"
 
-#include "Arduino.h"
-#include <WiFi.h>
-#include "SPIFFS.h"
-#include <ESP8266FtpServer.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
@@ -24,8 +19,7 @@
 #define LINE_WHITE < 2000
 #define LINE_BLACK < 2000
 
-const char *ssid = "RFREITAS";
-const char *password = "941138872";
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 extern "C"
 {
@@ -132,8 +126,6 @@ TaskHandle_t xTaskSensors;
 TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskFTP;
 
-FtpServer ftpSrv; //set #define FTP_DEBUG in ESP8266FtpServer.h to see ftp verbose on serial
-
 ////////////////START FUNÇÕES////////////////
 
 void calibSensor(QTRSensors *sensor)
@@ -158,44 +150,6 @@ void GetData(QTRSensors *array, QTRSensors *s_laterais, ESP32Encoder *enc_dir, E
   carVal->motEncs.encDir = enc_dir->getCount() * -1;
   carVal->motEncs.encEsq = enc_esq->getCount();
   carVal->motEncs.media = (carVal->motEncs.encDir + carVal->motEncs.encEsq) / 2;
-}
-
-void SerialSend()
-{
-
-  /* Serial.printf("Setpoint: %.lf\n", dirPIDVal.setpoint);
-  Serial.printf("Input: %.lf\n", dirPIDVal.input);
-  Serial.printf("Output: %.lf\n", dirPIDVal.output);
-  Serial.printf("---------\n");
-
-  Serial.printf("LeftMotor: %d\n", MotorControl.getMotorSpeed(0));
-  Serial.printf("RightMotor: %d\n", MotorControl.getMotorSpeed(1));
-  Serial.printf("---------\n");
-
-  Serial.printf("velMot\tvelPID\n");
-  Serial.printf("%d\t%.lf\n", carVal.rightBaseSpeed, dirPIDVal.outputMax);
-  Serial.printf("---------\n");
-
-  Serial.printf("Kp\tKi\tKd\n");
-  Serial.printf("%lf\t%lf\t%lf\n", dirPIDVal.Kp, dirPIDVal.Ki, dirPIDVal.Kd);
-  Serial.printf("---------\n");
-
-  Serial.printf("Ciclo: %ld\n", totalTime);
-  Serial.printf("---------\n");
-
-  Serial.printf("SL1: %d\n", sensorLat.sensorL1);
-  Serial.printf("SL2: %d\n", sensorLat.sensorL2);
-  Serial.printf("SL3: %d\n", sensorLat.sensorL3);
-  Serial.printf("SL4: %d\n", sensorLat.sensorL4);
-  Serial.printf("---------\n");
-
-  Serial.printf("EncEsq: %d\n", motEncs.encEsq);
-  Serial.printf("EncDir: %d\n", motEncs.encDir);
-  Serial.printf("---------\n");
-
-  Serial.printf("EncEsqCount: %d\n", carVal.leftMarksPassed);
-  Serial.printf("EncDirCount: %d\n", carVal.rightMarksPassed);
-  Serial.printf("---------\n"); */
 }
 
 void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal, paramsCar *carParam)
@@ -377,15 +331,8 @@ void vTaskCarStatus(void *pvParameters)
 
 void vTaskFTP(void *pvParameters)
 {
-  if (SPIFFS.begin(true))
-  {
-    ESP_LOGD("SPIFFS", "SPIFFS Iniciada!");
-    ftpSrv.begin("Braia", "W2knaft@123"); //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
-  }
-
   for (;;)
   {
-    ftpSrv.handleFTP();
     vTaskDelay(1);
   }
 }
@@ -394,17 +341,7 @@ void vTaskFTP(void *pvParameters)
 
 void app_main(void)
 {
-  initArduino();
   gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
-
-  ESP_LOGD("WiFi", "Conectando na rede");
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED)
-    ESP_LOGD("WiFi", ".");
-  ESP_LOGD("WiFi", "Conetado!, IP: %s", WiFi.localIP().toString().c_str());
-
-  WiFi.setSleep(false);
 
   // Instancia o carro
   dataCar braia;
@@ -418,8 +355,8 @@ void app_main(void)
   xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braia, 10, &xTaskSensors);
   xTaskCreate(vTaskPID, "TaskPID", 10000, &braia, 9, &xTaskPID);
   xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braia, 8, &xTaskMotors);
-  xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, &braia, 4, &xTaskCarStatus);
-  xTaskCreate(vTaskFTP, "TaskFTP", 10000, &braia, 4, &xTaskFTP);
+  //xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, &braia, 4, &xTaskCarStatus);
+  //xTaskCreate(vTaskFTP, "TaskFTP", 10000, &braia, 4, &xTaskFTP);
 
   for (;;)
   {
