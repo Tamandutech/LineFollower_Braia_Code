@@ -1,4 +1,5 @@
-#include "stdbool.h"
+#include <stdbool.h>
+#include <string>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -16,7 +17,9 @@
 #define TRACK_LEFT_MARKS 57
 #define TRACK_RIGHT_MARKS 12
 
-#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+
+using namespace std;
 
 extern "C"
 {
@@ -32,87 +35,78 @@ enum CarStatus
 struct valuesS
 {
   uint16_t *channel;
-  double line;
+  int16_t line;
 };
 
 struct valuesEnc
 {
-  uint32_t encDir = 0;
-  uint32_t encEsq = 0;
-  uint32_t media = 0;
+  int32_t encDir = 0;
+  int32_t encEsq = 0;
 };
 
 struct valuesMarks
 {
-  int leftPassed = 0;
-  int rightPassed = 0;
+  int16_t leftPassed = 0;
+  int16_t rightPassed = 0;
   bool sLatEsq;
   bool sLatDir;
 };
 
-struct valuesSamples
+struct trackSamples
 {
   valuesEnc motEncs;
   valuesS sLat;
   valuesS sArray;
-  unsigned long time;
+  uint64_t time;
 };
 
 struct valuesPID
 {
   // Parâmetros
-  double *input = NULL;
-  double output = 0;
-
-  // Variaveis de calculo
-  float P = 0, I = 0, D = 0;
-  float last_proportional = 0;
-  float proportional = 0;
-  float derivative = 0;
-  float integral = 0;
+  int16_t *input = NULL;
+  float output = 0;
 };
 
 struct valuesSpeed
 {
-  double right = 0;
-  double left = 0;
+  int8_t right = 0;
+  int8_t left = 0;
 };
 
 struct paramSpeed
 {
-  uint8_t max = 80;
-  uint8_t min = 5;
-  uint8_t base = 40;
+  int8_t max = 80;
+  int8_t min = 5;
+  int8_t base = 40;
 };
 
 struct paramPID
 {
-  double setpoint = 3500;
-  double outputMin = -100;
-  double outputMax = +100;
-  double Kp = 0.01;
-  double Ki = 0.00;
-  double Kd = 0.10;
+  int16_t setpoint = 3500;
+  float Kp = 0.01;
+  float Ki = 0.00;
+  float Kd = 0.10;
 };
 
 struct valuesCar
 {
-  int state = 1; // 0: parado, 1: linha, 2: curva
+  int8_t state = 1; // 0: parado, 1: linha, 2: curva
   valuesSpeed speed;
   valuesPID PID;
-  valuesSamples *marksTrack;
   valuesMarks latMarks;
   valuesEnc motEncs;
   valuesS sLat;
   valuesS sArray;
 };
 
-struct paramsCar{
+struct paramsCar
+{
   paramSpeed speed;
   paramPID PID;
 };
 
-struct dataCar{
+struct dataCar
+{
   valuesCar values;
   paramsCar params;
 };
@@ -127,14 +121,26 @@ TaskHandle_t xTaskFTP;
 
 void calibSensor(QTRSensors *sensor)
 {
+  std::string maxsmins = "";
+
   for (uint16_t i = 0; i < 200; i++)
   {
     sensor->calibrate();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
+
+  for (uint8_t i = 0; i < sensor->getSensorCount(); i++)
+    maxsmins += to_string(sensor->calibrationOn.minimum[i]) + ' ';
+
+  maxsmins += '\n';
+
+  for (uint8_t i = 0; i < sensor->getSensorCount(); i++)
+    maxsmins += to_string(sensor->calibrationOn.maximum[i]) + ' ';
+
+  ESP_LOGD("QTRSensors", "\n%s", maxsmins.c_str());
 }
 
-void GetData(QTRSensors *array, QTRSensors *s_laterais, ESP32Encoder *enc_dir, ESP32Encoder *enc_esq, valuesCar *carVal)
+void getSensors(QTRSensors *array, QTRSensors *s_laterais, ESP32Encoder *enc_dir, ESP32Encoder *enc_esq, valuesCar *carVal)
 {
   // Update erro do array
   carVal->sArray.line = array->readLineWhite(carVal->sArray.channel);
@@ -146,7 +152,6 @@ void GetData(QTRSensors *array, QTRSensors *s_laterais, ESP32Encoder *enc_dir, E
   // Update dos encoders dos motores
   carVal->motEncs.encDir = enc_dir->getCount() * -1;
   carVal->motEncs.encEsq = enc_esq->getCount();
-  carVal->motEncs.media = (carVal->motEncs.encDir + carVal->motEncs.encEsq) / 2;
 }
 
 void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal, paramsCar *carParam)
@@ -155,8 +160,8 @@ void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal, params
   {
     MotorControl->motorForward(0);
     MotorControl->motorForward(1);
-    MotorControl->motorSpeed(1, constrain(carVal->speed.left, carParam->speed.min, carParam->speed.max));
-    MotorControl->motorSpeed(0, constrain(carVal->speed.right, carParam->speed.min, carParam->speed.max));
+    MotorControl->motorSpeed(1, carVal->speed.left);
+    MotorControl->motorSpeed(0, carVal->speed.right);
   }
   else
   {
@@ -205,26 +210,6 @@ void verifyState(valuesCar *carVal)
       carVal->state = 1;
   else
     carVal->state = 0;
-}
-
-void PIDFollow(valuesCar *carVal, paramsCar *carParam)
-{
-  // Calculo de valor lido
-  carVal->PID.proportional = (*carVal->PID.input) - 3500;
-  carVal->PID.derivative = carVal->PID.proportional - carVal->PID.last_proportional;
-  carVal->PID.integral = carVal->PID.integral + carVal->PID.proportional;
-  carVal->PID.last_proportional = carVal->PID.proportional;
-
-  carVal->PID.P = carVal->PID.proportional * carParam->PID.Kp;
-  carVal->PID.D = carVal->PID.derivative * carParam->PID.Kd;
-  carVal->PID.I = carVal->PID.integral * carParam->PID.Ki;
-
-  // PID
-  carVal->PID.output = carVal->PID.P + carVal->PID.I + carVal->PID.D;
-
-  // Calculo de velocidade do motor
-  carVal->speed.right = carParam->speed.base - carVal->PID.output;
-  carVal->speed.left = carParam->speed.base + carVal->PID.output;
 }
 
 ////////////////END FUNÇÕES////////////////
@@ -295,7 +280,7 @@ void vTaskSensors(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    GetData(&array, &s_laterais, &enc_dir, &enc_esq, &((dataCar *)pvParameters)->values);
+    getSensors(&array, &s_laterais, &enc_dir, &enc_esq, &((dataCar *)pvParameters)->values);
     processSLat(&((dataCar *)pvParameters)->values);
 
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
@@ -304,15 +289,41 @@ void vTaskSensors(void *pvParameters)
 
 void vTaskPID(void *pvParameters)
 {
+  valuesCar *carVal = &((dataCar *)pvParameters)->values;
+  paramsCar *carParam = &((dataCar *)pvParameters)->params;
+
+  // Variaveis de calculo
+  float P = 0, I = 0, D = 0;
+  float last_proportional = 0;
+  float proportional = 0;
+  float derivative = 0;
+  float integral = 0;
+
   // PID configs
-  ((dataCar *)pvParameters)->values.PID.input = &((dataCar *)pvParameters)->values.sArray.line;
+  carVal->PID.input = &carVal->sArray.line;
 
   vTaskSuspend(xTaskPID);
 
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    PIDFollow(&((dataCar *)pvParameters)->values, &((dataCar *)pvParameters)->params);
+    // Calculo de valor lido
+    proportional = static_cast<float>(*carVal->PID.input) - 3500;
+    derivative = proportional - last_proportional;
+    integral = integral + proportional;
+    last_proportional = proportional;
+
+    P = proportional * carParam->PID.Kp;
+    D = derivative * carParam->PID.Kd;
+    I = integral * carParam->PID.Ki;
+
+    // PID
+    carVal->PID.output = P + I + D;
+
+    // Calculo de velocidade do motor
+    
+    carVal->speed.right = constrain(carParam->speed.base - static_cast<int8_t>(carVal->PID.output), carParam->speed.min, carParam->speed.max);
+    carVal->speed.left = constrain(carParam->speed.base + static_cast<int8_t>(carVal->PID.output), carParam->speed.min, carParam->speed.max);
 
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
@@ -343,6 +354,8 @@ void app_main(void)
   // Instancia o carro
   dataCar braia;
 
+  ESP_LOGD("Memoria", "Carro: %d\tParametros: %d\tValores: %d", sizeof(braia), sizeof(braia.params), sizeof(braia.values));
+
   // Alocando espaço de memória para salvar os valores dos canais do array e dos sensores laterais
   braia.values.sArray.channel = (uint16_t *)heap_caps_calloc(8, sizeof(uint16_t), MALLOC_CAP_8BIT);
   braia.values.sLat.channel = (uint16_t *)heap_caps_calloc(2, sizeof(uint16_t), MALLOC_CAP_8BIT);
@@ -358,7 +371,6 @@ void app_main(void)
   for (;;)
   {
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    ESP_LOGD("Braia", "Linha: %.lf\tEncs: %d\tSpeedL: %.2lf\tSpeedR: %.2lf", braia.values.sArray.line, braia.values.motEncs.media, braia.values.speed.left, braia.values.speed.right);
+    ESP_LOGD("Braia", "Linha: %d\tEncs: %d\tSpeedL: %d\tSpeedR: %d", braia.values.sArray.line, (braia.values.motEncs.encDir + braia.values.motEncs.encEsq) / 2, braia.values.speed.left, braia.values.speed.right);
   }
-
 }

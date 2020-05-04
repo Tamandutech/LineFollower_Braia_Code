@@ -185,6 +185,8 @@ public:
   /// See also setSamplesPerSensor().
   uint16_t getSamplesPerSensor() { return _samplesPerSensor; }
 
+  uint16_t getSensorCount() { return _sensorCount; }
+
   /// \brief Sets the emitter control pin for the sensors.
   ///
   /// \param emitterPin The Arduino digital pin that controls whether the IR
