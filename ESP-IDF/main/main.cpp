@@ -1,11 +1,17 @@
 #include <stdbool.h>
 #include <string>
+#include <list>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include "esp_now.h"
+#include "esp_wifi.h"
+#include "tcpip_adapter.h"
 
 #include "ESP32Encoder.h"
 #include "ESP32MotorControl.h"
@@ -20,6 +26,14 @@
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 using namespace std;
+
+// MACs ESPs:
+
+// Braia: 24:6F:28:B2:23:D0
+// CCenter: 24:6F:28:9D:7C:44
+
+uint8_t broadcastAddress[] = {0x24, 0x6F, 0x28, 0x9D, 0x7C, 0x44};
+esp_now_peer_info_t peerInfo;
 
 extern "C"
 {
@@ -50,14 +64,6 @@ struct valuesMarks
   int16_t rightPassed = 0;
   bool sLatEsq;
   bool sLatDir;
-};
-
-struct trackSamples
-{
-  valuesEnc motEncs;
-  valuesS sLat;
-  valuesS sArray;
-  uint64_t time;
 };
 
 struct valuesPID
@@ -111,11 +117,27 @@ struct dataCar
   paramsCar params;
 };
 
+struct valuesSamples
+{
+  valuesCar carVal;
+  uint32_t time;
+
+  valuesSamples(valuesCar carVal) : carVal(carVal)
+  {
+    time = esp_log_timestamp();
+  };
+
+  valuesSamples(){};
+};
+
+list<valuesSamples> valSamples;
+
 TaskHandle_t xTaskMotors;
 TaskHandle_t xTaskPID;
 TaskHandle_t xTaskSensors;
 TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskFTP;
+TaskHandle_t xTaskESPNOW;
 
 ////////////////START FUNÇÕES////////////////
 
@@ -179,7 +201,7 @@ void processSLat(valuesCar *carVal)
     {
       // Debounce
       if (!(carVal->latMarks.sLatEsq))
-        carVal->sLat.channel[0]++;
+        carVal->latMarks.leftPassed++;
 
       carVal->latMarks.sLatEsq = true;
       carVal->latMarks.sLatDir = false;
@@ -188,7 +210,7 @@ void processSLat(valuesCar *carVal)
     {
       // Debounce
       if (!(carVal->latMarks.sLatDir))
-        carVal->sLat.channel[1]++;
+        carVal->latMarks.rightPassed++;
 
       carVal->latMarks.sLatEsq = false;
       carVal->latMarks.sLatDir = true;
@@ -210,6 +232,43 @@ void verifyState(valuesCar *carVal)
       carVal->state = 1;
   else
     carVal->state = 0;
+}
+
+/* WiFi should start before using ESPNOW */
+static void wifiInit(void)
+{
+  tcpip_adapter_init();
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+  esp_wifi_set_ps(WIFI_PS_NONE);
+  ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_LR));
+}
+
+// Callback when data is sent
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
+{
+  /* Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail"); */
+}
+
+// Callback when data is received
+void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
+{
+  /*  memcpy(&incomingSample, incomingData, sizeof(incomingSample));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+
+  samplesList.push_back(incomingSample); */
+}
+
+void takeSample(list<valuesSamples> *list, valuesCar *carVal)
+{
+  if (list->size() < 100)
+    list->emplace_back(valuesSamples(*carVal));
 }
 
 ////////////////END FUNÇÕES////////////////
@@ -238,6 +297,8 @@ void vTaskMotors(void *pvParameters)
 
 void vTaskSensors(void *pvParameters)
 {
+  valuesCar *carVal = &((dataCar *)pvParameters)->values;
+
   // Instancia dos sensores de linha
   QTRSensors array;
   QTRSensors s_laterais;
@@ -280,8 +341,8 @@ void vTaskSensors(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    getSensors(&array, &s_laterais, &enc_dir, &enc_esq, &((dataCar *)pvParameters)->values);
-    processSLat(&((dataCar *)pvParameters)->values);
+    getSensors(&array, &s_laterais, &enc_dir, &enc_esq, carVal);
+    processSLat(carVal);
 
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
@@ -321,7 +382,7 @@ void vTaskPID(void *pvParameters)
     carVal->PID.output = P + I + D;
 
     // Calculo de velocidade do motor
-    
+
     carVal->speed.right = constrain(carParam->speed.base - static_cast<int8_t>(carVal->PID.output), carParam->speed.min, carParam->speed.max);
     carVal->speed.left = constrain(carParam->speed.base + static_cast<int8_t>(carVal->PID.output), carParam->speed.min, carParam->speed.max);
 
@@ -331,9 +392,17 @@ void vTaskPID(void *pvParameters)
 
 void vTaskCarStatus(void *pvParameters)
 {
+  valuesCar *carVal = &((dataCar *)pvParameters)->values;
 
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
+    takeSample(&valSamples, carVal);
+
+    if (carVal->latMarks.sLatDir || carVal->latMarks.sLatEsq)
+      vTaskDelayUntil(&xLastWakeTime, 20 / portTICK_PERIOD_MS);
+    else
+      vTaskDelayUntil(&xLastWakeTime, 200 / portTICK_PERIOD_MS);
   }
 }
 
@@ -345,10 +414,62 @@ void vTaskFTP(void *pvParameters)
   }
 }
 
+void vTaskESPNOW(void *pvParameters)
+{
+  valuesCar *carVal = &((dataCar *)pvParameters)->values;
+
+  if (esp_now_init() != 0)
+    ESP_LOGD("ESP-NOW", "Falha ao iniciar");
+
+  // Once ESPNow is successfully Init, we will register for Send CB to
+  // get the status of Trasnmitted packet
+  esp_now_register_send_cb(OnDataSent);
+
+  // Register peer
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 11;
+  peerInfo.encrypt = false;
+  peerInfo.ifidx = ESP_IF_WIFI_STA;
+
+  // Add peer
+  if (esp_now_add_peer(&peerInfo) != ESP_OK)
+  {
+    ESP_LOGD("ESP-NOW", "Failed to add peer");
+    return;
+  }
+  // Register for a callback function that will be called when data is received
+  esp_now_register_recv_cb(OnDataRecv);
+
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  for (;;)
+  {
+    if (valSamples.size() > 0)
+      if (esp_now_send(broadcastAddress, (uint8_t *)&valSamples.front(), sizeof(valSamples.front())) == ESP_OK)
+        valSamples.pop_front();
+
+    if (valSamples.size() > 10)
+      vTaskDelayUntil(&xLastWakeTime, 50 / portTICK_PERIOD_MS);
+    else
+      vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+  }
+}
+
 ////////////////END TASKS////////////////
 
 void app_main(void)
 {
+
+  //Initialize NVS
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+  {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
+
+  wifiInit();
+
   gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
 
   // Instancia o carro
@@ -362,10 +483,11 @@ void app_main(void)
 
   esp_log_level_set("ESP32MotorControl", ESP_LOG_ERROR);
 
+  xTaskCreate(vTaskESPNOW, "TaskESPNOW", 10000, &braia, 6, &xTaskMotors);
   xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braia, 10, &xTaskSensors);
   xTaskCreate(vTaskPID, "TaskPID", 10000, &braia, 9, &xTaskPID);
   xTaskCreate(vTaskMotors, "TaskMotors", 10000, &braia, 8, &xTaskMotors);
-  //xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, &braia, 4, &xTaskCarStatus);
+  xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, &braia, 7, &xTaskCarStatus);
   //xTaskCreate(vTaskFTP, "TaskFTP", 10000, &braia, 4, &xTaskFTP);
 
   for (;;)
