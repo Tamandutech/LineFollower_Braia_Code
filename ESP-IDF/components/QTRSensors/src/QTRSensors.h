@@ -9,6 +9,7 @@
 #include <freertos/task.h>
 #include <mcp3008_driver.h>
 #include <stdint.h>
+#include "esp_log.h"
 
 /// \brief Emitter behavior when taking readings.
 ///
@@ -16,7 +17,8 @@
 /// with setEmitterPin(), and the odd/even modes will only work if you are
 /// using a second-generation QTR or QTRX sensor with two emitter control pins
 /// and you specify both pins with setEmitterPins().
-enum class QTRReadMode : uint8_t {
+enum class QTRReadMode : uint8_t
+{
   /// Each reading is made without turning on the infrared (IR) emitters. The
   /// reading represents ambient light levels near the sensor.
   Off,
@@ -53,10 +55,23 @@ enum class QTRReadMode : uint8_t {
 };
 
 /// Sensor types.
-enum class QTRType : uint8_t { Undefined, RC, Analog, AnalogESP, MCP3008 };
+enum class QTRType : uint8_t
+{
+  Undefined,
+  RC,
+  Analog,
+  AnalogESP,
+  MCP3008
+};
 
 /// Emitters selected to turn on or off.
-enum class QTREmitters : uint8_t { All, Odd, Even, None };
+enum class QTREmitters : uint8_t
+{
+  All,
+  Odd,
+  Even,
+  None
+};
 
 /// Represents an undefined emitter control pin.
 const uint8_t QTRNoEmitterPin = 255;
@@ -75,7 +90,8 @@ const uint8_t QTRMaxSensors = 31;
 ///
 /// See \ref md_usage for an overview of how this library can be used and some
 /// example code.
-class QTRSensors {
+class QTRSensors
+{
 public:
   QTRSensors() = default;
 
@@ -500,7 +516,8 @@ public:
   ///
   /// See \ref md_usage for more information and example code.
   uint16_t readLineBlack(uint16_t *sensorValues,
-                         QTRReadMode mode = QTRReadMode::On) {
+                         QTRReadMode mode = QTRReadMode::On)
+  {
     return readLinePrivate(sensorValues, mode, false);
   }
 
@@ -523,14 +540,16 @@ public:
   ///
   /// See \ref md_usage for more information and example code.
   uint16_t readLineWhite(uint16_t *sensorValues,
-                         QTRReadMode mode = QTRReadMode::On) {
+                         QTRReadMode mode = QTRReadMode::On)
+  {
     return readLinePrivate(sensorValues, mode, true);
   }
 
   /// \brief Stores sensor calibration data.
   ///
   /// See calibrate() and readCalibrated() for details.
-  struct CalibrationData {
+  struct CalibrationData
+  {
     /// Whether array pointers have been allocated and initialized.
     bool initialized = false;
     /// Lowest readings seen during calibration.
@@ -555,6 +574,9 @@ public:
   CalibrationData calibrationOff;
 
   /// \}
+
+  void setCalibrationOn(uint16_t maxChannel[], uint16_t minChannel[]);
+  void setCalibrationOff(uint16_t maxChannel[], uint16_t minChannel[]);
 
 private:
   mcp3008::MCPDriver ls;

@@ -384,29 +384,53 @@ void QTRSensors::resetCalibration()
   }
 }
 
+void QTRSensors::setCalibrationOn(uint16_t maxChannel[], uint16_t minChannel[])
+{
+  // (Re)allocate and initialize the arrays if necessary.
+  if (!calibrationOn.initialized)
+  {
+    uint16_t *oldMaximum = calibrationOn.maximum;
+    calibrationOn.maximum = (uint16_t *)realloc(calibrationOn.maximum,
+                                                sizeof(uint16_t) * _sensorCount);
+    if (calibrationOn.maximum == nullptr)
+    {
+      // Memory allocation failed; don't continue.
+      free(oldMaximum); // deallocate any memory used by old array
+      return;
+    }
+
+    uint16_t *oldMinimum = calibrationOn.minimum;
+    calibrationOn.minimum = (uint16_t *)realloc(calibrationOn.minimum,
+                                                sizeof(uint16_t) * _sensorCount);
+    if (calibrationOn.minimum == nullptr)
+    {
+      // Memory allocation failed; don't continue.
+      free(oldMinimum); // deallocate any memory used by old array
+      return;
+    }
+
+    // Initialize the max and min calibrated values to values that
+    // will cause the first reading to update them.
+    for (uint8_t i = 0; i < _sensorCount; i++)
+    {
+      calibrationOn.maximum[i] = 0;
+      calibrationOn.minimum[i] = _maxValue;
+    }
+
+    calibrationOn.initialized = true;
+  }
+
+  // record the min and max calibration values
+  for (uint8_t i = 0; i < _sensorCount; i++)
+  {
+    calibrationOn.maximum[i] = maxChannel[i];
+    calibrationOn.minimum[i] = minChannel[i];
+  }
+}
+
 void QTRSensors::calibrate(QTRReadMode mode)
 {
-  // manual emitter control is not supported
-  if (mode == QTRReadMode::Manual)
-  {
-    return;
-  }
-
-  if (mode == QTRReadMode::On || mode == QTRReadMode::OnAndOff)
-  {
-    calibrateOnOrOff(calibrationOn, QTRReadMode::On);
-  }
-  else if (mode == QTRReadMode::OddEven ||
-           mode == QTRReadMode::OddEvenAndOff)
-  {
-    calibrateOnOrOff(calibrationOn, QTRReadMode::OddEven);
-  }
-
-  if (mode == QTRReadMode::OnAndOff || mode == QTRReadMode::OddEvenAndOff ||
-      mode == QTRReadMode::Off)
-  {
-    calibrateOnOrOff(calibrationOff, QTRReadMode::Off);
-  }
+  calibrateOnOrOff(calibrationOn, QTRReadMode::On);
 }
 
 void QTRSensors::calibrateOnOrOff(CalibrationData &calibration,
@@ -491,90 +515,13 @@ void QTRSensors::calibrateOnOrOff(CalibrationData &calibration,
 
 void QTRSensors::read(uint16_t *sensorValues, QTRReadMode mode)
 {
-  switch (mode)
-  {
-  case QTRReadMode::Off:
-    emittersOff();
-    // fall through
-  case QTRReadMode::Manual:
-    readPrivate(sensorValues);
-    return;
-
-  case QTRReadMode::On:
-  case QTRReadMode::OnAndOff:
-    emittersOn();
-    readPrivate(sensorValues);
-    emittersOff();
-    break;
-
-  case QTRReadMode::OddEven:
-  case QTRReadMode::OddEvenAndOff:
-    // Turn on odd emitters and read the odd-numbered sensors.
-    // (readPrivate takes a 0-based array index, so start = 0 to start with
-    // the first sensor)
-    emittersSelect(QTREmitters::Odd);
-    readPrivate(sensorValues, 0, 2);
-
-    // Turn on even emitters and read the even-numbered sensors.
-    // (readPrivate takes a 0-based array index, so start = 1 to start with
-    // the second sensor)
-    emittersSelect(QTREmitters::Even);
-    readPrivate(sensorValues, 1, 2);
-
-    emittersOff();
-    break;
-
-  default: // invalid - do nothing
-    return;
-  }
-
-  if (mode == QTRReadMode::OnAndOff || mode == QTRReadMode::OddEvenAndOff)
-  {
-    // Take a second set of readings and return the values (on + max - off).
-
-    uint16_t offValues[QTRMaxSensors];
-    readPrivate(offValues);
-
-    for (uint8_t i = 0; i < _sensorCount; i++)
-    {
-      sensorValues[i] += _maxValue - offValues[i];
-      if (sensorValues[i] > _maxValue)
-      {
-        // This usually doesn't happen, because the sensor reading should
-        // go up when the emitters are turned off.
-        sensorValues[i] = _maxValue;
-      }
-    }
-  }
+  readPrivate(sensorValues);
 }
 
 void QTRSensors::readCalibrated(uint16_t *sensorValues, QTRReadMode mode)
 {
-  // manual emitter control is not supported
-  if (mode == QTRReadMode::Manual)
-  {
+  if (!calibrationOn.initialized)
     return;
-  }
-
-  // if not calibrated, do nothing
-
-  if (mode == QTRReadMode::On || mode == QTRReadMode::OnAndOff ||
-      mode == QTRReadMode::OddEvenAndOff)
-  {
-    if (!calibrationOn.initialized)
-    {
-      return;
-    }
-  }
-
-  if (mode == QTRReadMode::Off || mode == QTRReadMode::OnAndOff ||
-      mode == QTRReadMode::OddEvenAndOff)
-  {
-    if (!calibrationOff.initialized)
-    {
-      return;
-    }
-  }
 
   // read the needed values
   read(sensorValues, mode);
@@ -583,63 +530,25 @@ void QTRSensors::readCalibrated(uint16_t *sensorValues, QTRReadMode mode)
   {
     uint16_t calmin, calmax;
 
-    // find the correct calibration
-    if (mode == QTRReadMode::On || mode == QTRReadMode::OddEven)
-    {
-      calmax = calibrationOn.maximum[i];
-      calmin = calibrationOn.minimum[i];
-    }
-    else if (mode == QTRReadMode::Off)
-    {
-      calmax = calibrationOff.maximum[i];
-      calmin = calibrationOff.minimum[i];
-    }
-    else // QTRReadMode::OnAndOff, QTRReadMode::OddEvenAndOff
-    {
-      if (calibrationOff.minimum[i] < calibrationOn.minimum[i])
-      {
-        // no meaningful signal
-        calmin = _maxValue;
-      }
-      else
-      {
-        // this won't go past _maxValue
-        calmin =
-            calibrationOn.minimum[i] + _maxValue - calibrationOff.minimum[i];
-      }
-
-      if (calibrationOff.maximum[i] < calibrationOn.maximum[i])
-      {
-        // no meaningful signal
-        calmax = _maxValue;
-      }
-      else
-      {
-        // this won't go past _maxValue
-        calmax =
-            calibrationOn.maximum[i] + _maxValue - calibrationOff.maximum[i];
-      }
-    }
+    calmax = calibrationOn.maximum[i];
+    calmin = calibrationOn.minimum[i];
 
     uint16_t denominator = calmax - calmin;
     int16_t value = 0;
 
     if (denominator != 0)
-    {
-      value = (((int32_t)sensorValues[i]) - calmin) * 1000 / denominator;
-    }
+      value = (((uint16_t)sensorValues[i]) - calmin) * 1000 / denominator;
 
     if (value < 0)
-    {
       value = 0;
-    }
     else if (value > 1000)
-    {
       value = 1000;
-    }
 
     sensorValues[i] = value;
   }
+  /* ESP_LOGD("Sensores", "%d | %d | %d | %d | %d | %d | %d | %d\n", sensorValues[0], sensorValues[1],
+           sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5],
+           sensorValues[6], sensorValues[7]); */
 }
 
 // Reads the first of every [step] sensors, starting with [start] (0-indexed,
@@ -715,7 +624,7 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
         // add the conversion result
-         //sensorValues[i] += adc1_get_raw((adc1_channel_t)_sensorPins[i]);
+        //sensorValues[i] += adc1_get_raw((adc1_channel_t)_sensorPins[i]);
       }
     }
 
@@ -739,7 +648,7 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
         // add the conversion result
-         sensorValues[i] += adc1_get_raw(_sensorPinsESP[i]);
+        sensorValues[i] += adc1_get_raw(_sensorPinsESP[i]);
       }
     }
 
@@ -786,12 +695,6 @@ uint16_t QTRSensors::readLinePrivate(uint16_t *sensorValues, QTRReadMode mode,
   bool onLine = false;
   uint32_t avg = 0; // this is for the weighted total
   uint16_t sum = 0; // this is for the denominator, which is <= 64000
-
-  // manual emitter control is not supported
-  if (mode == QTRReadMode::Manual)
-  {
-    return 0;
-  }
 
   readCalibrated(sensorValues, mode);
 
