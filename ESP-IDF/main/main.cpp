@@ -36,6 +36,7 @@ TaskHandle_t xTaskSensors;
 TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskFTP;
 TaskHandle_t xTaskESPNOW;
+TaskHandle_t xTaskVerifyState;
 
 SemaphoreHandle_t xSemaphoreCarValues = NULL;
 SemaphoreHandle_t xSemaphoreCarParams = NULL;
@@ -163,7 +164,7 @@ void getSensors(QTRSensors *array, QTRSensors *s_laterais, ESP32Encoder *enc_dir
 
 void MotorControlFunc(ESP32MotorControl *MotorControl, valuesCar *carVal, paramsCar *carParam)
 {
-  if (carVal->state != 0)
+  if (carVal->state != CAR_STOPPED)
   {
     MotorControl->motorForward(0);
     MotorControl->motorForward(1);
@@ -211,17 +212,6 @@ void processSLat(valuesCar *carVal)
 
     xSemaphoreGive(xSemaphoreCarValues);
   }
-}
-
-void verifyState(valuesCar *carVal)
-{
-  if (carVal->latMarks.rightPassed < TRACK_RIGHT_MARKS /* || carVal.leftMarksPassed < TRACK_LEFT_MARKS */)
-    if (carVal->latMarks.leftPassed % 2 != 0)
-      carVal->state = 2;
-    else
-      carVal->state = 1;
-  else
-    carVal->state = 0;
 }
 
 static void wifiInit(void)
@@ -305,7 +295,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 
       ESP_LOGD("PARAM-QTRSENSORS", "\n%s", maxsmins.c_str());
 
-      ESP_LOGD("PARAM-SPEED", "Speed -> Max: %d | Min: %d | Base: %d", braia.params.speed.max, braia.params.speed.min, braia.params.speed.base);
+      ESP_LOGD("PARAM-SPEED", "Speed -> Max: %d | Min: %d | Base: %d", braia.params.speed.atual->max, braia.params.speed.atual->min, braia.params.speed.atual->base);
 
       xSemaphoreGive(xSemaphoreCarParams);
     }
@@ -330,6 +320,28 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 ////////////////END FUNÇÕES////////////////
 
 ////////////////START TASKS////////////////
+
+void vTaskVerifyState(void *pvParameters)
+{
+  valuesCar *carVal = &((dataCar *)pvParameters)->values;
+  paramsCar *carParam = &((dataCar *)pvParameters)->params;
+
+  if (carVal->latMarks.rightPassed < TRACK_RIGHT_MARKS /* || carVal.leftMarksPassed < TRACK_LEFT_MARKS */)
+    if (carVal->latMarks.leftPassed % 2 != 0)
+    {
+      carVal->state = CAR_IN_CURVE;
+      carParam->PID.atual = &carParam->PID.reta;
+      carParam->speed.atual = &carParam->speed.reta;
+    }
+    else
+    {
+      carVal->state = CAR_IN_LINE;
+      carParam->PID.atual = &carParam->PID.curva;
+      carParam->speed.atual = &carParam->speed.curva;
+    }
+  else
+    carVal->state = CAR_STOPPED;
+}
 
 void vTaskMotors(void *pvParameters)
 {
@@ -443,17 +455,17 @@ void vTaskPID(void *pvParameters)
     integral = integral + proportional;
     last_proportional = proportional;
 
-    P = proportional * carParam->PID.Kp;
-    D = derivative * carParam->PID.Kd;
-    I = integral * carParam->PID.Ki;
+    P = proportional * carParam->PID.atual->Kp;
+    D = derivative * carParam->PID.atual->Kd;
+    I = integral * carParam->PID.atual->Ki;
 
     // PID
     carVal->PID.output = P + I + D;
 
     // Calculo de velocidade do motor
 
-    carVal->speed.right = constrain(carParam->speed.base - static_cast<int8_t>(carVal->PID.output), carParam->speed.min, carParam->speed.max);
-    carVal->speed.left = constrain(carParam->speed.base + static_cast<int8_t>(carVal->PID.output), carParam->speed.min, carParam->speed.max);
+    carVal->speed.right = constrain(carParam->speed.atual->base - static_cast<int8_t>(carVal->PID.output), carParam->speed.atual->min, carParam->speed.atual->max);
+    carVal->speed.left = constrain(carParam->speed.atual->base + static_cast<int8_t>(carVal->PID.output), carParam->speed.atual->min, carParam->speed.atual->max);
 
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
@@ -462,7 +474,7 @@ void vTaskPID(void *pvParameters)
 void vTaskCarStatus(void *pvParameters)
 {
   valuesCar *carVal = &((dataCar *)pvParameters)->values;
-  paramsCar *carParam = &((dataCar *)pvParameters)->params;
+  //paramsCar *carParam = &((dataCar *)pvParameters)->params;
 
   ESP_LOGD("vTaskCarStatus", "Pausando...");
   vTaskSuspend(xTaskCarStatus);
@@ -575,6 +587,7 @@ void app_main(void)
   vSemaphoreCreateBinary(xSemaphoreCarValuesToESPNOW);
   vSemaphoreCreateBinary(xSemaphoreCarParamsToESPNOW);
 
+  xTaskCreate(vTaskVerifyState, "TaskVerifyState", 10000, &braia, 9, &xTaskVerifyState);
   xTaskCreate(vTaskESPNOW, "TaskESPNOW", 10000, &braia, 6, &xTaskESPNOW);
   xTaskCreate(vTaskSensors, "TaskSensors", 10000, &braia, 10, &xTaskSensors);
   xTaskCreate(vTaskPID, "TaskPID", 10000, &braia, 9, &xTaskPID);

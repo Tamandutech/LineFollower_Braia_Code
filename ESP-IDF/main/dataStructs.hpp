@@ -3,8 +3,9 @@
 
 enum CarStatus
 {
-    IN_CURVE = 0,
-    IN_LINE = 1
+    CAR_IN_CURVE,
+    CAR_IN_LINE,
+    CAR_STOPPED
 };
 
 enum enum_espNOW
@@ -109,6 +110,7 @@ struct paramSpeed
 {
     paramSpeedVals curva;
     paramSpeedVals reta;
+    paramSpeedVals *atual;
 };
 
 struct paramPIDVals
@@ -121,16 +123,16 @@ struct paramPIDVals
     paramPIDVals() : setpoint(3500), Kp(0.01), Ki(0.00), Kd(0.10){};
 };
 
-
 struct paramPID
 {
     paramPIDVals curva;
     paramPIDVals reta;
+    paramPIDVals *atual;
 };
 
 struct valuesCar
 {
-    int8_t state; // 0: parado, 1: linha, 2: curva
+    CarStatus state; // 0: parado, 1: linha, 2: curva
     valuesSpeed speed;
     valuesPID PID;
     valuesMarks latMarks;
@@ -139,7 +141,7 @@ struct valuesCar
     valuesSArray sArray;
     uint32_t lastUpdate;
 
-    valuesCar() : state(1), lastUpdate(0){};
+    valuesCar() : state(CAR_IN_LINE), lastUpdate(0){};
 };
 
 struct paramsCar
