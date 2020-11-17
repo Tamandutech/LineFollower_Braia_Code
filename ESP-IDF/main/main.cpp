@@ -432,13 +432,21 @@ void vTaskPID(void *pvParameters)
   valuesCar *carVal = &((dataCar *)pvParameters)->values;
   paramsCar *carParam = &((dataCar *)pvParameters)->params;
 
-  // Variaveis de calculo
-  float P = 0, I = 0, D = 0;
-  float last_proportional = 0;
-  float proportional = 0;
-  float derivative = 0;
-  float integral = 0;
-
+  // Variaveis de calculo para os pids da velocidade rotacional e translacional
+  float Kp = carParam->PID.atual->Kp;
+  float Ki = carParam->PID.atual->Ki*10E-3;
+  float Kd = carParam->PID.atual->Kd/10E-3;
+  float KpRot = carParam->PID.atual->KpRot;
+  float KiRot = carParam->PID.atual->KiRot*10E-3;
+  float KdRot = carParam->PID.atual->KdRot/10E-3;
+  //valores anteriores dos encoders para cálculo da velocidade de cada roda
+  int32_t last_encDir=0;
+  int32_t last_encEsq=0;
+  //erros anteriores
+  float errRot_ant=0,errRot_ant2=0;
+  float errTrans_ant=0,errTrans_ant2=0;
+  //saidas pid anteriores
+  float lastTransPid = 0,lastRotPid = 0;  
   // PID configs
   carVal->PID.input = &carVal->sArray.line;
 
@@ -449,23 +457,31 @@ void vTaskPID(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    // Calculo de valor lido
-    proportional = static_cast<float>(*carVal->PID.input) - 3500;
-    derivative = proportional - last_proportional;
-    integral = integral + proportional;
-    last_proportional = proportional;
-
-    P = proportional * carParam->PID.atual->Kp;
-    D = derivative * carParam->PID.atual->Kd;
-    I = integral * carParam->PID.atual->Ki;
-
-    // PID
-    carVal->PID.output = P + I + D;
-
+    //Velocidades de cada roda
+    float VelEncDir = (carVal->motEncs.encDir - last_encDir)/10E-3;
+    float VelEncEsq = (carVal->motEncs.encEsq - last_encEsq)/10E-3;
+    last_encDir = carVal->motEncs.encDir;
+    last_encEsq = carVal->motEncs.encEsq;
+    //Velocidade do carrinho
+    float VelRot = VelEncDir-VelEncEsq; // Rotacional
+    float VelTrans = VelEncDir+VelEncEsq; //Translacional
+    //Erros atuais, resta calcular o setpointRot em função da posição do carrinho na linha
+    float erroVelTrans = carParam->PID.atual->setpoint - VelTrans; 
+    float erroVelRot = carParam->PID.atual->setpointRot - VelRot;
+    //calculando Pids rotacional e translacional
+    float PidTrans = erroVelTrans*(Kp+Ki*5E-3+Kd*100) + errTrans_ant*(-Kp+Ki*5E-3-Kd*200) + errTrans_ant2*(Kd*100) + lastTransPid;
+    errTrans_ant2=errTrans_ant;
+    errTrans_ant=erroVelTrans;
+    float PidRot = erroVelRot*(KpRot+KiRot*5E-3+KdRot*100) + errRot_ant*(-Kp+Ki*5E-3-Kd*200) + errRot_ant2*(Kd*100) + lastRotPid;
+    errRot_ant2=errRot_ant;
+    errRot_ant=erroVelRot;
+    // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
+    carVal->PID.output = PidTrans;
+    carVal->PID.outputRot = PidRot;
     // Calculo de velocidade do motor
 
-    carVal->speed.right = constrain(carParam->speed.atual->base - static_cast<int8_t>(carVal->PID.output), carParam->speed.atual->min, carParam->speed.atual->max);
-    carVal->speed.left = constrain(carParam->speed.atual->base + static_cast<int8_t>(carVal->PID.output), carParam->speed.atual->min, carParam->speed.atual->max);
+    carVal->speed.right = constrain(static_cast<int16_t>(carVal->PID.output) + static_cast<int16_t>(carVal->PID.outputRot), carParam->speed.atual->min, carParam->speed.atual->max);
+    carVal->speed.left = constrain(static_cast<int16_t>(carVal->PID.output) - static_cast<int16_t>(carVal->PID.outputRot), carParam->speed.atual->min, carParam->speed.atual->max);
 
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }

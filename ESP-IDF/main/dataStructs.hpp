@@ -54,7 +54,6 @@ struct valuesEnc
 {
     int32_t encDir;
     int32_t encEsq;
-
     valuesEnc() : encDir(0), encEsq(0){};
 };
 
@@ -73,15 +72,15 @@ struct valuesPID
     // Parâmetros
     int16_t *input;
     float output;
+    float outputRot;
 
-    valuesPID() : input(NULL), output(0){};
+    valuesPID() : input(NULL), output(0), outputRot(0){};
 };
 
 struct valuesSpeed
 {
     int8_t right;
     int8_t left;
-
     valuesSpeed() : right(0), left(0){};
 };
 
@@ -116,11 +115,15 @@ struct paramSpeed
 struct paramPIDVals
 {
     int16_t setpoint;
+    int16_t setpointRot;
     float Kp;
     float Ki;
     float Kd;
+    float KpRot;
+    float KiRot;
+    float KdRot;
 
-    paramPIDVals() : setpoint(3500), Kp(0.01), Ki(0.00), Kd(0.10){};
+    paramPIDVals() : setpoint(3500),setpointRot(0), Kp(0.01), Ki(0.00), Kd(0.10), KpRot(0.01), KiRot(0.00), KdRot(0.10){};
 };
 
 struct paramPID
