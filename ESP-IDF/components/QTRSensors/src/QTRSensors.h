@@ -10,6 +10,7 @@
 #include <mcp3008_driver.h>
 #include <stdint.h>
 #include "esp_log.h"
+#include <vector>
 
 /// \brief Emitter behavior when taking readings.
 ///
@@ -553,9 +554,9 @@ public:
     /// Whether array pointers have been allocated and initialized.
     bool initialized = false;
     /// Lowest readings seen during calibration.
-    uint16_t *minimum = nullptr;
+    std::vector<uint16_t> minimum;
     /// Highest readings seen during calibration.
-    uint16_t *maximum = nullptr;
+    std::vector<uint16_t> maximum;
   };
 
   /// \name Calibration data

@@ -1,3 +1,6 @@
+#ifndef ROBOT_OLD_STRUCTS_H
+#define ROBOT_OLD_STRUCTS_H
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -70,7 +73,7 @@ struct valuesMarks
 
 struct valuesPID
 {
-    // Parâmetros
+    //Parâmetros
     int16_t *input;
     float output;
 
@@ -178,3 +181,5 @@ struct paramsSamples
     paramsSamples(paramsCar carParam, uint32_t time) : carParam(carParam), time(time){};
     paramsSamples(){};
 };
+
+#endif

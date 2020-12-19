@@ -365,19 +365,19 @@ void QTRSensors::resetCalibration()
 {
   for (uint8_t i = 0; i < _sensorCount; i++)
   {
-    if (calibrationOn.maximum)
+    if (calibrationOn.maximum.data())
     {
       calibrationOn.maximum[i] = 0;
     }
-    if (calibrationOff.maximum)
+    if (calibrationOff.maximum.data())
     {
       calibrationOff.maximum[i] = 0;
     }
-    if (calibrationOn.minimum)
+    if (calibrationOn.minimum.data())
     {
       calibrationOn.minimum[i] = _maxValue;
     }
-    if (calibrationOff.minimum)
+    if (calibrationOff.minimum.data())
     {
       calibrationOff.minimum[i] = _maxValue;
     }
@@ -389,25 +389,8 @@ void QTRSensors::setCalibrationOn(uint16_t maxChannel[], uint16_t minChannel[])
   // (Re)allocate and initialize the arrays if necessary.
   if (!calibrationOn.initialized)
   {
-    uint16_t *oldMaximum = calibrationOn.maximum;
-    calibrationOn.maximum = (uint16_t *)realloc(calibrationOn.maximum,
-                                                sizeof(uint16_t) * _sensorCount);
-    if (calibrationOn.maximum == nullptr)
-    {
-      // Memory allocation failed; don't continue.
-      free(oldMaximum); // deallocate any memory used by old array
-      return;
-    }
-
-    uint16_t *oldMinimum = calibrationOn.minimum;
-    calibrationOn.minimum = (uint16_t *)realloc(calibrationOn.minimum,
-                                                sizeof(uint16_t) * _sensorCount);
-    if (calibrationOn.minimum == nullptr)
-    {
-      // Memory allocation failed; don't continue.
-      free(oldMinimum); // deallocate any memory used by old array
-      return;
-    }
+    calibrationOn.maximum.reserve(_sensorCount);
+    calibrationOn.minimum.reserve(_sensorCount);
 
     // Initialize the max and min calibrated values to values that
     // will cause the first reading to update them.
@@ -443,25 +426,8 @@ void QTRSensors::calibrateOnOrOff(CalibrationData &calibration,
   // (Re)allocate and initialize the arrays if necessary.
   if (!calibration.initialized)
   {
-    uint16_t *oldMaximum = calibration.maximum;
-    calibration.maximum = (uint16_t *)realloc(calibration.maximum,
-                                              sizeof(uint16_t) * _sensorCount);
-    if (calibration.maximum == nullptr)
-    {
-      // Memory allocation failed; don't continue.
-      free(oldMaximum); // deallocate any memory used by old array
-      return;
-    }
-
-    uint16_t *oldMinimum = calibration.minimum;
-    calibration.minimum = (uint16_t *)realloc(calibration.minimum,
-                                              sizeof(uint16_t) * _sensorCount);
-    if (calibration.minimum == nullptr)
-    {
-      // Memory allocation failed; don't continue.
-      free(oldMinimum); // deallocate any memory used by old array
-      return;
-    }
+    calibration.maximum.reserve(_sensorCount);
+    calibration.minimum.reserve(_sensorCount);
 
     // Initialize the max and min calibrated values to values that
     // will cause the first reading to update them.
@@ -751,20 +717,20 @@ QTRSensors::~QTRSensors()
   {
     heap_caps_free(_sensorPinsESP);
   }
-  if (calibrationOn.maximum)
+  if (calibrationOn.maximum.data())
   {
-    heap_caps_free(calibrationOn.maximum);
+    calibrationOn.maximum.~vector();
   }
-  if (calibrationOff.maximum)
+  if (calibrationOff.maximum.data())
   {
-    heap_caps_free(calibrationOff.maximum);
+    calibrationOff.maximum.~vector();
   }
-  if (calibrationOn.minimum)
+  if (calibrationOn.minimum.data())
   {
-    heap_caps_free(calibrationOn.minimum);
+    calibrationOn.minimum.~vector();
   }
-  if (calibrationOff.minimum)
+  if (calibrationOff.minimum.data())
   {
-    heap_caps_free(calibrationOff.minimum);
+    calibrationOff.minimum.~vector();
   }
 }

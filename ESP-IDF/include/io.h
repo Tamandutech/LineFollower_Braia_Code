@@ -1,3 +1,8 @@
+#include "includes.hpp"
+
+#ifndef ROBOT_IO_H
+#define ROBOT_IO_H
+
 
 // Sensores laterais
 #define SL1 ADC1_CHANNEL_3 // GPIO39
@@ -21,7 +26,9 @@
 #define ENC_MOT_DIR_B 16
 
 // SPI do ADC (Utiliza VSPI do ESP32)
-#define ADC_CLK 18
-#define ADC_DOUT 19
-#define ADC_DIN 23
-#define ADC_CS 22
+#define ADC_CLK GPIO_NUM_18
+#define ADC_DOUT GPIO_NUM_19
+#define ADC_DIN GPIO_NUM_23
+#define ADC_CS GPIO_NUM_22
+
+#endif
