@@ -5,6 +5,23 @@ dataSpeed::dataSpeed(std::string name)
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s", name.c_str());
+
+    ESP_LOGD(tag, "Criando Semáforos: %s", name.c_str());
+    vSemaphoreCreateBinary(xSemaphoreMPR_MotEsq);
+    vSemaphoreCreateBinary(xSemaphoreMPR_MotDir);
+    vSemaphoreCreateBinary(xSemaphorerevsRight_inst);
+    vSemaphoreCreateBinary(xSemaphorerevsLeft_inst);
+    vSemaphoreCreateBinary(xSemaphorerevsCar_media);
+    vSemaphoreCreateBinary(xSemaphoreright_line);
+    vSemaphoreCreateBinary(xSemaphoreleft_line);
+    vSemaphoreCreateBinary(xSemaphoremax_line);
+    vSemaphoreCreateBinary(xSemaphoremin_line);
+    vSemaphoreCreateBinary(xSemaphorebase_line);
+    vSemaphoreCreateBinary(xSemaphoreright_curve);
+    vSemaphoreCreateBinary(xSemaphoreleft_curve);
+    vSemaphoreCreateBinary(xSemaphoremax_curve);
+    vSemaphoreCreateBinary(xSemaphoremin_curve);
+    vSemaphoreCreateBinary(xSemaphorebase_curve);
 }
 
 // Metodos de valores variaveis

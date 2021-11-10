@@ -6,6 +6,10 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     this->name = name;
     this->robotState = initialState;
     ESP_LOGD(tag, "Criando objeto: %s", name.c_str());
+    
+    ESP_LOGD(tag, "Criando Semáforos: %s", name.c_str());
+    vSemaphoreCreateBinary(xSemaphoreRobotState);
+
 }
 
 int RobotStatus::setState(CarState value)

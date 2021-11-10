@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string>
 
+#include "dataSLatMarks.h"
 #include "dataSpeed.h"
 #include "dataPID.h"
 #include "dataSensor.h"
@@ -22,6 +23,7 @@ public:
     dataPID *getPIDVel();
     dataPID *getPIDRot();
     RobotStatus *getStatus();
+    dataSLatMarks *getSLatMarks();
 
 private:
     std::string name;
@@ -31,6 +33,7 @@ private:
     dataPID *PIDVel;
     dataPID *PIDRot;
     dataSensor *sLat;
+    dataSLatMarks *sLatMarks;
     dataSensor *sArray;
     RobotStatus *Status;
 };
