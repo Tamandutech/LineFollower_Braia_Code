@@ -1,5 +1,8 @@
+
 #include "includes.hpp"
 #include "RobotData.h"
+
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
@@ -20,7 +23,7 @@ void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia)
   {
     sArray->calibrate();
     SLat->calibrate();
-    vTaskDelay(200 / portTick);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
   //leitura e armazenamento dos valores máximos e mínimos dos sensores obtidos na calibração
   std::vector<uint16_t> sArrayMaxes(sArray->calibrationOn.maximum,sArray->calibrationOn.maximum+sArray->getSensorCount());
@@ -49,33 +52,37 @@ void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia) // função
   braia->getsArray()->setChannels(sArraychannelsVec);
   braia->getsLat()->setChannels(SLatchannelsVec);
 
-  braia->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
+  //braia->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
 void processSLat(Robot *braia)
 {
+  bool sldir1 = gpio_get_level(GPIO_NUM_17);
+  bool sldir2 = gpio_get_level(GPIO_NUM_5);
   auto SLat = braia->getsLat();
-  auto latMarks = braia->getlatMarks();
-  if(SLat->getLine() < -250 || SLat->getLine() > 250)
-  {
-    if(SLat->getLine() < -250)
-    {
-      if(!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
-      latMarks->SetSlatEsq(true);
-      latMarks->SetSlatDir(false);
-    }
-    else
-    {
-      if(!(latMarks->getSLatDir())) latMarks->rightPassedInc();
-      latMarks->SetSlatDir(true);
-      latMarks->SetSlatEsq(false);
-    }
+  uint16_t slesq1 = SLat->getChannel(0);
+  uint16_t slesq2 = SLat->getChannel(1);
+  // auto latMarks = braia->getSLatMarks();
+  // if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2)
+  // {
+  //   if(slesq1 < 1500 || slesq2 < 1500)
+  //   {
+  //     if(!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
+  //     latMarks->SetSlatEsq(true);
+  //     latMarks->SetSlatDir(false);
+  //   }
+  //   else if(!sldir1 || !sldir2)
+  //   {
+  //     if(!(latMarks->getSLatDir())) latMarks->rightPassedInc();
+  //     latMarks->SetSlatDir(true);
+  //     latMarks->SetSlatEsq(false);
+  //   }
     
-  }
-  else
-  {
-    latMarks->SetSlatDir(false);
-    latMarks->SetSlatEsq(false);
-  } 
+  // }
+  // else
+  // {
+  //   latMarks->SetSlatDir(false);
+  //   latMarks->SetSlatEsq(false);
+  // } 
 
 }
 /////////////// INICIO TASKs DO ROBO ///////////////
@@ -110,8 +117,8 @@ void vTaskMotors(void *pvParameters)
     {
       motors.motorForward(0); // motor 0 ligado para frente
       motors.motorForward(1); // motor 1 ligado para frente
-      motors.motorSpeed(0,braia->getSpeed()->getSpeedRight()); // velocidade do motor 0
-      motors.motorSpeed(1,braia->getSpeed()->getSpeedLeft()); // velocidade do motor 1
+      motors.motorSpeed(0,braia->getSpeed()->getSpeedRight(braia->getStatus()->getState())); // velocidade do motor 0
+      motors.motorSpeed(1,braia->getSpeed()->getSpeedLeft(braia->getStatus()->getState())); // velocidade do motor 1
     }
     else
     {
@@ -135,19 +142,23 @@ void vTaskSensors(void *pvParameters)
 
   // Definindo GPIOs e configs para sensor Array
   sArray.setTypeMCP3008();
-  sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, ADC_DIN, ADC_DOUT, ADC_CLK, ADC_CS, 1350000, VSPI_HOST);
+  sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, (gpio_num_t)ADC_DIN, (gpio_num_t)ADC_DOUT, (gpio_num_t)ADC_CLK, (gpio_num_t)ADC_CS, 1350000, VSPI_HOST);
   sArray.setSamplesPerSensor(5);
 
   // Definindo GPIOs e configs para sensor Lateral
+  gpio_pad_select_gpio(17);
+  gpio_set_direction(GPIO_NUM_17,GPIO_MODE_INPUT);
+  gpio_pad_select_gpio(05);
+  gpio_set_direction(GPIO_NUM_5,GPIO_MODE_INPUT);
   sLat.setTypeAnalogESP();
-  sLat.setSensorPins((const adc1_channel_t[]){SL1, SL2, SL3, SL4}, 4);
+  sLat.setSensorPins((const adc1_channel_t[]){SL1, SL2}, 2);
   sLat.setSamplesPerSensor(5);
 
   calibAllsensors(&sArray,&sLat,braia); // calibração dos sensores
 
   vTaskResume(xTaskMotors);
   vTaskResume(xTaskPID);
-  vTaskResume(xTaskCarStatus);
+  // vTaskResume(xTaskCarStatus);
   vTaskResume(xTaskSpeed);
 
   ESP_LOGD(TAG, "Retomada!");
@@ -367,11 +378,19 @@ void app_main(void)
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
   braia = new Robot("Braia");
 
+  esp_log_level_set("*", ESP_LOG_DEBUG);        // set all components to ERROR level
+
   // Criacao das tasks e definindo seus parametros
   //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)
+
   xTaskCreate(vTaskMotors, "TaskMotors", 10000, braia, 9, &xTaskMotors);
+
   xTaskCreate(vTaskSensors, "TaskSensors", 10000, braia, 9, &xTaskSensors);
+
   xTaskCreate(vTaskPID, "TaskPID", 10000, braia, 9, &xTaskPID);
-  xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
+
   xTaskCreate(vTaskSpeed, "TaskSpeed", 10000, braia, 9, &xTaskSpeed);
+
+
+  xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
 }
