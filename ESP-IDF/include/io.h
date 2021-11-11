@@ -1,6 +1,8 @@
 // Sensores laterais
-#define SL1 39 // GPIO39
-#define SL2 36 // GPIO36
+
+#define SL1 ADC1_CHANNEL_3// GPIO39
+#define SL2 ADC1_CHANNEL_0 // GPIO36
+
 #define SL3 17 // GPIO17
 #define SL4 05 // GPIO05
 

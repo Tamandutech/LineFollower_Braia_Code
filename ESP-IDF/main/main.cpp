@@ -52,21 +52,25 @@ void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia) // função
   braia->getsArray()->setChannels(sArraychannelsVec);
   braia->getsLat()->setChannels(SLatchannelsVec);
 
-  braia->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
+  //braia->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
 void processSLat(Robot *braia)
 {
-  // auto SLat = braia->getsLat();
+  bool sldir1 = gpio_get_level(GPIO_NUM_17);
+  bool sldir2 = gpio_get_level(GPIO_NUM_5);
+  auto SLat = braia->getsLat();
+  uint16_t slesq1 = SLat->getChannel(0);
+  uint16_t slesq2 = SLat->getChannel(1);
   // auto latMarks = braia->getSLatMarks();
-  // if(SLat->getLine() < -250 || SLat->getLine() > 250)
+  // if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2)
   // {
-  //   if(SLat->getLine() < -250)
+  //   if(slesq1 < 1500 || slesq2 < 1500)
   //   {
   //     if(!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
   //     latMarks->SetSlatEsq(true);
   //     latMarks->SetSlatDir(false);
   //   }
-  //   else
+  //   else if(!sldir1 || !sldir2)
   //   {
   //     if(!(latMarks->getSLatDir())) latMarks->rightPassedInc();
   //     latMarks->SetSlatDir(true);
@@ -142,8 +146,12 @@ void vTaskSensors(void *pvParameters)
   sArray.setSamplesPerSensor(5);
 
   // Definindo GPIOs e configs para sensor Lateral
+  gpio_pad_select_gpio(17);
+  gpio_set_direction(GPIO_NUM_17,GPIO_MODE_INPUT);
+  gpio_pad_select_gpio(05);
+  gpio_set_direction(GPIO_NUM_5,GPIO_MODE_INPUT);
   sLat.setTypeAnalogESP();
-  sLat.setSensorPins((const adc1_channel_t[]){SL1, SL2, SL3, SL4}, 4);
+  sLat.setSensorPins((const adc1_channel_t[]){SL1, SL2}, 2);
   sLat.setSamplesPerSensor(5);
 
   calibAllsensors(&sArray,&sLat,braia); // calibração dos sensores

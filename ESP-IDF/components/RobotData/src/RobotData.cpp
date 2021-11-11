@@ -9,7 +9,9 @@ Robot::Robot(std::string name)
     // Instânciando objetos componentes do Robô.
     ESP_LOGD(tag, "Criando sub-objetos para o %s", "Robô");
 
-    // this->sLatMarks = new dataSLatMarks("sLatMarks");
+
+    //this->sLatMarks = new dataSLatMarks("sLatMarks");
+
     this->PIDVel = new dataPID("PIDVel");
     this->PIDRot = new dataPID("PIDRot");
     this->speed = new dataSpeed("speed");
