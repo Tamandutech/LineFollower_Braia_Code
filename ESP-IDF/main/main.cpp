@@ -61,28 +61,28 @@ void processSLat(Robot *braia)
   auto SLat = braia->getsLat();
   uint16_t slesq1 = SLat->getChannel(0);
   uint16_t slesq2 = SLat->getChannel(1);
-  // auto latMarks = braia->getSLatMarks();
-  // if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2)
-  // {
-  //   if(slesq1 < 1500 || slesq2 < 1500)
-  //   {
-  //     if(!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
-  //     latMarks->SetSlatEsq(true);
-  //     latMarks->SetSlatDir(false);
-  //   }
-  //   else if(!sldir1 || !sldir2)
-  //   {
-  //     if(!(latMarks->getSLatDir())) latMarks->rightPassedInc();
-  //     latMarks->SetSlatDir(true);
-  //     latMarks->SetSlatEsq(false);
-  //   }
+  auto latMarks = braia->getSLatMarks();
+  if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2)
+  {
+    if(slesq1 < 1500 || slesq2 < 1500)
+    {
+      if(!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
+      latMarks->SetSLatEsq(true);
+      latMarks->SetSLatDir(false);
+    }
+    else if(!sldir1 || !sldir2)
+    {
+      if(!(latMarks->getSLatDir())) latMarks->rightPassedInc();
+      latMarks->SetSLatDir(true);
+      latMarks->SetSLatEsq(false);
+    }
     
-  // }
-  // else
-  // {
-  //   latMarks->SetSlatDir(false);
-  //   latMarks->SetSlatEsq(false);
-  // } 
+  }
+  else
+  {
+    latMarks->SetSLatDir(false);
+    latMarks->SetSLatEsq(false);
+  } 
 
 }
 /////////////// INICIO TASKs DO ROBO ///////////////
