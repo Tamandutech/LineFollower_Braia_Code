@@ -16,20 +16,20 @@ TaskHandle_t xTaskPID;
 TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskSpeed;
 
-void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia)
+void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia)
 {
   //Calibração dos dos sensores laterais e array
-  for(uint16_t i= 0;i<200;i++)
+  for (uint16_t i = 0; i < 200; i++)
   {
     sArray->calibrate();
     SLat->calibrate();
-    vTaskDelay(200 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
   //leitura e armazenamento dos valores máximos e mínimos dos sensores obtidos na calibração
-  std::vector<uint16_t> sArrayMaxes(sArray->calibrationOn.maximum,sArray->calibrationOn.maximum+sArray->getSensorCount());
-  std::vector<uint16_t> sArrayMins(sArray->calibrationOn.minimum,sArray->calibrationOn.minimum+sArray->getSensorCount());
-  std::vector<uint16_t> SLatMaxes(SLat->calibrationOn.maximum,SLat->calibrationOn.maximum+SLat->getSensorCount());
-  std::vector<uint16_t> SLatMins(SLat->calibrationOn.minimum,SLat->calibrationOn.minimum+SLat->getSensorCount());
+  std::vector<uint16_t> sArrayMaxes(sArray->calibrationOn.maximum, sArray->calibrationOn.maximum + sArray->getSensorCount());
+  std::vector<uint16_t> sArrayMins(sArray->calibrationOn.minimum, sArray->calibrationOn.minimum + sArray->getSensorCount());
+  std::vector<uint16_t> SLatMaxes(SLat->calibrationOn.maximum, SLat->calibrationOn.maximum + SLat->getSensorCount());
+  std::vector<uint16_t> SLatMins(SLat->calibrationOn.minimum, SLat->calibrationOn.minimum + SLat->getSensorCount());
 
   //armazenamento dos valores máximos e mínimos dos sensores no objeto Braia
   braia->getsArray()->setChannelsMaxes(sArrayMaxes);
@@ -37,20 +37,24 @@ void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia)
   braia->getsLat()->setChannelsMaxes(SLatMaxes);
   braia->getsLat()->setChannelsMins(SLatMins);
 }
-void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia) // função leitura dos sensores
+void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia) // função leitura dos sensores
 {
   //Arrays para armazenar leitura bruta dos sensores array e laterais
   uint16_t sArraychannels[sArray->getSensorCount()];
   uint16_t SLatchannels[SLat->getSensorCount()];
 
-  braia->getsArray()->setLine(sArray->readLineWhite(sArraychannels)); // cálculo dos valores do sensor array
-  SLat->readCalibrated(SLatchannels); //leitura dos sensores laterais
-  std::vector<uint16_t> sArraychannelsVec(sArraychannels,sArraychannels+sArray->getSensorCount()); // vector(array) com os valores do sensor array
-  std::vector<uint16_t> SLatchannelsVec(SLatchannels,SLatchannels+SLat->getSensorCount()); // vector(array) com os valores dos sensores laterais
+  braia->getsArray()->setLine(sArray->readLineWhite(sArraychannels));                                 // cálculo dos valores do sensor array
+  SLat->readCalibrated(SLatchannels);                                                                 //leitura dos sensores laterais
+  std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array
+  std::vector<uint16_t> SLatchannelsVec(SLatchannels, SLatchannels + SLat->getSensorCount());         // vector(array) com os valores dos sensores laterais
 
   //armazenando da leitura bruta do sensor array e lateral no objeto Braia
   braia->getsArray()->setChannels(sArraychannelsVec);
   braia->getsLat()->setChannels(SLatchannelsVec);
+
+  ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+  ESP_LOGD("getSensors", "Linha: %d", braia->getsArray()->getLine());
+  ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
 
   //braia->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
@@ -58,32 +62,35 @@ void processSLat(Robot *braia)
 {
   bool sldir1 = gpio_get_level(GPIO_NUM_17);
   bool sldir2 = gpio_get_level(GPIO_NUM_5);
+
+  ESP_LOGD("processSLat","Laterais (Direira): %d | %d", sldir1, sldir2);
+
   auto SLat = braia->getsLat();
   uint16_t slesq1 = SLat->getChannel(0);
   uint16_t slesq2 = SLat->getChannel(1);
   auto latMarks = braia->getSLatMarks();
-  if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
+  if (slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
   {
-    if(slesq1 < 1500 || slesq2 < 1500)
+    if (slesq1 < 1500 || slesq2 < 1500)
     {
-      if(!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
+      if (!(latMarks->getSLatEsq()))
+        latMarks->leftPassedInc();
       latMarks->SetSLatEsq(true);
       latMarks->SetSLatDir(false);
     }
-    else if(!sldir1 || !sldir2)
+    else if (!sldir1 || !sldir2)
     {
-      if(!(latMarks->getSLatDir())) latMarks->rightPassedInc();
+      if (!(latMarks->getSLatDir()))
+        latMarks->rightPassedInc();
       latMarks->SetSLatDir(true);
       latMarks->SetSLatEsq(false);
     }
-    
   }
   else
   {
     latMarks->SetSLatDir(false);
     latMarks->SetSLatEsq(false);
-  } 
-
+  }
 }
 /////////////// INICIO TASKs DO ROBO ///////////////
 
@@ -113,17 +120,17 @@ void vTaskMotors(void *pvParameters)
   // Loop
   for (;;)
   {
-    if(braia->getStatus()->getState()!=CAR_STOPPED) // verificar se o carrinho deveria se mover
+    if (braia->getStatus()->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
-      motors.motorForward(0); // motor 0 ligado para frente
-      motors.motorForward(1); // motor 1 ligado para frente
-      motors.motorSpeed(0,braia->getSpeed()->getSpeedRight(braia->getStatus()->getState())); // velocidade do motor 0
-      motors.motorSpeed(1,braia->getSpeed()->getSpeedLeft(braia->getStatus()->getState())); // velocidade do motor 1
+      motors.motorForward(0);                                                                 // motor 0 ligado para frente
+      motors.motorForward(1);                                                                 // motor 1 ligado para frente
+      motors.motorSpeed(0, braia->getSpeed()->getSpeedRight(braia->getStatus()->getState())); // velocidade do motor 0
+      motors.motorSpeed(1, braia->getSpeed()->getSpeedLeft(braia->getStatus()->getState()));  // velocidade do motor 1
     }
     else
     {
       motors.motorsStop(); // parar motores
-    }   
+    }
     vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);
   }
 }
@@ -142,19 +149,19 @@ void vTaskSensors(void *pvParameters)
 
   // Definindo GPIOs e configs para sensor Array
   sArray.setTypeMCP3008();
-  sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, (gpio_num_t)ADC_DIN, (gpio_num_t)ADC_DOUT, (gpio_num_t)ADC_CLK, (gpio_num_t)ADC_CS, 1350000, VSPI_HOST);
+  sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, (gpio_num_t)ADC_DOUT, (gpio_num_t)ADC_DIN, (gpio_num_t)ADC_CLK, (gpio_num_t)ADC_CS, 1350000, VSPI_HOST);
   sArray.setSamplesPerSensor(5);
 
   // Definindo GPIOs e configs para sensor Lateral
   gpio_pad_select_gpio(17);
-  gpio_set_direction(GPIO_NUM_17,GPIO_MODE_INPUT);
+  gpio_set_direction(GPIO_NUM_17, GPIO_MODE_INPUT);
   gpio_pad_select_gpio(05);
-  gpio_set_direction(GPIO_NUM_5,GPIO_MODE_INPUT);
+  gpio_set_direction(GPIO_NUM_5, GPIO_MODE_INPUT);
   sLat.setTypeAnalogESP();
   sLat.setSensorPins((const adc1_channel_t[]){SL1, SL2}, 2);
   sLat.setSamplesPerSensor(5);
 
-  calibAllsensors(&sArray,&sLat,braia); // calibração dos sensores
+  calibAllsensors(&sArray, &sLat, braia); // calibração dos sensores
 
   vTaskResume(xTaskMotors);
   vTaskResume(xTaskPID);
@@ -169,7 +176,7 @@ void vTaskSensors(void *pvParameters)
   // Loop
   for (;;)
   {
-    getSensors(&sArray,&sLat,braia); // leitura dos sensores
+    getSensors(&sArray, &sLat, braia); // leitura dos sensores
     processSLat(braia);
 
     vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);
@@ -344,23 +351,26 @@ void vTaskSpeed(void *pvParameters)
     // Calculos de velocidade instantanea (RPM)
     speed->setRPMLeft_inst(                         // -> Calculo velocidade instantanea motor esquerdo
         (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
-          / (float)speed->getMPR_MotEsq())                 // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
+          / (float)speed->getMPR_MotEsq())          // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
          / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
          ));
     lastPulseLeft = enc_motEsq.getCount(); // Salva pulsos do encoder para ser usado no proximo calculo
 
     speed->setRPMRight_inst(                        // -> Calculo velocidade instantanea motor direito
         (((enc_motDir.getCount() - lastPulseRight)  // Delta de pulsos do encoder esquerdo
-          / (float)speed->getMPR_MotDir())                 // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
+          / (float)speed->getMPR_MotDir())          // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
          / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
          ));
     lastPulseRight = enc_motDir.getCount(); // Salva pulsos do motor para ser usado no proximo calculo
 
     // Calculo de velocidade media do carro (RPM)
-    speed->setRPMCar_media(                                                                        // -> Calculo velocidade media do carro
+    speed->setRPMCar_media(                                                                                      // -> Calculo velocidade media do carro
         (((lastPulseRight / (float)speed->getMPR_MotDir() + lastPulseLeft / (float)speed->getMPR_MotEsq())) / 2) // Revolucoes media desde inicializacao
-        / ((float)deltaTimeMS_media / (float)60000)                                                // Divisao do delta tempo em minutos para calculo de RPM
+        / ((float)deltaTimeMS_media / (float)60000)                                                              // Divisao do delta tempo em minutos para calculo de RPM
     );
+
+    // ESP_LOGD("vTaskSpeed", "encDir: %d", enc_motDir.getCount());
+    // ESP_LOGD("vTaskSpeed", "encEsq: %d", enc_motEsq.getCount());
 
     vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
   }
@@ -378,7 +388,7 @@ void app_main(void)
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
   braia = new Robot("Braia");
 
-  esp_log_level_set("*", ESP_LOG_DEBUG);        // set all components to ERROR level
+  esp_log_level_set("*", ESP_LOG_DEBUG); // set all components to ERROR level
 
   // Criacao das tasks e definindo seus parametros
   //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)
@@ -390,7 +400,6 @@ void app_main(void)
   xTaskCreate(vTaskPID, "TaskPID", 10000, braia, 9, &xTaskPID);
 
   xTaskCreate(vTaskSpeed, "TaskSpeed", 10000, braia, 9, &xTaskSpeed);
-
 
   xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
 }

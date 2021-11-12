@@ -546,9 +546,9 @@ void QTRSensors::readCalibrated(uint16_t *sensorValues, QTRReadMode mode)
 
     sensorValues[i] = value;
   }
-  /* ESP_LOGD("Sensores", "%d | %d | %d | %d | %d | %d | %d | %d\n", sensorValues[0], sensorValues[1],
-           sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5],
-           sensorValues[6], sensorValues[7]); */
+  ESP_LOGD("QTRSensors", "%d | %d | %d | %d | %d | %d | %d | %d\n", sensorValues[0], sensorValues[1],
+          sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5],
+          sensorValues[6], sensorValues[7]);
 }
 
 // Reads the first of every [step] sensors, starting with [start] (0-indexed,
@@ -624,7 +624,7 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
         // add the conversion result
-        //sensorValues[i] += adc1_get_raw((adc1_channel_t)_sensorPins[i]);
+        sensorValues[i] += adc1_get_raw((adc1_channel_t)_sensorPins[i]);
       }
     }
 
