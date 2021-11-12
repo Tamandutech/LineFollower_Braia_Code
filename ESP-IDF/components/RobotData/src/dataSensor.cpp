@@ -5,7 +5,7 @@ dataSensor::dataSensor(uint16_t qtdChannels, std::string name)
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s", name.c_str());
-
+    this->qtdChannels = qtdChannels;
     // Alocando espaço para as variáveis
     ESP_LOGD(tag, "Alocando espaço na memória paras as variáveis, quantidade de canais: %d", qtdChannels);
     channel.reserve(qtdChannels);

@@ -47,7 +47,7 @@ void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot * braia) // função
   SLat->readCalibrated(SLatchannels); //leitura dos sensores laterais
   std::vector<uint16_t> sArraychannelsVec(sArraychannels,sArraychannels+sArray->getSensorCount()); // vector(array) com os valores do sensor array
   std::vector<uint16_t> SLatchannelsVec(SLatchannels,SLatchannels+SLat->getSensorCount()); // vector(array) com os valores dos sensores laterais
-  
+
   //armazenando da leitura bruta do sensor array e lateral no objeto Braia
   braia->getsArray()->setChannels(sArraychannelsVec);
   braia->getsLat()->setChannels(SLatchannelsVec);
@@ -62,7 +62,7 @@ void processSLat(Robot *braia)
   uint16_t slesq1 = SLat->getChannel(0);
   uint16_t slesq2 = SLat->getChannel(1);
   auto latMarks = braia->getSLatMarks();
-  if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2)
+  if(slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
   {
     if(slesq1 < 1500 || slesq2 < 1500)
     {
