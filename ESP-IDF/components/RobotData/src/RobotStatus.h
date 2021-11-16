@@ -21,6 +21,9 @@ public:
 
     int setState(CarState actualState);
     CarState getState();
+    
+    int setMapping(bool value);
+    bool getMapping();
 
 private:
     std::string name;
@@ -28,6 +31,8 @@ private:
 
     CarState robotState;
     SemaphoreHandle_t xSemaphoreRobotState;
+    bool robotMap;
+    SemaphoreHandle_t xSemaphoreRobotMap;
 };
 
 #endif

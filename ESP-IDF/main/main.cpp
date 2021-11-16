@@ -127,8 +127,8 @@ void vTaskMotors(void *pvParameters)
     {
       motors.motorForward(0);                                         // motor 0 ligado para frente
       motors.motorForward(1);                                         // motor 1 ligado para frente
-      motors.motorSpeed(0, speed->getSpeedRight(status->getState())); // velocidade do motor 0
-      motors.motorSpeed(1, speed->getSpeedLeft(status->getState()));  // velocidade do motor 1
+      motors.motorSpeed(0, speed->getSpeedLeft(status->getState()));  // velocidade do motor 0
+      motors.motorSpeed(1, speed->getSpeedRight(status->getState())); // velocidade do motor 1
     }
     else
     {
@@ -236,7 +236,7 @@ void vTaskPID(void *pvParameters)
     float VelTrans = VelEncDir + VelEncEsq; //Translacional
 
     //Erros atuais
-    PIDRot->setSetpoint((braia->getsArray()->getLine() - 3500) / 7); // cálculo do setpoint rotacional
+    PIDRot->setSetpoint((3500 - braia->getsArray()->getLine()) / 7); // cálculo do setpoint rotacional
     float erroVelTrans = (float)(PIDTrans->getSetpoint()) - VelTrans;
     float erroVelRot = (float)(PIDRot->getSetpoint()) - VelRot;
 
@@ -282,10 +282,12 @@ void vTaskPID(void *pvParameters)
 void vTaskCarStatus(void *pvParameters)
 {
   static const char *TAG = "vTaskCarStatus";
+  #define Marks 40 // marcas laterais esquerda na pista 
 
   Robot *braia = (Robot *)pvParameters;
   RobotStatus *status = braia->getStatus();
-
+  dataSpeed *speed = braia->getSpeed();
+  
   // Setup
   ESP_LOGD(TAG, "Task criada!");
 
@@ -296,10 +298,39 @@ void vTaskCarStatus(void *pvParameters)
   // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
+  // Matriz com dados de media encoders,linha do carrinho
+  int16_t Manualmap[2][40]={{0,0,0,0,0},   // media
+                            {0,0,0,0,0}}; // linha
+
   // Loop
   for (;;)
   {
     ESP_LOGD(TAG, "CarStatus: %d", status->getState());
+    if(!status->getMapping() && braia->getSLatMarks()->getrightMarks() < 2){ // define o status do carrinho se o mapeamento não estiver ocorrendo
+      int16_t mediaEnc = (speed->getEncRight() + speed->getEncLeft())/2; // calcula media dos encodrrs
+      int mark = 0;
+      for(mark=0; mark < Marks; mark++){ // Verifica a contagem do encoder e atribui o estado ao robô
+        if(mark < Marks-1){
+          int16_t Manualmedia = Manualmap[0][mark];
+          int16_t ManualmediaNxt = Manualmap[0][mark+1];
+          if(mediaEnc >= Manualmedia && mediaEnc <= ManualmediaNxt){ // análise do valor das médias dos encoders
+            CarState estado;
+            if(Manualmap[1][mark] == CAR_IN_LINE) estado = CAR_IN_LINE; 
+            else estado = CAR_IN_CURVE;
+            status->setState(estado);
+            break;
+          }
+        }
+        else{
+          CarState estado;
+          if(Manualmap[1][mark] == CAR_IN_LINE) estado = CAR_IN_LINE;
+          else estado = CAR_IN_CURVE;
+          status->setState(estado);
+          break;
+        }
+      }
+
+    }
 
     xLastWakeTime = xTaskGetTickCount();
     vTaskDelayUntil(&xLastWakeTime, 2000 / portTICK_PERIOD_MS);
@@ -320,6 +351,10 @@ void vTaskSpeed(void *pvParameters)
   Robot *braia = (Robot *)pvParameters;
   dataSpeed *speed = braia->getSpeed();
 
+  //Pulsos para uma revolução de cada encoder (revolução*redução)
+  speed->setMPR_MotDir(20,30);
+  speed->setMPR_MotEsq(20,30);
+
   // Componente de gerenciamento dos encoders
   ESP32Encoder enc_motEsq;
   ESP32Encoder enc_motDir;
@@ -327,10 +362,6 @@ void vTaskSpeed(void *pvParameters)
   // GPIOs dos encoders dos encoders dos motores
   enc_motEsq.attachHalfQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
   enc_motDir.attachHalfQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
-
-  // Quando for começar a utilizar, necessario limpeza da contagem.
-  enc_motEsq.clearCount();
-  enc_motDir.clearCount();
 
   TickType_t lastTicksRevsCalc = 0;
   int32_t lastPulseRight = 0;
@@ -351,6 +382,10 @@ void vTaskSpeed(void *pvParameters)
 
   // Variavel contendo quantidade de pulsos inicial do carro
   initialTicksCar = xTaskGetTickCount();
+
+  // Quando for começar a utilizar, necessario limpeza da contagem.
+  enc_motEsq.clearCount();
+  enc_motDir.clearCount();
   // Loop
   for (;;)
   {
@@ -366,6 +401,7 @@ void vTaskSpeed(void *pvParameters)
          / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
          ));
     lastPulseLeft = enc_motEsq.getCount(); // Salva pulsos do encoder para ser usado no proximo calculo
+    speed->setEncLeft(lastPulseLeft); //Salva pulsos do encoder esquerdo na classe speed
 
     speed->setRPMRight_inst(                        // -> Calculo velocidade instantanea motor direito
         (((enc_motDir.getCount() - lastPulseRight)  // Delta de pulsos do encoder esquerdo
@@ -373,6 +409,7 @@ void vTaskSpeed(void *pvParameters)
          / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
          ));
     lastPulseRight = enc_motDir.getCount(); // Salva pulsos do motor para ser usado no proximo calculo
+    speed->setEncRight(lastPulseRight); //Salva pulsos do encoder direito na classe speed
 
     // Calculo de velocidade media do carro (RPM)
     speed->setRPMCar_media(                                                                                      // -> Calculo velocidade media do carro
@@ -398,25 +435,66 @@ void app_main(void)
 {
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
   braia = new Robot("Braia");
+  
+  braia->getStatus()->setMapping(false);
+  bool mapping = braia->getStatus()->getMapping();
+  braia->getStatus()->setState(CAR_IN_LINE);
+  if(mapping){
 
-  braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
-  braia->getSpeed()->setSpeedBase(40, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedBase(30, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(30, CAR_IN_CURVE);
 
-  braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
-  braia->getSpeed()->setSpeedMax(80, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMax(60, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
 
-  braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-  braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-  braia->getPIDRot()->setKd(0.10, CAR_IN_LINE);
-  braia->getPIDVel()->setKd(0.10, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.10, CAR_IN_LINE);
+    braia->getPIDVel()->setKd(0.10, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.10, CAR_IN_CURVE);
+    braia->getPIDVel()->setKd(0.10, CAR_IN_CURVE);
 
-  braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-  braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
+    braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
+    braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
+    braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
+    braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-  braia->getPIDRot()->setKp(0.01, CAR_IN_LINE);
-  braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
 
+    braia->getPIDVel()->setSetpoint(400);
+  }
+  else{
+    braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(40, CAR_IN_CURVE);
+
+    braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMax(80, CAR_IN_CURVE);
+
+    braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
+
+    braia->getPIDRot()->setKd(0.10, CAR_IN_LINE);
+    braia->getPIDVel()->setKd(0.10, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.10, CAR_IN_CURVE);
+    braia->getPIDVel()->setKd(0.10, CAR_IN_CURVE);
+
+    braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
+    braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
+    braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
+    braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
+
+    braia->getPIDRot()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
+
+    braia->getPIDVel()->setSetpoint(800);
+
+  }
   // Criacao das tasks e definindo seus parametros
   //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)
 

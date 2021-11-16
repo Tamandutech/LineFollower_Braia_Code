@@ -22,6 +22,8 @@ dataSpeed::dataSpeed(std::string name)
     vSemaphoreCreateBinary(xSemaphoremax_curve);
     vSemaphoreCreateBinary(xSemaphoremin_curve);
     vSemaphoreCreateBinary(xSemaphorebase_curve);
+    vSemaphoreCreateBinary(xSemaphoreEncLeft);
+    vSemaphoreCreateBinary(xSemaphoreEncRight);
 }
 
 // Metodos de valores variaveis
@@ -301,4 +303,16 @@ DataFunction dataSpeed::setRPMCar_media(int16_t value){
 }
 int16_t dataSpeed::getRPMCar_media(){
     return getVar(&revsCar_media, &xSemaphorerevsCar_media);
+}
+DataFunction dataSpeed::setEncRight(int16_t value){
+    return setVar(value, &EncRight, &xSemaphoreEncRight);
+}
+int16_t dataSpeed::getEncRight(){
+    return getVar(&EncRight, &xSemaphoreEncRight);
+}
+DataFunction dataSpeed::setEncLeft(int16_t value){
+    return setVar(value, &EncLeft, &xSemaphoreEncLeft);
+}
+int16_t dataSpeed::getEncLeft(){
+    return getVar(&EncLeft, &xSemaphoreEncLeft);
 }
