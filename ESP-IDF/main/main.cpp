@@ -63,7 +63,7 @@ void processSLat(Robot *braia)
   bool sldir1 = gpio_get_level(GPIO_NUM_17);
   bool sldir2 = gpio_get_level(GPIO_NUM_5);
 
-  ESP_LOGD("processSLat","Laterais (Direira): %d | %d", sldir1, sldir2);
+  ESP_LOGD("processSLat", "Laterais (Direira): %d | %d", sldir1, sldir2);
 
   auto SLat = braia->getsLat();
   uint16_t slesq1 = SLat->getChannel(0);
@@ -100,7 +100,10 @@ void vTaskMotors(void *pvParameters)
   //Robot *braia = (Robot *)pvParameters;
   // Setup
   ESP_LOGD(TAG, "Task criada!");
+
   Robot *braia = (Robot *)pvParameters;
+  dataSpeed *speed = braia->getSpeed();
+  RobotStatus *status = braia->getStatus();
 
   // Componente de controle dos motores
   ESP32MotorControl motors;
@@ -114,18 +117,18 @@ void vTaskMotors(void *pvParameters)
 
   ESP_LOGD(TAG, "Retomada!");
 
-  // Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
+  // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   // Loop
   for (;;)
   {
-    if (braia->getStatus()->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
+    if (status->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
-      motors.motorForward(0);                                                                 // motor 0 ligado para frente
-      motors.motorForward(1);                                                                 // motor 1 ligado para frente
-      motors.motorSpeed(0, braia->getSpeed()->getSpeedRight(braia->getStatus()->getState())); // velocidade do motor 0
-      motors.motorSpeed(1, braia->getSpeed()->getSpeedLeft(braia->getStatus()->getState()));  // velocidade do motor 1
+      motors.motorForward(0);                                         // motor 0 ligado para frente
+      motors.motorForward(1);                                         // motor 1 ligado para frente
+      motors.motorSpeed(0, speed->getSpeedRight(status->getState())); // velocidade do motor 0
+      motors.motorSpeed(1, speed->getSpeedLeft(status->getState()));  // velocidade do motor 1
     }
     else
     {
@@ -170,7 +173,7 @@ void vTaskSensors(void *pvParameters)
 
   ESP_LOGD(TAG, "Retomada!");
 
-  // Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
+  // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   // Loop
@@ -242,6 +245,7 @@ void vTaskPID(void *pvParameters)
     errTrans_ant2 = errTrans_ant;
     errTrans_ant = erroVelTrans;
     lastTransPid = PidTrans;
+
     float PidRot = erroVelRot * (KpRot + KiRot * h1 + KdRot * h2) + errRot_ant * (-KpVel + KiVel * h1 - KdVel * h2x2) + errRot_ant2 * (KdVel * h2) + lastRotPid;
     errRot_ant2 = errRot_ant;
     errRot_ant = erroVelRot;
@@ -268,6 +272,8 @@ void vTaskPID(void *pvParameters)
         constrain((int16_t)(PIDTrans->getOutput()) - (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
         braia->getStatus()->getState());
 
+    ESP_LOGD("vTaskPID", "speedMin: %d | speedMax: %d", speedMin, speedMin);
+
     vTaskResume(xTaskCarStatus);
     vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
   }
@@ -276,7 +282,9 @@ void vTaskPID(void *pvParameters)
 void vTaskCarStatus(void *pvParameters)
 {
   static const char *TAG = "vTaskCarStatus";
-  //Robot *braia = (Robot *)pvParameters;
+
+  Robot *braia = (Robot *)pvParameters;
+  RobotStatus *status = braia->getStatus();
 
   // Setup
   ESP_LOGD(TAG, "Task criada!");
@@ -285,13 +293,16 @@ void vTaskCarStatus(void *pvParameters)
 
   ESP_LOGD(TAG, "Retomada!");
 
-  // Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
+  // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   // Loop
   for (;;)
   {
-    vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);
+    ESP_LOGD(TAG, "CarStatus: %d", status->getState());
+
+    xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil(&xLastWakeTime, 2000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -312,6 +323,7 @@ void vTaskSpeed(void *pvParameters)
   // Componente de gerenciamento dos encoders
   ESP32Encoder enc_motEsq;
   ESP32Encoder enc_motDir;
+
   // GPIOs dos encoders dos encoders dos motores
   enc_motEsq.attachHalfQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
   enc_motDir.attachHalfQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
@@ -323,8 +335,7 @@ void vTaskSpeed(void *pvParameters)
   TickType_t lastTicksRevsCalc = 0;
   int32_t lastPulseRight = 0;
   int32_t lastPulseLeft = 0;
-  // delta entre ultimo calculo e o atual em millisegundos
-  uint16_t deltaTimeMS_inst;
+  uint16_t deltaTimeMS_inst; // delta entre ultimo calculo e o atual em millisegundos
 
   TickType_t initialTicksCar = 0;
   uint16_t deltaTimeMS_media;
@@ -335,7 +346,7 @@ void vTaskSpeed(void *pvParameters)
 
   ESP_LOGD(TAG, "Retomada!");
 
-  // Variavel necerraria para funcionaliade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
+  // Variavel necerraria para funcionaliade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   // Variavel contendo quantidade de pulsos inicial do carro
@@ -388,7 +399,23 @@ void app_main(void)
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
   braia = new Robot("Braia");
 
-  esp_log_level_set("*", ESP_LOG_DEBUG); // set all components to ERROR level
+  braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
+  braia->getSpeed()->setSpeedBase(40, CAR_IN_CURVE);
+
+  braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
+  braia->getSpeed()->setSpeedMax(80, CAR_IN_CURVE);
+
+  braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
+  braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
+
+  braia->getPIDRot()->setKd(0.10, CAR_IN_LINE);
+  braia->getPIDVel()->setKd(0.10, CAR_IN_CURVE);
+
+  braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
+  braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
+
+  braia->getPIDRot()->setKp(0.01, CAR_IN_LINE);
+  braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
 
   // Criacao das tasks e definindo seus parametros
   //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)

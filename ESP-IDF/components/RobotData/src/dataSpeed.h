@@ -81,14 +81,12 @@ private:
             {
                 tempChannel = (*var);
                 xSemaphoreGive((*xSemaphoreOfVar));
-                return RETORNO_OK;
+                return tempChannel;
             }
             else
             {
                 ESP_LOGE(tag, "Variável ocupada, não foi possível ler valor. Tentando novamente...");
             }
-
-            return tempChannel;
         }
     }
 
