@@ -195,7 +195,8 @@ void vTaskPID(void *pvParameters)
   auto const h2x2 = h2 * 2;
 
   Robot *braia = (Robot *)pvParameters;
-
+  dataSpeed *speed = braia->getSpeed();
+  RobotStatus *status = braia->getStatus();
   dataPID *PIDTrans = braia->getPIDVel();
   dataPID *PIDRot = braia->getPIDRot();
 
@@ -207,9 +208,6 @@ void vTaskPID(void *pvParameters)
   float KpRot = PIDRot->getKp(braia->getStatus()->getState());
   float KiRot = PIDRot->getKi(braia->getStatus()->getState()) * BaseDeTempo;
   float KdRot = PIDRot->getKd(braia->getStatus()->getState()) / BaseDeTempo;
-
-  auto VelEncDir = braia->getSpeed()->getRPMRight_inst();
-  auto VelEncEsq = braia->getSpeed()->getRPMLeft_inst();
 
   //erros anteriores
   float errRot_ant = 0, errRot_ant2 = 0;
@@ -232,8 +230,8 @@ void vTaskPID(void *pvParameters)
     vTaskSuspend(xTaskCarStatus);
 
     //Velocidade do carrinho
-    float VelRot = VelEncDir - VelEncEsq;   // Rotacional
-    float VelTrans = VelEncDir + VelEncEsq; //Translacional
+    float VelRot = speed->getRPMRight_inst() - speed->getRPMLeft_inst();   // Rotacional
+    float VelTrans = speed->getRPMRight_inst() + speed->getRPMLeft_inst(); //Translacional
 
     //Erros atuais
     PIDRot->setSetpoint((3500 - braia->getsArray()->getLine()) / 7); // cálculo do setpoint rotacional
@@ -251,9 +249,9 @@ void vTaskPID(void *pvParameters)
     errRot_ant = erroVelRot;
     lastRotPid = PidRot;
 
-    auto speedBase = braia->getSpeed()->getSpeedBase(braia->getStatus()->getState());
-    auto speedMin = braia->getSpeed()->getSpeedMin(braia->getStatus()->getState());
-    auto speedMax = braia->getSpeed()->getSpeedMax(braia->getStatus()->getState());
+    auto speedBase = speed->getSpeedBase(status->getState());
+    auto speedMin = speed->getSpeedMin(status->getState());
+    auto speedMax = speed->getSpeedMax(status->getState());
 
     // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
     PIDTrans->setOutput(constrain(
@@ -264,15 +262,16 @@ void vTaskPID(void *pvParameters)
     PIDRot->setOutput(PidRot / 10);
 
     // Calculo de velocidade do motor
-    braia->getSpeed()->setSpeedRight(
+    speed->setSpeedRight(
         constrain((int16_t)(PIDTrans->getOutput()) + (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
-        braia->getStatus()->getState());
+        status->getState());
 
-    braia->getSpeed()->setSpeedLeft(
+    speed->setSpeedLeft(
         constrain((int16_t)(PIDTrans->getOutput()) - (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
-        braia->getStatus()->getState());
+        status->getState());
 
-    ESP_LOGD("vTaskPID", "speedMin: %d | speedMax: %d", speedMin, speedMin);
+    ESP_LOGD("vTaskPID", "speedMin: %d | speedMax: %d", speedMin, speedMax);
+    ESP_LOGD("vTaskPID", "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->getOutput(), PIDTrans->getOutput());
 
     vTaskResume(xTaskCarStatus);
     vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
@@ -351,9 +350,8 @@ void vTaskSpeed(void *pvParameters)
   Robot *braia = (Robot *)pvParameters;
   dataSpeed *speed = braia->getSpeed();
 
-  //Pulsos para uma revolução de cada encoder (revolução*redução)
-  speed->setMPR_MotDir(20,30);
-  speed->setMPR_MotEsq(20,30);
+  auto MPR_MotEsq = 600;
+  auto MPR_MotDir = 600;
 
   // Componente de gerenciamento dos encoders
   ESP32Encoder enc_motEsq;
@@ -397,7 +395,7 @@ void vTaskSpeed(void *pvParameters)
     // Calculos de velocidade instantanea (RPM)
     speed->setRPMLeft_inst(                         // -> Calculo velocidade instantanea motor esquerdo
         (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
-          / (float)speed->getMPR_MotEsq())          // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
+          / (float)MPR_MotEsq)          // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
          / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
          ));
     lastPulseLeft = enc_motEsq.getCount(); // Salva pulsos do encoder para ser usado no proximo calculo
@@ -405,7 +403,7 @@ void vTaskSpeed(void *pvParameters)
 
     speed->setRPMRight_inst(                        // -> Calculo velocidade instantanea motor direito
         (((enc_motDir.getCount() - lastPulseRight)  // Delta de pulsos do encoder esquerdo
-          / (float)speed->getMPR_MotDir())          // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
+          / (float)MPR_MotDir)          // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
          / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
          ));
     lastPulseRight = enc_motDir.getCount(); // Salva pulsos do motor para ser usado no proximo calculo
@@ -417,9 +415,10 @@ void vTaskSpeed(void *pvParameters)
         / ((float)deltaTimeMS_media / (float)60000)                                                              // Divisao do delta tempo em minutos para calculo de RPM
     );
 
-    // ESP_LOGD("vTaskSpeed", "encDir: %d", enc_motDir.getCount());
-    // ESP_LOGD("vTaskSpeed", "encEsq: %d", enc_motEsq.getCount());
+    //ESP_LOGD("vTaskSpeed", "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
+    //ESP_LOGD("vTaskSpeed", "VelEncDir: %d | VelEncEsq: %d", speed->getRPMRight_inst(), speed->getRPMLeft_inst());
 
+    xLastWakeTime = xTaskGetTickCount();
     vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
   }
 }
@@ -439,6 +438,11 @@ void app_main(void)
   braia->getStatus()->setMapping(false);
   bool mapping = braia->getStatus()->getMapping();
   braia->getStatus()->setState(CAR_IN_LINE);
+
+  //Pulsos para uma revolução de cada encoder (revolução*redução)
+  // braia->getSpeed()->setMPR_MotDir(20,30);
+  // braia->getSpeed()->setMPR_MotEsq(20,30);
+
   if(mapping){
 
     braia->getSpeed()->setSpeedBase(30, CAR_IN_LINE);
@@ -495,6 +499,7 @@ void app_main(void)
     braia->getPIDVel()->setSetpoint(800);
 
   }
+  
   // Criacao das tasks e definindo seus parametros
   //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)
 

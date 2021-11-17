@@ -18,8 +18,8 @@
 // Encoders Motores
 #define ENC_MOT_ESQ_A 04
 #define ENC_MOT_ESQ_B 16
-#define ENC_MOT_DIR_A 35
-#define ENC_MOT_DIR_B 34
+#define ENC_MOT_DIR_A 34
+#define ENC_MOT_DIR_B 35
 
 // SPI do ADC (Utiliza VSPI do ESP32)
 #define ADC_CLK 18
