@@ -15,6 +15,7 @@ TaskHandle_t xTaskSensors;
 TaskHandle_t xTaskPID;
 TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskSpeed;
+TaskHandle_t xTaskMapping;
 
 void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia)
 {
@@ -71,14 +72,14 @@ void processSLat(Robot *braia)
   auto latMarks = braia->getSLatMarks();
   if (slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
   {
-    if (slesq1 < 1500 || slesq2 < 1500)
+    if ((slesq1 < 1500 || slesq2 < 1500) && (sldir1 && sldir2)) //lendo sLat esq. branco e dir. preto
     {
       if (!(latMarks->getSLatEsq()))
         latMarks->leftPassedInc();
       latMarks->SetSLatEsq(true);
       latMarks->SetSLatDir(false);
     }
-    else if (!sldir1 || !sldir2)
+    else if ((!sldir1 || !sldir2) && (slesq1 > 1500 && slesq2 > 1500)) // lendo sldir. branco e sLat esq. preto 
     {
       if (!(latMarks->getSLatDir()))
         latMarks->rightPassedInc();
@@ -90,6 +91,15 @@ void processSLat(Robot *braia)
   {
     latMarks->SetSLatDir(false);
     latMarks->SetSLatEsq(false);
+  }
+
+  if(slesq1 < 1500 && slesq2 < 1500 && !sldir1 && !sldir2){//continuar em frente em intersecção de linhas
+    braia->getStatus()->setState(CAR_IN_LINE);
+  }
+
+  if(latMarks->getrightMarks() == 2){ //parar depois da leitura da segunda linha direita
+    vTaskDelay(500);
+    braia->getStatus()->setState(CAR_STOPPED);
   }
 }
 /////////////// INICIO TASKs DO ROBO ///////////////
@@ -170,6 +180,7 @@ void vTaskSensors(void *pvParameters)
   vTaskResume(xTaskPID);
   // vTaskResume(xTaskCarStatus);
   vTaskResume(xTaskSpeed);
+  if(braia->getStatus()->getMapping()) vTaskResume(xTaskMapping);
 
   ESP_LOGD(TAG, "Retomada!");
 
@@ -190,9 +201,9 @@ void vTaskPID(void *pvParameters)
 {
   auto const TaskDelay = 200;
   auto const BaseDeTempo = (TaskDelay * 1E-3);
-  auto const h1 = BaseDeTempo / 2;
-  auto const h2 = 1 / BaseDeTempo;
-  auto const h2x2 = h2 * 2;
+  //auto const h1 = BaseDeTempo / 2;
+  //auto const h2 = 1 / BaseDeTempo;
+  //auto const h2x2 = h2 * 2;
 
   Robot *braia = (Robot *)pvParameters;
   dataSpeed *speed = braia->getSpeed();
@@ -210,11 +221,17 @@ void vTaskPID(void *pvParameters)
   float KdRot = PIDRot->getKd(braia->getStatus()->getState()) / BaseDeTempo;
 
   //erros anteriores
-  float errRot_ant = 0, errRot_ant2 = 0;
-  float errTrans_ant = 0, errTrans_ant2 = 0;
+  float errRot_ant = 0; //errRot_ant2 = 0;
+  float errTrans_ant = 0; //errTrans_ant2 = 0;
 
   //saidas pid anteriores
-  float lastTransPid = 0, lastRotPid = 0;
+  //float lastTransPid = 0, lastRotPid = 0;
+
+  //Variáveis para cálculo do pid rot e trans
+  float PidTrans=0;
+  float Ptrans=0,Itrans=0,Dtrans=0;
+  float PidRot = 0; 
+  float Prot=0,Irot=0,Drot=0; 
 
   // Definindo input da classe PID Rotacional valor de linha do sensor Array
   PIDRot->setInput(braia->getsArray()->getLine());
@@ -239,15 +256,23 @@ void vTaskPID(void *pvParameters)
     float erroVelRot = (float)(PIDRot->getSetpoint()) - VelRot;
 
     //calculando Pids rotacional e translacional
-    float PidTrans = erroVelTrans * (KpVel + KiVel * h1 + KdVel * h2) + errTrans_ant * (-KpVel + KiVel * h1 - KdVel * h2x2) + errTrans_ant2 * (KdVel * h2) + lastTransPid;
-    errTrans_ant2 = errTrans_ant;
+    //float PidTrans = erroVelTrans * (KpVel + KiVel * h1 + KdVel * h2) + errTrans_ant * (-KpVel + KiVel * h1 - KdVel * h2x2) + errTrans_ant2 * (KdVel * h2) + lastTransPid;
+    //errTrans_ant2 = errTrans_ant;
+    Ptrans = KpVel * erroVelTrans;
+    Itrans += KiVel * erroVelTrans;
+    Dtrans = KdVel * (erroVelTrans - errTrans_ant);
+    PidTrans = Ptrans + Itrans + Dtrans;
     errTrans_ant = erroVelTrans;
-    lastTransPid = PidTrans;
+    //lastTransPid = PidTrans;
 
-    float PidRot = erroVelRot * (KpRot + KiRot * h1 + KdRot * h2) + errRot_ant * (-KpVel + KiVel * h1 - KdVel * h2x2) + errRot_ant2 * (KdVel * h2) + lastRotPid;
-    errRot_ant2 = errRot_ant;
+    //float PidRot = erroVelRot * (KpRot + KiRot * h1 + KdRot * h2) + errRot_ant * (-KpRot + KiRot * h1 - KdRot * h2x2) + errRot_ant2 * (KdRot * h2) + lastRotPid;
+    //errRot_ant2 = errRot_ant;
+    Prot = KpRot * erroVelRot;
+    Irot += KiRot * erroVelRot;
+    Drot = KdRot * (erroVelRot - errRot_ant);
+    PidRot = Prot + Irot + Drot;
     errRot_ant = erroVelRot;
-    lastRotPid = PidRot;
+    //lastRotPid = PidRot;
 
     auto speedBase = speed->getSpeedBase(status->getState());
     auto speedMin = speed->getSpeedMin(status->getState());
@@ -423,6 +448,94 @@ void vTaskSpeed(void *pvParameters)
   }
 }
 
+void vTaskMapping(void *pvParameters){
+
+  //setup
+  //gpio_pad_select_gpio(17);
+  //gpio_set_direction(GPIO_NUM_17, GPIO_MODE_INPUT);
+  //gpio_pad_select_gpio(05);
+  //gpio_set_direction(GPIO_NUM_5, GPIO_MODE_INPUT);
+  gpio_pad_select_gpio(0);
+  gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
+  gpio_set_pull_mode(GPIO_NUM_0,GPIO_PULLUP_ONLY);
+
+  
+  static const char *TAG = "vTaskMapping";
+  ESP_LOGD(TAG, "Mapeamento Iniciado e aguardando calibração");
+  vTaskSuspend(xTaskMapping);
+  ESP_LOGD(TAG, "Mapeamento Retomado!");
+  
+
+  Robot *braia = (Robot *)pvParameters;
+  auto speedMapping = braia->getSpeed();
+  
+  //speedMapping -> setSpeedMin(50, CAR_IN_LINE);//velocidade minima de mapeamento e estado do robô(linha)
+  //speedMapping -> setSpeedMax(70, CAR_IN_LINE);//velocidade maxima de mapeamento e estado do robô(linha)
+  //speedMapping -> setSpeedBase(((50+70)/2), CAR_IN_LINE);//velocidade base de mapeamento e estado do robô(linha)
+
+  //Inicio mapeamento
+  int16_t mappingData[3][40]={{0,0,0},{0,0,0},{0,0,0}}; // [tempo][media][estado]
+                    //  "quantidade de marcações"
+
+  //mappingData[2][L,L,R, , , , , , , , , , , , , , , ,]; considerando o tempo do video, adicionar os estados do robô
+  uint16_t marks = 0;
+
+  TickType_t xLastWakeTime = xTaskGetTickCount();// Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
+
+  bool startTimer = false;
+
+  TickType_t xInicialTicks = xTaskGetTickCount();
+
+  // Loop
+  for (;;)
+  {
+    
+    auto SLat = braia->getsLat();
+    uint16_t slesq1 = SLat->getChannel(0);
+    uint16_t slesq2 = SLat->getChannel(1);
+    bool sldir1 = gpio_get_level(GPIO_NUM_17);
+    bool sldir2 = gpio_get_level(GPIO_NUM_5);
+    auto latMarks = braia->getSLatMarks();
+    bool bottom = gpio_get_level(GPIO_NUM_0);
+    
+    if(((latMarks->getrightMarks()) == 1) && !startTimer){
+      
+      xInicialTicks = xTaskGetTickCount(); //pegando o tempo inicial
+      startTimer = true;
+    }
+
+
+    if((latMarks->getrightMarks()) == 1){
+
+      if ((slesq1 < 1500 || slesq2 < 1500) && (sldir1 && sldir2))
+      {
+        //tempo
+        mappingData[0][marks] = xTaskGetTickCount() - xInicialTicks;
+        //media
+        mappingData[1][marks] = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+        //estado
+        marks ++;
+
+      } 
+
+    }
+    else if(latMarks->getrightMarks() < 1){
+      ESP_LOGD(TAG, "Mapeamento não iniciado");
+    }
+    else if(latMarks->getrightMarks() > 1){
+      ESP_LOGD(TAG, "Mapeamento finalizado");
+    }
+    if(!bottom){
+      ESP_LOGD(" ","Tempo, Média, Estado");
+      for(int i = 0; i < marks;  i++){
+         ESP_LOGD(" ","%d, %d, %d", mappingData[0][i],mappingData[1][i], mappingData[2][i]);
+        }
+      }
+
+      vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);  
+    }         
+ }
+
 /////////////// FIM TASKs DO ROBO ///////////////
 
 extern "C"
@@ -512,4 +625,7 @@ void app_main(void)
   xTaskCreate(vTaskSpeed, "TaskSpeed", 10000, braia, 9, &xTaskSpeed);
 
   xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
+
+  xTaskCreate(vTaskMapping, "TaskMapping", 10000, braia, 9, &xTaskMapping);
+
 }
