@@ -2,7 +2,8 @@
 #include "includes.hpp"
 #include "RobotData.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LINE_COLOR_BLACK
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
@@ -24,7 +25,7 @@ void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia)
   {
     sArray->calibrate();
     SLat->calibrate();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(20 / portTICK_PERIOD_MS);
   }
   //leitura e armazenamento dos valores máximos e mínimos dos sensores obtidos na calibração
   std::vector<uint16_t> sArrayMaxes(sArray->calibrationOn.maximum, sArray->calibrationOn.maximum + sArray->getSensorCount());
@@ -38,13 +39,19 @@ void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia)
   braia->getsLat()->setChannelsMaxes(SLatMaxes);
   braia->getsLat()->setChannelsMins(SLatMins);
 }
+
 void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia) // função leitura dos sensores
 {
   //Arrays para armazenar leitura bruta dos sensores array e laterais
   uint16_t sArraychannels[sArray->getSensorCount()];
   uint16_t SLatchannels[SLat->getSensorCount()];
 
-  braia->getsArray()->setLine(sArray->readLineWhite(sArraychannels));                                 // cálculo dos valores do sensor array
+#ifdef LINE_COLOR_BLACK
+  braia->getsArray()->setLine(sArray->readLineBlack(sArraychannels));  
+#else
+  braia->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
+#endif
+                               // cálculo dos valores do sensor array
   SLat->readCalibrated(SLatchannels);                                                                 //leitura dos sensores laterais
   std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array
   std::vector<uint16_t> SLatchannelsVec(SLatchannels, SLatchannels + SLat->getSensorCount());         // vector(array) com os valores dos sensores laterais
@@ -59,6 +66,7 @@ void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia) // função 
 
   //braia->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
+
 void processSLat(Robot *braia)
 {
   bool sldir1 = gpio_get_level(GPIO_NUM_17);
@@ -102,6 +110,7 @@ void processSLat(Robot *braia)
     braia->getStatus()->setState(CAR_STOPPED);
   }
 }
+
 /////////////// INICIO TASKs DO ROBO ///////////////
 
 void vTaskMotors(void *pvParameters)
@@ -144,7 +153,7 @@ void vTaskMotors(void *pvParameters)
     {
       motors.motorsStop(); // parar motores
     }
-    vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -193,13 +202,13 @@ void vTaskSensors(void *pvParameters)
     getSensors(&sArray, &sLat, braia); // leitura dos sensores
     processSLat(braia);
 
-    vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
   }
 }
 
 void vTaskPID(void *pvParameters)
 {
-  auto const TaskDelay = 200;
+  auto const TaskDelay = 10;
   auto const BaseDeTempo = (TaskDelay * 1E-3);
   //auto const h1 = BaseDeTempo / 2;
   //auto const h2 = 1 / BaseDeTempo;
@@ -280,11 +289,11 @@ void vTaskPID(void *pvParameters)
 
     // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
     PIDTrans->setOutput(constrain(
-        ((PidTrans / 10) + speedBase),
+        ((PidTrans) + speedBase),
         speedMin,
         speedMax));
 
-    PIDRot->setOutput(PidRot / 10);
+    PIDRot->setOutput(PidRot);
 
     // Calculo de velocidade do motor
     speed->setSpeedRight(
@@ -583,8 +592,10 @@ void app_main(void)
     braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
 
     braia->getPIDVel()->setSetpoint(400);
+
   }
   else{
+
     braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
     braia->getSpeed()->setSpeedBase(40, CAR_IN_CURVE);
 
@@ -594,22 +605,22 @@ void app_main(void)
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.10, CAR_IN_LINE);
-    braia->getPIDVel()->setKd(0.10, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.10, CAR_IN_CURVE);
-    braia->getPIDVel()->setKd(0.10, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.0, CAR_IN_LINE);
+    braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.0, CAR_IN_CURVE);
+    braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.1, CAR_IN_LINE);
     braia->getPIDVel()->setKp(0.01, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.1, CAR_IN_CURVE);
     braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(800);
+    braia->getPIDVel()->setSetpoint(400);
 
   }
   

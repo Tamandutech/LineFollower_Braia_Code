@@ -36,7 +36,7 @@
 
 //////// Defines
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #define PWM_FREQ 25000 // PWM Frequency
 
 //////// Class
