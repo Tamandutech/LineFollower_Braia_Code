@@ -605,9 +605,9 @@ void app_main(void)
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.0, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.0, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -616,11 +616,11 @@ void app_main(void)
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKp(0.1, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
     braia->getPIDRot()->setKp(0.1, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(400);
+    braia->getPIDVel()->setSetpoint(800);
 
   }
   
