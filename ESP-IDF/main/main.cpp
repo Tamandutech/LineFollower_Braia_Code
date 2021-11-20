@@ -4,6 +4,7 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #define LINE_COLOR_BLACK
+#define taskStatus false
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
@@ -78,16 +79,16 @@ void processSLat(Robot *braia)
   uint16_t slesq1 = SLat->getChannel(0);
   uint16_t slesq2 = SLat->getChannel(1);
   auto latMarks = braia->getSLatMarks();
-  if (slesq1 < 1500 || slesq2 < 1500 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
+  if (slesq1 < 300 || slesq2 < 300 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
   {
-    if ((slesq1 < 1500 || slesq2 < 1500) && (sldir1 && sldir2)) //lendo sLat esq. branco e dir. preto
+    if ((slesq1 < 300 || slesq2 < 300) && (sldir1 && sldir2)) //lendo sLat esq. branco e dir. preto
     {
       if (!(latMarks->getSLatEsq()))
         latMarks->leftPassedInc();
       latMarks->SetSLatEsq(true);
       latMarks->SetSLatDir(false);
     }
-    else if ((!sldir1 || !sldir2) && (slesq1 > 1500 && slesq2 > 1500)) // lendo sldir. branco e sLat esq. preto 
+    else if ((!sldir1 || !sldir2) && (slesq1 > 600 && slesq2 > 600)) // lendo sldir. branco e sLat esq. preto 
     {
       if (!(latMarks->getSLatDir()))
         latMarks->rightPassedInc();
@@ -101,7 +102,7 @@ void processSLat(Robot *braia)
     latMarks->SetSLatEsq(false);
   }
 
-  if(slesq1 < 1500 && slesq2 < 1500 && !sldir1 && !sldir2){//continuar em frente em intersecção de linhas
+  if(slesq1 < 300 && slesq2 < 300 && !sldir1 && !sldir2){//continuar em frente em intersecção de linhas
     braia->getStatus()->setState(CAR_IN_LINE);
   }
 
@@ -187,7 +188,7 @@ void vTaskSensors(void *pvParameters)
 
   vTaskResume(xTaskMotors);
   vTaskResume(xTaskPID);
-  // vTaskResume(xTaskCarStatus);
+  if(taskStatus) vTaskResume(xTaskCarStatus);
   vTaskResume(xTaskSpeed);
   if(braia->getStatus()->getMapping()) vTaskResume(xTaskMapping);
 
@@ -221,13 +222,8 @@ void vTaskPID(void *pvParameters)
   dataPID *PIDRot = braia->getPIDRot();
 
   // Variaveis de calculo para os pids da velocidade rotacional e translacional
-  float KpVel = PIDTrans->getKp(braia->getStatus()->getState());
-  float KiVel = PIDTrans->getKi(braia->getStatus()->getState()) * BaseDeTempo;
-  float KdVel = PIDTrans->getKd(braia->getStatus()->getState()) / BaseDeTempo;
-
-  float KpRot = PIDRot->getKp(braia->getStatus()->getState());
-  float KiRot = PIDRot->getKi(braia->getStatus()->getState()) * BaseDeTempo;
-  float KdRot = PIDRot->getKd(braia->getStatus()->getState()) / BaseDeTempo;
+  float KpVel = 0, KiVel = 0, KdVel = 0; 
+  float KpRot = 0, KiRot = 0, KdRot = 0;
 
   //erros anteriores
   float errRot_ant = 0; //errRot_ant2 = 0;
@@ -253,7 +249,18 @@ void vTaskPID(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    vTaskSuspend(xTaskCarStatus);
+    CarState estado = status->getState();
+    if (estado == CAR_IN_LINE) PIDTrans->setSetpoint(800);
+    else if (estado == CAR_IN_CURVE) PIDTrans->setSetpoint(600);
+
+    // Variaveis de calculo para os pids da velocidade rotacional e translacional
+    KpVel = PIDTrans->getKp(estado);
+    KiVel = PIDTrans->getKi(estado) * BaseDeTempo;
+    KdVel = PIDTrans->getKd(estado) / BaseDeTempo;
+
+    KpRot = PIDRot->getKp(estado);
+    KiRot = PIDRot->getKi(estado) * BaseDeTempo;
+    KdRot = PIDRot->getKd(estado) / BaseDeTempo;
 
     //Velocidade do carrinho
     float VelRot = speed->getRPMRight_inst() - speed->getRPMLeft_inst();   // Rotacional
@@ -283,9 +290,9 @@ void vTaskPID(void *pvParameters)
     errRot_ant = erroVelRot;
     //lastRotPid = PidRot;
 
-    auto speedBase = speed->getSpeedBase(status->getState());
-    auto speedMin = speed->getSpeedMin(status->getState());
-    auto speedMax = speed->getSpeedMax(status->getState());
+    auto speedBase = speed->getSpeedBase(estado);
+    auto speedMin = speed->getSpeedMin(estado);
+    auto speedMax = speed->getSpeedMax(estado);
 
     // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
     PIDTrans->setOutput(constrain(
@@ -298,16 +305,15 @@ void vTaskPID(void *pvParameters)
     // Calculo de velocidade do motor
     speed->setSpeedRight(
         constrain((int16_t)(PIDTrans->getOutput()) + (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
-        status->getState());
+        estado);
 
     speed->setSpeedLeft(
         constrain((int16_t)(PIDTrans->getOutput()) - (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
-        status->getState());
+        estado);
 
     ESP_LOGD("vTaskPID", "speedMin: %d | speedMax: %d", speedMin, speedMax);
     ESP_LOGD("vTaskPID", "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->getOutput(), PIDTrans->getOutput());
 
-    vTaskResume(xTaskCarStatus);
     vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
   }
 }
@@ -334,13 +340,15 @@ void vTaskCarStatus(void *pvParameters)
   // Matriz com dados de media encoders,linha do carrinho
   int16_t Manualmap[2][40]={{0,0,0,0,0},   // media
                             {0,0,0,0,0}}; // linha
-
+  int16_t FinalMark = 0; // Media dos encoders da marcação final
+  int16_t PlusPulses = 0; // Pulsos a mais para a parada
   // Loop
   for (;;)
   {
     ESP_LOGD(TAG, "CarStatus: %d", status->getState());
-    if(!status->getMapping() && braia->getSLatMarks()->getrightMarks() < 2){ // define o status do carrinho se o mapeamento não estiver ocorrendo
-      int16_t mediaEnc = (speed->getEncRight() + speed->getEncLeft())/2; // calcula media dos encodrrs
+    int16_t mediaEnc = (speed->getEncRight() + speed->getEncLeft())/2; // calcula media dos encoders
+    if (mediaEnc >= FinalMark + PlusPulses)  braia->getStatus()->setState(CAR_STOPPED);
+    if(!status->getMapping() && braia->getSLatMarks()->getrightMarks() < 2 && mediaEnc < FinalMark + PlusPulses){ // define o status do carrinho se o mapeamento não estiver ocorrendo
       int mark = 0;
       for(mark=0; mark < Marks; mark++){ // Verifica a contagem do encoder e atribui o estado ao robô
         if(mark < Marks-1){
@@ -366,7 +374,7 @@ void vTaskCarStatus(void *pvParameters)
     }
 
     xLastWakeTime = xTaskGetTickCount();
-    vTaskDelayUntil(&xLastWakeTime, 2000 / portTICK_PERIOD_MS);
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
   }
 }
 
@@ -492,6 +500,7 @@ void vTaskMapping(void *pvParameters){
   TickType_t xLastWakeTime = xTaskGetTickCount();// Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
 
   bool startTimer = false;
+  int16_t FinalMarkData = 0; // Media dos encoders na marcação final
 
   TickType_t xInicialTicks = xTaskGetTickCount();
 
@@ -516,10 +525,10 @@ void vTaskMapping(void *pvParameters){
 
     if((latMarks->getrightMarks()) == 1){
 
-      if ((slesq1 < 1500 || slesq2 < 1500) && (sldir1 && sldir2))
+      if ((slesq1 < 300 || slesq2 < 300) && (sldir1 && sldir2))
       {
         //tempo
-        mappingData[0][marks] = xTaskGetTickCount() - xInicialTicks;
+        mappingData[0][marks] = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
         //media
         mappingData[1][marks] = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
         //estado
@@ -533,17 +542,19 @@ void vTaskMapping(void *pvParameters){
     }
     else if(latMarks->getrightMarks() > 1){
       ESP_LOGD(TAG, "Mapeamento finalizado");
+      FinalMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
     }
     if(!bottom){
-      ESP_LOGD(" ","Tempo, Média, Estado");
+      ESP_LOGD("","Tempo, Média, Estado");
       for(int i = 0; i < marks;  i++){
-         ESP_LOGD(" ","%d, %d, %d", mappingData[0][i],mappingData[1][i], mappingData[2][i]);
-        }
+         ESP_LOGD("","%d, %d, %d", mappingData[0][i],mappingData[1][i], mappingData[2][i]);
       }
+      ESP_LOGD("Final Mark (média dos encoders) "," %d ", FinalMarkData);
+    }
 
-      vTaskDelayUntil(&xLastWakeTime, 500 / portTICK_PERIOD_MS);  
-    }         
- }
+    vTaskDelayUntil(&xLastWakeTime, 30 / portTICK_PERIOD_MS);  
+  }         
+}
 
 /////////////// FIM TASKs DO ROBO ///////////////
 
@@ -576,20 +587,20 @@ void app_main(void)
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.10, CAR_IN_LINE);
-    braia->getPIDVel()->setKd(0.10, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.10, CAR_IN_CURVE);
-    braia->getPIDVel()->setKd(0.10, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
+    braia->getPIDVel()->setKd(0.00, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
+    braia->getPIDVel()->setKd(0.00, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.01, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.01, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.01, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.1, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.1, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
 
     braia->getPIDVel()->setSetpoint(400);
 
@@ -600,14 +611,14 @@ void app_main(void)
     braia->getSpeed()->setSpeedBase(40, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(80, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.0, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.0, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -616,11 +627,11 @@ void app_main(void)
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKp(0.1, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.01, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
     braia->getPIDRot()->setKp(0.1, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.01, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(400);
+    braia->getPIDVel()->setSetpoint(800);
 
   }
   
