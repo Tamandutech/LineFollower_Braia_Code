@@ -31,11 +31,11 @@ public:
     int16_t getRPMCar_media();
 
     // Contagem atual dos encoders
-    DataFunction setEncRight(int16_t value);
-    int16_t getEncRight();
+    DataFunction setEncRight(int32_t value);
+    int32_t getEncRight();
 
-    DataFunction setEncLeft(int16_t value);
-    int16_t getEncLeft();
+    DataFunction setEncLeft(int32_t value);
+    int32_t getEncLeft();
 
     // Valores de Parametros
     DataFunction setMPR_MotEsq(uint16_t Revolucao, uint16_t Reducao);
@@ -112,9 +112,9 @@ private:
 
     //Contagem atual dos encoders
     SemaphoreHandle_t xSemaphoreEncRight;
-    int16_t EncRight;
+    int32_t EncRight;
     SemaphoreHandle_t xSemaphoreEncLeft;
-    int16_t EncLeft;
+    int32_t EncLeft;
 
     // Valocidades atuais
     SemaphoreHandle_t xSemaphorerevsRight_inst;

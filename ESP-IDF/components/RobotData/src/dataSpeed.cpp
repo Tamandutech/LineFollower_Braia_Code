@@ -304,15 +304,15 @@ DataFunction dataSpeed::setRPMCar_media(int16_t value){
 int16_t dataSpeed::getRPMCar_media(){
     return getVar(&revsCar_media, &xSemaphorerevsCar_media);
 }
-DataFunction dataSpeed::setEncRight(int16_t value){
+DataFunction dataSpeed::setEncRight(int32_t value){
     return setVar(value, &EncRight, &xSemaphoreEncRight);
 }
-int16_t dataSpeed::getEncRight(){
+int32_t dataSpeed::getEncRight(){
     return getVar(&EncRight, &xSemaphoreEncRight);
 }
-DataFunction dataSpeed::setEncLeft(int16_t value){
+DataFunction dataSpeed::setEncLeft(int32_t value){
     return setVar(value, &EncLeft, &xSemaphoreEncLeft);
 }
-int16_t dataSpeed::getEncLeft(){
+int32_t dataSpeed::getEncLeft(){
     return getVar(&EncLeft, &xSemaphoreEncLeft);
 }

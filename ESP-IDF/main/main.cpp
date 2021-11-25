@@ -3,7 +3,7 @@
 #include "RobotData.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
-#define LINE_COLOR_BLACK
+//#define LINE_COLOR_BLACK
 #define taskStatus false
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
@@ -106,7 +106,7 @@ void processSLat(Robot *braia)
     braia->getStatus()->setState(CAR_IN_LINE);
   }
 
-  if(latMarks->getrightMarks() == 2){ //parar depois da leitura da segunda linha direita
+  if(latMarks->getrightMarks() >= 2){ //parar depois da leitura da segunda linha direita
     vTaskDelay(500);
     braia->getStatus()->setState(CAR_STOPPED);
   }
@@ -139,11 +139,23 @@ void vTaskMotors(void *pvParameters)
 
   // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
-
+  //((xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS) < 18000
+  //TickType_t xInicialTicks = xTaskGetTickCount();
   // Loop
   for (;;)
-  {
-    if (status->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
+  { 
+    int32_t mediaEnc = ((speed->getEncRight()) + (speed->getEncLeft())) / 2;
+    // if(mediaEnc > 3660 && mediaEnc < 4800) {
+    //   braia->getPIDVel()->setSetpoint(2000);
+    //   braia->getPIDVel()->setKp(0.07, CAR_IN_LINE);
+    //   braia->getPIDVel()->setKp(0.07, CAR_IN_CURVE);
+    // }
+    // else{
+    //   braia->getPIDVel()->setSetpoint(1700);
+    //   braia->getPIDVel()->setKp(0.065, CAR_IN_LINE);
+    //   braia->getPIDVel()->setKp(0.065, CAR_IN_CURVE);
+    // }
+    if (status->getState() != CAR_STOPPED && mediaEnc < 26600) // verificar se o carrinho deveria se mover
     {
       motors.motorForward(0);                                         // motor 0 ligado para frente
       motors.motorForward(1);                                         // motor 1 ligado para frente
@@ -153,8 +165,10 @@ void vTaskMotors(void *pvParameters)
     else
     {
       motors.motorsStop(); // parar motores
+      //ESP_LOGE("EncData: ", "%d", mediaEnc);
+      //vTaskDelay(1000/ portTICK_PERIOD_MS);
     }
-    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS); //10ms
   }
 }
 
@@ -203,13 +217,13 @@ void vTaskSensors(void *pvParameters)
     getSensors(&sArray, &sLat, braia); // leitura dos sensores
     processSLat(braia);
 
-    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS); 
   }
 }
 
 void vTaskPID(void *pvParameters)
 {
-  auto const TaskDelay = 10;
+  auto const TaskDelay = 10; // 10ms
   auto const BaseDeTempo = (TaskDelay * 1E-3);
   //auto const h1 = BaseDeTempo / 2;
   //auto const h2 = 1 / BaseDeTempo;
@@ -338,22 +352,22 @@ void vTaskCarStatus(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   // Matriz com dados de media encoders,linha do carrinho
-  int16_t Manualmap[2][40]={{0,0,0,0,0},   // media
+  int32_t Manualmap[2][40]={{0,0,0,0,0},   // media
                             {0,0,0,0,0}}; // linha
-  int16_t FinalMark = 0; // Media dos encoders da marcação final
-  int16_t PlusPulses = 0; // Pulsos a mais para a parada
+  int32_t FinalMark = 0; // Media dos encoders da marcação final
+  int32_t PlusPulses = 0; // Pulsos a mais para a parada
   // Loop
   for (;;)
   {
     ESP_LOGD(TAG, "CarStatus: %d", status->getState());
-    int16_t mediaEnc = (speed->getEncRight() + speed->getEncLeft())/2; // calcula media dos encoders
+    int32_t mediaEnc = (speed->getEncRight() + speed->getEncLeft())/2; // calcula media dos encoders
     if (mediaEnc >= FinalMark + PlusPulses)  braia->getStatus()->setState(CAR_STOPPED);
     if(!status->getMapping() && braia->getSLatMarks()->getrightMarks() < 2 && mediaEnc < FinalMark + PlusPulses){ // define o status do carrinho se o mapeamento não estiver ocorrendo
       int mark = 0;
       for(mark=0; mark < Marks; mark++){ // Verifica a contagem do encoder e atribui o estado ao robô
         if(mark < Marks-1){
-          int16_t Manualmedia = Manualmap[0][mark];
-          int16_t ManualmediaNxt = Manualmap[0][mark+1];
+          int32_t Manualmedia = Manualmap[0][mark];
+          int32_t ManualmediaNxt = Manualmap[0][mark+1];
           if(mediaEnc >= Manualmedia && mediaEnc <= ManualmediaNxt){ // análise do valor das médias dos encoders
             CarState estado;
             if(Manualmap[1][mark] == CAR_IN_LINE) estado = CAR_IN_LINE; 
@@ -385,7 +399,7 @@ void vTaskCarStatus(void *pvParameters)
 void vTaskSpeed(void *pvParameters)
 {
   // Tempo de delay
-  auto const TaskDelay = 10;
+  auto const TaskDelay = 10; // 10 ms
 
   static const char *TAG = "vTaskSpeed";
 
@@ -433,7 +447,6 @@ void vTaskSpeed(void *pvParameters)
     lastTicksRevsCalc = xTaskGetTickCount();
 
     deltaTimeMS_media = (xTaskGetTickCount() - initialTicksCar) * portTICK_PERIOD_MS;
-
     // Calculos de velocidade instantanea (RPM)
     speed->setRPMLeft_inst(                         // -> Calculo velocidade instantanea motor esquerdo
         (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
@@ -456,7 +469,8 @@ void vTaskSpeed(void *pvParameters)
         (((lastPulseRight / (float)speed->getMPR_MotDir() + lastPulseLeft / (float)speed->getMPR_MotEsq())) / 2) // Revolucoes media desde inicializacao
         / ((float)deltaTimeMS_media / (float)60000)                                                              // Divisao do delta tempo em minutos para calculo de RPM
     );
-
+    //ESP_LOGE(TAG,"Direito: %d",enc_motDir.getCount());
+    //ESP_LOGE(TAG,"Direito: %d",enc_motEsq.getCount());
     //ESP_LOGD("vTaskSpeed", "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
     //ESP_LOGD("vTaskSpeed", "VelEncDir: %d | VelEncEsq: %d", speed->getRPMRight_inst(), speed->getRPMLeft_inst());
 
@@ -491,7 +505,7 @@ void vTaskMapping(void *pvParameters){
   //speedMapping -> setSpeedBase(((50+70)/2), CAR_IN_LINE);//velocidade base de mapeamento e estado do robô(linha)
 
   //Inicio mapeamento
-  int16_t mappingData[3][40]={{0,0,0},{0,0,0},{0,0,0}}; // [tempo][media][estado]
+  int32_t mappingData[3][40]={{0,0,0},{0,0,0},{0,0,0}}; // [tempo][media][estado]
                     //  "quantidade de marcações"
 
   //mappingData[2][L,L,R, , , , , , , , , , , , , , , ,]; considerando o tempo do video, adicionar os estados do robô
@@ -500,7 +514,7 @@ void vTaskMapping(void *pvParameters){
   TickType_t xLastWakeTime = xTaskGetTickCount();// Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
 
   bool startTimer = false;
-  int16_t FinalMarkData = 0; // Media dos encoders na marcação final
+  int32_t FinalMarkData = 0; // Media dos encoders na marcação final
 
   TickType_t xInicialTicks = xTaskGetTickCount();
 
@@ -597,9 +611,9 @@ void app_main(void)
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.1, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
     braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.1, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
     braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
 
     braia->getPIDVel()->setSetpoint(400);
@@ -607,8 +621,8 @@ void app_main(void)
   }
   else{
 
-    braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(40, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedBase(50, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(50, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
@@ -616,9 +630,9 @@ void app_main(void)
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.004, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.004, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -626,12 +640,12 @@ void app_main(void)
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.1, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.1, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.79, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.055, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.79, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.055, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(800);
+    braia->getPIDVel()->setSetpoint(1900);
 
   }
   
