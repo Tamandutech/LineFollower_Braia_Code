@@ -1,22 +1,27 @@
 #include "Service.h"
 
-Service::Service(std::string name, uint32_t stackDepth, UBaseType_t priority)
+Service::Service(const char* name, uint32_t stackDepth, UBaseType_t priority)
 {
     this->name = name;
-    ESP_LOGD(name.c_str(), "Criando serviço");
+    this->stackDepth = stackDepth;
+    this->priority = priority;
 
-    if (pdPASS == xTaskCreate(task, name.c_str(), stackDepth, this, priority, &this->xTaskService))
-        ESP_LOGD(name.c_str(), "Task criada no RTOS");
-    else
-        ESP_LOGE(name.c_str(), "Sem RAM disponivel");
-        
+    ESP_LOGD(name, "Criando serviço");
 }
 
 void Service::task(void *_params)
 {
     Service *s = static_cast<Service *>(_params);
-    
+
     s->Setup();
-    vTaskResume(NULL);
+    // vTaskSuspend(NULL);
     s->Main();
+}
+
+void Service::create()
+{
+    if (pdPASS == xTaskCreate(task, name, stackDepth, this, priority, &this->xTaskService))
+        ESP_LOGD(name, "Task criada no RTOS");
+    else
+        ESP_LOGE(name, "Sem RAM disponivel");
 }

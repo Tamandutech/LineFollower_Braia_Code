@@ -6,11 +6,11 @@
 class DebugService : public Service
 {
 public:
-    DebugService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
-    ~Service() override;
+    DebugService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    ~DebugService(){};
 
-    void Setup() override;
-    void Main() override;
+    void Setup();
+    void Main();
 
 private:
     

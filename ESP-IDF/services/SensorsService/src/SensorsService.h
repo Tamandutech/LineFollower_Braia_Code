@@ -10,7 +10,7 @@
 class SensorsService : Service
 {
 public:
-    SensorsService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    SensorsService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
     ~SensorsService();
 
     void Main() override;

@@ -11,18 +11,24 @@
 
 #include "RobotData.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+
 class Service
 {
 public:
-    Service(std::string name, uint32_t stackDepth, UBaseType_t priority);
-    virtual ~Service();
+    Service(const char* name, uint32_t stackDepth, UBaseType_t priority);
+    virtual ~Service(){};
 
     virtual void Setup() = 0;
     virtual void Main() = 0;
 
+    void create();
+
 protected:
-    std::string name;
+    const char* name;
     TaskHandle_t xTaskService;
+    uint32_t stackDepth;
+    UBaseType_t priority;
 
     static void task(void *_params);
 };

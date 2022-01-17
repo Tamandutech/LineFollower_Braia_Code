@@ -4,7 +4,7 @@
 
 #include "DebugService.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 //#define LINE_COLOR_BLACK
 #define taskStatus false
 
@@ -28,10 +28,8 @@ extern "C"
 
 void app_main(void)
 {
-  Service *serviceOrch;
   DebugService debugService("DebugService", 10000, 9);
-  
-  serviceOrch = &debugService;
+  debugService.create();
 
   // // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
   // braia = new Robot("Braia");

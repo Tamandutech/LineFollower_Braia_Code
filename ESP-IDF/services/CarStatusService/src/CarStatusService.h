@@ -6,7 +6,7 @@
 class CarStatusService : Service
 {
 public:
-    CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    CarStatusService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
     ~CarStatusService();
 
     void Main() override;
