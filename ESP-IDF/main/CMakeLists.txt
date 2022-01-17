@@ -5,4 +5,9 @@ set(app_sources
 	"main.cpp"
 )
 
-idf_component_register(SRCS ${app_sources})
+
+idf_component_register(
+	SRCS ${app_sources}
+)
+
+list(APPEND REQUIRES "DebugService")
