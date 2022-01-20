@@ -22,6 +22,8 @@ TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskSpeed;
 TaskHandle_t xTaskMapping;
 
+SensorsService *sensorsService;
+
 extern "C"
 {
   void app_main(void);
@@ -29,6 +31,7 @@ extern "C"
 
 void app_main(void)
 {
+  
   braia = new Robot("Braia");
 
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
@@ -102,11 +105,12 @@ void app_main(void)
 
   // DebugService debugService("DebugService", braia, 10000, 9);
   // debugService.createAsync();
+  
+  sensorsService = new SensorsService("SensorsService", braia, 100000, 9);
+  sensorsService->Start();
 
-  SensorsService sensorsService("SensorsService", braia, 100000, 9);
-  sensorsService.createAsync();
+  // vTaskStartScheduler();
 
-  sensorsService.startAsync();
   // debugService.startAsync();
 
   // Criacao das tasks e definindo seus parametros
