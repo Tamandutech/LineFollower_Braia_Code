@@ -4,7 +4,7 @@ dataPID::dataPID(std::string name)
 {
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = name;
-    ESP_LOGD(tag, "Criando objeto: %s", name.c_str());
+    ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
 
     ESP_LOGD(tag, "Criando Semáforos");
     vSemaphoreCreateBinary(xSemaphoreInput);

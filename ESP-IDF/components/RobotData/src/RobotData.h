@@ -13,6 +13,8 @@
 
 #include "esp_log.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+
 class Robot
 {
 public:

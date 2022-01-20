@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+
 #include <driver/gpio.h>
 #include <esp_heap_caps.h>
 #include <driver/adc.h>
@@ -579,6 +581,8 @@ public:
   void setCalibrationOff(uint16_t maxChannel[], uint16_t minChannel[]);
 
 private:
+  const char *tag = "QTRSensors";
+
   mcp3008::MCPDriver ls;
   mcp3008::MCPDriver::Config mcp_cfg;
 

@@ -14,6 +14,7 @@ void QTRSensors::setTypeAnalog()
 
 void QTRSensors::setTypeAnalogESP()
 {
+  ESP_LOGD(tag, "Definindo tipo ESP");
   _type = QTRType::AnalogESP;
   _maxValue = 4095; // Arduino analogRead() returns a 10-bit value by default
 
@@ -22,6 +23,7 @@ void QTRSensors::setTypeAnalogESP()
 
 void QTRSensors::setTypeMCP3008()
 {
+  ESP_LOGD(tag, "Definindo tipo MCP3008");
   _type = QTRType::MCP3008;
   _maxValue = 1023; // MCP3008 returns a 10-bit value by default
 }
@@ -34,6 +36,7 @@ void QTRSensors::setSensorPins(const uint8_t *pins, uint8_t sensorCount,
 
   if (_type == QTRType::MCP3008)
   {
+    ESP_LOGD(tag, "MCP3008:\n - CS: %d\n - MOSI: %d\n - MISO: %d\n - SCK: %d\n - freq: %d", cs, mosi, miso, sck, freq);
     mcp_cfg =
         mcp3008::MCPDriver::Config(cs, mosi, miso, sck, 0xFF, freq, spi_dev);
 
@@ -117,6 +120,7 @@ void QTRSensors::setTimeout(uint16_t timeout)
 
 void QTRSensors::setSamplesPerSensor(uint8_t samples)
 {
+  ESP_LOGD(tag, "setSamplesPer: %d", samples);
   if (samples > 64)
   {
     samples = 64;
@@ -440,31 +444,28 @@ void QTRSensors::calibrateOnOrOff(CalibrationData &calibration,
   uint16_t maxSensorValues[QTRMaxSensors];
   uint16_t minSensorValues[QTRMaxSensors];
 
-  // (Re)allocate and initialize the arrays if necessary.
   if (!calibration.initialized)
   {
     uint16_t *oldMaximum = calibration.maximum;
-    calibration.maximum = (uint16_t *)realloc(calibration.maximum,
-                                              sizeof(uint16_t) * _sensorCount);
+    calibration.maximum = (uint16_t *)heap_caps_realloc(calibration.maximum, sizeof(uint16_t) * _sensorCount, MALLOC_CAP_8BIT);
+
     if (calibration.maximum == nullptr)
     {
-      // Memory allocation failed; don't continue.
-      free(oldMaximum); // deallocate any memory used by old array
+      ESP_LOGD(tag, "Falha ao tentar alocar \"calibration.maximum\"");
+      heap_caps_free(oldMaximum);
       return;
     }
 
     uint16_t *oldMinimum = calibration.minimum;
-    calibration.minimum = (uint16_t *)realloc(calibration.minimum,
-                                              sizeof(uint16_t) * _sensorCount);
+    calibration.minimum = (uint16_t *)heap_caps_realloc(calibration.minimum, sizeof(uint16_t) * _sensorCount, MALLOC_CAP_8BIT);
+
     if (calibration.minimum == nullptr)
     {
-      // Memory allocation failed; don't continue.
-      free(oldMinimum); // deallocate any memory used by old array
+      ESP_LOGD(tag, "Falha ao tentar alocar \"calibration.minimum\"");
+      heap_caps_free(oldMinimum);
       return;
     }
 
-    // Initialize the max and min calibrated values to values that
-    // will cause the first reading to update them.
     for (uint8_t i = 0; i < _sensorCount; i++)
     {
       calibration.maximum[i] = 0;
@@ -480,36 +481,21 @@ void QTRSensors::calibrateOnOrOff(CalibrationData &calibration,
 
     for (uint8_t i = 0; i < _sensorCount; i++)
     {
-      // set the max we found THIS time
       if ((j == 0) || (sensorValues[i] > maxSensorValues[i]))
-      {
         maxSensorValues[i] = sensorValues[i];
-      }
 
-      // set the min we found THIS time
       if ((j == 0) || (sensorValues[i] < minSensorValues[i]))
-      {
         minSensorValues[i] = sensorValues[i];
-      }
     }
   }
 
-  // record the min and max calibration values
   for (uint8_t i = 0; i < _sensorCount; i++)
   {
-    // Update maximum only if the min of 10 readings was still higher than it
-    // (we got 10 readings in a row higher than the existing maximum).
     if (minSensorValues[i] > calibration.maximum[i])
-    {
       calibration.maximum[i] = minSensorValues[i];
-    }
 
-    // Update minimum only if the max of 10 readings was still lower than it
-    // (we got 10 readings in a row lower than the existing minimum).
     if (maxSensorValues[i] < calibration.minimum[i])
-    {
       calibration.minimum[i] = maxSensorValues[i];
-    }
   }
 }
 
@@ -546,9 +532,9 @@ void QTRSensors::readCalibrated(uint16_t *sensorValues, QTRReadMode mode)
 
     sensorValues[i] = value;
   }
-  ESP_LOGD("QTRSensors", "%d | %d | %d | %d | %d | %d | %d | %d\n", sensorValues[0], sensorValues[1],
-          sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5],
-          sensorValues[6], sensorValues[7]);
+  ESP_LOGD(tag, "%d | %d | %d | %d | %d | %d | %d | %d\n", sensorValues[0], sensorValues[1],
+           sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5],
+           sensorValues[6], sensorValues[7]);
 }
 
 // Reads the first of every [step] sensors, starting with [start] (0-indexed,
@@ -649,6 +635,7 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
       {
         // add the conversion result
         sensorValues[i] += adc1_get_raw(_sensorPinsESP[i]);
+        ESP_LOGD(tag, "ADC (ESP) Canal: %d", _sensorPinsESP[i]);
       }
     }
 
@@ -662,17 +649,22 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
 
   case QTRType::MCP3008:
     // reset the values
+    esp_err_t mcpError;
+
     for (uint8_t i = start; i < _sensorCount; i += step)
     {
       sensorValues[i] = 0;
     }
 
+    ESP_LOGD(tag, "ADC (MCP3008) Quantidade de canais: %d", _sensorCount);
+
     for (uint8_t j = 0; j < _samplesPerSensor; j++)
     {
-      for (uint8_t i = start; i < _sensorCount; i += step)
+      for (uint8_t i = start; i < _sensorCount; i = mcpError == ESP_OK ? i + step : i)
       {
         // add the conversion result
-        sensorValues[i] += ls.readChannel(_sensorPins[i]);
+        sensorValues[i] += ls.readChannel(_sensorPins[i], false, &mcpError);
+        ESP_LOGD(tag, "ADC (MCP3008) sensorValues[%d]: %d", i, sensorValues[i]);
       }
     }
 

@@ -6,7 +6,7 @@
 class PIDService : Service
 {
 public:
-    PIDService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Service (name, robot, stackDepth, priority){};
     ~PIDService();
 
     void Main() override;

@@ -14,6 +14,8 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+
 class RobotStatus
 {
 public:

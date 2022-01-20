@@ -9,7 +9,7 @@
 class MotorsService : Service
 {
 public:
-    MotorsService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    MotorsService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Service (name, robot, stackDepth, priority){};
     ~MotorsService();
 
     void Main() override;

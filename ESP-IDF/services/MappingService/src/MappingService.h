@@ -6,7 +6,7 @@
 class MappingService : Service
 {
 public:
-    MappingService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    MappingService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Service (name, robot, stackDepth, priority){};
     ~MappingService();
 
     void Main() override;

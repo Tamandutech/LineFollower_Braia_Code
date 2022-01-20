@@ -6,7 +6,7 @@
 class SpeedService : Service
 {
 public:
-    SpeedService(const char* name, uint32_t stackDepth, UBaseType_t priority) : Service (name, stackDepth, priority){};
+    SpeedService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Service (name, robot, stackDepth, priority){};
     ~SpeedService();
 
     void Main() override;
