@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include <driver/gpio.h>
 #include <esp_heap_caps.h>
 #include <driver/adc.h>

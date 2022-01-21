@@ -2,14 +2,16 @@
 #include "includes.hpp"
 #include "RobotData.h"
 
-#include "DebugService.h"
-#include "SensorsService.h"
+#include "CarStatusService.hpp"
+#include "MappingService.hpp"
+#include "MotorsService.hpp"
+#include "PIDService.hpp"
+#include "SensorsService.hpp"
+#include "SpeedService.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 //#define LINE_COLOR_BLACK
 #define taskStatus false
-
-#define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 // Componentes de encapsulamento das variaveis
 Robot *braia;
@@ -22,7 +24,12 @@ TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskSpeed;
 TaskHandle_t xTaskMapping;
 
+CarStatusService *carStatusService;
+MappingService *mappingService;
+MotorsService *motorsService;
+PIDService *pidService;
 SensorsService *sensorsService;
+SpeedService *speedService;
 
 extern "C"
 {
@@ -31,7 +38,6 @@ extern "C"
 
 void app_main(void)
 {
-  
   braia = new Robot("Braia");
 
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
@@ -103,28 +109,21 @@ void app_main(void)
     braia->getPIDVel()->setSetpoint(1900);
   }
 
-  // DebugService debugService("DebugService", braia, 10000, 9);
-  // debugService.createAsync();
-  
-  sensorsService = new SensorsService("SensorsService", braia, 100000, 9);
+  carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
+  carStatusService->Start();
+
+  mappingService = new MappingService("MappingService", braia, 10000, 9);
+  // carStatusService->Start();
+
+  motorsService = new MotorsService("MotorsService", braia, 10000, 9);
+  motorsService->Start();
+
+  pidService = new PIDService("PIDService", braia, 10000, 9);
+  pidService->Start();
+
+  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
   sensorsService->Start();
 
-  // vTaskStartScheduler();
-
-  // debugService.startAsync();
-
-  // Criacao das tasks e definindo seus parametros
-  //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)
-
-  // xTaskCreate(vTaskMotors, "TaskMotors", 10000, braia, 9, &xTaskMotors);
-
-  // xTaskCreate(vTaskSensors, "TaskSensors", 10000, braia, 9, &xTaskSensors);
-
-  // xTaskCreate(vTaskPID, "TaskPID", 10000, braia, 9, &xTaskPID);
-
-  // xTaskCreate(vTaskSpeed, "TaskSpeed", 10000, braia, 9, &xTaskSpeed);
-
-  // xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
-
-  // xTaskCreate(vTaskMapping, "TaskMapping", 10000, braia, 9, &xTaskMapping);
+  speedService = new SpeedService("SpeedService", braia, 10000, 9);
+  speedService->Start();
 }
