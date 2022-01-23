@@ -16,14 +16,6 @@
 // Componentes de encapsulamento das variaveis
 Robot *braia;
 
-// TaksHandles para gerenciar execucao das tasks
-TaskHandle_t xTaskMotors;
-TaskHandle_t xTaskSensors;
-TaskHandle_t xTaskPID;
-TaskHandle_t xTaskCarStatus;
-TaskHandle_t xTaskSpeed;
-TaskHandle_t xTaskMapping;
-
 CarStatusService *carStatusService;
 MappingService *mappingService;
 MotorsService *motorsService;
