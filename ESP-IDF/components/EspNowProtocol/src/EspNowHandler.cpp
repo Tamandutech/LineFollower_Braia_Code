@@ -55,14 +55,16 @@ esp_err_t EspNowHandler::EspSend(ProtocolCodes code, uint16_t ver, uint16_t data
     {
         int TotalDataSize = sizeof(code) + sizeof(ver) + sizeof(dataSize) + dataSize;
         uint8_t *dataToSend = (uint8_t *)malloc(TotalDataSize);
+        uint16_t ptrAdvance = 0; //qtd de bytes que o ponteiro precisa avançar para receber novos dados 
         memcpy(dataToSend, &code, sizeof(code));
-        dataToSend += sizeof(code);
-        memcpy(dataToSend, &ver, sizeof(ver));
-        dataToSend += sizeof(ver);
-        memcpy(dataToSend, &dataSize, sizeof(dataSize));
-        dataToSend += sizeof(dataSize);
-        memcpy(dataToSend, msgSend, sizeof(dataSize));
-        sendreturn = esp_now_send(this->peerInfo.peer_addr, (uint8_t *)dataToSend, sizeof(TotalDataSize));
+        ptrAdvance += sizeof(code);
+        memcpy(dataToSend + ptrAdvance, &ver, sizeof(ver));
+        ptrAdvance += sizeof(ver);
+        memcpy(dataToSend + ptrAdvance, &dataSize, sizeof(dataSize));
+        ptrAdvance += sizeof(dataSize);
+        memcpy(dataToSend + ptrAdvance, msgSend, dataSize);
+        sendreturn = esp_now_send(this->peerInfo.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
+        free(dataToSend);
         xSemaphoreGive(xSemaphorePeerInfo);
     }
     else
