@@ -1,5 +1,10 @@
 #include "EspNowHandler.h"
 
+uint8_t *EspNowHandler::ReceivedData;
+bool EspNowHandler::dataReceived;
+SemaphoreHandle_t EspNowHandler::xSemaphoreReceivedData;
+SemaphoreHandle_t EspNowHandler::xSemaphoredataReceived;
+
 EspNowHandler::EspNowHandler(std::string name)
 {
     this->name = name;
@@ -134,19 +139,17 @@ uint8_t *EspNowHandler::getReceivedData()
     {
         tempvar = EspNowHandler::ReceivedData;
         xSemaphoreGive(xSemaphoreReceivedData);
-        for (;;)
+        if (xSemaphoreTake(xSemaphoredataReceived, (TickType_t)30) == pdTRUE)
         {
-            if (xSemaphoreTake(xSemaphoredataReceived, (TickType_t)10) == pdTRUE)
-            {
-                EspNowHandler::dataReceived = false;
-                xSemaphoreGive(xSemaphoredataReceived);
-                return tempvar;
-            }
-            else
-            {
-                ESP_LOGE("EspNowHandler", "Variável dataReceived ocupada, não foi possível definir valor.");
-                return tempvar;
-            }
+            EspNowHandler::dataReceived = false;
+            xSemaphoreGive(xSemaphoredataReceived);
+            return tempvar;
+        }
+        else
+        {
+            ESP_LOGE("EspNowHandler", "Variável dataReceived ocupada, não foi possível definir valor.");
+            tempvar = nullptr;
+            return tempvar;
         }
     }
     else

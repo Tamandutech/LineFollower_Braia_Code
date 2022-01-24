@@ -47,9 +47,4 @@ class EspNowHandler
 
 };
 
-// uint8_t *EspNowHandler::ReceivedData;
-// bool EspNowHandler::dataReceived;
-// SemaphoreHandle_t EspNowHandler::xSemaphoreReceivedData;
-// SemaphoreHandle_t EspNowHandler::xSemaphoredataReceived;
-
 #endif
