@@ -1,10 +1,11 @@
 
 #include "includes.hpp"
 #include "RobotData.h"
+#include "EspNowHandler.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
 //#define LINE_COLOR_BLACK
-#define taskStatus false
+#define taskStatus false // Variável para habilitar a TaskStatus
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
@@ -18,6 +19,7 @@ TaskHandle_t xTaskPID;
 TaskHandle_t xTaskCarStatus;
 TaskHandle_t xTaskSpeed;
 TaskHandle_t xTaskMapping;
+TaskHandle_t xTaskEspNow;
 
 void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *braia)
 {
@@ -74,7 +76,6 @@ void processSLat(Robot *braia)
   bool sldir2 = gpio_get_level(GPIO_NUM_5);
 
   ESP_LOGD("processSLat", "Laterais (Direira): %d | %d", sldir1, sldir2);
-
   auto SLat = braia->getsLat();
   uint16_t slesq1 = SLat->getChannel(0);
   uint16_t slesq2 = SLat->getChannel(1);
@@ -202,6 +203,7 @@ void vTaskSensors(void *pvParameters)
 
   vTaskResume(xTaskMotors);
   vTaskResume(xTaskPID);
+  vTaskResume(xTaskEspNow);
   if(taskStatus) vTaskResume(xTaskCarStatus);
   vTaskResume(xTaskSpeed);
   if(braia->getStatus()->getMapping()) vTaskResume(xTaskMapping);
@@ -335,12 +337,12 @@ void vTaskPID(void *pvParameters)
 void vTaskCarStatus(void *pvParameters)
 {
   static const char *TAG = "vTaskCarStatus";
-  #define Marks 40 // marcas laterais esquerda na pista 
 
   Robot *braia = (Robot *)pvParameters;
   RobotStatus *status = braia->getStatus();
   dataSpeed *speed = braia->getSpeed();
-  
+  auto latMarks = braia->getSLatMarks();
+  int Marks = latMarks->getTotalLeftMarks();  // marcas laterais esquerda na pista 
   // Setup
   ESP_LOGD(TAG, "Task criada!");
 
@@ -354,7 +356,7 @@ void vTaskCarStatus(void *pvParameters)
   // Matriz com dados de media encoders,linha do carrinho
   int32_t Manualmap[2][40]={{0,0,0,0,0},   // media
                             {0,0,0,0,0}}; // linha
-  int32_t FinalMark = 0; // Media dos encoders da marcação final
+  int32_t FinalMark = latMarks->getFinalMark(); // Media dos encoders da marcação final
   int32_t PlusPulses = 0; // Pulsos a mais para a parada
   // Loop
   for (;;)
@@ -366,19 +368,21 @@ void vTaskCarStatus(void *pvParameters)
       int mark = 0;
       for(mark=0; mark < Marks; mark++){ // Verifica a contagem do encoder e atribui o estado ao robô
         if(mark < Marks-1){
-          int32_t Manualmedia = Manualmap[0][mark];
-          int32_t ManualmediaNxt = Manualmap[0][mark+1];
+          int32_t Manualmedia = (latMarks->getMarkDataReg(mark)).MapEncMedia; //Manualmap[0][mark];
+          int32_t ManualmediaNxt =  (latMarks->getMarkDataReg(mark+1)).MapEncMedia;//Manualmap[0][mark+1];
           if(mediaEnc >= Manualmedia && mediaEnc <= ManualmediaNxt){ // análise do valor das médias dos encoders
+            int32_t mapstatus = (latMarks->getMarkDataReg(mark)).MapStatus; // status do robô
             CarState estado;
-            if(Manualmap[1][mark] == CAR_IN_LINE) estado = CAR_IN_LINE; 
+            if(mapstatus == CAR_IN_LINE) estado = CAR_IN_LINE; 
             else estado = CAR_IN_CURVE;
             status->setState(estado);
             break;
           }
         }
         else{
+          int32_t mapstatus = (latMarks->getMarkDataReg(mark)).MapStatus; // status do robô
           CarState estado;
-          if(Manualmap[1][mark] == CAR_IN_LINE) estado = CAR_IN_LINE;
+          if(mapstatus == CAR_IN_LINE) estado = CAR_IN_LINE;
           else estado = CAR_IN_CURVE;
           status->setState(estado);
           break;
@@ -406,7 +410,7 @@ void vTaskSpeed(void *pvParameters)
   Robot *braia = (Robot *)pvParameters;
   dataSpeed *speed = braia->getSpeed();
 
-  auto MPR_MotEsq = 600;
+  auto MPR_MotEsq = 600; // Variável com constante de conversão de pulsos para Rpm, Consertar o método que retorna esta variável
   auto MPR_MotDir = 600;
 
   // Componente de gerenciamento dos encoders
@@ -466,7 +470,7 @@ void vTaskSpeed(void *pvParameters)
 
     // Calculo de velocidade media do carro (RPM)
     speed->setRPMCar_media(                                                                                      // -> Calculo velocidade media do carro
-        (((lastPulseRight / (float)speed->getMPR_MotDir() + lastPulseLeft / (float)speed->getMPR_MotEsq())) / 2) // Revolucoes media desde inicializacao
+        (((lastPulseRight / (float)MPR_MotDir + lastPulseLeft / (float)MPR_MotEsq)) / 2) // Revolucoes media desde inicializacao
         / ((float)deltaTimeMS_media / (float)60000)                                                              // Divisao do delta tempo em minutos para calculo de RPM
     );
     //ESP_LOGE(TAG,"Direito: %d",enc_motDir.getCount());
@@ -492,13 +496,15 @@ void vTaskMapping(void *pvParameters){
 
   
   static const char *TAG = "vTaskMapping";
-  ESP_LOGD(TAG, "Mapeamento Iniciado e aguardando calibração");
+  ESP_LOGI(TAG, "Mapeamento Iniciado e aguardando calibração");
   vTaskSuspend(xTaskMapping);
-  ESP_LOGD(TAG, "Mapeamento Retomado!");
+  ESP_LOGI(TAG, "Mapeamento Retomado!");
   
 
   Robot *braia = (Robot *)pvParameters;
   auto speedMapping = braia->getSpeed();
+  auto SLat = braia->getsLat();
+  auto latMarks = braia->getSLatMarks();
   
   //speedMapping -> setSpeedMin(50, CAR_IN_LINE);//velocidade minima de mapeamento e estado do robô(linha)
   //speedMapping -> setSpeedMax(70, CAR_IN_LINE);//velocidade maxima de mapeamento e estado do robô(linha)
@@ -511,10 +517,13 @@ void vTaskMapping(void *pvParameters){
   //mappingData[2][L,L,R, , , , , , , , , , , , , , , ,]; considerando o tempo do video, adicionar os estados do robô
   uint16_t marks = 0;
 
-  TickType_t xLastWakeTime = xTaskGetTickCount();// Variavel necerraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
+  TickType_t xLastWakeTime = xTaskGetTickCount();// Variavel necesárraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
 
   bool startTimer = false;
+  bool leftpassed = false;
+  int iloop=0; // Variável para debug
   int32_t FinalMarkData = 0; // Media dos encoders na marcação final
+  int32_t InitialMarkData = 0; // Media dos encoders na marcação inicial
 
   TickType_t xInicialTicks = xTaskGetTickCount();
 
@@ -522,52 +531,100 @@ void vTaskMapping(void *pvParameters){
   for (;;)
   {
     
-    auto SLat = braia->getsLat();
     uint16_t slesq1 = SLat->getChannel(0);
     uint16_t slesq2 = SLat->getChannel(1);
     bool sldir1 = gpio_get_level(GPIO_NUM_17);
     bool sldir2 = gpio_get_level(GPIO_NUM_5);
-    auto latMarks = braia->getSLatMarks();
     bool bottom = gpio_get_level(GPIO_NUM_0);
     
     if(((latMarks->getrightMarks()) == 1) && !startTimer){
       
       xInicialTicks = xTaskGetTickCount(); //pegando o tempo inicial
       startTimer = true;
+      InitialMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+      latMarks->SetInitialMark(InitialMarkData);
     }
-
-
+    if(iloop>=20)
+    {
+      ESP_LOGI("getSensors", "Laterais Esquerdos: %d | %d ", slesq1, slesq2);
+      ESP_LOGI("getSensors", "Laterais Direitos: %d | %d ", sldir1, sldir2);
+      ESP_LOGI(TAG, "Marcações direita: %d ", latMarks->getrightMarks());
+      iloop=0;
+    }
+    iloop++;
     if((latMarks->getrightMarks()) == 1){
-
       if ((slesq1 < 300 || slesq2 < 300) && (sldir1 && sldir2))
       {
+        struct MapData MarkReg;
         //tempo
-        mappingData[0][marks] = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
+        MarkReg.MapTime = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
         //media
-        mappingData[1][marks] = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+        MarkReg.MapEncMedia = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
         //estado
+        if((marks % 2) == 0){ // Verifica se o carrinho está na curva ou na linha
+          MarkReg.MapStatus = CAR_IN_CURVE;
+        }
+        else{
+          MarkReg.MapStatus = CAR_IN_LINE;
+        }
+        ESP_LOGI(TAG,"%d, %d, %d", MarkReg.MapTime,MarkReg.MapEncMedia, MarkReg.MapStatus);
+        latMarks->SetMarkDataReg(MarkReg, marks); // Salva os dados da marcação na struct MapData
         marks ++;
+        leftpassed = true; // Diz que o carro está em uma marcação esquerda
 
+      }
+      else{
+        leftpassed = false;
       } 
 
     }
     else if(latMarks->getrightMarks() < 1){
-      ESP_LOGD(TAG, "Mapeamento não iniciado");
+      ESP_LOGI(TAG, "Mapeamento não iniciado");
     }
     else if(latMarks->getrightMarks() > 1){
-      ESP_LOGD(TAG, "Mapeamento finalizado");
+      ESP_LOGI(TAG, "Mapeamento finalizado");
       FinalMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+      latMarks->SetMapFinished(true);
+      latMarks->SetFinalMark(FinalMarkData);
     }
     if(!bottom){
-      ESP_LOGD("","Tempo, Média, Estado");
+      ESP_LOGI("","Tempo, Média, Estado");
       for(int i = 0; i < marks;  i++){
-         ESP_LOGD("","%d, %d, %d", mappingData[0][i],mappingData[1][i], mappingData[2][i]);
+         struct MapData markreg = latMarks->getMarkDataReg(i); 
+         ESP_LOGI("","%d, %d, %d", markreg.MapTime,markreg.MapEncMedia, markreg.MapStatus);
       }
-      ESP_LOGD("Final Mark (média dos encoders) "," %d ", FinalMarkData);
+      ESP_LOGI("Final Mark (média dos encoders) "," %d ", FinalMarkData);
     }
 
     vTaskDelayUntil(&xLastWakeTime, 30 / portTICK_PERIOD_MS);  
   }         
+}
+
+void vTaskEspNow(void *pvParameters){
+  
+  auto TaskDelay = 30;
+  static const char *TAG = "vTaskEspNow";
+  ESP_LOGD(TAG, "Task EspNow Iniciada e aguardando calibração");
+  vTaskSuspend(xTaskEspNow);
+  ESP_LOGD(TAG, "TaskEspNow Retomada!");
+  
+  uint8_t broadcastAddress[] = {0x24, 0x6F, 0x28, 0xB2, 0x23, 0xD0};
+  Robot *braia = (Robot *)pvParameters;
+  EspNowHandler protocolHandler;
+  protocolHandler.EspNowInit(1,broadcastAddress,false);
+  char msgSend[] = "Mensagem do Robo";
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
+  for(;;){
+    uint8_t *ReceivedData;
+    if(protocolHandler.dataAvailable()){
+      ReceivedData = protocolHandler.getReceivedData();
+
+    }
+
+    protocolHandler.EspSend(MapDataSend,0,0,msgSend);
+    vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);  
+  }
 }
 
 /////////////// FIM TASKs DO ROBO ///////////////
@@ -663,5 +720,7 @@ void app_main(void)
   xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
 
   xTaskCreate(vTaskMapping, "TaskMapping", 10000, braia, 9, &xTaskMapping);
+
+  xTaskCreate(vTaskEspNow, "TaskEspNow", 10000, braia, 9, &xTaskEspNow);
 
 }
