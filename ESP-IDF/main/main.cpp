@@ -34,15 +34,11 @@ void app_main(void)
 
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
 
-  braia->getStatus()->setMapping(false);
-  bool mapping = braia->getStatus()->getMapping();
-  braia->getStatus()->setState(CAR_IN_LINE);
-
   //Pulsos para uma revolução de cada encoder (revolução*redução)
   // braia->getSpeed()->setMPR_MotDir(20,30);
   // braia->getSpeed()->setMPR_MotEsq(20,30);
 
-  if (mapping)
+  if (braia->getStatus()->getMapping())
   {
 
     braia->getSpeed()->setSpeedBase(30, CAR_IN_LINE);

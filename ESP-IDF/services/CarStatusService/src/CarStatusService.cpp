@@ -5,6 +5,9 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     this->robot = robot;
     this->status = robot->getStatus();
     this->speed = robot->getSpeed();
+
+    status->setMapping(false);
+    status->setState(CAR_IN_LINE);
 }
 
 void CarStatusService::Run()

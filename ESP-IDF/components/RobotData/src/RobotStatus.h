@@ -31,7 +31,7 @@ private:
     std::string name;
     const char *tag = "RobotStatus";
 
-    CarState robotState;
+    CarState robotState = CAR_IN_LINE;
     SemaphoreHandle_t xSemaphoreRobotState;
     bool robotMap;
     SemaphoreHandle_t xSemaphoreRobotMap;
