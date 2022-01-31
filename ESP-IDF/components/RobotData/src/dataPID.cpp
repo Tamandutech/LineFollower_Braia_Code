@@ -117,6 +117,7 @@ int dataPID::setKp(float Kp, CarState state)
 {
     switch (state)
     {
+    case CAR_STOPPED:
     case CAR_IN_LINE:
         if (xSemaphoreTake(xSemaphoreKp_line, (TickType_t)10) == pdTRUE)
         {
@@ -146,7 +147,7 @@ int dataPID::setKp(float Kp, CarState state)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de Kp não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de Kp não será definido!", state);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -156,6 +157,7 @@ float dataPID::getKp(CarState state)
     float tempKp;
     switch (state)
     {
+    case CAR_STOPPED:
     case CAR_IN_LINE:
         if (xSemaphoreTake(xSemaphoreKp_line, (TickType_t)10) == pdTRUE)
         {
@@ -183,7 +185,7 @@ float dataPID::getKp(CarState state)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido para obter o Kp do PID, retornando valor para linha.");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Kp do PID, retornando valor para linha.", state);
         return DEFAULT_KP_LINE;
         break;
     }
@@ -195,6 +197,7 @@ int dataPID::setKi(float Ki, CarState state)
 {
     switch (state)
     {
+    case CAR_STOPPED:
     case CAR_IN_LINE:
         if (xSemaphoreTake(xSemaphoreKi_line, (TickType_t)10) == pdTRUE)
         {
@@ -224,7 +227,7 @@ int dataPID::setKi(float Ki, CarState state)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de Ki não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de Ki não será definido!", state);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -234,6 +237,7 @@ float dataPID::getKi(CarState state)
     float tempKi;
     switch (state)
     {
+    case CAR_STOPPED:
     case CAR_IN_LINE:
         if (xSemaphoreTake(xSemaphoreKi_line, (TickType_t)10) == pdTRUE)
         {
@@ -273,6 +277,7 @@ int dataPID::setKd(float Kd, CarState state)
 {
     switch (state)
     {
+    case CAR_STOPPED:
     case CAR_IN_LINE:
         if (xSemaphoreTake(xSemaphoreKd_line, (TickType_t)10) == pdTRUE)
         {
@@ -302,7 +307,7 @@ int dataPID::setKd(float Kd, CarState state)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de Kd não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de Kd não será definido!", state);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -312,6 +317,7 @@ float dataPID::getKd(CarState state)
     float tempKd;
     switch (state)
     {
+    case CAR_STOPPED:
     case CAR_IN_LINE:
         if (xSemaphoreTake(xSemaphoreKd_line, (TickType_t)10) == pdTRUE)
         {
@@ -339,7 +345,7 @@ float dataPID::getKd(CarState state)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido para obter o Kd do PID, retornando valor para linha.");
+        ESP_LOGE(tag, "Estado do Robô desconhecido para obter o Kd do PID: %d, retornando valor para linha.", state);
         return DEFAULT_KD_LINE;
         break;
     }

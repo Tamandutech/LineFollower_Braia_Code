@@ -8,7 +8,7 @@ using namespace cpp_freertos;
 
 #define Marks 40 // marcas laterais esquerda na pista
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class CarStatusService : public Thread
 {

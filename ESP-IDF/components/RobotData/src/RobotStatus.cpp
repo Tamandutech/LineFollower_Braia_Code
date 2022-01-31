@@ -6,11 +6,10 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     this->name = name;
     this->robotState = initialState;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
-    
+
     ESP_LOGD(tag, "Criando Semáforos: %s", name.c_str());
     vSemaphoreCreateBinary(xSemaphoreRobotState);
     vSemaphoreCreateBinary(xSemaphoreRobotMap);
-
 }
 
 int RobotStatus::setState(CarState value)
@@ -27,14 +26,18 @@ int RobotStatus::setState(CarState value)
         return RETORNO_VARIAVEL_OCUPADA;
     }
 }
+
 CarState RobotStatus::getState()
 {
+    CarState tempvar;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreRobotState, (TickType_t)10) == pdTRUE)
         {
+            tempvar = this->robotState;
             xSemaphoreGive(xSemaphoreRobotState);
             return this->robotState;
+            return tempvar;
         }
         else
         {
@@ -42,6 +45,7 @@ CarState RobotStatus::getState()
         }
     }
 }
+
 int RobotStatus::setMapping(bool value)
 {
     if (xSemaphoreTake(xSemaphoreRobotMap, (TickType_t)10) == pdTRUE)
@@ -58,12 +62,15 @@ int RobotStatus::setMapping(bool value)
 }
 bool RobotStatus::getMapping()
 {
+    bool tempvar;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreRobotMap, (TickType_t)10) == pdTRUE)
         {
+            tempvar = this->robotMap;
             xSemaphoreGive(xSemaphoreRobotMap);
             return this->robotMap;
+            return tempvar;
         }
         else
         {

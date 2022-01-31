@@ -32,7 +32,8 @@ DataFunction dataSpeed::setSpeedLeft(int8_t value, CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return setVar(value, &this->left_line, &xSemaphoreleft_line);
         break;
 
@@ -41,7 +42,7 @@ DataFunction dataSpeed::setSpeedLeft(int8_t value, CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedLeft não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedLeft não será definido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -50,7 +51,8 @@ int8_t dataSpeed::getSpeedLeft(CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return getVar(&this->left_line, &xSemaphoreleft_line);
         break;
 
@@ -59,7 +61,7 @@ int8_t dataSpeed::getSpeedLeft(CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedLeft não será lido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedLeft não será lido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -69,7 +71,8 @@ DataFunction dataSpeed::setSpeedRight(int8_t value, CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return setVar(value, &this->right_line, &xSemaphoreright_line);
         break;
 
@@ -78,7 +81,7 @@ DataFunction dataSpeed::setSpeedRight(int8_t value, CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedRight não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedRight não será definido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -87,7 +90,8 @@ int8_t dataSpeed::getSpeedRight(CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return getVar(&this->right_line, &xSemaphoreright_line);
         break;
 
@@ -96,7 +100,7 @@ int8_t dataSpeed::getSpeedRight(CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedLeft não será lido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedLeft não será lido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -106,7 +110,8 @@ DataFunction dataSpeed::setSpeedMax(int8_t value, CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return setVar(value, &this->max_line, &xSemaphoremax_line);
         break;
 
@@ -115,7 +120,7 @@ DataFunction dataSpeed::setSpeedMax(int8_t value, CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedMediaMax não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMax não será definido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -124,7 +129,8 @@ int8_t dataSpeed::getSpeedMax(CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return getVar(&this->max_line, &xSemaphoremax_line);
         break;
 
@@ -133,7 +139,7 @@ int8_t dataSpeed::getSpeedMax(CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedMediaMax não será lido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMax não será lido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -143,7 +149,8 @@ DataFunction dataSpeed::setSpeedMin(int8_t value, CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return setVar(value, &this->min_line, &xSemaphoremin_line);
         break;
 
@@ -152,7 +159,7 @@ DataFunction dataSpeed::setSpeedMin(int8_t value, CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedMediaMin não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMin não será definido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -161,7 +168,8 @@ int8_t dataSpeed::getSpeedMin(CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return getVar(&this->min_line, &xSemaphoremin_line);
         break;
 
@@ -170,7 +178,7 @@ int8_t dataSpeed::getSpeedMin(CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedMediaMin não será lido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMin não será lido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -180,7 +188,8 @@ DataFunction dataSpeed::setSpeedBase(int8_t value, CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return setVar(value, &this->base_line, &xSemaphorebase_line);
         break;
 
@@ -189,7 +198,7 @@ DataFunction dataSpeed::setSpeedBase(int8_t value, CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedMediaBase não será definido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaBase não será definido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }
@@ -198,7 +207,8 @@ int8_t dataSpeed::getSpeedBase(CarState carState)
 {
     switch (carState)
     {
-    case CAR_IN_LINE:
+    case CAR_STOPPED:
+case CAR_IN_LINE:
         return getVar(&this->base_line, &xSemaphorebase_line);
         break;
 
@@ -207,7 +217,7 @@ int8_t dataSpeed::getSpeedBase(CarState carState)
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido, valor de SpeedMediaBase não será lido!");
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaBase não será lido!", carState);
         return RETORNO_ARGUMENTO_INVALIDO;
         break;
     }

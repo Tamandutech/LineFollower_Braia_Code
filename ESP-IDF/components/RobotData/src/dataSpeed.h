@@ -1,7 +1,7 @@
 #ifndef DATA_SPEED_H
 #define DATA_SPEED_H
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 #include <stdint.h>
 #include <stddef.h>

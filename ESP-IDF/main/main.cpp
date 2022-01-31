@@ -32,12 +32,6 @@ void app_main(void)
 {
   braia = new Robot("Braia");
 
-  // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
-
-  //Pulsos para uma revolução de cada encoder (revolução*redução)
-  // braia->getSpeed()->setMPR_MotDir(20,30);
-  // braia->getSpeed()->setMPR_MotEsq(20,30);
-
   if (braia->getStatus()->getMapping())
   {
 
@@ -98,20 +92,28 @@ void app_main(void)
   }
 
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
+  mappingService = new MappingService("MappingService", braia, 10000, 9);
+  motorsService = new MotorsService("MotorsService", braia, 10000, 9);
+  speedService = new SpeedService("SpeedService", braia, 10000, 9);
+  pidService = new PIDService("PIDService", braia, 10000, 9);
+  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
+
+  sensorsService->Start();
+  pidService->Start();
+  speedService->Start();
+  motorsService->Start();
+  mappingService->Start();
   carStatusService->Start();
 
-  mappingService = new MappingService("MappingService", braia, 10000, 9);
-  // carStatusService->Start();
+  // for (;;)
+  // {
+  //   ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
+  //   ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
+  //   ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
+  //   ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
+  //   ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
+  //   ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
 
-  motorsService = new MotorsService("MotorsService", braia, 10000, 9);
-  motorsService->Start();
-
-  pidService = new PIDService("PIDService", braia, 10000, 9);
-  pidService->Start();
-
-  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
-  sensorsService->Start();
-
-  speedService = new SpeedService("SpeedService", braia, 10000, 9);
-  speedService->Start();
+  //   vTaskDelay(1000 / portTICK_PERIOD_MS);
+  // }
 }
