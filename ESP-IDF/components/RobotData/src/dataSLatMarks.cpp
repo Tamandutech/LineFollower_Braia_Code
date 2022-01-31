@@ -10,6 +10,9 @@ dataSLatMarks::dataSLatMarks(std::string name){
     vSemaphoreCreateBinary(xSemaphorerightMarks);
     vSemaphoreCreateBinary(xSemaphoreMarksData);
     vSemaphoreCreateBinary(xSemaphoreTotalLeftMarks);
+    vSemaphoreCreateBinary(xSemaphoreInitialMark);
+    vSemaphoreCreateBinary(xSemaphoreFinalMark);
+    vSemaphoreCreateBinary(xSemaphoreMapFinished);
 }
 bool dataSLatMarks::getSLatEsq(){
     bool tempInput;
@@ -47,7 +50,7 @@ bool dataSLatMarks::getSLatDir(){
     {
         if (xSemaphoreTake(xSemaphorelatdirPass, (TickType_t)10) == pdTRUE)
         {
-            tempInput = this->latesqPass;
+            tempInput = this->latdirPass;
             xSemaphoreGive(xSemaphorelatdirPass);
             return tempInput;
         }
@@ -95,7 +98,7 @@ int dataSLatMarks::rightPassedInc()
     }
     else
     {
-        ESP_LOGE(tag, "Variável leftMarks ocupada, não foi possível definir valor.");
+        ESP_LOGE(tag, "Variável rightMarks ocupada, não foi possível definir valor.");
         return RETORNO_VARIAVEL_OCUPADA;
     }
 }
@@ -194,7 +197,7 @@ int dataSLatMarks::SetTotalLeftMarks(uint16_t totalmarks)
     }
 }
 int32_t dataSLatMarks::getInitialMark(){
-    uint16_t tempInput;
+    int32_t tempInput;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreInitialMark, (TickType_t)10) == pdTRUE)
@@ -224,7 +227,7 @@ int dataSLatMarks::SetInitialMark(int32_t initialmark)
     }
 }
 int32_t dataSLatMarks::getFinalMark(){
-    uint16_t tempInput;
+    int32_t tempInput;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreFinalMark, (TickType_t)10) == pdTRUE)
@@ -254,7 +257,7 @@ int dataSLatMarks::SetFinalMark(int32_t finalmark)
     }
 }
 bool dataSLatMarks::getMapFinished(){
-    uint16_t tempInput;
+    bool tempInput;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreMapFinished, (TickType_t)10) == pdTRUE)

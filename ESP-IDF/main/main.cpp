@@ -5,7 +5,7 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 //#define LINE_COLOR_BLACK
-#define taskStatus false // Variável para habilitar a TaskStatus
+#define taskStatus true // Variável para habilitar a TaskStatus
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
@@ -75,40 +75,43 @@ void processSLat(Robot *braia)
   bool sldir1 = gpio_get_level(GPIO_NUM_17);
   bool sldir2 = gpio_get_level(GPIO_NUM_5);
 
-  ESP_LOGD("processSLat", "Laterais (Direira): %d | %d", sldir1, sldir2);
   auto SLat = braia->getsLat();
+  auto status = braia->getStatus();
   uint16_t slesq1 = SLat->getChannel(0);
   uint16_t slesq2 = SLat->getChannel(1);
   auto latMarks = braia->getSLatMarks();
-  if (slesq1 < 300 || slesq2 < 300 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
+  ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
+  ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
+  if (slesq1 < 300 || !sldir2 ) // leitura de faixas brancas sensores laterais
   {
-    if ((slesq1 < 300 || slesq2 < 300) && (sldir1 && sldir2)) //lendo sLat esq. branco e dir. preto
+    if ((slesq1 < 300) && (sldir2)) //lendo sLat esq. branco e dir. preto
     {
-      if (!(latMarks->getSLatEsq()))
-        latMarks->leftPassedInc();
+      if (!(latMarks->getSLatEsq())) latMarks->leftPassedInc();
       latMarks->SetSLatEsq(true);
       latMarks->SetSLatDir(false);
+      //ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
     }
-    else if ((!sldir1 || !sldir2) && (slesq1 > 600 && slesq2 > 600)) // lendo sldir. branco e sLat esq. preto 
+    else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto 
     {
-      if (!(latMarks->getSLatDir()))
-        latMarks->rightPassedInc();
+      if (!(latMarks->getSLatDir())) latMarks->rightPassedInc();
       latMarks->SetSLatDir(true);
       latMarks->SetSLatEsq(false);
     }
   }
   else
   {
+    //ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
     latMarks->SetSLatDir(false);
     latMarks->SetSLatEsq(false);
   }
 
-  if(slesq1 < 300 && slesq2 < 300 && !sldir1 && !sldir2){//continuar em frente em intersecção de linhas
-    braia->getStatus()->setState(CAR_IN_LINE);
+  if(slesq1 < 300 && !sldir2 && latMarks->getrightMarks() < 2){//continuar em frente em intersecção de linhas
+    //braia->getStatus()->setState(CAR_IN_LINE);
   }
 
-  if(latMarks->getrightMarks() >= 2){ //parar depois da leitura da segunda linha direita
-    vTaskDelay(500);
+  if(latMarks->getrightMarks() >= 2 && status->getMapping()){ //parar depois da leitura da segunda linha direita
+    vTaskDelay(500/portTICK_PERIOD_MS);
+    vTaskSuspend(xTaskPID);
     braia->getStatus()->setState(CAR_STOPPED);
   }
 }
@@ -145,18 +148,7 @@ void vTaskMotors(void *pvParameters)
   // Loop
   for (;;)
   { 
-    int32_t mediaEnc = ((speed->getEncRight()) + (speed->getEncLeft())) / 2;
-    // if(mediaEnc > 3660 && mediaEnc < 4800) {
-    //   braia->getPIDVel()->setSetpoint(2000);
-    //   braia->getPIDVel()->setKp(0.07, CAR_IN_LINE);
-    //   braia->getPIDVel()->setKp(0.07, CAR_IN_CURVE);
-    // }
-    // else{
-    //   braia->getPIDVel()->setSetpoint(1700);
-    //   braia->getPIDVel()->setKp(0.065, CAR_IN_LINE);
-    //   braia->getPIDVel()->setKp(0.065, CAR_IN_CURVE);
-    // }
-    if (status->getState() != CAR_STOPPED && mediaEnc < 26600) // verificar se o carrinho deveria se mover
+    if (status->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
       motors.motorForward(0);                                         // motor 0 ligado para frente
       motors.motorForward(1);                                         // motor 1 ligado para frente
@@ -203,7 +195,7 @@ void vTaskSensors(void *pvParameters)
 
   vTaskResume(xTaskMotors);
   vTaskResume(xTaskPID);
-  vTaskResume(xTaskEspNow);
+  //vTaskResume(xTaskEspNow);
   if(taskStatus) vTaskResume(xTaskCarStatus);
   vTaskResume(xTaskSpeed);
   if(braia->getStatus()->getMapping()) vTaskResume(xTaskMapping);
@@ -225,6 +217,7 @@ void vTaskSensors(void *pvParameters)
 
 void vTaskPID(void *pvParameters)
 {
+  bool DEBUGON = false;
   auto const TaskDelay = 10; // 10ms
   auto const BaseDeTempo = (TaskDelay * 1E-3);
   //auto const h1 = BaseDeTempo / 2;
@@ -253,7 +246,7 @@ void vTaskPID(void *pvParameters)
   float Ptrans=0,Itrans=0,Dtrans=0;
   float PidRot = 0; 
   float Prot=0,Irot=0,Drot=0; 
-
+  int iloop = 0;
   // Definindo input da classe PID Rotacional valor de linha do sensor Array
   PIDRot->setInput(braia->getsArray()->getLine());
 
@@ -266,9 +259,20 @@ void vTaskPID(void *pvParameters)
   for (;;)
   {
     CarState estado = status->getState();
-    if (estado == CAR_IN_LINE) PIDTrans->setSetpoint(800);
-    else if (estado == CAR_IN_CURVE) PIDTrans->setSetpoint(600);
-
+    bool mapState = status->getMapping();
+    if(iloop>50 && DEBUGON) {
+      ESP_LOGI("vTaskPID", "CarstatusOut: %d | bool : %d", estado, mapState);
+      ESP_LOGI("vTaskPID", "SetPointTrans: %d", PIDTrans->getSetpoint());
+      iloop=0;
+    }
+    iloop++;
+    // Altera a velocidade linear se o carrinho não estiver mapeando
+    if ((estado == CAR_IN_LINE) && !mapState) {
+      PIDTrans->setSetpoint(1800);
+    } 
+    else if((estado == CAR_IN_CURVE) && !mapState) {
+      PIDTrans->setSetpoint(200);
+    }
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
     KpVel = PIDTrans->getKp(estado);
     KiVel = PIDTrans->getKi(estado) * BaseDeTempo;
@@ -337,12 +341,42 @@ void vTaskPID(void *pvParameters)
 void vTaskCarStatus(void *pvParameters)
 {
   static const char *TAG = "vTaskCarStatus";
+  bool DEBUGON = false;
 
   Robot *braia = (Robot *)pvParameters;
   RobotStatus *status = braia->getStatus();
   dataSpeed *speed = braia->getSpeed();
   auto latMarks = braia->getSLatMarks();
-  int Marks = latMarks->getTotalLeftMarks();  // marcas laterais esquerda na pista 
+  auto PidTrans = braia->getPIDVel();
+
+  latMarks->SetTotalLeftMarks(3);
+  latMarks->SetFinalMark(5472);
+  int Marks = latMarks->getTotalLeftMarks() + 1;  // marcas laterais esquerda na pista 
+
+  struct MapData marktest;
+  marktest.MapEncMedia = 0;
+  marktest.MapTime = 0;
+  marktest.MapStatus = CAR_IN_LINE;
+  latMarks->SetMarkDataReg(marktest,0);
+  marktest.MapEncMedia = 1100;
+  marktest.MapTime = 990;
+  marktest.MapStatus = CAR_IN_CURVE;
+  latMarks->SetMarkDataReg(marktest,1);
+  marktest.MapEncMedia = 2554;
+  marktest.MapTime = 3210;
+  marktest.MapStatus = CAR_IN_LINE;
+  latMarks->SetMarkDataReg(marktest,2);
+    marktest.MapEncMedia = 4999;
+  marktest.MapTime = 7470;
+  marktest.MapStatus = CAR_IN_CURVE;
+  latMarks->SetMarkDataReg(marktest,3); 
+  /*for(int i = 0;i < 5; i++){
+    marktest.MapEncMedia = (i*6000) + 2000;
+    marktest.MapTime = i*120;
+    if(i%2==0) marktest.MapStatus = CAR_IN_CURVE;
+    else marktest.MapStatus = CAR_IN_LINE;
+    latMarks->SetMarkDataReg(marktest,i); 
+  }*/
   // Setup
   ESP_LOGD(TAG, "Task criada!");
 
@@ -358,13 +392,29 @@ void vTaskCarStatus(void *pvParameters)
                             {0,0,0,0,0}}; // linha
   int32_t FinalMark = latMarks->getFinalMark(); // Media dos encoders da marcação final
   int32_t PlusPulses = 0; // Pulsos a mais para a parada
+  int iloop=0;
   // Loop
   for (;;)
   {
-    ESP_LOGD(TAG, "CarStatus: %d", status->getState());
+    
     int32_t mediaEnc = (speed->getEncRight() + speed->getEncLeft())/2; // calcula media dos encoders
-    if (mediaEnc >= FinalMark + PlusPulses)  braia->getStatus()->setState(CAR_STOPPED);
-    if(!status->getMapping() && braia->getSLatMarks()->getrightMarks() < 2 && mediaEnc < FinalMark + PlusPulses){ // define o status do carrinho se o mapeamento não estiver ocorrendo
+    if(iloop>=20 && DEBUGON)
+    {
+      ESP_LOGI(TAG, "CarStatus: %d", status->getState());
+      ESP_LOGI(TAG, "EncMedia: %d", mediaEnc);
+      ESP_LOGI(TAG, "FinalMark: %d", FinalMark);
+      ESP_LOGI(TAG, "SetPointTrans: %d", PidTrans->getSetpoint());
+      iloop=0;
+    }
+    iloop++;
+    if (mediaEnc >= FinalMark + PlusPulses && !status->getMapping()) 
+    {
+      vTaskDelay(500/portTICK_PERIOD_MS);
+      vTaskSuspend(xTaskPID);
+      vTaskSuspend(xTaskSensors);
+      braia->getStatus()->setState(CAR_STOPPED);
+    }
+    if(!status->getMapping() && mediaEnc < FinalMark + PlusPulses){ // define o status do carrinho se o mapeamento não estiver ocorrendo
       int mark = 0;
       for(mark=0; mark < Marks; mark++){ // Verifica a contagem do encoder e atribui o estado ao robô
         if(mark < Marks-1){
@@ -373,8 +423,12 @@ void vTaskCarStatus(void *pvParameters)
           if(mediaEnc >= Manualmedia && mediaEnc <= ManualmediaNxt){ // análise do valor das médias dos encoders
             int32_t mapstatus = (latMarks->getMarkDataReg(mark)).MapStatus; // status do robô
             CarState estado;
-            if(mapstatus == CAR_IN_LINE) estado = CAR_IN_LINE; 
-            else estado = CAR_IN_CURVE;
+            if(mapstatus == CAR_IN_LINE) {
+              estado = CAR_IN_LINE;
+            } 
+            else {
+              estado = CAR_IN_CURVE;
+            }
             status->setState(estado);
             break;
           }
@@ -382,8 +436,12 @@ void vTaskCarStatus(void *pvParameters)
         else{
           int32_t mapstatus = (latMarks->getMarkDataReg(mark)).MapStatus; // status do robô
           CarState estado;
-          if(mapstatus == CAR_IN_LINE) estado = CAR_IN_LINE;
-          else estado = CAR_IN_CURVE;
+          if(mapstatus == CAR_IN_LINE) {
+            estado = CAR_IN_LINE;
+          }
+          else {
+            estado = CAR_IN_CURVE;
+          }
           status->setState(estado);
           break;
         }
@@ -490,6 +548,7 @@ void vTaskMapping(void *pvParameters){
   //gpio_set_direction(GPIO_NUM_17, GPIO_MODE_INPUT);
   //gpio_pad_select_gpio(05);
   //gpio_set_direction(GPIO_NUM_5, GPIO_MODE_INPUT);
+  bool DEBUGON = true;
   gpio_pad_select_gpio(0);
   gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
   gpio_set_pull_mode(GPIO_NUM_0,GPIO_PULLUP_ONLY);
@@ -518,8 +577,13 @@ void vTaskMapping(void *pvParameters){
   uint16_t marks = 0;
 
   TickType_t xLastWakeTime = xTaskGetTickCount();// Variavel necesárraria para funcionalidade do vTaskDelayUtil, quarda a contagem de pulsos da CPU
-
+  struct MapData markreg;
+  markreg.MapEncMedia = 0;
+  markreg.MapTime = 0;
+  markreg.MapStatus = CAR_IN_LINE;
+  latMarks->SetMarkDataReg(markreg,0);
   bool startTimer = false;
+  bool mapfinish = false;
   bool leftpassed = false;
   int iloop=0; // Variável para debug
   int32_t FinalMarkData = 0; // Media dos encoders na marcação final
@@ -533,7 +597,7 @@ void vTaskMapping(void *pvParameters){
     
     uint16_t slesq1 = SLat->getChannel(0);
     uint16_t slesq2 = SLat->getChannel(1);
-    bool sldir1 = gpio_get_level(GPIO_NUM_17);
+    //bool sldir1 = gpio_get_level(GPIO_NUM_17);
     bool sldir2 = gpio_get_level(GPIO_NUM_5);
     bool bottom = gpio_get_level(GPIO_NUM_0);
     
@@ -544,16 +608,16 @@ void vTaskMapping(void *pvParameters){
       InitialMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
       latMarks->SetInitialMark(InitialMarkData);
     }
-    if(iloop>=20)
+    if(iloop>=20 && DEBUGON)
     {
-      ESP_LOGI("getSensors", "Laterais Esquerdos: %d | %d ", slesq1, slesq2);
-      ESP_LOGI("getSensors", "Laterais Direitos: %d | %d ", sldir1, sldir2);
+      ESP_LOGI("vTaskMapping", "Laterais Esquerdos: %d | %d ", slesq1 , slesq2);
+      ESP_LOGI("vTaskMapping", "Laterais Direitos: %d", sldir2);
       ESP_LOGI(TAG, "Marcações direita: %d ", latMarks->getrightMarks());
       iloop=0;
     }
     iloop++;
     if((latMarks->getrightMarks()) == 1){
-      if ((slesq1 < 300 || slesq2 < 300) && (sldir1 && sldir2))
+      if ((slesq1 < 300) && (sldir2) && !leftpassed)
       {
         struct MapData MarkReg;
         //tempo
@@ -568,32 +632,36 @@ void vTaskMapping(void *pvParameters){
           MarkReg.MapStatus = CAR_IN_LINE;
         }
         ESP_LOGI(TAG,"%d, %d, %d", MarkReg.MapTime,MarkReg.MapEncMedia, MarkReg.MapStatus);
-        latMarks->SetMarkDataReg(MarkReg, marks); // Salva os dados da marcação na struct MapData
+        latMarks->SetMarkDataReg(MarkReg, marks+1); // Salva os dados da marcação na struct MapData
         marks ++;
         leftpassed = true; // Diz que o carro está em uma marcação esquerda
 
       }
-      else{
+      else if (slesq1 > 600){
         leftpassed = false;
       } 
 
     }
     else if(latMarks->getrightMarks() < 1){
-      ESP_LOGI(TAG, "Mapeamento não iniciado");
+      //ESP_LOGI(TAG, "Mapeamento não iniciado");
     }
-    else if(latMarks->getrightMarks() > 1){
-      ESP_LOGI(TAG, "Mapeamento finalizado");
+    else if(latMarks->getrightMarks() > 1 && !mapfinish){
+      //ESP_LOGI(TAG, "Mapeamento finalizado");
       FinalMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
       latMarks->SetMapFinished(true);
       latMarks->SetFinalMark(FinalMarkData);
+      latMarks->SetTotalLeftMarks(marks);
+      mapfinish = true;
     }
     if(!bottom){
       ESP_LOGI("","Tempo, Média, Estado");
-      for(int i = 0; i < marks;  i++){
+      for(int i = 0; i < marks+1;  i++){
          struct MapData markreg = latMarks->getMarkDataReg(i); 
          ESP_LOGI("","%d, %d, %d", markreg.MapTime,markreg.MapEncMedia, markreg.MapStatus);
       }
-      ESP_LOGI("Final Mark (média dos encoders) "," %d ", FinalMarkData);
+      ESP_LOGI("Initial Mark (média dos encoders) "," %d ", latMarks->getInitialMark());
+      ESP_LOGI("Final Mark (média dos encoders) "," %d ", latMarks->getFinalMark());
+      ESP_LOGI("Total de marcações esquerdas "," %d ", latMarks->getTotalLeftMarks());
     }
 
     vTaskDelayUntil(&xLastWakeTime, 30 / portTICK_PERIOD_MS);  
@@ -639,7 +707,7 @@ void app_main(void)
   // Inicializacao do componente de encapsulamento de dado, definindo nome do robo
   braia = new Robot("Braia");
   
-  braia->getStatus()->setMapping(false);
+  braia->getStatus()->setMapping(true);
   bool mapping = braia->getStatus()->getMapping();
   braia->getStatus()->setState(CAR_IN_LINE);
 
@@ -649,47 +717,47 @@ void app_main(void)
 
   if(mapping){
 
-    braia->getSpeed()->setSpeedBase(30, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(30, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedBase(25, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(25, CAR_IN_CURVE);
 
-    braia->getSpeed()->setSpeedMax(60, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMax(50, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
-    braia->getPIDVel()->setKd(0.00, CAR_IN_LINE);
+    braia->getPIDVel()->setKd(0.000, CAR_IN_LINE);
     braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
-    braia->getPIDVel()->setKd(0.00, CAR_IN_CURVE);
+    braia->getPIDVel()->setKd(0.000, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(400);
+    braia->getPIDVel()->setSetpoint(100);
 
   }
   else{
 
-    braia->getSpeed()->setSpeedBase(50, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(50, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(20, CAR_IN_CURVE);
 
-    braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMax(70, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.004, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.004, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -697,30 +765,30 @@ void app_main(void)
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.79, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.055, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.79, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.055, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(1900);
+    braia->getPIDVel()->setSetpoint(1500);
 
   }
   
   // Criacao das tasks e definindo seus parametros
   //xTaskCreate(FUNCAO, NOME, TAMANHO DA HEAP, ARGUMENTO, PRIORIDADE, TASK HANDLE)
-
+  ESP_LOGI("TaskMotors", "TaskMotors Rodando");
   xTaskCreate(vTaskMotors, "TaskMotors", 10000, braia, 9, &xTaskMotors);
-
+  ESP_LOGI("TaskSensors", "TaskSensors Rodando");
   xTaskCreate(vTaskSensors, "TaskSensors", 10000, braia, 9, &xTaskSensors);
-
+  ESP_LOGI("TaskPid", "TaskPid Rodando");
   xTaskCreate(vTaskPID, "TaskPID", 10000, braia, 9, &xTaskPID);
-
+  ESP_LOGI("TaskSpeed", "TaskSpeed Rodando");
   xTaskCreate(vTaskSpeed, "TaskSpeed", 10000, braia, 9, &xTaskSpeed);
-
+  ESP_LOGI("TaskCarStatus", "TaskCarStatus Rodando");
   xTaskCreate(vTaskCarStatus, "TaskCarStatus", 10000, braia, 9, &xTaskCarStatus);
-
+  ESP_LOGI("TaskMap", "TaskMap Rodando");
   xTaskCreate(vTaskMapping, "TaskMapping", 10000, braia, 9, &xTaskMapping);
-
-  xTaskCreate(vTaskEspNow, "TaskEspNow", 10000, braia, 9, &xTaskEspNow);
+  //ESP_LOGI("TaskEspNow", "TaskEspNow Rodando");
+  //xTaskCreate(vTaskEspNow, "TaskEspNow", 10000, braia, 9, &xTaskEspNow);
 
 }

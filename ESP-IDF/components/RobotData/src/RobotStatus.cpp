@@ -29,12 +29,14 @@ int RobotStatus::setState(CarState value)
 }
 CarState RobotStatus::getState()
 {
+    CarState tempvar;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreRobotState, (TickType_t)10) == pdTRUE)
         {
+            tempvar = this->robotState; 
             xSemaphoreGive(xSemaphoreRobotState);
-            return this->robotState;
+            return tempvar;
         }
         else
         {
@@ -58,12 +60,14 @@ int RobotStatus::setMapping(bool value)
 }
 bool RobotStatus::getMapping()
 {
+    bool tempvar;
     for (;;)
     {
         if (xSemaphoreTake(xSemaphoreRobotMap, (TickType_t)10) == pdTRUE)
         {
+            tempvar = this->robotMap;
             xSemaphoreGive(xSemaphoreRobotMap);
-            return this->robotMap;
+            return tempvar;
         }
         else
         {

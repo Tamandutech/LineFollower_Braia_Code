@@ -83,12 +83,12 @@ private:
     template <class getVarType>
     getVarType getVar(getVarType *var, SemaphoreHandle_t *xSemaphoreOfVar)
     {
-        uint16_t tempChannel;
+        //getVarType tempChannel;
         for (;;)
         {
             if (xSemaphoreTake((*xSemaphoreOfVar), (TickType_t)10) == pdTRUE)
             {
-                tempChannel = (*var);
+                getVarType tempChannel = (*var);
                 xSemaphoreGive((*xSemaphoreOfVar));
                 return tempChannel;
             }
