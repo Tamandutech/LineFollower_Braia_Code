@@ -50,6 +50,7 @@ void SpeedService::Run()
             (((lastPulseRight / (float)speed->getMPR_MotDir() + lastPulseLeft / (float)speed->getMPR_MotEsq())) / 2) // Revolucoes media desde inicializacao
             / ((float)deltaTimeMS_media / (float)60000)                                                              // Divisao do delta tempo em minutos para calculo de RPM
         );
+        
         ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motDir.getCount());
         ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motEsq.getCount());
         ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());

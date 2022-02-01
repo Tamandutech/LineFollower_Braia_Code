@@ -21,6 +21,20 @@ private:
     Robot *robot;
     dataSpeed *speedMapping;
 
+    dataSensor *SLat;
+    dataSLatMarks *latMarks;
+
+    struct MapData markreg;
+
+    bool startTimer = false;
+    bool mapfinish = false;
+    bool leftpassed = false;
+
+    int iloop = 0;               // Variável para debug
+    
+    int32_t FinalMarkData = 0;   // Media dos encoders na marcação final
+    int32_t InitialMarkData = 0; // Media dos encoders na marcação inicial
+
     int32_t mappingData[3][40] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}; // [tempo][media][estado]
                                                                     //  "quantidade de marcações"
     uint16_t marks = 0;

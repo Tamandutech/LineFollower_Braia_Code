@@ -40,6 +40,8 @@ private:
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
     float PidRot = 0;
     float Prot = 0, Irot = 0, Drot = 0;
+
+    int iloop = 0;
 };
 
 #endif

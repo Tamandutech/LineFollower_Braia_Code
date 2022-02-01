@@ -39,14 +39,6 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
     robot->getsArray()->setChannelsMins(sArrayMins);
     robot->getsLat()->setChannelsMaxes(SLatMaxes);
     robot->getsLat()->setChannelsMins(SLatMins);
-
-    // vTaskResume(xTaskMotors);
-    // vTaskResume(xTaskPID);
-    // if (taskStatus)
-    //     vTaskResume(xTaskCarStatus);
-    // vTaskResume(xTaskSpeed);
-    // if (robot->getStatus()->getMapping())
-    //     vTaskResume(xTaskMapping);
 }
 
 void SensorsService::Run()
@@ -80,13 +72,13 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array
     std::vector<uint16_t> SLatchannelsVec(SLatchannels, SLatchannels + SLat->getSensorCount());         // vector(array) com os valores dos sensores laterais
 
-    //armazenando da leitura bruta do sensor array e lateral no objeto robot
+    //armazenando da leitura bruta do sensor array e lateral no objeto Braia
     robot->getsArray()->setChannels(sArraychannelsVec);
     robot->getsLat()->setChannels(SLatchannelsVec);
 
-    ESP_LOGD(GetName().c_str(), "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
-    ESP_LOGD(GetName().c_str(), "Linha: %d", robot->getsArray()->getLine());
-    ESP_LOGD(GetName().c_str(), "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
+    ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+    ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
+    ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
 
     //robot->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
@@ -96,22 +88,24 @@ void SensorsService::processSLat(Robot *robot)
     bool sldir1 = gpio_get_level(GPIO_NUM_17);
     bool sldir2 = gpio_get_level(GPIO_NUM_5);
 
-    ESP_LOGD(GetName().c_str(), "Laterais (Direira): %d | %d", sldir1, sldir2);
-
     auto SLat = robot->getsLat();
+    auto status = robot->getStatus();
     uint16_t slesq1 = SLat->getChannel(0);
     uint16_t slesq2 = SLat->getChannel(1);
     auto latMarks = robot->getSLatMarks();
-    if (slesq1 < 300 || slesq2 < 300 || !sldir1 || !sldir2) // leitura de faixas brancas sensores laterais
+    ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
+    ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
+    if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
     {
-        if ((slesq1 < 300 || slesq2 < 300) && (sldir1 && sldir2)) //lendo sLat esq. branco e dir. preto
+        if ((slesq1 < 300) && (sldir2)) //lendo sLat esq. branco e dir. preto
         {
             if (!(latMarks->getSLatEsq()))
                 latMarks->leftPassedInc();
             latMarks->SetSLatEsq(true);
             latMarks->SetSLatDir(false);
+            //ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         }
-        else if ((!sldir1 || !sldir2) && (slesq1 > 600 && slesq2 > 600)) // lendo sldir. branco e sLat esq. preto
+        else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
         {
             if (!(latMarks->getSLatDir()))
                 latMarks->rightPassedInc();
@@ -121,18 +115,21 @@ void SensorsService::processSLat(Robot *robot)
     }
     else
     {
+        //ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         latMarks->SetSLatDir(false);
         latMarks->SetSLatEsq(false);
     }
 
-    if (slesq1 < 300 && slesq2 < 300 && !sldir1 && !sldir2)
+    if (slesq1 < 300 && !sldir2 && latMarks->getrightMarks() < 2)
     { //continuar em frente em intersecção de linhas
-        robot->getStatus()->setState(CAR_IN_LINE);
+        //robot->getStatus()->setState(CAR_IN_LINE);
     }
 
-    if (latMarks->getrightMarks() >= 2)
+    if (latMarks->getrightMarks() >= 2 && status->getMapping())
     { //parar depois da leitura da segunda linha direita
-        vTaskDelay(500);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        // TODO: corrigir parada da TaskPID
+        // vTaskSuspend(xTaskPID);
         robot->getStatus()->setState(CAR_STOPPED);
     }
 }

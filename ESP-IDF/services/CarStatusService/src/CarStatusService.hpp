@@ -6,8 +6,6 @@
 
 using namespace cpp_freertos;
 
-#define Marks 40 // marcas laterais esquerda na pista
-
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class CarStatusService : public Thread
@@ -21,6 +19,11 @@ private:
     Robot *robot;
     RobotStatus *status;
     dataSpeed *speed;
+
+    dataSLatMarks *latMarks;
+    dataPID *PidTrans;
+
+    int Marks = 0;
 
     // Matriz com dados de media encoders,linha do carrinho
     int32_t Manualmap[2][40] = {{0, 0, 0, 0, 0},  // media

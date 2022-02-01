@@ -20,18 +20,7 @@ void MotorsService::Run()
   // Loop
   for (;;)
   {
-    int32_t mediaEnc = ((speed->getEncRight()) + (speed->getEncLeft())) / 2;
-    // if(mediaEnc > 3660 && mediaEnc < 4800) {
-    //   braia->getPIDVel()->setSetpoint(2000);
-    //   braia->getPIDVel()->setKp(0.07, CAR_IN_LINE);
-    //   braia->getPIDVel()->setKp(0.07, CAR_IN_CURVE);
-    // }
-    // else{
-    //   braia->getPIDVel()->setSetpoint(1700);
-    //   braia->getPIDVel()->setKp(0.065, CAR_IN_LINE);
-    //   braia->getPIDVel()->setKp(0.065, CAR_IN_CURVE);
-    // }
-    if (status->getState() != CAR_STOPPED && mediaEnc < 26600) // verificar se o carrinho deveria se mover
+    if (status->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
       motors.motorForward(0);                                         // motor 0 ligado para frente
       motors.motorForward(1);                                         // motor 1 ligado para frente

@@ -17,11 +17,27 @@ void PIDService::Run()
     for (;;)
     {
         CarState estado = status->getState();
-        if (estado == CAR_IN_LINE)
-            PIDTrans->setSetpoint(800);
-        else if (estado == CAR_IN_CURVE)
-            PIDTrans->setSetpoint(600);
+        bool mapState = status->getMapping();
 
+#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
+        if (iloop > 50)
+        {
+            ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
+            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PIDTrans->getSetpoint());
+            iloop = 0;
+        }
+        iloop++;
+#endif
+
+        // Altera a velocidade linear se o carrinho não estiver mapeando
+        if ((estado == CAR_IN_LINE) && !mapState)
+        {
+            PIDTrans->setSetpoint(1800);
+        }
+        else if ((estado == CAR_IN_CURVE) && !mapState)
+        {
+            PIDTrans->setSetpoint(200);
+        }
         // Variaveis de calculo para os pids da velocidade rotacional e translacional
         KpVel = PIDTrans->getKp(estado);
         KiVel = PIDTrans->getKi(estado) * BaseDeTempo;
@@ -41,17 +57,23 @@ void PIDService::Run()
         float erroVelRot = (float)(PIDRot->getSetpoint()) - VelRot;
 
         //calculando Pids rotacional e translacional
+        //float PidTrans = erroVelTrans * (KpVel + KiVel * h1 + KdVel * h2) + errTrans_ant * (-KpVel + KiVel * h1 - KdVel * h2x2) + errTrans_ant2 * (KdVel * h2) + lastTransPid;
+        //errTrans_ant2 = errTrans_ant;
         Ptrans = KpVel * erroVelTrans;
         Itrans += KiVel * erroVelTrans;
         Dtrans = KdVel * (erroVelTrans - errTrans_ant);
         PidTrans = Ptrans + Itrans + Dtrans;
         errTrans_ant = erroVelTrans;
+        //lastTransPid = PidTrans;
 
+        //float PidRot = erroVelRot * (KpRot + KiRot * h1 + KdRot * h2) + errRot_ant * (-KpRot + KiRot * h1 - KdRot * h2x2) + errRot_ant2 * (KdRot * h2) + lastRotPid;
+        //errRot_ant2 = errRot_ant;
         Prot = KpRot * erroVelRot;
         Irot += KiRot * erroVelRot;
         Drot = KdRot * (erroVelRot - errRot_ant);
         PidRot = Prot + Irot + Drot;
         errRot_ant = erroVelRot;
+        //lastRotPid = PidRot;
 
         auto speedBase = speed->getSpeedBase(estado);
         auto speedMin = speed->getSpeedMin(estado);

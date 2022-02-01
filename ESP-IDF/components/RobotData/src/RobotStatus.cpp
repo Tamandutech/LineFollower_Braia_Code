@@ -34,9 +34,8 @@ CarState RobotStatus::getState()
     {
         if (xSemaphoreTake(xSemaphoreRobotState, (TickType_t)10) == pdTRUE)
         {
-            tempvar = this->robotState;
+            tempvar = this->robotState; 
             xSemaphoreGive(xSemaphoreRobotState);
-            return this->robotState;
             return tempvar;
         }
         else
@@ -69,7 +68,6 @@ bool RobotStatus::getMapping()
         {
             tempvar = this->robotMap;
             xSemaphoreGive(xSemaphoreRobotMap);
-            return this->robotMap;
             return tempvar;
         }
         else

@@ -1,6 +1,7 @@
 
 #include "includes.hpp"
 #include "RobotData.h"
+#include "EspNowHandler.h"
 
 #include "CarStatusService.hpp"
 #include "MappingService.hpp"
@@ -11,7 +12,7 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 //#define LINE_COLOR_BLACK
-#define taskStatus false
+#define taskStatus true // Variável para habilitar a TaskStatus
 
 // Componentes de encapsulamento das variaveis
 Robot *braia;
@@ -35,47 +36,47 @@ void app_main(void)
   if (braia->getStatus()->getMapping())
   {
 
-    braia->getSpeed()->setSpeedBase(30, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(30, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedBase(25, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(25, CAR_IN_CURVE);
 
-    braia->getSpeed()->setSpeedMax(60, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMax(50, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
-    braia->getPIDVel()->setKd(0.00, CAR_IN_LINE);
+    braia->getPIDVel()->setKd(0.000, CAR_IN_LINE);
     braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
-    braia->getPIDVel()->setKd(0.00, CAR_IN_CURVE);
+    braia->getPIDVel()->setKd(0.000, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.03, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.03, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(400);
+    braia->getPIDVel()->setSetpoint(100);
   }
   else
   {
 
-    braia->getSpeed()->setSpeedBase(50, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(50, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedBase(20, CAR_IN_CURVE);
 
-    braia->getSpeed()->setSpeedMax(80, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(60, CAR_IN_CURVE);
+    braia->getSpeed()->setSpeedMax(70, CAR_IN_LINE);
+    braia->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
 
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.004, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.004, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -83,12 +84,12 @@ void app_main(void)
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.79, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.055, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.79, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.055, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(1900);
+    braia->getPIDVel()->setSetpoint(1500);
   }
 
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
@@ -99,11 +100,13 @@ void app_main(void)
   sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
 
   sensorsService->Start();
+  motorsService->Start();
   pidService->Start();
   speedService->Start();
-  motorsService->Start();
-  mappingService->Start();
   carStatusService->Start();
+
+  if (braia->getStatus()->getMapping())
+    mappingService->Start();
 
   // for (;;)
   // {
