@@ -32,4 +32,12 @@ enum ProtocolCodes
 
 };
 
+typedef struct {
+    uint8_t cmd;  // Comando
+    uint8_t version; // Versão do comando
+    uint16_t packetsToReceive;  // Quantidade de pacotes para receber ainda
+    uint8_t size;  // Tamanho completo da mensagem
+    uint8_t *data; //Mensagem
+} __attribute__((packed)) espnow_ota_packet_t;
+
 #endif
