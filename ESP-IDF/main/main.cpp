@@ -103,20 +103,24 @@ void app_main(void)
   motorsService->Start();
   pidService->Start();
   speedService->Start();
-  carStatusService->Start();
+
+  if (taskStatus)
+    carStatusService->Start();
 
   if (braia->getStatus()->getMapping())
     mappingService->Start();
 
-  // for (;;)
-  // {
-  //   ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
-  //   ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
-  //   ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
-  //   ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
-  //   ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
-  //   ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
+#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
+  for (;;)
+  {
+    ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
+    ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
+    ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
+    ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
+    ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
+    ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
 
-  //   vTaskDelay(1000 / portTICK_PERIOD_MS);
-  // }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+#endif
 }
