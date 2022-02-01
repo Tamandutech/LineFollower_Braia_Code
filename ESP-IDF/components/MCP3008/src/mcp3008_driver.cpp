@@ -164,28 +164,26 @@ uint16_t MCPDriver::readChannel(uint8_t channel, bool differential, esp_err_t *r
     {
         if (result)
             *result = ESP_FAIL;
-        return 0;
+        return 0xFFFF;
     }
 
     spi_transaction_t trans /* = {0} */;
     memset(&trans, 0, sizeof(trans));
-
     trans.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
     trans.length = 3 * 8;
     trans.tx_data[0] = 1;
     trans.tx_data[1] = (!differential << 7) | ((channel & 0x07) << 4);
-    esp_err_t res = ESP_OK;
 
+    esp_err_t res = spi_device_transmit(m_spi, &trans);
     if (res != ESP_OK)
     {
         if (result)
             *result = res;
-        return 0;
+        return 0xFFFF;
     }
 
     if (result)
         *result = ESP_OK;
-
     return ((trans.rx_data[1] & 0x03) << 8) | trans.rx_data[2];
 }
 
