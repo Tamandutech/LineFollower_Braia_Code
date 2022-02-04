@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cmath>
+#include <queue>
 
 #include "dataEnums.h"
 #include "esp_log.h"
@@ -28,8 +30,8 @@ class EspNowHandler
         EspNowHandler(std::string name = "EspNowProtocol");
         void EspNowInit(uint8_t canal, uint8_t * Mac, bool criptografia); // Inicia o espnow e registra os dados do peer
         esp_err_t EspSend(ProtocolCodes code, uint16_t ver, uint16_t dataSize, void *msgSend); // envia dados para o gateway
-        uint8_t *getReceivedData(); // retorna o dado recebido do gateway
         bool dataAvailable(); // verifica se existe novo dado para ler
+        struct PacketData getPacketReceived(); // obtém o próximo pacote da fila com os pacotes de dados recebidos
 
     private:
         std::string name;
@@ -40,10 +42,9 @@ class EspNowHandler
         static void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len); // Evento de dado Recebido
         esp_now_peer_info_t peerInfo;
         SemaphoreHandle_t xSemaphorePeerInfo;
-        static uint8_t *ReceivedData; // Armazena os dados recebidos
-        static bool dataReceived; // informa se existe dados para ler
-        static SemaphoreHandle_t xSemaphoreReceivedData;
-        static SemaphoreHandle_t xSemaphoredataReceived;
+        static std::queue<struct PacketData> PacketsReceived;
+        static SemaphoreHandle_t xSemaphorepacketreceived;
+
 
 };
 

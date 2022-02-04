@@ -1,9 +1,7 @@
 #include "EspNowHandler.h"
 
-uint8_t *EspNowHandler::ReceivedData;
-bool EspNowHandler::dataReceived;
-SemaphoreHandle_t EspNowHandler::xSemaphoreReceivedData;
-SemaphoreHandle_t EspNowHandler::xSemaphoredataReceived;
+std::queue<struct PacketData> EspNowHandler::PacketsReceived;
+SemaphoreHandle_t EspNowHandler::xSemaphorepacketreceived;
 
 EspNowHandler::EspNowHandler(std::string name)
 {
@@ -11,26 +9,16 @@ EspNowHandler::EspNowHandler(std::string name)
     ESP_LOGD(tag, "Criando objeto: %s", name.c_str());
     ESP_LOGD(tag, "Criando Semáforos");
     vSemaphoreCreateBinary(xSemaphorePeerInfo);
-    vSemaphoreCreateBinary(xSemaphoreReceivedData);
-    vSemaphoreCreateBinary(xSemaphoredataReceived);
+    vSemaphoreCreateBinary(xSemaphorepacketreceived);
 }
 void EspNowHandler::EspNowInit(uint8_t canal, uint8_t *Mac, bool criptografia)
 {
-    if (xSemaphoreTake(xSemaphoredataReceived, (TickType_t)10) == pdTRUE)
-    {
-        EspNowHandler::dataReceived = false;
-        xSemaphoreGive(xSemaphoredataReceived);
-    }
-    else
-    {
-        ESP_LOGE("EspNowHandler", "Variável dataReceived ocupada, não foi possível definir valor.");
-    }
-
     if (xSemaphoreTake(xSemaphorePeerInfo, (TickType_t)10) == pdTRUE)
     {
         memcpy(this->peerInfo.peer_addr, Mac, 6);
         this->peerInfo.channel = 1;
         this->peerInfo.encrypt = false;
+        this->peerInfo.ifidx = WIFI_IF_STA;
         xSemaphoreGive(xSemaphorePeerInfo);
     }
     else
@@ -51,26 +39,42 @@ void EspNowHandler::EspNowInit(uint8_t canal, uint8_t *Mac, bool criptografia)
 esp_err_t EspNowHandler::EspSend(ProtocolCodes code, uint16_t ver, uint16_t dataSize, void *msgSend)
 {
     esp_err_t sendreturn = ESP_ERR_ESPNOW_NOT_INIT;
+    esp_now_peer_info_t peer;
     if (xSemaphoreTake(xSemaphorePeerInfo, (TickType_t)10) == pdTRUE)
     {
-        int TotalDataSize = sizeof(code) + sizeof(ver) + sizeof(dataSize) + dataSize;
-        uint8_t *dataToSend = (uint8_t *)malloc(TotalDataSize);
-        uint16_t ptrAdvance = 0; //qtd de bytes que o ponteiro precisa avançar para receber novos dados 
-        memcpy(dataToSend, &code, sizeof(code));
-        ptrAdvance += sizeof(code);
-        memcpy(dataToSend + ptrAdvance, &ver, sizeof(ver));
-        ptrAdvance += sizeof(ver);
-        memcpy(dataToSend + ptrAdvance, &dataSize, sizeof(dataSize));
-        ptrAdvance += sizeof(dataSize);
-        memcpy(dataToSend + ptrAdvance, msgSend, dataSize);
-        sendreturn = esp_now_send(this->peerInfo.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
-        free(dataToSend);
+        peer = this->peerInfo;
         xSemaphoreGive(xSemaphorePeerInfo);
     }
     else
     {
         ESP_LOGE("EspNowHandler", "Variável PeerInfo ocupada, não foi possível definir valor.");
+        return sendreturn;
     }
+    struct PacketData Packet;
+    size_t TotalDataSize = sizeof(Packet);
+    uint8_t *dataToSend = (uint8_t *)malloc(TotalDataSize);
+    uint8_t *msgData = (uint8_t *)msgSend;
+    Packet.cmd = code;
+    Packet.version = ver;
+    Packet.packetsToReceive = ceil(dataSize/230.0) - 1;
+    Packet.size = dataSize;
+    uint16_t packets = Packet.packetsToReceive;
+    uint16_t ptrAdvance = 0; //qtd de bytes que o ponteiro precisa avançar para receber novos dados 
+    uint16_t lastPacketSize = dataSize - (Packet.packetsToReceive*230); // Tamanho em bytes do último pacote, os outros pacotes terão 230 bytes
+    for(int i = packets; i>=0; i--){
+        if(i==0){
+            memcpy(Packet.data,msgData+ptrAdvance,lastPacketSize);
+        }
+        else{
+            memcpy(Packet.data,msgData+ptrAdvance,230);
+        }
+        memcpy(dataToSend,&Packet,TotalDataSize);
+        sendreturn = esp_now_send(peer.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
+        Packet.packetsToReceive--;
+        ptrAdvance+=230;
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+    }
+    free(dataToSend);
     return sendreturn;
 }
 void EspNowHandler::wifiInit(void)
@@ -94,7 +98,8 @@ void EspNowHandler::espNowInit()
     // Adiciona peer
     if (xSemaphoreTake(xSemaphorePeerInfo, (TickType_t)10) == pdTRUE)
     {
-        if (esp_now_add_peer(&this->peerInfo) != ESP_OK)
+        ESP_LOGD("ESP-NOW","PeerMac : %x|%x|%x|%x|%x|%x ",this->peerInfo.peer_addr[0], this->peerInfo.peer_addr[1],this->peerInfo.peer_addr[2],this->peerInfo.peer_addr[3],this->peerInfo.peer_addr[4], this->peerInfo.peer_addr[5]);
+        if (esp_now_add_peer(&(this->peerInfo)) != ESP_OK)
         {
             ESP_LOGD("ESP-NOW", "Failed to add peer");
             xSemaphoreGive(xSemaphorePeerInfo);
@@ -109,24 +114,14 @@ void EspNowHandler::espNowInit()
 void EspNowHandler::OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
     ESP_LOGD("ESP-NOW", "Mensagem recebida, bytes: %d", len);
-    if (xSemaphoreTake(xSemaphoreReceivedData, (TickType_t)10) == pdTRUE)
-    {
-        memcpy(ReceivedData, incomingData, len);
-        ESP_LOGD("ESP-NOW", "Mensagem: %s", ReceivedData);
-        xSemaphoreGive(xSemaphoreReceivedData);
-        if (xSemaphoreTake(xSemaphoredataReceived, (TickType_t)10) == pdTRUE)
-        {
-            EspNowHandler::dataReceived = true;
-            xSemaphoreGive(xSemaphoredataReceived);
-        }
-        else
-        {
-            ESP_LOGE("EspNowHandler", "Variável dataReceived ocupada, não foi possível definir valor.");
-        }
+    struct PacketData packetIncome;
+    memcpy(&packetIncome, incomingData, len);
+    if (xSemaphoreTake(xSemaphorepacketreceived, (TickType_t)10) == pdTRUE){
+        EspNowHandler::PacketsReceived.push(packetIncome);
+        xSemaphoreGive(xSemaphorepacketreceived);
     }
-    else
-    {
-        ESP_LOGE("EspNowHandler", "Variável ReceivedData ocupada, não foi possível definir valor.");
+    else{
+            ESP_LOGE("EspNowHandler", "Variável packetsreceived ocupada, não foi possível definir valor.");
     }
 }
 void EspNowHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -134,44 +129,33 @@ void EspNowHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t st
     ESP_LOGD("OnDataSent", "\r\nLast Packet Send Status:\t");
     ESP_LOGD("OnDataSent", "%s", status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
-uint8_t *EspNowHandler::getReceivedData()
-{
-    uint8_t *tempvar = nullptr;
-    if (xSemaphoreTake(xSemaphoreReceivedData, (TickType_t)10) == pdTRUE)
-    {
-        tempvar = EspNowHandler::ReceivedData;
-        xSemaphoreGive(xSemaphoreReceivedData);
-        if (xSemaphoreTake(xSemaphoredataReceived, (TickType_t)30) == pdTRUE)
-        {
-            EspNowHandler::dataReceived = false;
-            xSemaphoreGive(xSemaphoredataReceived);
-            return tempvar;
-        }
-        else
-        {
-            ESP_LOGE("EspNowHandler", "Variável dataReceived ocupada, não foi possível definir valor.");
-            tempvar = nullptr;
-            return tempvar;
-        }
-    }
-    else
-    {
-        ESP_LOGE("EspNowHandler", "Variável ReceivedData ocupada, não foi possível definir valor.");
-        return tempvar;
-    }
-}
 bool EspNowHandler::dataAvailable()
 {
     bool tempvar = false;
-    if (xSemaphoreTake(xSemaphoredataReceived, (TickType_t)10) == pdTRUE)
+    if (xSemaphoreTake(xSemaphorepacketreceived, (TickType_t)10) == pdTRUE)
     {
-        tempvar = EspNowHandler::dataReceived;
-        xSemaphoreGive(xSemaphoredataReceived);
+        tempvar = !PacketsReceived.empty();
+        xSemaphoreGive(xSemaphorepacketreceived);
         return tempvar;
     }
     else
     {
-        ESP_LOGE("EspNowHandler", "Variável dataReceived ocupada, não foi possível definir valor.");
+        ESP_LOGE("EspNowHandler", "Variável Packetsreceived ocupada, não foi possível definir valor.");
+        return tempvar;
+    }
+}
+struct PacketData EspNowHandler::getPacketReceived(){
+    struct PacketData tempvar;
+    if (xSemaphoreTake(xSemaphorepacketreceived, (TickType_t)10) == pdTRUE)
+    {
+        tempvar = EspNowHandler::PacketsReceived.front();
+        PacketsReceived.pop();
+        xSemaphoreGive(xSemaphorepacketreceived);
+        return tempvar;
+    }
+    else
+    {
+        ESP_LOGE("EspNowHandler", "Variável PacketsReceived ocupada, não foi possível definir valor.");
         return tempvar;
     }
 }

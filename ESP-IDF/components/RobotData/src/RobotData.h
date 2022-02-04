@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string>
+#include <queue>
 
 #include "dataSLatMarks.h"
 #include "dataSpeed.h"
@@ -26,6 +27,8 @@ public:
     dataPID *getPIDRot();
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
+    struct PacketData getPacketSend();
+    bool PacketSendavailable();
 
 private:
     std::string name;
@@ -38,6 +41,8 @@ private:
     dataSLatMarks *sLatMarks;
     dataSensor *sArray;
     RobotStatus *Status;
+    std::queue<struct PacketData> PacketstoSend; // Pacotes para envio pelo espnow
+    SemaphoreHandle_t xSemaphorepacketstosend;
 };
 
 #endif

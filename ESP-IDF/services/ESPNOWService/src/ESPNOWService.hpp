@@ -1,5 +1,5 @@
-#ifndef MAPPING_SERVICE_H
-#define MAPPING_SERVICE_H
+#ifndef ESPNOW_SERVICE_H
+#define ESPNOW_SERVICE_H
 
 #include "thread.hpp"
 #include "RobotData.h"
@@ -10,7 +10,7 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 class ESPNOWService : public Thread
 {
@@ -21,11 +21,12 @@ public:
 
 private:
     Robot *robot;
-    uint16_t TaskDelay = 30;
-    uint8_t broadcastAddress[6] = {0x24, 0x6F, 0x28, 0xB2, 0x23, 0xD0};
-
+    uint16_t TaskDelay = 3000;
+    uint8_t broadcastAddress[6] = {0xE0,0xE2,0xE6,0x0D,0x43,0x0C};
+    char msgrecebida[60];
     EspNowHandler protocolHandler;
-    std::string msgSend = "Mensagem do Robo";
+    struct PacketData packet;
+    char msgSend[20] = "Mensagem do Robo";
 };
 
 #endif

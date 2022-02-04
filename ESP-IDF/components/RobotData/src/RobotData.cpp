@@ -29,6 +29,8 @@ Robot::Robot(std::string name)
 
     this->Status = new RobotStatus(CAR_IN_LINE, "RobotStatus");
     ESP_LOGD(tag, "Status (%p)", this->Status);
+
+    vSemaphoreCreateBinary(xSemaphorepacketstosend);
 }
 
 dataSLatMarks *Robot::getSLatMarks()

@@ -9,8 +9,9 @@
 #include "PIDService.hpp"
 #include "SensorsService.hpp"
 #include "SpeedService.hpp"
+#include "ESPNOWService.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 //#define LINE_COLOR_BLACK
 #define taskStatus true // Variável para habilitar a TaskStatus
 
@@ -23,6 +24,7 @@ MotorsService *motorsService;
 PIDService *pidService;
 SensorsService *sensorsService;
 SpeedService *speedService;
+ESPNOWService *espnowService;
 
 extern "C"
 {
@@ -98,11 +100,13 @@ void app_main(void)
   speedService = new SpeedService("SpeedService", braia, 10000, 9);
   pidService = new PIDService("PIDService", braia, 10000, 9);
   sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
+  espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
 
   sensorsService->Start();
   motorsService->Start();
   pidService->Start();
   speedService->Start();
+  espnowService->Start();
 
   if (taskStatus)
     carStatusService->Start();

@@ -11,13 +11,18 @@ void ESPNOWService::Run()
 
     for (;;)
     {
-        uint8_t *ReceivedData;
         if (protocolHandler.dataAvailable())
         {
-            ReceivedData = protocolHandler.getReceivedData();
+            packet = protocolHandler.getPacketReceived();
+            if(packet.packetsToReceive==0){
+                memcpy(msgrecebida,packet.data,packet.size);
+                ESP_LOGD(GetName().c_str(), "Mensagem: %s",msgrecebida);
+                ESP_LOGD(GetName().c_str(), "Tamanho: %d",packet.size);   
+            }
+
         }
 
-        protocolHandler.EspSend(MapDataSend, 0, 0, (void *)msgSend.c_str());
+        protocolHandler.EspSend(CMDTXT, 2, sizeof(msgSend), (void *)msgSend);
         vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
     }
 }
