@@ -120,11 +120,6 @@ void SensorsService::processSLat(Robot *robot)
         latMarks->SetSLatEsq(false);
     }
 
-    if (slesq1 < 300 && !sldir2 && latMarks->getrightMarks() < 2)
-    { //continuar em frente em intersecção de linhas
-        //robot->getStatus()->setState(CAR_IN_LINE);
-    }
-
     if (latMarks->getrightMarks() >= 2 && status->getMapping())
     { //parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);

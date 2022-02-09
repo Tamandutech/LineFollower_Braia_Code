@@ -2,6 +2,7 @@
 
 Robot::Robot(std::string name)
 {
+    
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = tag;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
@@ -29,8 +30,8 @@ Robot::Robot(std::string name)
 
     this->Status = new RobotStatus(CAR_IN_LINE, "RobotStatus");
     ESP_LOGD(tag, "Status (%p)", this->Status);
-
     vSemaphoreCreateBinary(xSemaphorepacketstosend);
+
 }
 
 dataSLatMarks *Robot::getSLatMarks()
@@ -66,4 +67,48 @@ dataPID *Robot::getPIDRot()
 RobotStatus *Robot::getStatus()
 {
     return this->Status;
+}
+bool Robot::PacketSendavailable(){
+    bool tempvar = false;
+    if (xSemaphoreTake(xSemaphorepacketstosend, (TickType_t)10) == pdTRUE)
+    {
+        tempvar = !PacketstoSend.empty();
+        xSemaphoreGive(xSemaphorepacketstosend);
+        return tempvar;
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável PacketstoSend ocupada, não foi possível definir valor.");
+        return tempvar;
+    }
+}
+
+struct PacketData Robot::getPacketSend(){
+    struct PacketData tempvar;
+    if (xSemaphoreTake(xSemaphorepacketstosend, (TickType_t)10) == pdTRUE)
+    {
+        tempvar = PacketstoSend.front();
+        PacketstoSend.pop();
+        xSemaphoreGive(xSemaphorepacketstosend);
+        return tempvar;
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável PacketstoSend ocupada, não foi possível definir valor.");
+        return tempvar;
+    }
+}
+
+int Robot::addPacketSend(struct PacketData packet){
+    if (xSemaphoreTake(xSemaphorepacketstosend, (TickType_t)10) == pdTRUE)
+    {
+        PacketstoSend.push(packet);
+        xSemaphoreGive(xSemaphorepacketstosend);
+        return RETORNO_OK;
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável PacketstoSend ocupada, não foi possível definir valor.");
+        return RETORNO_VARIAVEL_OCUPADA;
+    }
 }

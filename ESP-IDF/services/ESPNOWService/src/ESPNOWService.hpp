@@ -21,11 +21,15 @@ public:
 
 private:
     Robot *robot;
-    uint16_t TaskDelay = 3000;
+    uint16_t TaskDelay = 500;
     uint8_t broadcastAddress[6] = {0xE0,0xE2,0xE6,0x0D,0x43,0x0C};
-    char msgrecebida[60];
+    char msgrecebida[60]; // comandos recebidos em texto
     EspNowHandler protocolHandler;
-    struct PacketData packet;
+    struct PacketData packetReceive;
+    struct PacketData packetSend;
+    uint8_t *dataReceived; // preparo dos dados recebidos
+    bool newData = false; // Informa se uma nova estrutura foi enviada
+    uint16_t ptrPos = 0; // informa a posição do ponteiro em que novos dados tem que ser armazenados
     char msgSend[20] = "Mensagem do Robo";
 };
 

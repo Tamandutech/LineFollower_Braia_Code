@@ -8,7 +8,7 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 class MappingService : public Thread
 {
@@ -34,8 +34,6 @@ private:
     
     int32_t FinalMarkData = 0;   // Media dos encoders na marcação final
     int32_t InitialMarkData = 0; // Media dos encoders na marcação inicial
-
-    int32_t mappingData[3][40] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}; // [tempo][media][estado]
                                                                     //  "quantidade de marcações"
     uint16_t marks = 0;
 };

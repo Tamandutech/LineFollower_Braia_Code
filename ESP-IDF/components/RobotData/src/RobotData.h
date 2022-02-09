@@ -28,7 +28,9 @@ public:
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
     struct PacketData getPacketSend();
+    int addPacketSend(struct PacketData packet);
     bool PacketSendavailable();
+
 
 private:
     std::string name;

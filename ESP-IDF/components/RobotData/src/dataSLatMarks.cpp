@@ -286,3 +286,24 @@ int dataSLatMarks::SetMapFinished(bool mapfinished)
         return RETORNO_VARIAVEL_OCUPADA;
     }
 }
+
+struct SLatMarks dataSLatMarks::getData(){
+    struct SLatMarks SLatData;
+    SLatData.leftMarks = this->getleftMarks();
+    SLatData.rightMarks = this->getrightMarks();
+    SLatData.InitialMark = this->getInitialMark();
+    SLatData.FinalMark = this->getFinalMark();
+    SLatData.TotalLeftMarks = this->getTotalLeftMarks();
+    SLatData.MapFinished = this->getMapFinished();
+    if (xSemaphoreTake(xSemaphoreMarksData, (TickType_t)10) == pdTRUE)
+    {
+        memcpy(SLatData.MarksData,this->MarksData,sizeof(this->MarksData));
+        xSemaphoreGive(xSemaphoreMarksData);
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável MarksData ocupada, não foi possível ler valor. Tentando novamente...");
+    }
+    return SLatData;
+
+}

@@ -26,7 +26,7 @@ public:
     
     int setMapping(bool value);
     bool getMapping();
-
+    
 private:
     std::string name;
     const char *tag = "RobotStatus";

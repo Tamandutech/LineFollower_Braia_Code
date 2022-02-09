@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <cstring>
 
 #include "dataEnums.h"
 #include "esp_log.h"
@@ -38,6 +39,7 @@ public:
     int rightPassedInc();
     uint16_t getleftMarks();
     uint16_t getrightMarks();
+    struct SLatMarks getData();
 
 
     

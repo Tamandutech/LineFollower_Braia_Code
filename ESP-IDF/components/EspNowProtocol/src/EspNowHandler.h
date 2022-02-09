@@ -29,7 +29,7 @@ class EspNowHandler
     public:
         EspNowHandler(std::string name = "EspNowProtocol");
         void EspNowInit(uint8_t canal, uint8_t * Mac, bool criptografia); // Inicia o espnow e registra os dados do peer
-        esp_err_t EspSend(ProtocolCodes code, uint16_t ver, uint16_t dataSize, void *msgSend); // envia dados para o gateway
+        esp_err_t EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, void *msgSend); // envia dados para o gateway
         bool dataAvailable(); // verifica se existe novo dado para ler
         struct PacketData getPacketReceived(); // obtém o próximo pacote da fila com os pacotes de dados recebidos
 
@@ -40,8 +40,10 @@ class EspNowHandler
         void espNowInit();
         static void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status); //Evento para enviar o dado
         static void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len); // Evento de dado Recebido
-        esp_now_peer_info_t peerInfo;
+        esp_now_peer_info_t peerInfo; // Variável para adicionar o peer
         SemaphoreHandle_t xSemaphorePeerInfo;
+        esp_now_peer_info_t peerProtocol; // Variável para ler dados do peeer nos métodos da classe
+        SemaphoreHandle_t xSemaphorePeerProtocol;
         static std::queue<struct PacketData> PacketsReceived;
         static SemaphoreHandle_t xSemaphorepacketreceived;
 

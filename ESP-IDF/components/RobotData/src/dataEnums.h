@@ -29,6 +29,7 @@ enum ProtocolCodes
     dataSpeedSend,
     RobotStatusSend,
     CMDTXT,
+    MarkData,
 
 };
 
@@ -36,7 +37,18 @@ struct PacketData{
     uint8_t cmd;  // Comando
     uint8_t version; // Versão do comando
     uint16_t packetsToReceive;  // Quantidade de pacotes para receber ainda
-    uint8_t size;  // Tamanho completo da mensagem
+    uint16_t size;  // Tamanho total do dado que será enviado pelos pacotes
+    uint8_t packetsize; // Tamanho do dado contido no pacote
     uint8_t data[230]; //Mensagem
+};
+
+struct SLatMarks{
+    uint16_t leftMarks;
+    uint16_t rightMarks;
+    struct MapData MarksData[70];
+    uint16_t TotalLeftMarks;
+    int32_t InitialMark;
+    int32_t FinalMark;
+    bool MapFinished;
 };
 #endif

@@ -10,6 +10,7 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     ESP_LOGD(tag, "Criando Semáforos: %s", name.c_str());
     vSemaphoreCreateBinary(xSemaphoreRobotState);
     vSemaphoreCreateBinary(xSemaphoreRobotMap);
+    
 }
 
 int RobotStatus::setState(CarState value)
