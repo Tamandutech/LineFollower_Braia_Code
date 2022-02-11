@@ -87,7 +87,7 @@ esp_err_t EspNowHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
         sendreturn = esp_now_send(peer.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
         Packet.packetsToReceive--;
         ptrAdvance+=sizeof(Packet.data);
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     free(dataToSend);
     return sendreturn;

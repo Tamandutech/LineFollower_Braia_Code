@@ -93,6 +93,7 @@ void SensorsService::processSLat(Robot *robot)
     uint16_t slesq1 = SLat->getChannel(0);
     uint16_t slesq2 = SLat->getChannel(1);
     auto latMarks = robot->getSLatMarks();
+
     ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
     ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
     if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
@@ -120,11 +121,11 @@ void SensorsService::processSLat(Robot *robot)
         latMarks->SetSLatEsq(false);
     }
 
-    if (latMarks->getrightMarks() >= 2 && status->getMapping())
+    if (latMarks->getrightMarks() >= 2 && status->getMapping() && status->getState() != CAR_STOPPED)
     { //parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);
         // TODO: corrigir parada da TaskPID
         // vTaskSuspend(xTaskPID);
-        robot->getStatus()->setState(CAR_STOPPED);
+        status->setState(CAR_STOPPED);     
     }
 }

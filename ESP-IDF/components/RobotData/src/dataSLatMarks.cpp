@@ -74,6 +74,34 @@ int dataSLatMarks::SetSLatDir(bool latdirPass)
         return RETORNO_VARIAVEL_OCUPADA;
     }
 }
+int dataSLatMarks::SetleftMarks(uint16_t marksleft)
+{
+    if (xSemaphoreTake(xSemaphoreleftMarks, (TickType_t)10) == pdTRUE)
+    {
+        this->leftMarks = marksleft;
+        xSemaphoreGive(xSemaphoreleftMarks);
+        return RETORNO_OK;
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável leftMarks ocupada, não foi possível definir valor.");
+        return RETORNO_VARIAVEL_OCUPADA;
+    }
+}
+int dataSLatMarks::SetrightMarks(uint16_t marksright)
+{
+    if (xSemaphoreTake(xSemaphorerightMarks, (TickType_t)10) == pdTRUE)
+    {
+        this->rightMarks = marksright;
+        xSemaphoreGive(xSemaphorerightMarks);
+        return RETORNO_OK;
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável rightMarks ocupada, não foi possível definir valor.");
+        return RETORNO_VARIAVEL_OCUPADA;
+    }
+}
 int dataSLatMarks::leftPassedInc()
 {
     if (xSemaphoreTake(xSemaphoreleftMarks, (TickType_t)10) == pdTRUE)
@@ -305,5 +333,23 @@ struct SLatMarks dataSLatMarks::getData(){
         ESP_LOGE(tag, "Variável MarksData ocupada, não foi possível ler valor. Tentando novamente...");
     }
     return SLatData;
+
+}
+int dataSLatMarks::setData(struct SLatMarks SLatData){
+    this->SetInitialMark(SLatData.InitialMark);
+    this->SetFinalMark(SLatData.FinalMark);
+    this->SetTotalLeftMarks(SLatData.TotalLeftMarks);
+    this->SetMapFinished(SLatData.MapFinished);
+    if (xSemaphoreTake(xSemaphoreMarksData, (TickType_t)10) == pdTRUE)
+    {
+        memcpy(this->MarksData,SLatData.MarksData,sizeof(this->MarksData));
+        xSemaphoreGive(xSemaphoreMarksData);
+        return RETORNO_OK;
+    }
+    else
+    {
+        ESP_LOGE(tag, "Variável MarksData ocupada, não foi possível ler valor. Tentando novamente...");
+        return RETORNO_VARIAVEL_OCUPADA;
+    }
 
 }

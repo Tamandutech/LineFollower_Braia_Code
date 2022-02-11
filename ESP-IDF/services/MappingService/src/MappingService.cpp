@@ -14,6 +14,7 @@ MappingService::MappingService(const char *name, Robot *robot, uint32_t stackDep
     speedMapping = robot->getSpeed();
     SLat = robot->getsLat();
     latMarks = robot->getSLatMarks();
+    status = robot->getStatus();
 
     markreg.MapEncMedia = 0;
     markreg.MapTime = 0;
@@ -32,14 +33,17 @@ void MappingService::Run()
     // Loop
     for (;;)
     {
-
+        CarState Parar = status->getState(); // Verifica se o mapeamento deve iniciar
+        bool mapping = status->getMapping(); // Verifica se o mapeamento deve iniciar
         uint16_t slesq1 = SLat->getChannel(0);
         uint16_t slesq2 = SLat->getChannel(1);
         //bool sldir1 = gpio_get_level(GPIO_NUM_17);
         bool sldir2 = gpio_get_level(GPIO_NUM_5);
         bool bottom = gpio_get_level(GPIO_NUM_0);
 
-        if (((latMarks->getrightMarks()) == 1) && !startTimer)
+        mapfinish = latMarks->getMapFinished();
+
+        if (((latMarks->getrightMarks()) == 1) && !startTimer && Parar != CAR_STOPPED && mapping)
         {
 
             xInicialTicks = xTaskGetTickCount(); //pegando o tempo inicial
@@ -49,7 +53,7 @@ void MappingService::Run()
         }
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_ERROR
-        if (iloop >= 20)
+        if (iloop >= 20 && mapping)
         {
             ESP_LOGD(GetName().c_str(), "Laterais Esquerdos: %d | %d ", slesq1, slesq2);
             ESP_LOGD(GetName().c_str(), "Laterais Direitos: %d", sldir2);
@@ -59,7 +63,7 @@ void MappingService::Run()
         iloop++;
 #endif
 
-        if ((latMarks->getrightMarks()) == 1)
+        if ((latMarks->getrightMarks()) == 1 && mapping && Parar != CAR_STOPPED)
         {
             if ((slesq1 < 300) && (sldir2) && !leftpassed)
             {
@@ -93,11 +97,11 @@ void MappingService::Run()
                 leftpassed = false;
             }
         }
-        else if (latMarks->getrightMarks() < 1)
+        else if (latMarks->getrightMarks() < 1 && mapping && Parar != CAR_STOPPED)
         {
             //ESP_LOGI(GetName().c_str(), "Mapeamento não iniciado");
         }
-        else if (latMarks->getrightMarks() > 1 && !mapfinish)
+        else if (latMarks->getrightMarks() > 1 && !mapfinish && mapping)
         {
             //ESP_LOGI(GetName().c_str(), "Mapeamento finalizado");
             FinalMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
@@ -109,9 +113,8 @@ void MappingService::Run()
             mapPacket.version = 1;
             mapPacket.size = sizeof(struct SLatMarks);
             robot->addPacketSend(mapPacket);
-            mapfinish = true;
         }
-        if (!bottom)
+        if (!bottom && latMarks->getMapFinished())
         {
             struct PacketData mapPacket;
             mapPacket.cmd = MapDataSend;

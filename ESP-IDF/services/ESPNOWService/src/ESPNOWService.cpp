@@ -3,6 +3,7 @@
 ESPNOWService::ESPNOWService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     this->robot = robot;
+    status = robot->getStatus();
     protocolHandler.EspNowInit(1, broadcastAddress, false);
 };
 
@@ -13,14 +14,17 @@ void ESPNOWService::Run()
     for (;;)
     {
         // Analisa os comandos recebidos em texto
-        if(strcmp(msgrecebida,"stop") == 0 && strlen(msgrecebida)!=0){
-            robot->getStatus()->setState(CAR_STOPPED);
+        std::string cmd="";
+        cmd = msgrecebida;
+        if(cmd.find("stop") != -1 && cmd.size() > 0){
+            status->setState(CAR_STOPPED);
             strcpy(msgrecebida,"empty");
         }
-        else if(strcmp(msgrecebida,"start") == 0 && strlen(msgrecebida)!=0){
-            strcpy(msgrecebida,"empty");
-        }
-        else if(strcmp(msgrecebida,"startMap") == 0 && strlen(msgrecebida)!=0){
+        else if(cmd.find("map") != -1 && cmd.size() > 0){
+            robot->getSLatMarks()->SetMapFinished(false);
+            robot->getSLatMarks()->SetrightMarks(0);
+            status->setState(CAR_IN_LINE);
+            status->setMapping(true);
             strcpy(msgrecebida,"empty");
         }
         if (protocolHandler.dataAvailable())
@@ -34,11 +38,16 @@ void ESPNOWService::Run()
             if(packetReceive.packetsToReceive==0){ // Executa as tarefas relacionados com o último comando recebido
                 newData = false;
                 memcpy(dataReceived+ptrPos,packetReceive.data,packetReceive.packetsize);
-                switch (packetReceive.cmd)
+                switch (packetReceive.cmd) // Prepara pacotes recebidos
                 {
                     case MapDataSend:
                         struct SLatMarks LatMarks;
                         memcpy(&LatMarks,dataReceived,packetReceive.size);
+                        robot->getSLatMarks()->setData(LatMarks);
+                        status->setMapping(false);
+                        robot->getSLatMarks()->SetrightMarks(0);
+                        status->setState(CAR_IN_LINE);
+                        ESP_LOGD(GetName().c_str(),"Comando Recebido: Encoders iniciados");
                         break;
                     case CMDTXT:
                         memcpy(msgrecebida,dataReceived,packetReceive.size);

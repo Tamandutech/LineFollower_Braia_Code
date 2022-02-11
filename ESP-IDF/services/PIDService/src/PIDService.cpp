@@ -29,14 +29,27 @@ void PIDService::Run()
         iloop++;
 #endif
 
-        // Altera a velocidade linear se o carrinho não estiver mapeando
-        if ((estado == CAR_IN_LINE) && !mapState)
+        // Altera a velocidade linear do carrinho
+        if (estado == CAR_IN_LINE && !mapState)
         {
             PIDTrans->setSetpoint(1800);
         }
-        else if ((estado == CAR_IN_CURVE) && !mapState)
+        else if (estado == CAR_IN_CURVE && !mapState)
         {
             PIDTrans->setSetpoint(200);
+        }
+        else if(mapState && estado != CAR_STOPPED){
+            PIDTrans->setSetpoint(100);
+        }
+        
+        // Reseta o PID se o carrinho parar
+        if(estado == CAR_STOPPED){
+            Ptrans = 0;
+            Dtrans = 0;
+            Itrans = 0;
+            Prot = 0;
+            Drot = 0;
+            Irot = 0;
         }
         // Variaveis de calculo para os pids da velocidade rotacional e translacional
         KpVel = PIDTrans->getKp(estado);

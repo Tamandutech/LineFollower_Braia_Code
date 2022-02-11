@@ -30,11 +30,14 @@ public:
     struct MapData getMarkDataReg(int regnum); // Dados das marcações laterais da pista
     int SetSLatEsq(bool latesqPass);
     int SetSLatDir(bool latdirPass);
+    int SetleftMarks(uint16_t marksleft);
+    int SetrightMarks(uint16_t marksright);
     int SetMapFinished(bool mapfinished);
     int SetTotalLeftMarks(uint16_t totalmarks);
     int SetInitialMark(int32_t initialmark);
     int SetFinalMark(int32_t finalmark);
     int SetMarkDataReg(struct MapData markreg, int regnum);
+    int setData( struct SLatMarks SLatData);
     int leftPassedInc();
     int rightPassedInc();
     uint16_t getleftMarks();

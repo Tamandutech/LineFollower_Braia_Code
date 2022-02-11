@@ -111,8 +111,8 @@ void app_main(void)
   if (taskStatus)
     carStatusService->Start();
 
-  if (braia->getStatus()->getMapping())
-    mappingService->Start();
+  //if (braia->getStatus()->getMapping())
+  mappingService->Start();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)

@@ -24,6 +24,8 @@ private:
     dataSensor *SLat;
     dataSLatMarks *latMarks;
 
+    RobotStatus *status;
+
     struct MapData markreg;
 
     bool startTimer = false;

@@ -5,6 +5,7 @@
 #include "RobotData.h"
 
 #include "string.h"
+#include <cstring>
 
 #include "EspNowHandler.h"
 
@@ -21,7 +22,8 @@ public:
 
 private:
     Robot *robot;
-    uint16_t TaskDelay = 500;
+    RobotStatus *status;
+    uint16_t TaskDelay = 200;
     uint8_t broadcastAddress[6] = {0xE0,0xE2,0xE6,0x0D,0x43,0x0C};
     char msgrecebida[60]; // comandos recebidos em texto
     EspNowHandler protocolHandler;

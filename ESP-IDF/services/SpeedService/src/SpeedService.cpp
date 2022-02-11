@@ -24,6 +24,13 @@ void SpeedService::Run()
     // Loop
     for (;;)
     {
+        CarState estado = robot->getStatus()->getState();
+        if(estado == CAR_STOPPED){
+            enc_motEsq.clearCount();
+            enc_motDir.clearCount();
+            lastPulseLeft = 0;
+            lastPulseRight = 0;
+        }
         deltaTimeMS_inst = (xTaskGetTickCount() - lastTicksRevsCalc) * portTICK_PERIOD_MS;
         lastTicksRevsCalc = xTaskGetTickCount();
 
