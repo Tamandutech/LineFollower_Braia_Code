@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - run: cd ESP-IDF
     - uses: actions/checkout@v2
     - name: Cache pip
       uses: actions/cache@v2
