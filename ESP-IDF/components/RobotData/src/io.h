@@ -10,9 +10,9 @@
 #define DRIVER_PWMA 14
 #define DRIVER_AIN1 26
 #define DRIVER_AIN2 27
-#define DRIVER_PWMB 32
-#define DRIVER_BIN2 25
-#define DRIVER_BIN1 33
+#define DRIVER_PWMB 13
+#define DRIVER_BIN2 17
+#define DRIVER_BIN1 25
 #define DRIVER_STBY 21
 
 // Encoders Motores

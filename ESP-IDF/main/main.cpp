@@ -10,10 +10,11 @@
 #include "SensorsService.hpp"
 #include "SpeedService.hpp"
 #include "ESPNOWService.hpp"
+#include "LEDsService.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 //#define LINE_COLOR_BLACK
-#define taskStatus true // Variável para habilitar a TaskStatus
+#define taskStatus false // Variável para habilitar a TaskStatus
 
 // Componentes de encapsulamento das variaveis
 Robot *braia;
@@ -25,6 +26,7 @@ PIDService *pidService;
 SensorsService *sensorsService;
 SpeedService *speedService;
 ESPNOWService *espnowService;
+LEDsService *ledsService;
 
 extern "C"
 {
@@ -94,6 +96,9 @@ void app_main(void)
     braia->getPIDVel()->setSetpoint(1500);
   }
 
+  ledsService = new LEDsService("LEDsService", braia, 10000, 9);
+  ledsService->Start();
+
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
   mappingService = new MappingService("MappingService", braia, 10000, 9);
   motorsService = new MotorsService("MotorsService", braia, 10000, 9);
@@ -111,8 +116,8 @@ void app_main(void)
   if (taskStatus)
     carStatusService->Start();
 
-  //if (braia->getStatus()->getMapping())
-  mappingService->Start();
+  if (braia->getStatus()->getMapping())
+    mappingService->Start();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)
