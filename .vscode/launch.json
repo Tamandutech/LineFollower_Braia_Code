@@ -1,0 +1,69 @@
+// AUTOMATICALLY GENERATED FILE. PLEASE DO NOT MODIFY IT MANUALLY
+//
+// PIO Unified Debugger
+//
+// Documentation: https://docs.platformio.org/page/plus/debugging.html
+// Configuration: https://docs.platformio.org/page/projectconf/section_env_debug.html
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug",
+            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/esp32doit-devkit-v1/firmware.elf",
+            "projectEnvName": "esp32doit-devkit-v1",
+            "toolchainBinDir": "/home/vscode/.platformio/packages/toolchain-xtensa-esp32/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": {
+                "type": "PlatformIO",
+                "task": "Pre-Debug"
+            }
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (skip Pre-Debug)",
+            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/esp32doit-devkit-v1/firmware.elf",
+            "projectEnvName": "esp32doit-devkit-v1",
+            "toolchainBinDir": "/home/vscode/.platformio/packages/toolchain-xtensa-esp32/bin",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (without uploading)",
+            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/esp32doit-devkit-v1/firmware.elf",
+            "projectEnvName": "esp32doit-devkit-v1",
+            "toolchainBinDir": "/home/vscode/.platformio/packages/toolchain-xtensa-esp32/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "loadMode": "manual"
+        },
+        {
+          "name": "PIO Debug (QEMU)",
+          "type": "cppdbg",
+          "request": "launch",
+          "MIMode": "gdb",
+          "miDebuggerPath": "/opt/esp/tools/xtensa-esp32-elf/esp-2021r2-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb",
+          "program": "/workspaces/LineFollower_Braia_Code/.pio/build/esp32doit-devkit-v1/firmware.elf",
+          "windows": {
+            "program": "/workspaces/LineFollower_Braia_Code/.pio/build/esp32doit-devkit-v1/firmware.elf"
+          },
+          "cwd": "${workspaceFolder}",
+          "setupCommands": [
+            { "text": "target remote :3333" },
+            { "text": "set remote hardware-watchpoint-limit 2"},
+            { "text": "mon reset halt" },
+            { "text": "thb app_main" },
+            { "text": "flushregs" }
+          ],
+          "preLaunchTask": "QEMU Debug: Start",
+          "postDebugTask": "Encerrar Tarefas",
+          "externalConsole": false,
+          "logging": {
+            "engineLogging": true
+          }
+        }
+    ]
+}

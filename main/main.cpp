@@ -12,7 +12,7 @@
 #include "ESPNOWService.hpp"
 #include "LEDsService.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 //#define LINE_COLOR_BLACK
 #define taskStatus false // Variável para habilitar a TaskStatus
 
