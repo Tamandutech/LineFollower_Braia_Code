@@ -7,8 +7,7 @@ board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32")
 
 env.Replace(
-    UPLOADER=join(
-        platform.get_package_dir("tool-esptoolpy") or "", "esptool.py"),
+    UPLOADER=join(platform.get_package_dir("tool-esptoolpy") or "", "esptool.py"),
     UPLOADERFLAGS=[
         "--chip", mcu,
         "--port", '"$UPLOAD_PORT"',

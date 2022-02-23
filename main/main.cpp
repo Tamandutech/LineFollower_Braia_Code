@@ -96,8 +96,8 @@ void app_main(void)
     braia->getPIDVel()->setSetpoint(1500);
   }
 
-  // ledsService = new LEDsService("LEDsService", braia, 10000, 9);
-  // ledsService->Start();
+  ledsService = new LEDsService("LEDsService", braia, 10000, 9);
+  ledsService->Start();
 
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
   // mappingService = new MappingService("MappingService", braia, 10000, 9);
@@ -124,7 +124,7 @@ void app_main(void)
   {
     // ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
     // ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
-    // ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
+    ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
     ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
     // ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
     // ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
