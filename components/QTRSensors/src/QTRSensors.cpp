@@ -18,7 +18,9 @@ void QTRSensors::setTypeAnalogESP()
   _type = QTRType::AnalogESP;
   _maxValue = 4095; // Arduino analogRead() returns a 10-bit value by default
 
+#ifndef ESP32_QEMU
   adc1_config_width(ADC_WIDTH_BIT_12);
+#endif
 }
 
 void QTRSensors::setTypeMCP3008()
@@ -67,7 +69,9 @@ void QTRSensors::setSensorPins(const adc1_channel_t *pins, uint8_t sensorCount)
   for (uint8_t i = 0; i < sensorCount; i++)
   {
     _sensorPinsESP[i] = pins[i];
+#ifndef ESP32_QEMU
     adc1_config_channel_atten(_sensorPinsESP[i], ADC_ATTEN_DB_11);
+#endif
   }
 
   _sensorCount = sensorCount;
@@ -133,7 +137,9 @@ void QTRSensors::setEmitterPin(uint8_t emitterPin)
   releaseEmitterPins();
 
   _oddEmitterPin = emitterPin;
+#ifndef ESP32_QEMU
   gpio_set_direction((gpio_num_t)_oddEmitterPin, GPIO_MODE_INPUT_OUTPUT);
+#endif
 
   _emitterPinCount = 1;
 }
@@ -144,8 +150,10 @@ void QTRSensors::setEmitterPins(uint8_t oddEmitterPin, uint8_t evenEmitterPin)
 
   _oddEmitterPin = oddEmitterPin;
   _evenEmitterPin = evenEmitterPin;
+#ifndef ESP32_QEMU
   gpio_set_direction((gpio_num_t)_oddEmitterPin, GPIO_MODE_INPUT_OUTPUT);
   gpio_set_direction((gpio_num_t)_evenEmitterPin, GPIO_MODE_INPUT_OUTPUT);
+#endif
 
   _emitterPinCount = 2;
 }
@@ -154,13 +162,17 @@ void QTRSensors::releaseEmitterPins()
 {
   if (_oddEmitterPin != QTRNoEmitterPin)
   {
+#ifndef ESP32_QEMU
     gpio_set_direction((gpio_num_t)_oddEmitterPin, GPIO_MODE_INPUT_OUTPUT);
+#endif
     _oddEmitterPin = QTRNoEmitterPin;
   }
 
   if (_evenEmitterPin != QTRNoEmitterPin)
   {
+#ifndef ESP32_QEMU
     gpio_set_direction((gpio_num_t)_evenEmitterPin, GPIO_MODE_INPUT_OUTPUT);
+#endif
     _evenEmitterPin = QTRNoEmitterPin;
   }
 
@@ -189,10 +201,16 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
       (_emitterPinCount == 2 && emitters == QTREmitters::Odd))
   {
     // Check if pin is defined and only turn off if not already off
-    if ((_oddEmitterPin != QTRNoEmitterPin) &&
-        gpio_get_level((gpio_num_t)_oddEmitterPin) == 1)
+    if ((_oddEmitterPin != QTRNoEmitterPin)
+#ifndef ESP32_QEMU
+        &&
+        gpio_get_level((gpio_num_t)_oddEmitterPin) == 1
+#endif
+    )
     {
+#ifndef ESP32_QEMU
       gpio_set_level((gpio_num_t)_oddEmitterPin, 0);
+#endif
       pinChanged = true;
     }
   }
@@ -204,10 +222,16 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
       (emitters == QTREmitters::All || emitters == QTREmitters::Even))
   {
     // Check if pin is defined and only turn off if not already off
-    if ((_evenEmitterPin != QTRNoEmitterPin) &&
-        gpio_get_level((gpio_num_t)_evenEmitterPin) == 1)
+    if ((_evenEmitterPin != QTRNoEmitterPin)
+#ifndef ESP32_QEMU
+        &&
+        gpio_get_level((gpio_num_t)_evenEmitterPin) == 1
+#endif
+    )
     {
+#ifndef ESP32_QEMU
       gpio_set_level((gpio_num_t)_evenEmitterPin, 0);
+#endif
       pinChanged = true;
     }
   }
@@ -243,7 +267,11 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
     // we might be changing the dimming level (emittersOnWithPin() should take
     // care of this)
     if ((_oddEmitterPin != QTRNoEmitterPin) &&
-        (_dimmable || gpio_get_level((gpio_num_t)_oddEmitterPin) == 0))
+        (_dimmable
+#ifndef ESP32_QEMU
+         || gpio_get_level((gpio_num_t)_oddEmitterPin) == 0
+#endif
+         ))
     {
       emittersOnStart = emittersOnWithPin(_oddEmitterPin);
       pinChanged = true;
@@ -261,7 +289,11 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
     // we might be changing the dimming level (emittersOnWithPin() should take
     // care of this)
     if ((_evenEmitterPin != QTRNoEmitterPin) &&
-        (_dimmable || (gpio_get_level((gpio_num_t)_evenEmitterPin) == 0)))
+        (_dimmable
+#ifndef ESP32_QEMU
+         || (gpio_get_level((gpio_num_t)_evenEmitterPin) == 0)
+#endif
+             ))
     {
       emittersOnStart = emittersOnWithPin(_evenEmitterPin);
       pinChanged = true;
@@ -291,17 +323,25 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
 // returns time when pin was first set high (used by emittersSelect())
 uint16_t QTRSensors::emittersOnWithPin(uint8_t pin)
 {
-  if (_dimmable && (gpio_get_level((gpio_num_t)pin) == 1))
+  if (_dimmable
+#ifndef ESP32_QEMU
+      && (gpio_get_level((gpio_num_t)pin) == 1)
+#endif
+  )
   {
     // We are turning on dimmable emitters that are already on. To avoid
     // messing up the dimming level, we have to turn the emitters off and back
     // on. This means the turn-off delay will happen even if wait = false was
     // passed to emittersOn(). (Driver min is 1 ms.)
+#ifndef ESP32_QEMU
     gpio_set_level((gpio_num_t)pin, 0);
+#endif
     vTaskDelay(1.2 / portTICK_PERIOD_MS);
   }
 
+#ifndef ESP32_QEMU
   gpio_set_level((gpio_num_t)pin, 1);
+#endif
   uint16_t emittersOnStart = esp_timer_get_time();
 
   if (_dimmable && (_dimmingLevel > 0))
@@ -309,9 +349,13 @@ uint16_t QTRSensors::emittersOnWithPin(uint8_t pin)
     for (uint8_t i = 0; i < _dimmingLevel; i++)
     {
       vTaskDelay(0.001 / portTICK_PERIOD_MS);
+#ifndef ESP32_QEMU
       gpio_set_level((gpio_num_t)pin, 0);
+#endif
       vTaskDelay(0.001 / portTICK_PERIOD_MS);
+#ifndef ESP32_QEMU
       gpio_set_level((gpio_num_t)pin, 1);
+#endif
     }
   }
 
@@ -555,10 +599,12 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
     for (uint8_t i = start; i < _sensorCount; i += step)
     {
       sensorValues[i] = _maxValue;
+#ifndef ESP32_QEMU
       // make sensor line an output (drives low briefly, but doesn't matter)
       gpio_set_direction((gpio_num_t)_sensorPins[i], GPIO_MODE_INPUT_OUTPUT);
       // drive sensor line high
       gpio_set_level((gpio_num_t)_sensorPins[i], 1);
+#endif
     }
 
     vTaskDelay(0.001 / portTICK_PERIOD_MS);
@@ -575,8 +621,10 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
 
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
+#ifndef ESP32_QEMU
         // make sensor line an input (should also ensure pull-up is disabled)
         gpio_set_direction((gpio_num_t)_sensorPins[i], GPIO_MODE_INPUT_OUTPUT);
+#endif
       }
 
       while (time < _maxValue)
@@ -587,7 +635,10 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
         time = esp_timer_get_time() - startTime;
         for (uint8_t i = start; i < _sensorCount; i += step)
         {
-          if ((gpio_get_level((gpio_num_t)_sensorPins[i]) == 0) &&
+          if (
+#ifndef ESP32_QEMU
+              (gpio_get_level((gpio_num_t)_sensorPins[i]) == 0) &&
+#endif
               (time < sensorValues[i]))
           {
             // record the first time the line reads low
@@ -609,8 +660,12 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
     {
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
-        // add the conversion result
+// add the conversion result
+#ifndef ESP32_QEMU
         sensorValues[i] += adc1_get_raw((adc1_channel_t)_sensorPins[i]);
+#else
+        sensorValues[i] += 0;
+#endif
       }
     }
 
@@ -634,7 +689,11 @@ void QTRSensors::readPrivate(uint16_t *sensorValues, uint8_t start,
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
         // add the conversion result
+#ifndef ESP32_QEMU
         sensorValues[i] += adc1_get_raw(_sensorPinsESP[i]);
+#else
+        sensorValues[i] += 0;
+#endif
         ESP_LOGD(tag, "ADC (ESP) Canal: %d", _sensorPinsESP[i]);
       }
     }

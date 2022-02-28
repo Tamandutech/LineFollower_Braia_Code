@@ -4,8 +4,6 @@
 #include "thread.hpp"
 #include "RobotData.h"
 
-#include "io.h"
-
 #include "ESP32Encoder.h"
 
 using namespace cpp_freertos;

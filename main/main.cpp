@@ -100,17 +100,17 @@ void app_main(void)
   // ledsService->Start();
 
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
-  // mappingService = new MappingService("MappingService", braia, 10000, 9);
-  // motorsService = new MotorsService("MotorsService", braia, 10000, 9);
-  // speedService = new SpeedService("SpeedService", braia, 10000, 9);
+  mappingService = new MappingService("MappingService", braia, 10000, 9);
+  motorsService = new MotorsService("MotorsService", braia, 10000, 9);
+  speedService = new SpeedService("SpeedService", braia, 10000, 9);
   pidService = new PIDService("PIDService", braia, 10000, 9);
-  // sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
+  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
   // espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
 
-  // sensorsService->Start();
-  // motorsService->Start();
+  sensorsService->Start();
+  motorsService->Start();
   pidService->Start();
-  // speedService->Start();
+  speedService->Start();
   // espnowService->Start();
 
   if (taskStatus)

@@ -4,9 +4,11 @@ MappingService::MappingService(const char *name, Robot *robot, uint32_t stackDep
 {
     this->robot = robot;
 
+#ifndef ESP32_QEMU
     gpio_pad_select_gpio(0);
     gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
     gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
+#endif
 
     ESP_LOGD(GetName().c_str(), "Mapeamento Iniciado e aguardando calibração");
     ESP_LOGD(GetName().c_str(), "Mapeamento Retomado!");
@@ -21,7 +23,6 @@ MappingService::MappingService(const char *name, Robot *robot, uint32_t stackDep
     markreg.MapStatus = CAR_IN_LINE;
 
     latMarks->SetMarkDataReg(markreg, 0);
-
 };
 
 void MappingService::Run()
@@ -37,16 +38,23 @@ void MappingService::Run()
         bool mapping = status->getMapping(); // Verifica se o mapeamento deve iniciar
         uint16_t slesq1 = SLat->getChannel(0);
         uint16_t slesq2 = SLat->getChannel(1);
-        //bool sldir1 = gpio_get_level(GPIO_NUM_17);
+
+#ifdef ESP32_QEMU
+        // bool sldir1 = gpio_get_level(GPIO_NUM_17);
+        bool sldir2 = false;
+        bool bottom = false;
+#else
+        // bool sldir1 = gpio_get_level(GPIO_NUM_17);
         bool sldir2 = gpio_get_level(GPIO_NUM_5);
         bool bottom = gpio_get_level(GPIO_NUM_0);
+#endif
 
         mapfinish = latMarks->getMapFinished();
 
         if (((latMarks->getrightMarks()) == 1) && !startTimer && Parar != CAR_STOPPED && mapping)
         {
 
-            xInicialTicks = xTaskGetTickCount(); //pegando o tempo inicial
+            xInicialTicks = xTaskGetTickCount(); // pegando o tempo inicial
             startTimer = true;
             InitialMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
             latMarks->SetInitialMark(InitialMarkData);
@@ -68,11 +76,11 @@ void MappingService::Run()
             if ((slesq1 < 300) && (sldir2) && !leftpassed)
             {
                 struct MapData MarkReg;
-                //tempo
+                // tempo
                 MarkReg.MapTime = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
-                //media
+                // media
                 MarkReg.MapEncMedia = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
-                //estado
+                // estado
                 if ((marks % 2) == 0)
                 { // Verifica se o carrinho está na curva ou na linha
                     MarkReg.MapStatus = CAR_IN_CURVE;
@@ -87,7 +95,7 @@ void MappingService::Run()
                 markData.cmd = MarkData;
                 markData.version = 1;
                 markData.size = sizeof(MarkReg);
-                memcpy(markData.data,&MarkReg,sizeof(MarkReg));
+                memcpy(markData.data, &MarkReg, sizeof(MarkReg));
                 robot->addPacketSend(markData);
                 marks++;
                 leftpassed = true; // Diz que o carro está em uma marcação esquerda
@@ -99,11 +107,11 @@ void MappingService::Run()
         }
         else if (latMarks->getrightMarks() < 1 && mapping && Parar != CAR_STOPPED)
         {
-            //ESP_LOGI(GetName().c_str(), "Mapeamento não iniciado");
+            // ESP_LOGI(GetName().c_str(), "Mapeamento não iniciado");
         }
         else if (latMarks->getrightMarks() > 1 && !mapfinish && mapping)
         {
-            //ESP_LOGI(GetName().c_str(), "Mapeamento finalizado");
+            // ESP_LOGI(GetName().c_str(), "Mapeamento finalizado");
             FinalMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
             latMarks->SetMapFinished(true);
             latMarks->SetFinalMark(FinalMarkData);

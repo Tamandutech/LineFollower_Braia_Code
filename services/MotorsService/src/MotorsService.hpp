@@ -6,8 +6,6 @@
 
 #include "ESP32MotorControl.h"
 
-#include "io.h"
-
 using namespace cpp_freertos;
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR

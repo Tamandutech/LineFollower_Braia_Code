@@ -10,16 +10,18 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
     sArray.setSamplesPerSensor(5);
 
     // Definindo GPIOs e configs para sensor Lateral
+#ifndef ESP32_QEMU
     gpio_pad_select_gpio(39);
     gpio_set_direction(GPIO_NUM_17, GPIO_MODE_INPUT);
     gpio_pad_select_gpio(05);
     gpio_set_direction(GPIO_NUM_5, GPIO_MODE_INPUT);
+#endif
 
     sLat.setTypeAnalogESP();
-    sLat.setSensorPins((const adc1_channel_t[]){SL1, SL2}, 2);
+    sLat.setSensorPins((const adc1_channel_t[]){(adc1_channel_t)SL1, (adc1_channel_t)SL2}, 2);
     sLat.setSamplesPerSensor(5);
 
-    //Calibração dos dos sensores laterais e array
+    // Calibração dos dos sensores laterais e array
     for (uint16_t i = 0; i < 20; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p) | sLat: (%p)", this, &sArray, &sLat);
@@ -28,13 +30,13 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
-    //leitura e armazenamento dos valores máximos e mínimos dos sensores obtidos na calibração
+    // leitura e armazenamento dos valores máximos e mínimos dos sensores obtidos na calibração
     std::vector<uint16_t> sArrayMaxes(sArray.calibrationOn.maximum, sArray.calibrationOn.maximum + sArray.getSensorCount());
     std::vector<uint16_t> sArrayMins(sArray.calibrationOn.minimum, sArray.calibrationOn.minimum + sArray.getSensorCount());
     std::vector<uint16_t> SLatMaxes(sLat.calibrationOn.maximum, sLat.calibrationOn.maximum + sLat.getSensorCount());
     std::vector<uint16_t> SLatMins(sLat.calibrationOn.minimum, sLat.calibrationOn.minimum + sLat.getSensorCount());
 
-    //armazenamento dos valores máximos e mínimos dos sensores no objeto robot
+    // armazenamento dos valores máximos e mínimos dos sensores no objeto robot
     robot->getsArray()->setChannelsMaxes(sArrayMaxes);
     robot->getsArray()->setChannelsMins(sArrayMins);
     robot->getsLat()->setChannelsMaxes(SLatMaxes);
@@ -58,7 +60,7 @@ void SensorsService::Run()
 
 void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot) // função leitura dos sensores
 {
-    //Arrays para armazenar leitura bruta dos sensores array e laterais
+    // Arrays para armazenar leitura bruta dos sensores array e laterais
     uint16_t sArraychannels[sArray->getSensorCount()];
     uint16_t SLatchannels[SLat->getSensorCount()];
 
@@ -68,11 +70,11 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     robot->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
 #endif
     // cálculo dos valores do sensor array
-    SLat->readCalibrated(SLatchannels);                                                                 //leitura dos sensores laterais
+    SLat->readCalibrated(SLatchannels);                                                                 // leitura dos sensores laterais
     std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array
     std::vector<uint16_t> SLatchannelsVec(SLatchannels, SLatchannels + SLat->getSensorCount());         // vector(array) com os valores dos sensores laterais
 
-    //armazenando da leitura bruta do sensor array e lateral no objeto Braia
+    // armazenando da leitura bruta do sensor array e lateral no objeto Braia
     robot->getsArray()->setChannels(sArraychannelsVec);
     robot->getsLat()->setChannels(SLatchannelsVec);
 
@@ -80,13 +82,18 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
     ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
 
-    //robot->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
+    // robot->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
 
 void SensorsService::processSLat(Robot *robot)
 {
+#ifndef ESP32_QEMU
     bool sldir1 = gpio_get_level(GPIO_NUM_17);
     bool sldir2 = gpio_get_level(GPIO_NUM_5);
+#else
+    bool sldir1 = false;
+    bool sldir2 = false;
+#endif
 
     auto SLat = robot->getsLat();
     auto status = robot->getStatus();
@@ -98,13 +105,13 @@ void SensorsService::processSLat(Robot *robot)
     ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
     if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
     {
-        if ((slesq1 < 300) && (sldir2)) //lendo sLat esq. branco e dir. preto
+        if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
         {
             if (!(latMarks->getSLatEsq()))
                 latMarks->leftPassedInc();
             latMarks->SetSLatEsq(true);
             latMarks->SetSLatDir(false);
-            //ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+            // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         }
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
         {
@@ -116,16 +123,16 @@ void SensorsService::processSLat(Robot *robot)
     }
     else
     {
-        //ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+        // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         latMarks->SetSLatDir(false);
         latMarks->SetSLatEsq(false);
     }
 
     if (latMarks->getrightMarks() >= 2 && status->getMapping() && status->getState() != CAR_STOPPED)
-    { //parar depois da leitura da segunda linha direita
+    { // parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);
         // TODO: corrigir parada da TaskPID
         // vTaskSuspend(xTaskPID);
-        status->setState(CAR_STOPPED);     
+        status->setState(CAR_STOPPED);
     }
 }

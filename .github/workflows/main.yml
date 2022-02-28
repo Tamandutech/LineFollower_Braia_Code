@@ -9,7 +9,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./ESP-IDF
+        working-directory: ./
 
     steps:
     - uses: actions/checkout@v2

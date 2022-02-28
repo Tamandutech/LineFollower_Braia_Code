@@ -4,8 +4,6 @@
 #include "thread.hpp"
 #include "RobotData.h"
 
-#include "io.h"
-
 #include "QTRSensors.h"
 
 using namespace cpp_freertos;
