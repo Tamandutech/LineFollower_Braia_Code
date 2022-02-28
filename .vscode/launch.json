@@ -12,21 +12,21 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/ESP32-BraiaV3/firmware.elf",
-            "projectEnvName": "ESP32-BraiaV3",
+            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/ESP32-QEMU/firmware.elf",
+            "projectEnvName": "ESP32-QEMU",
             "toolchainBinDir": "/home/vscode/.platformio/packages/toolchain-xtensa-esp32/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
-                "task": "Pre-Debug (ESP32-BraiaV3)"
+                "task": "Pre-Debug (ESP32-QEMU)"
             }
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/ESP32-BraiaV3/firmware.elf",
-            "projectEnvName": "ESP32-BraiaV3",
+            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/ESP32-QEMU/firmware.elf",
+            "projectEnvName": "ESP32-QEMU",
             "toolchainBinDir": "/home/vscode/.platformio/packages/toolchain-xtensa-esp32/bin",
             "internalConsoleOptions": "openOnSessionStart"
         },
@@ -34,8 +34,8 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/ESP32-BraiaV3/firmware.elf",
-            "projectEnvName": "ESP32-BraiaV3",
+            "executable": "/workspaces/LineFollower_Braia_Code/.pio/build/ESP32-QEMU/firmware.elf",
+            "projectEnvName": "ESP32-QEMU",
             "toolchainBinDir": "/home/vscode/.platformio/packages/toolchain-xtensa-esp32/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "loadMode": "manual"

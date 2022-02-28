@@ -5,6 +5,7 @@ LEDsService::LEDsService(const char *name, Robot *robot, uint32_t stackDepth, UB
     this->robot = robot;
     this->status = robot->getStatus();
 
+#ifndef ESP32_QEMU
     FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
     FastLED.setMaxPowerInVoltsAndMilliamps(8, 2000);
 
@@ -17,6 +18,7 @@ LEDsService::LEDsService(const char *name, Robot *robot, uint32_t stackDepth, UB
     ws2812fx->setMode(0 /*segid*/, FX_MODE_STATIC);
     segments[0].colors[0] = CRGB::Black;
     ws2812fx->service();
+#endif
 }
 
 void LEDsService::Run()
@@ -24,7 +26,9 @@ void LEDsService::Run()
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
-        //ws2812fx->service();
+#ifndef ESP32_QEMU
+        // ws2812fx->service();
+#endif
 
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);

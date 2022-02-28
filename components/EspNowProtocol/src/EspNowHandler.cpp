@@ -38,7 +38,7 @@ void EspNowHandler::EspNowInit(uint8_t canal, uint8_t *Mac, bool criptografia)
     {
         ESP_LOGE("EspNowHandler", "Variável PeerProtocol ocupada, não foi possível definir valor.");
     }
-    //Initialize NVS
+    // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
@@ -69,24 +69,27 @@ esp_err_t EspNowHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
     uint8_t *msgData = (uint8_t *)msgSend;
     Packet.cmd = code;
     Packet.version = ver;
-    Packet.packetsToReceive = ceil((float)dataSize/(float)sizeof(Packet.data)) - 1;
+    Packet.packetsToReceive = ceil((float)dataSize / (float)sizeof(Packet.data)) - 1;
     Packet.size = dataSize;
     uint16_t packets = Packet.packetsToReceive;
-    uint16_t ptrAdvance = 0; //qtd de bytes que o ponteiro precisa avançar para receber novos dados 
-    uint16_t lastPacketSize = dataSize - (Packet.packetsToReceive*sizeof(Packet.data)); // Tamanho em bytes do último pacote, os outros pacotes terão um tamanho fixo
-    for(int i = packets; i>=0; i--){
-        if(i==0){
-            memcpy(Packet.data,msgData+ptrAdvance,lastPacketSize);
+    uint16_t ptrAdvance = 0;                                                              // qtd de bytes que o ponteiro precisa avançar para receber novos dados
+    uint16_t lastPacketSize = dataSize - (Packet.packetsToReceive * sizeof(Packet.data)); // Tamanho em bytes do último pacote, os outros pacotes terão um tamanho fixo
+    for (int i = packets; i >= 0; i--)
+    {
+        if (i == 0)
+        {
+            memcpy(Packet.data, msgData + ptrAdvance, lastPacketSize);
             Packet.packetsize = lastPacketSize;
         }
-        else{
-            memcpy(Packet.data,msgData+ptrAdvance,sizeof(Packet.data));
+        else
+        {
+            memcpy(Packet.data, msgData + ptrAdvance, sizeof(Packet.data));
             Packet.packetsize = sizeof(Packet.data);
         }
-        memcpy(dataToSend,&Packet,TotalDataSize);
+        memcpy(dataToSend, &Packet, TotalDataSize);
         sendreturn = esp_now_send(peer.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
         Packet.packetsToReceive--;
-        ptrAdvance+=sizeof(Packet.data);
+        ptrAdvance += sizeof(Packet.data);
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     free(dataToSend);
@@ -94,6 +97,7 @@ esp_err_t EspNowHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
 }
 void EspNowHandler::wifiInit(void)
 {
+#ifndef ESP32_QEMU
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -101,9 +105,11 @@ void EspNowHandler::wifiInit(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
+#endif
 }
 void EspNowHandler::espNowInit()
 {
+#ifndef ESP32_QEMU
     if (esp_now_init() != 0)
         ESP_LOGD("ESP-NOW", "Falha ao iniciar");
 
@@ -113,7 +119,7 @@ void EspNowHandler::espNowInit()
     // Adiciona peer
     if (xSemaphoreTake(xSemaphorePeerInfo, (TickType_t)10) == pdTRUE)
     {
-        ESP_LOGD("ESP-NOW","PeerMac : %x|%x|%x|%x|%x|%x ",this->peerInfo.peer_addr[0], this->peerInfo.peer_addr[1],this->peerInfo.peer_addr[2],this->peerInfo.peer_addr[3],this->peerInfo.peer_addr[4], this->peerInfo.peer_addr[5]);
+        ESP_LOGD("ESP-NOW", "PeerMac : %x|%x|%x|%x|%x|%x ", this->peerInfo.peer_addr[0], this->peerInfo.peer_addr[1], this->peerInfo.peer_addr[2], this->peerInfo.peer_addr[3], this->peerInfo.peer_addr[4], this->peerInfo.peer_addr[5]);
         if (esp_now_add_peer(&(this->peerInfo)) != ESP_OK)
         {
             ESP_LOGD("ESP-NOW", "Failed to add peer");
@@ -125,18 +131,21 @@ void EspNowHandler::espNowInit()
     }
 
     esp_now_register_recv_cb(EspNowHandler::OnDataRecv);
+#endif
 }
 void EspNowHandler::OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
     ESP_LOGD("ESP-NOW", "Mensagem recebida, bytes: %d", len);
     struct PacketData packetIncome;
     memcpy(&packetIncome, incomingData, len);
-    if (xSemaphoreTake(xSemaphorepacketreceived, (TickType_t)10) == pdTRUE){
+    if (xSemaphoreTake(xSemaphorepacketreceived, (TickType_t)10) == pdTRUE)
+    {
         EspNowHandler::PacketsReceived.push(packetIncome);
         xSemaphoreGive(xSemaphorepacketreceived);
     }
-    else{
-            ESP_LOGE("EspNowHandler", "Variável packetsreceived ocupada, não foi possível definir valor.");
+    else
+    {
+        ESP_LOGE("EspNowHandler", "Variável packetsreceived ocupada, não foi possível definir valor.");
     }
 }
 void EspNowHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -159,7 +168,8 @@ bool EspNowHandler::dataAvailable()
         return tempvar;
     }
 }
-struct PacketData EspNowHandler::getPacketReceived(){
+struct PacketData EspNowHandler::getPacketReceived()
+{
     struct PacketData tempvar;
     if (xSemaphoreTake(xSemaphorepacketreceived, (TickType_t)10) == pdTRUE)
     {
