@@ -140,10 +140,10 @@ void CarStatusService::Run()
             robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
             robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-            robot->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
-            robot->getPIDVel()->setKd(0.000, CAR_IN_LINE);
-            robot->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
-            robot->getPIDVel()->setKd(0.000, CAR_IN_CURVE);
+            robot->getPIDRot()->setKd(0.0001, CAR_IN_LINE);
+            robot->getPIDVel()->setKd(0.00, CAR_IN_LINE);
+            robot->getPIDRot()->setKd(0.0001, CAR_IN_CURVE);
+            robot->getPIDVel()->setKd(0.00, CAR_IN_CURVE);
 
             robot->getPIDRot()->setKi(0.00, CAR_IN_LINE);
             robot->getPIDVel()->setKi(0.00, CAR_IN_LINE);
@@ -151,9 +151,9 @@ void CarStatusService::Run()
             robot->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
             robot->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-            robot->getPIDVel()->setKp(0.035, CAR_IN_LINE);
+            robot->getPIDVel()->setKp(0.05, CAR_IN_LINE);
             robot->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-            robot->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
+            robot->getPIDVel()->setKp(0.05, CAR_IN_CURVE);
 
         }
         else if(!robot->getStatus()->getMapping() && mapChanged)
@@ -169,10 +169,10 @@ void CarStatusService::Run()
             robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
             robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-            robot->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
-            robot->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-            robot->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
-            robot->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
+            robot->getPIDRot()->setKd(0.0001, CAR_IN_LINE);
+            robot->getPIDVel()->setKd(0.00, CAR_IN_LINE);
+            robot->getPIDRot()->setKd(0.0001, CAR_IN_CURVE);
+            robot->getPIDVel()->setKd(0.0001, CAR_IN_CURVE);
 
             robot->getPIDRot()->setKi(0.00, CAR_IN_LINE);
             robot->getPIDVel()->setKi(0.00, CAR_IN_LINE);
@@ -180,9 +180,9 @@ void CarStatusService::Run()
             robot->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
             robot->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-            robot->getPIDVel()->setKp(0.035, CAR_IN_LINE);
+            robot->getPIDVel()->setKp(0.05, CAR_IN_LINE);
             robot->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-            robot->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
+            robot->getPIDVel()->setKp(0.05, CAR_IN_CURVE);
 
         }
         xLastWakeTime = xTaskGetTickCount();

@@ -26,8 +26,8 @@ private:
     ESP32Encoder enc_motDir;
 
     short const TaskDelay = 10; // 10 ms
-    uint16_t const MPR_MotEsq = 600;
-    uint16_t const MPR_MotDir = 600;
+    uint16_t const MPR_MotEsq = 120;
+    uint16_t const MPR_MotDir = 120;
 
     TickType_t lastTicksRevsCalc = 0;
     int32_t lastPulseRight = 0;
@@ -36,6 +36,7 @@ private:
 
     TickType_t initialTicksCar = 0;
     uint16_t deltaTimeMS_media = 0;
+    int iloop=0;
 };
 
 #endif

@@ -10,7 +10,7 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 #define NUM_LEDS 3
 #define DATA_PIN 32

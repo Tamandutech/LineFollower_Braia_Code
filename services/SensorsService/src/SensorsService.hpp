@@ -9,7 +9,7 @@
 using namespace cpp_freertos;
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
-
+#define LINE_COLOR_BLACK
 class SensorsService : public Thread
 {
 public:

@@ -22,7 +22,7 @@
 #include "tcpip_adapter.h"
 #include "esp_system.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class EspNowHandler
 {

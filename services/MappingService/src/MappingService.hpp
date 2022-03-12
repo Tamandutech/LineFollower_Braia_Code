@@ -8,7 +8,7 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class MappingService : public Thread
 {

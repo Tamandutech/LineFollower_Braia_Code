@@ -6,8 +6,8 @@ SpeedService::SpeedService(const char *name, Robot *robot, uint32_t stackDepth, 
     this->speed = robot->getSpeed();
 
     // GPIOs dos encoders dos encoders dos motores
-    enc_motEsq.attachHalfQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
-    enc_motDir.attachHalfQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
+    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
+    enc_motDir.attachFullQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
 };
 
 void SpeedService::Run()
@@ -57,12 +57,14 @@ void SpeedService::Run()
             (((lastPulseRight / (float)speed->getMPR_MotDir() + lastPulseLeft / (float)speed->getMPR_MotEsq())) / 2) // Revolucoes media desde inicializacao
             / ((float)deltaTimeMS_media / (float)60000)                                                              // Divisao do delta tempo em minutos para calculo de RPM
         );
-        
-        ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motDir.getCount());
-        ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motEsq.getCount());
-        ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
-        ESP_LOGD(GetName().c_str(), "VelEncDir: %d | VelEncEsq: %d", speed->getRPMRight_inst(), speed->getRPMLeft_inst());
-
+        if(iloop>=200){
+            ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motDir.getCount());
+            ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motEsq.getCount());
+            ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
+            ESP_LOGD(GetName().c_str(), "VelEncDir: %d | VelEncEsq: %d", speed->getRPMRight_inst(), speed->getRPMLeft_inst());
+            iloop = 0;
+        }
+        iloop++;
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
     }

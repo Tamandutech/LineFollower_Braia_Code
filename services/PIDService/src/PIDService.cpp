@@ -32,14 +32,14 @@ void PIDService::Run()
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-            PIDTrans->setSetpoint(1800);
+            PIDTrans->setSetpoint(900);
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            PIDTrans->setSetpoint(200);
+            PIDTrans->setSetpoint(1000);
         }
         else if(mapState && estado != CAR_STOPPED){
-            PIDTrans->setSetpoint(100);
+            PIDTrans->setSetpoint(1000);
         }
         
         // Reseta o PID se o carrinho parar

@@ -12,9 +12,8 @@
 #include "ESPNOWService.hpp"
 #include "LEDsService.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 //#define LINE_COLOR_BLACK
-#define taskStatus false // Variável para habilitar a TaskStatus
 
 // Componentes de encapsulamento das variaveis
 Robot *braia;
@@ -49,9 +48,9 @@ void app_main(void)
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.000, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.000, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.000, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.000, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -59,12 +58,12 @@ void app_main(void)
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.035, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.06, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.06, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(100);
+    braia->getPIDVel()->setSetpoint(200);
   }
   else
   {
@@ -78,9 +77,9 @@ void app_main(void)
     braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
     braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKd(0.0025, CAR_IN_LINE);
+    braia->getPIDRot()->setKd(0.000, CAR_IN_LINE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.0025, CAR_IN_CURVE);
+    braia->getPIDRot()->setKd(0.000, CAR_IN_CURVE);
     braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
 
     braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
@@ -88,12 +87,12 @@ void app_main(void)
     braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
     braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
 
-    braia->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.035, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.035, CAR_IN_CURVE);
+    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
+    braia->getPIDVel()->setKp(0.06, CAR_IN_LINE);
+    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
+    braia->getPIDVel()->setKp(0.06, CAR_IN_CURVE);
 
-    braia->getPIDVel()->setSetpoint(1500);
+    braia->getPIDVel()->setSetpoint(500);
   }
 
   ledsService = new LEDsService("LEDsService", braia, 10000, 9);
@@ -112,12 +111,8 @@ void app_main(void)
   pidService->Start();
   speedService->Start();
   espnowService->Start();
-
-  if (taskStatus)
-    carStatusService->Start();
-
-  if (braia->getStatus()->getMapping())
-    mappingService->Start();
+  carStatusService->Start();
+  mappingService->Start();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)
