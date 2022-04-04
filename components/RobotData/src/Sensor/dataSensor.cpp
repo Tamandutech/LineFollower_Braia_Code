@@ -13,10 +13,10 @@ dataSensor::dataSensor(uint16_t qtdChannels, std::string name)
     minChannel.reserve(qtdChannels);
 
     ESP_LOGD(tag, "Criando Semáforos");
-    vSemaphoreCreateBinary(xSemaphorechannel);
-    vSemaphoreCreateBinary(xSemaphoreline);
-    vSemaphoreCreateBinary(xSemaphoremaxChannel);
-    vSemaphoreCreateBinary(xSemaphoreminChannel);
+    (xSemaphorechannel) = xSemaphoreCreateMutex();
+    (xSemaphoreline) = xSemaphoreCreateMutex();
+    (xSemaphoremaxChannel) = xSemaphoreCreateMutex();
+    (xSemaphoreminChannel) = xSemaphoreCreateMutex();
 }
 
 int dataSensor::setLine(uint16_t value)

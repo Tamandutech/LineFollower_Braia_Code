@@ -4,15 +4,15 @@ dataSLatMarks::dataSLatMarks(std::string name){
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
     ESP_LOGD(tag, "Criando Semáforos");
-    vSemaphoreCreateBinary(xSemaphorelatesqPass);
-    vSemaphoreCreateBinary(xSemaphorelatdirPass);
-    vSemaphoreCreateBinary(xSemaphoreleftMarks);
-    vSemaphoreCreateBinary(xSemaphorerightMarks);
-    vSemaphoreCreateBinary(xSemaphoreMarksData);
-    vSemaphoreCreateBinary(xSemaphoreTotalLeftMarks);
-    vSemaphoreCreateBinary(xSemaphoreInitialMark);
-    vSemaphoreCreateBinary(xSemaphoreFinalMark);
-    vSemaphoreCreateBinary(xSemaphoreMapFinished);
+    (xSemaphorelatesqPass) = xSemaphoreCreateMutex();
+    (xSemaphorelatdirPass) = xSemaphoreCreateMutex();
+    (xSemaphoreleftMarks) = xSemaphoreCreateMutex();
+    (xSemaphorerightMarks) = xSemaphoreCreateMutex();
+    (xSemaphoreMarksData) = xSemaphoreCreateMutex();
+    (xSemaphoreTotalLeftMarks) = xSemaphoreCreateMutex();
+    (xSemaphoreInitialMark) = xSemaphoreCreateMutex();
+    (xSemaphoreFinalMark) = xSemaphoreCreateMutex();
+    (xSemaphoreMapFinished) = xSemaphoreCreateMutex();
 }
 bool dataSLatMarks::getSLatEsq(){
     bool tempInput;

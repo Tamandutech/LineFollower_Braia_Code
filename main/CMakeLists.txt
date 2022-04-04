@@ -10,4 +10,9 @@ idf_component_register(
 	SRCS ${app_sources}
 )
 
-list(APPEND REQUIRES "DebugService")
+list(
+	APPEND 
+		REQUIRES 
+			"DebugService"
+			"RobotData"
+)

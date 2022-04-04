@@ -12,7 +12,11 @@
 #include "ESPNOWService.hpp"
 #include "LEDsService.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "DataAbstract.hpp"
+
+#include <string>
+
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 //#define LINE_COLOR_BLACK
 
 // Componentes de encapsulamento das variaveis
@@ -34,6 +38,30 @@ extern "C"
 
 void app_main(void)
 {
+/*
+  ESP_LOGD("app_main", "Iniciando teste.");
+
+  DataAbstract<uint16_t> numu16Test("numu16Test");
+  DataAbstract<int16_t> num16Test("num16Test");
+  DataAbstract<const char*> stringTest("stringTest");
+  DataAbstract<uint8_t> num8Test("numu8Test");
+  DataAbstract<uint32_t> num32Test("numu32Test");
+
+  numu16Test.setData(10);
+  num16Test.setData(-10);
+  stringTest.setData("testando");
+  num8Test.setData(25);
+  num32Test.setData(51235);
+
+  ESP_LOGD("app_main", "num16Test: %d", numu16Test.getData());
+  ESP_LOGD("app_main", "num16Test: %d", num16Test.getData());
+  ESP_LOGD("app_main", "stringTest: %s", stringTest.getData());
+  ESP_LOGD("app_main", "num8Test: %d", num8Test.getData());
+  ESP_LOGD("app_main", "num32Test: %d", num32Test.getData());
+
+  ESP_LOGD("app_main", "Teste finalizado");
+
+*/
   braia = new Robot("Braia");
 
   if (braia->getStatus()->getMapping())
@@ -67,7 +95,6 @@ void app_main(void)
   }
   else
   {
-
     braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
     braia->getSpeed()->setSpeedBase(20, CAR_IN_CURVE);
 

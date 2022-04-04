@@ -7,15 +7,16 @@ dataPID::dataPID(std::string name)
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
 
     ESP_LOGD(tag, "Criando Semáforos");
-    vSemaphoreCreateBinary(xSemaphoreInput);
-    vSemaphoreCreateBinary(xSemaphoreOutput);
-    vSemaphoreCreateBinary(xSemaphoreSetpoint);
-    vSemaphoreCreateBinary(xSemaphoreKp_line);
-    vSemaphoreCreateBinary(xSemaphoreKp_curve);
-    vSemaphoreCreateBinary(xSemaphoreKi_line);
-    vSemaphoreCreateBinary(xSemaphoreKi_curve);
-    vSemaphoreCreateBinary(xSemaphoreKd_line);
-    vSemaphoreCreateBinary(xSemaphoreKd_curve);
+    (xSemaphoreInput) = xSemaphoreCreateMutex();
+    (xSemaphoreOutput) = xSemaphoreCreateMutex();
+    (xSemaphoreSetpoint) = xSemaphoreCreateMutex();
+    (xSemaphoreKp_line) = xSemaphoreCreateMutex();
+    (xSemaphoreKp_curve) = xSemaphoreCreateMutex();
+    (xSemaphoreKi_line) = xSemaphoreCreateMutex();
+    (xSemaphoreKi_curve) = xSemaphoreCreateMutex();
+    (xSemaphoreKd_line) = xSemaphoreCreateMutex();
+    (xSemaphoreKd_curve) = xSemaphoreCreateMutex();
+
 }
 
 int dataPID::setInput(int16_t input)

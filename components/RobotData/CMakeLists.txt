@@ -1,2 +1,18 @@
-idf_component_register(SRCS "src/RobotData.cpp" "src/dataPID.cpp" "src/dataSensor.cpp" "src/dataSpeed.cpp" "src/RobotStatus.cpp" "src/dataSLatMarks.cpp"
-INCLUDE_DIRS "src")
+idf_component_register(
+    SRCS 
+        "src/RobotData.cpp" 
+        "src/PID/dataPID.cpp" 
+        "src/Sensor/dataSensor.cpp" 
+        "src/Speed/dataSpeed.cpp" 
+        "src/Status/RobotStatus.cpp" 
+        "src/SLatMarks/dataSLatMarks.cpp"
+
+    INCLUDE_DIRS 
+        "src"
+        "src/dataTypes"
+        "src/PID"
+        "src/Sensor"
+        "src/SLatMarks"
+        "src/Speed"
+        "src/Status"
+)

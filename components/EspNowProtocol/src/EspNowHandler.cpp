@@ -8,9 +8,9 @@ EspNowHandler::EspNowHandler(std::string name)
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s", name.c_str());
     ESP_LOGD(tag, "Criando Semáforos");
-    vSemaphoreCreateBinary(xSemaphorePeerInfo);
-    vSemaphoreCreateBinary(xSemaphorePeerProtocol);
-    vSemaphoreCreateBinary(xSemaphorepacketreceived);
+    (xSemaphorePeerInfo) = xSemaphoreCreateMutex();
+    (xSemaphorePeerProtocol) = xSemaphoreCreateMutex();
+    (xSemaphorepacketreceived) = xSemaphoreCreateMutex();
 }
 void EspNowHandler::EspNowInit(uint8_t canal, uint8_t *Mac, bool criptografia)
 {
