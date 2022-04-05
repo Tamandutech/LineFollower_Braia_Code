@@ -8,6 +8,7 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     this->latMarks = robot->getSLatMarks();
     this->PidTrans = robot->getPIDVel();
 
+#if defined(ManualMap)
     latMarks->SetTotalLeftMarks(3);
     latMarks->SetFinalMark(5472);
     Marks = latMarks->getTotalLeftMarks() + 1; // marcas laterais esquerda na pista
@@ -29,6 +30,7 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     marktest.MapTime = 7470;
     marktest.MapStatus = CAR_IN_CURVE;
     latMarks->SetMarkDataReg(marktest, 3);
+#endif
 
     status->setMapping(false);
     status->setState(CAR_STOPPED);
@@ -49,16 +51,30 @@ void CarStatusService::Run()
     {
         CarState parar = status->getState(); // Verifica se o carro deve se manter parado
         bool bottom = gpio_get_level(GPIO_NUM_0);
-        if(!bottom && !status->getMapping()){
-            status->setState(CAR_IN_LINE);
-            status->setMapping(true);
-            latMarks->SetMapFinished(false);
-            latMarks->SetrightMarks(0);
+        ParametersData = robot->GetParams();
+        if(!bottom){   
+            vTaskDelay(2500 / portTICK_PERIOD_MS);
+            bottom = gpio_get_level(GPIO_NUM_0);
+            if(bottom && !status->getMapping()){ // Começa mapeamento
+                status->setState(CAR_IN_LINE);
+                status->setMapping(true);
+                latMarks->SetMapFinished(false);
+                latMarks->SetrightMarks(0);
+                latMarks->SetleftMarks(0);
+            }
+            else if(!bottom){  // Começa a usar dados do encoder para completar a pista
+                status->setState(CAR_IN_LINE);
+                status->setMapping(false);
+                latMarks->SetMapFinished(true);
+                latMarks->SetrightMarks(0);
+                latMarks->SetleftMarks(0);
+            }
         }
         if(lastmapstate != status->getMapping()){
             lastmapstate = status->getMapping();
             mapChanged = true;
         }
+
         int32_t FinalMark = latMarks->getFinalMark(); // Media dos encoders da marcação final
         Marks = latMarks->getTotalLeftMarks() + 1;
         int32_t mediaEnc = (speed->getEncRight() + speed->getEncLeft()) / 2; // calcula media dos encoders
@@ -127,62 +143,10 @@ void CarStatusService::Run()
                 }
             }
         }
-        if (robot->getStatus()->getMapping() && mapChanged)
+        if (mapChanged)
         {
             mapChanged = false;
-
-            robot->getSpeed()->setSpeedBase(25, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedBase(25, CAR_IN_CURVE);
-
-            robot->getSpeed()->setSpeedMax(50, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
-
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
-
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_LINE);
-            robot->getPIDVel()->setKd(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_CURVE);
-            robot->getPIDVel()->setKd(0.00, CAR_IN_CURVE);
-
-            robot->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
-
-            robot->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_LINE);
-            robot->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_CURVE);
-
-        }
-        else if(!robot->getStatus()->getMapping() && mapChanged)
-        {
-            mapChanged = false;
-
-            robot->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedBase(20, CAR_IN_CURVE);
-
-            robot->getSpeed()->setSpeedMax(70, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
-
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
-
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_LINE);
-            robot->getPIDVel()->setKd(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_CURVE);
-            robot->getPIDVel()->setKd(0.0001, CAR_IN_CURVE);
-
-            robot->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
-
-            robot->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_LINE);
-            robot->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_CURVE);
+            robot->Setparams(); // Atualiza os parâmetros do robô
 
         }
         xLastWakeTime = xTaskGetTickCount();

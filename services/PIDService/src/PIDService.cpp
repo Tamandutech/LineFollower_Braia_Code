@@ -18,6 +18,7 @@ void PIDService::Run()
     {
         CarState estado = status->getState();
         bool mapState = status->getMapping();
+        ParametersData = robot->GetParams();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         if (iloop > 50)
@@ -32,14 +33,14 @@ void PIDService::Run()
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-            PIDTrans->setSetpoint(900);
+            PIDTrans->setSetpoint(ParametersData.VelTargetRunLine);
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            PIDTrans->setSetpoint(1000);
+            PIDTrans->setSetpoint(ParametersData.VelTargetRunCurve);
         }
         else if(mapState && estado != CAR_STOPPED){
-            PIDTrans->setSetpoint(1000);
+            PIDTrans->setSetpoint(ParametersData.VelTargetMap);
         }
         
         // Reseta o PID se o carrinho parar

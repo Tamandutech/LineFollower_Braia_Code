@@ -26,6 +26,7 @@ private:
     uint16_t TaskDelay = 200;
     uint8_t broadcastAddress[6] = {0xE0,0xE2,0xE6,0x0D,0x43,0x0C};
     char msgrecebida[60]; // comandos recebidos em texto
+    struct CarParameters ParamsData; // Parâmetros do robô
     EspNowHandler protocolHandler;
     struct PacketData packetReceive;
     struct PacketData packetSend;

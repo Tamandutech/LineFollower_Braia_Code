@@ -36,65 +36,6 @@ void app_main(void)
 {
   braia = new Robot("Braia");
 
-  if (braia->getStatus()->getMapping())
-  {
-
-    braia->getSpeed()->setSpeedBase(25, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(25, CAR_IN_CURVE);
-
-    braia->getSpeed()->setSpeedMax(50, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
-
-    braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
-
-    braia->getPIDRot()->setKd(0.000, CAR_IN_LINE);
-    braia->getPIDVel()->setKd(0.000, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.000, CAR_IN_CURVE);
-    braia->getPIDVel()->setKd(0.000, CAR_IN_CURVE);
-
-    braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-    braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
-    braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
-    braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
-
-    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.06, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.06, CAR_IN_CURVE);
-
-    braia->getPIDVel()->setSetpoint(200);
-  }
-  else
-  {
-
-    braia->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedBase(20, CAR_IN_CURVE);
-
-    braia->getSpeed()->setSpeedMax(70, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
-
-    braia->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-    braia->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
-
-    braia->getPIDRot()->setKd(0.000, CAR_IN_LINE);
-    braia->getPIDVel()->setKd(0.0, CAR_IN_LINE);
-    braia->getPIDRot()->setKd(0.000, CAR_IN_CURVE);
-    braia->getPIDVel()->setKd(0.0, CAR_IN_CURVE);
-
-    braia->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-    braia->getPIDVel()->setKi(0.00, CAR_IN_LINE);
-    braia->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
-    braia->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
-
-    braia->getPIDRot()->setKp(0.5, CAR_IN_LINE);
-    braia->getPIDVel()->setKp(0.06, CAR_IN_LINE);
-    braia->getPIDRot()->setKp(0.5, CAR_IN_CURVE);
-    braia->getPIDVel()->setKp(0.06, CAR_IN_CURVE);
-
-    braia->getPIDVel()->setSetpoint(500);
-  }
-
   ledsService = new LEDsService("LEDsService", braia, 10000, 9);
   ledsService->Start();
 
