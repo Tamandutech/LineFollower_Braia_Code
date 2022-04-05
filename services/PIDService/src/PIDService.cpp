@@ -8,7 +8,7 @@ PIDService::PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBas
     this->PIDTrans = robot->getPIDVel();
     this->PIDRot = robot->getPIDRot();
 
-    this->PIDRot->setInput(this->robot->getsArray()->getLine());
+    this->PIDRot->input->setData(this->robot->getsArray()->getLine());
 };
 
 void PIDService::Run()
@@ -16,14 +16,14 @@ void PIDService::Run()
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
-        CarState estado = status->getState();
-        bool mapState = status->getMapping();
+        CarState estado = status->robotState->getData();
+        bool mapState = status->robotMap->getData();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         if (iloop > 50)
         {
             ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
-            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PIDTrans->getSetpoint());
+            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PIDTrans->setpoint->getData());
             iloop = 0;
         }
         iloop++;
@@ -32,14 +32,14 @@ void PIDService::Run()
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-            PIDTrans->setSetpoint(900);
+            PIDTrans->setpoint->setData(900);
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            PIDTrans->setSetpoint(1000);
+            PIDTrans->setpoint->setData(1000);
         }
         else if(mapState && estado != CAR_STOPPED){
-            PIDTrans->setSetpoint(1000);
+            PIDTrans->setpoint->setData(1000);
         }
         
         // Reseta o PID se o carrinho parar
@@ -52,22 +52,22 @@ void PIDService::Run()
             Irot = 0;
         }
         // Variaveis de calculo para os pids da velocidade rotacional e translacional
-        KpVel = PIDTrans->getKp(estado);
-        KiVel = PIDTrans->getKi(estado) * BaseDeTempo;
-        KdVel = PIDTrans->getKd(estado) / BaseDeTempo;
+        KpVel = PIDTrans->Kp(estado)->getData();
+        KiVel = PIDTrans->Ki(estado)->getData() * BaseDeTempo;
+        KdVel = PIDTrans->Kd(estado)->getData() / BaseDeTempo;
 
-        KpRot = PIDRot->getKp(estado);
-        KiRot = PIDRot->getKi(estado) * BaseDeTempo;
-        KdRot = PIDRot->getKd(estado) / BaseDeTempo;
+        KpRot = PIDRot->Kp(estado)->getData();
+        KiRot = PIDRot->Ki(estado)->getData() * BaseDeTempo;
+        KdRot = PIDRot->Kd(estado)->getData() / BaseDeTempo;
 
         //Velocidade do carrinho
         float VelRot = speed->getRPMRight_inst() - speed->getRPMLeft_inst();   // Rotacional
         float VelTrans = speed->getRPMRight_inst() + speed->getRPMLeft_inst(); //Translacional
 
         //Erros atuais
-        PIDRot->setSetpoint((3500 - robot->getsArray()->getLine()) / 7); // cálculo do setpoint rotacional
-        float erroVelTrans = (float)(PIDTrans->getSetpoint()) - VelTrans;
-        float erroVelRot = (float)(PIDRot->getSetpoint()) - VelRot;
+        PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / 7); // cálculo do setpoint rotacional
+        float erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
+        float erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
 
         //calculando Pids rotacional e translacional
         //float PidTrans = erroVelTrans * (KpVel + KiVel * h1 + KdVel * h2) + errTrans_ant * (-KpVel + KiVel * h1 - KdVel * h2x2) + errTrans_ant2 * (KdVel * h2) + lastTransPid;
@@ -93,24 +93,24 @@ void PIDService::Run()
         auto speedMax = speed->getSpeedMax(estado);
 
         // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
-        PIDTrans->setOutput(constrain(
+        PIDTrans->output->setData(constrain(
             ((PidTrans) + speedBase),
             speedMin,
             speedMax));
 
-        PIDRot->setOutput(PidRot);
+        PIDRot->output->setData(PidRot);
 
         // Calculo de velocidade do motor
         speed->setSpeedRight(
-            constrain((int16_t)(PIDTrans->getOutput()) + (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
+            constrain((int16_t)(PIDTrans->output->getData()) + (int16_t)(PIDRot->output->getData()), speedMin, speedMax),
             estado);
 
         speed->setSpeedLeft(
-            constrain((int16_t)(PIDTrans->getOutput()) - (int16_t)(PIDRot->getOutput()), speedMin, speedMax),
+            constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax),
             estado);
 
         ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);
-        ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->getOutput(), PIDTrans->getOutput());
+        ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
 
         vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
     }

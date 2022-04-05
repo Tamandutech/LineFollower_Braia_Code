@@ -128,11 +128,11 @@ void SensorsService::processSLat(Robot *robot)
         latMarks->SetSLatEsq(false);
     }
 
-    if (latMarks->getrightMarks() >= 2 && status->getMapping() && status->getState() != CAR_STOPPED)
+    if (latMarks->getrightMarks() >= 2 && status->robotMap->getData() && status->robotState->getData() != CAR_STOPPED)
     { // parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);
         // TODO: corrigir parada da TaskPID
         // vTaskSuspend(xTaskPID);
-        status->setState(CAR_STOPPED);
+        status->robotState->setData(CAR_STOPPED);
     }
 }

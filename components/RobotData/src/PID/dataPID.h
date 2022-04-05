@@ -24,6 +24,8 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#include "DataAbstract.hpp"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class dataPID
@@ -31,51 +33,25 @@ class dataPID
 public:
     dataPID(std::string name = "dataPID");
 
-    int setInput(int16_t input);
-    int16_t getInput();
-    
-    int setOutput(float output);
-    float getOutput();
+    DataAbstract<int16_t> *input;
+    DataAbstract<float> *output;
+    DataAbstract<int16_t> *setpoint;
 
-    int setSetpoint(int16_t Setpoint);
-    int16_t getSetpoint();
-
-    int setKp(float Kp, CarState state);
-    float getKp(CarState state);
-
-    int setKi(float Ki, CarState state);
-    float getKi(CarState state);
-
-    int setKd(float Kd, CarState state);
-    float getKd(CarState state);
+    DataAbstract<float> *Kp(CarState state);
+    DataAbstract<float> *Ki(CarState state);
+    DataAbstract<float> *Kd(CarState state);
 
 private:
     std::string name;
     const char *tag = "RobotData";
+  
+    DataAbstract<float> *Kp_line;
+    DataAbstract<float> *Ki_line;
+    DataAbstract<float> *Kd_line;
 
-    // Entrada e Saída da função
-    SemaphoreHandle_t xSemaphoreInput;
-    int16_t input = 0;
-    SemaphoreHandle_t xSemaphoreOutput;
-    float output = 0;
-
-    // Parâmetros
-    SemaphoreHandle_t xSemaphoreSetpoint;
-    int16_t Setpoint;
-
-    SemaphoreHandle_t xSemaphoreKp_line;
-    float Kp_line;
-    SemaphoreHandle_t xSemaphoreKi_line;
-    float Ki_line;
-    SemaphoreHandle_t xSemaphoreKd_line;
-    float Kd_line;
-    
-    SemaphoreHandle_t xSemaphoreKp_curve;
-    float Kp_curve;
-    SemaphoreHandle_t xSemaphoreKi_curve;
-    float Ki_curve;
-    SemaphoreHandle_t xSemaphoreKd_curve;
-    float Kd_curve;
+    DataAbstract<float> *Kp_curve;
+    DataAbstract<float> *Ki_curve;
+    DataAbstract<float> *Kd_curve;
 };
 
 #endif

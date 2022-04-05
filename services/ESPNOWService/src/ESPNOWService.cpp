@@ -17,14 +17,14 @@ void ESPNOWService::Run()
         std::string cmd="";
         cmd = msgrecebida;
         if(cmd.find("stop") != -1 && cmd.size() > 0){
-            status->setState(CAR_STOPPED);
+            status->robotState->setData(CAR_STOPPED);
             strcpy(msgrecebida,"empty");
         }
         else if(cmd.find("map") != -1 && cmd.size() > 0){
             robot->getSLatMarks()->SetMapFinished(false);
             robot->getSLatMarks()->SetrightMarks(0);
-            status->setState(CAR_IN_LINE);
-            status->setMapping(true);
+            status->robotState->setData(CAR_IN_LINE);
+            status->robotMap->setData(true);
             strcpy(msgrecebida,"empty");
         }
         if (protocolHandler.dataAvailable())
@@ -44,9 +44,9 @@ void ESPNOWService::Run()
                         struct SLatMarks LatMarks;
                         memcpy(&LatMarks,dataReceived,packetReceive.size);
                         robot->getSLatMarks()->setData(LatMarks);
-                        status->setMapping(false);
+                        status->robotMap->setData(false);
                         robot->getSLatMarks()->SetrightMarks(0);
-                        status->setState(CAR_IN_LINE);
+                        status->robotState->setData(CAR_IN_LINE);
                         ESP_LOGD(GetName().c_str(),"Comando Recebido: Encoders iniciados");
                         break;
                     case CMDTXT:

@@ -6,350 +6,69 @@ dataPID::dataPID(std::string name)
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
 
-    ESP_LOGD(tag, "Criando Semáforos");
-    (xSemaphoreInput) = xSemaphoreCreateMutex();
-    (xSemaphoreOutput) = xSemaphoreCreateMutex();
-    (xSemaphoreSetpoint) = xSemaphoreCreateMutex();
-    (xSemaphoreKp_line) = xSemaphoreCreateMutex();
-    (xSemaphoreKp_curve) = xSemaphoreCreateMutex();
-    (xSemaphoreKi_line) = xSemaphoreCreateMutex();
-    (xSemaphoreKi_curve) = xSemaphoreCreateMutex();
-    (xSemaphoreKd_line) = xSemaphoreCreateMutex();
-    (xSemaphoreKd_curve) = xSemaphoreCreateMutex();
+    // Inicializando os ponteiros para os tipos de dados.
+    ESP_LOGD(tag, "Inicializando ponteiros para os tipos de dados");
+    input = new DataAbstract<int16_t>("input");
+    output = new DataAbstract<float>("output");
+    setpoint = new DataAbstract<int16_t>("Setpoint");
 
-}
+    Kp_line = new DataAbstract<float>("Kp_line");
+    Ki_line = new DataAbstract<float>("Ki_line");
+    Kd_line = new DataAbstract<float>("Kd_line");
 
-int dataPID::setInput(int16_t input)
-{
-    if (xSemaphoreTake(xSemaphoreInput, (TickType_t)10) == pdTRUE)
-    {
-        this->input = input;
-        xSemaphoreGive(xSemaphoreInput);
-        return RETORNO_OK;
-    }
-    else
-    {
-        ESP_LOGE(tag, "Variável Input ocupada, não foi possível definir valor.");
-        return RETORNO_VARIAVEL_OCUPADA;
-    }
-}
-int16_t dataPID::getInput()
-{
-    int16_t tempInput;
-    for (;;)
-    {
-        if (xSemaphoreTake(xSemaphoreInput, (TickType_t)10) == pdTRUE)
-        {
-            tempInput = this->input;
-            xSemaphoreGive(xSemaphoreInput);
-            return tempInput;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Input ocupada, não foi possível ler valor. Tentando novamente...");
-        }
-    }
+    Kp_curve = new DataAbstract<float>("Kp_curve");
+    Ki_curve = new DataAbstract<float>("Ki_curve");
+    Kd_curve = new DataAbstract<float>("Kd_curve");
+    ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 
-int dataPID::setOutput(float output)
-{
-    if (xSemaphoreTake(xSemaphoreOutput, (TickType_t)10) == pdTRUE)
-    {
-        this->output = output;
-        xSemaphoreGive(xSemaphoreOutput);
-        return RETORNO_OK;
-    }
-    else
-    {
-        ESP_LOGE(tag, "Variável Output ocupada, não foi possível definir valor.");
-        return RETORNO_VARIAVEL_OCUPADA;
-    }
-}
-float dataPID::getOutput()
-{
-    int16_t tempOutput;
-    for (;;)
-    {
-        if (xSemaphoreTake(xSemaphoreOutput, (TickType_t)10) == pdTRUE)
-        {
-            tempOutput = this->output;
-            xSemaphoreGive(xSemaphoreOutput);
-            return tempOutput;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Output ocupada, não foi possível ler valor. Tentando novamente...");
-        }
-    }
-}
-
-int dataPID::setSetpoint(int16_t Setpoint)
-{
-    if (xSemaphoreTake(xSemaphoreSetpoint, (TickType_t)10) == pdTRUE)
-    {
-        this->Setpoint = Setpoint;
-        xSemaphoreGive(xSemaphoreSetpoint);
-        return RETORNO_OK;
-    }
-    else
-    {
-        ESP_LOGE(tag, "Variável Setpoint ocupada, não foi possível gravar valor. Tentando novamente...");
-        return RETORNO_VARIAVEL_OCUPADA;
-    }
-}
-int16_t dataPID::getSetpoint()
-{
-    int16_t tempSetpoint;
-    if (xSemaphoreTake(xSemaphoreSetpoint, (TickType_t)10) == pdTRUE)
-    {
-        tempSetpoint = this->Setpoint;
-        xSemaphoreGive(xSemaphoreSetpoint);
-    }
-    else
-    {
-        ESP_LOGE(tag, "Não foi possível obter o setpoint do PID, retornando valor padrão.");
-        return DEFAULT_SETPOINT;
-    }
-
-    return tempSetpoint;
-}
-
-int dataPID::setKp(float Kp, CarState state)
+DataAbstract<float> *dataPID::Kp(CarState state)
 {
     switch (state)
     {
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        if (xSemaphoreTake(xSemaphoreKp_line, (TickType_t)10) == pdTRUE)
-        {
-            this->Kp_line = Kp;
-            xSemaphoreGive(xSemaphoreKp_line);
-            return RETORNO_OK;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Kp_line ocupada, não foi possível definir valor.");
-            return RETORNO_VARIAVEL_OCUPADA;
-        }
-        break;
-
     case CAR_IN_CURVE:
-        if (xSemaphoreTake(xSemaphoreKp_curve, (TickType_t)10) == pdTRUE)
-        {
-            this->Kp_curve = Kp;
-            xSemaphoreGive(xSemaphoreKp_curve);
-            return RETORNO_OK;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Kp_curve ocupada, não foi possível definir valor.");
-            return RETORNO_VARIAVEL_OCUPADA;
-        }
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de Kp não será definido!", state);
-        return RETORNO_ARGUMENTO_INVALIDO;
-        break;
-    }
-}
-float dataPID::getKp(CarState state)
-{
-    float tempKp;
-    switch (state)
-    {
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        if (xSemaphoreTake(xSemaphoreKp_line, (TickType_t)10) == pdTRUE)
-        {
-            tempKp = this->Kp_line;
-            xSemaphoreGive(xSemaphoreKp_line);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Não foi possível obter o Kp_line do PID, retornando valor padrão.");
-            return DEFAULT_KP_LINE;
-        }
-        break;
-
-    case CAR_IN_CURVE:
-        if (xSemaphoreTake(xSemaphoreKp_curve, (TickType_t)10) == pdTRUE)
-        {
-            tempKp = this->Kp_curve;
-            xSemaphoreGive(xSemaphoreKp_curve);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Não foi possível obter o Kp_curve do PID, retornando valor padrão.");
-            return DEFAULT_KP_CURVE;
-        }
+        return Kp_curve;
         break;
 
     default:
         ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Kp do PID, retornando valor para linha.", state);
-        return DEFAULT_KP_LINE;
-        break;
-    }
-
-    return tempKp;
-}
-
-int dataPID::setKi(float Ki, CarState state)
-{
-    switch (state)
-    {
     case CAR_STOPPED:
     case CAR_IN_LINE:
-        if (xSemaphoreTake(xSemaphoreKi_line, (TickType_t)10) == pdTRUE)
-        {
-            this->Ki_line = Ki;
-            xSemaphoreGive(xSemaphoreKi_line);
-            return RETORNO_OK;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Ki_line ocupada, não foi possível definir valor.");
-            return RETORNO_VARIAVEL_OCUPADA;
-        }
-        break;
-
-    case CAR_IN_CURVE:
-        if (xSemaphoreTake(xSemaphoreKi_curve, (TickType_t)10) == pdTRUE)
-        {
-            this->Ki_curve = Ki;
-            xSemaphoreGive(xSemaphoreKi_curve);
-            return RETORNO_OK;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Ki_curve ocupada, não foi possível definir valor.");
-            return RETORNO_VARIAVEL_OCUPADA;
-        }
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de Ki não será definido!", state);
-        return RETORNO_ARGUMENTO_INVALIDO;
+        return Kp_line;
         break;
     }
 }
-float dataPID::getKi(CarState state)
-{
-    float tempKi;
-    switch (state)
-    {
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        if (xSemaphoreTake(xSemaphoreKi_line, (TickType_t)10) == pdTRUE)
-        {
-            tempKi = this->Ki_line;
-            xSemaphoreGive(xSemaphoreKi_line);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Não foi possível obter o Ki_line do PID, retornando valor padrão.");
-            return DEFAULT_KI_LINE;
-        }
-        break;
 
-    case CAR_IN_CURVE:
-        if (xSemaphoreTake(xSemaphoreKi_curve, (TickType_t)10) == pdTRUE)
-        {
-            tempKi = this->Ki_curve;
-            xSemaphoreGive(xSemaphoreKi_curve);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Não foi possível obter o Ki_curve do PID, retornando valor padrão.");
-            return DEFAULT_KI_CURVE;
-        }
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido para obter o Ki do PID, retornando valor para linha.");
-        return DEFAULT_KI_LINE;
-        break;
-    }
-
-    return tempKi;
-}
-
-int dataPID::setKd(float Kd, CarState state)
+DataAbstract<float> *dataPID::Ki(CarState state)
 {
     switch (state)
     {
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        if (xSemaphoreTake(xSemaphoreKd_line, (TickType_t)10) == pdTRUE)
-        {
-            this->Kd_line = Kd;
-            xSemaphoreGive(xSemaphoreKd_line);
-            return RETORNO_OK;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Kd_line ocupada, não foi possível definir valor.");
-            return RETORNO_VARIAVEL_OCUPADA;
-        }
-        break;
-
     case CAR_IN_CURVE:
-        if (xSemaphoreTake(xSemaphoreKd_curve, (TickType_t)10) == pdTRUE)
-        {
-            this->Kd_curve = Kd;
-            xSemaphoreGive(xSemaphoreKd_curve);
-            return RETORNO_OK;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Kd_curve ocupada, não foi possível definir valor.");
-            return RETORNO_VARIAVEL_OCUPADA;
-        }
+        return Ki_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de Kd não será definido!", state);
-        return RETORNO_ARGUMENTO_INVALIDO;
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Ki do PID, retornando valor para linha.", state);
+    case CAR_STOPPED:
+    case CAR_IN_LINE:
+        return Ki_line;
         break;
     }
 }
-float dataPID::getKd(CarState state)
+
+DataAbstract<float> *dataPID::Kd(CarState state)
 {
-    float tempKd;
     switch (state)
     {
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        if (xSemaphoreTake(xSemaphoreKd_line, (TickType_t)10) == pdTRUE)
-        {
-            tempKd = this->Kd_line;
-            xSemaphoreGive(xSemaphoreKd_line);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Não foi possível obter o Kd_line do PID, retornando valor padrão.");
-            return DEFAULT_KD_LINE;
-        }
-        break;
-
     case CAR_IN_CURVE:
-        if (xSemaphoreTake(xSemaphoreKd_curve, (TickType_t)10) == pdTRUE)
-        {
-            tempKd = this->Kd_curve;
-            xSemaphoreGive(xSemaphoreKd_curve);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Não foi possível obter o Kd_curve do PID, retornando valor padrão.");
-            return DEFAULT_KD_CURVE;
-        }
+        return Kd_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido para obter o Kd do PID: %d, retornando valor para linha.", state);
-        return DEFAULT_KD_LINE;
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Kd do PID, retornando valor para linha.", state);
+    case CAR_STOPPED:
+    case CAR_IN_LINE:
+        return Kd_line;
         break;
     }
-
-    return tempKd;
 }

@@ -30,33 +30,35 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     marktest.MapStatus = CAR_IN_CURVE;
     latMarks->SetMarkDataReg(marktest, 3);
 
-    status->setMapping(false);
-    status->setState(CAR_STOPPED);
+    status->robotMap->setData(false);
+    status->robotState->setData(CAR_STOPPED);
     latMarks->SetMapFinished(false);
 
     mapChanged = true;
-    lastmapstate = status->getMapping();
+    lastmapstate = status->robotMap->getData();
 }
 
 void CarStatusService::Run()
 {
     // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a conGetName().c_str()em de pulsos da CPU
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    int32_t PlusPulses = 0;                       // Pulsos a mais para a parada
+    int32_t PlusPulses = 0; // Pulsos a mais para a parada
     int iloop = 0;
     // Loop
     for (;;)
     {
-        CarState parar = status->getState(); // Verifica se o carro deve se manter parado
+        CarState parar = status->robotState->getData(); // Verifica se o carro deve se manter parado
         bool bottom = gpio_get_level(GPIO_NUM_0);
-        if(!bottom && !status->getMapping()){
-            status->setState(CAR_IN_LINE);
-            status->setMapping(true);
+        if (!bottom && !status->robotMap->getData())
+        {
+            status->robotState->setData(CAR_IN_LINE);
+            status->robotMap->setData(true);
             latMarks->SetMapFinished(false);
             latMarks->SetrightMarks(0);
         }
-        if(lastmapstate != status->getMapping()){
-            lastmapstate = status->getMapping();
+        if (lastmapstate != status->robotMap->getData())
+        {
+            lastmapstate = status->robotMap->getData();
             mapChanged = true;
         }
         int32_t FinalMark = latMarks->getFinalMark(); // Media dos encoders da marcação final
@@ -64,18 +66,18 @@ void CarStatusService::Run()
         int32_t mediaEnc = (speed->getEncRight() + speed->getEncLeft()) / 2; // calcula media dos encoders
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-        if (iloop >= 20 && !status->getMapping())
+        if (iloop >= 20 && !status->robotMap->getData())
         {
-            ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->getState());
+            ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
             ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEnc);
             ESP_LOGD(GetName().c_str(), "FinalMark: %d", FinalMark);
-            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->getSetpoint());
+            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->setpoint->getData());
             iloop = 0;
         }
         iloop++;
 #endif
 
-        if (mediaEnc >= FinalMark + PlusPulses && !status->getMapping() && parar != CAR_STOPPED)
+        if (mediaEnc >= FinalMark + PlusPulses && !status->robotMap->getData() && parar != CAR_STOPPED)
         {
             vTaskDelay(500 / portTICK_PERIOD_MS);
 
@@ -83,16 +85,16 @@ void CarStatusService::Run()
             // vTaskSuspend(xTaskPID);
             // vTaskSuspend(xTaskSensors);
 
-            robot->getStatus()->setState(CAR_STOPPED);
+            robot->getStatus()->robotState->setData(CAR_STOPPED);
         }
-        if (!status->getMapping() && mediaEnc < FinalMark + PlusPulses && parar != CAR_STOPPED)
+        if (!status->robotMap->getData() && mediaEnc < FinalMark + PlusPulses && parar != CAR_STOPPED)
         { // define o status do carrinho se o mapeamento não estiver ocorrendo
             int mark = 0;
             for (mark = 0; mark < Marks; mark++)
             { // Verifica a conGetName().c_str()em do encoder e atribui o estado ao robô
                 if (mark < Marks - 1)
                 {
-                    int32_t Manualmedia = (latMarks->getMarkDataReg(mark)).MapEncMedia; // Média dos encoders na chave mark    
+                    int32_t Manualmedia = (latMarks->getMarkDataReg(mark)).MapEncMedia;        // Média dos encoders na chave mark
                     int32_t ManualmediaNxt = (latMarks->getMarkDataReg(mark + 1)).MapEncMedia; // Média dos encoders na chave mark + 1
                     if (mediaEnc >= Manualmedia && mediaEnc <= ManualmediaNxt)
                     {                                                                   // análise do valor das médias dos encoders
@@ -106,7 +108,7 @@ void CarStatusService::Run()
                         {
                             estado = CAR_IN_CURVE;
                         }
-                        status->setState(estado);
+                        status->robotState->setData(estado);
                         break;
                     }
                 }
@@ -122,12 +124,12 @@ void CarStatusService::Run()
                     {
                         estado = CAR_IN_CURVE;
                     }
-                    status->setState(estado);
+                    status->robotState->setData(estado);
                     break;
                 }
             }
         }
-        if (robot->getStatus()->getMapping() && mapChanged)
+        if (robot->getStatus()->robotMap->getData() && mapChanged)
         {
             mapChanged = false;
 
@@ -140,23 +142,22 @@ void CarStatusService::Run()
             robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
             robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_LINE);
-            robot->getPIDVel()->setKd(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_CURVE);
-            robot->getPIDVel()->setKd(0.00, CAR_IN_CURVE);
+            robot->getPIDRot()->Kd(CAR_IN_LINE)->setData(0.0001);
+            robot->getPIDVel()->Kd(CAR_IN_LINE)->setData(0.00);
+            robot->getPIDRot()->Kd(CAR_IN_CURVE)->setData(0.0001);
+            robot->getPIDVel()->Kd(CAR_IN_CURVE)->setData(0.00);
 
-            robot->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
+            robot->getPIDRot()->Ki(CAR_IN_LINE)->setData(0.00);
+            robot->getPIDVel()->Ki(CAR_IN_LINE)->setData(0.00);
+            robot->getPIDRot()->Ki(CAR_IN_CURVE)->setData(0.00);
+            robot->getPIDVel()->Ki(CAR_IN_CURVE)->setData(0.00);
 
-            robot->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_LINE);
-            robot->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_CURVE);
-
+            robot->getPIDRot()->Kp(CAR_IN_LINE)->setData(0.27);
+            robot->getPIDVel()->Kp(CAR_IN_LINE)->setData(0.05);
+            robot->getPIDRot()->Kp(CAR_IN_CURVE)->setData(0.27);
+            robot->getPIDVel()->Kp(CAR_IN_CURVE)->setData(0.05);
         }
-        else if(!robot->getStatus()->getMapping() && mapChanged)
+        else if (!robot->getStatus()->robotMap->getData() && mapChanged)
         {
             mapChanged = false;
 
@@ -169,21 +170,20 @@ void CarStatusService::Run()
             robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
             robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
 
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_LINE);
-            robot->getPIDVel()->setKd(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKd(0.0001, CAR_IN_CURVE);
-            robot->getPIDVel()->setKd(0.0001, CAR_IN_CURVE);
+            robot->getPIDRot()->Kd(CAR_IN_LINE)->setData(0.0001);
+            robot->getPIDVel()->Kd(CAR_IN_LINE)->setData(0.00);
+            robot->getPIDRot()->Kd(CAR_IN_CURVE)->setData(0.0001);
+            robot->getPIDVel()->Kd(CAR_IN_CURVE)->setData(0.00);
 
-            robot->getPIDRot()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_LINE);
-            robot->getPIDRot()->setKi(0.00, CAR_IN_CURVE);
-            robot->getPIDVel()->setKi(0.00, CAR_IN_CURVE);
+            robot->getPIDRot()->Ki(CAR_IN_LINE)->setData(0.00);
+            robot->getPIDVel()->Ki(CAR_IN_LINE)->setData(0.00);
+            robot->getPIDRot()->Ki(CAR_IN_CURVE)->setData(0.00);
+            robot->getPIDVel()->Ki(CAR_IN_CURVE)->setData(0.00);
 
-            robot->getPIDRot()->setKp(0.27, CAR_IN_LINE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_LINE);
-            robot->getPIDRot()->setKp(0.27, CAR_IN_CURVE);
-            robot->getPIDVel()->setKp(0.05, CAR_IN_CURVE);
-
+            robot->getPIDRot()->Kp(CAR_IN_LINE)->setData(0.27);
+            robot->getPIDVel()->Kp(CAR_IN_LINE)->setData(0.05);
+            robot->getPIDRot()->Kp(CAR_IN_CURVE)->setData(0.27);
+            robot->getPIDVel()->Kp(CAR_IN_CURVE)->setData(0.05);
         }
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);

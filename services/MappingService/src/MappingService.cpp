@@ -34,8 +34,8 @@ void MappingService::Run()
     // Loop
     for (;;)
     {
-        CarState Parar = status->getState(); // Verifica se o mapeamento deve iniciar
-        bool mapping = status->getMapping(); // Verifica se o mapeamento deve iniciar
+        CarState Parar = status->robotState->getData(); // Verifica se o mapeamento deve iniciar
+        bool mapping = status->robotMap->getData(); // Verifica se o mapeamento deve iniciar
         uint16_t slesq1 = SLat->getChannel(0);
         uint16_t slesq2 = SLat->getChannel(1);
 

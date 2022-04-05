@@ -24,7 +24,7 @@ void SpeedService::Run()
     // Loop
     for (;;)
     {
-        CarState estado = robot->getStatus()->getState();
+        CarState estado = robot->getStatus()->robotState->getData();
         if(estado == CAR_STOPPED){
             enc_motEsq.clearCount();
             enc_motDir.clearCount();
