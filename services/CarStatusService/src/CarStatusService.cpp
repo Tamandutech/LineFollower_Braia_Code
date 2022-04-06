@@ -8,9 +8,9 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     this->latMarks = robot->getSLatMarks();
     this->PidTrans = robot->getPIDVel();
 
-    latMarks->SetTotalLeftMarks(3);
-    latMarks->SetFinalMark(5472);
-    Marks = latMarks->getTotalLeftMarks() + 1; // marcas laterais esquerda na pista
+    latMarks->totalLeftMarks->setData(3);
+    latMarks->finalMark->setData(5472);
+    Marks = latMarks->totalLeftMarks->getData() + 1; // marcas laterais esquerda na pista
 
     struct MapData marktest;
     marktest.MapEncMedia = 0;
@@ -32,7 +32,7 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
 
     status->robotMap->setData(false);
     status->robotState->setData(CAR_STOPPED);
-    latMarks->SetMapFinished(false);
+    latMarks->mapFinished->setData(false);
 
     mapChanged = true;
     lastmapstate = status->robotMap->getData();
@@ -53,16 +53,16 @@ void CarStatusService::Run()
         {
             status->robotState->setData(CAR_IN_LINE);
             status->robotMap->setData(true);
-            latMarks->SetMapFinished(false);
-            latMarks->SetrightMarks(0);
+            latMarks->mapFinished->setData(false);
+            latMarks->rightMarks->setData(0);
         }
         if (lastmapstate != status->robotMap->getData())
         {
             lastmapstate = status->robotMap->getData();
             mapChanged = true;
         }
-        int32_t FinalMark = latMarks->getFinalMark(); // Media dos encoders da marcação final
-        Marks = latMarks->getTotalLeftMarks() + 1;
+        int32_t FinalMark = latMarks->finalMark->getData(); // Media dos encoders da marcação final
+        Marks = latMarks->totalLeftMarks->getData() + 1;
         int32_t mediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG

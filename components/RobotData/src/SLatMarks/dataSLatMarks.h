@@ -15,60 +15,39 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#include "DataAbstract.hpp"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class dataSLatMarks
 {
 public:
     dataSLatMarks(std::string name = "dataSensor");
-    bool getSLatEsq();
-    bool getSLatDir();
-    bool getMapFinished(); // informa se o mapeamento está finalizado
-    uint16_t getTotalLeftMarks(); // Número total de marcações laterais esquerda da pista 
-    int32_t getFinalMark(); // Média dos encoders da marcação final
-    int32_t getInitialMark(); // Média dos encoders da marcação inicial
+
+    DataAbstract<bool> *latEsqPass;
+    DataAbstract<bool> *latDirPass;
+    DataAbstract<uint16_t> *leftMarks;
+    DataAbstract<uint16_t> *rightMarks;
+    DataAbstract<uint16_t> *totalLeftMarks;
+    DataAbstract<int32_t> *initialMark;
+    DataAbstract<int32_t> *finalMark;
+    DataAbstract<bool> *mapFinished;
+
     struct MapData getMarkDataReg(int regnum); // Dados das marcações laterais da pista
-    int SetSLatEsq(bool latesqPass);
-    int SetSLatDir(bool latdirPass);
-    int SetleftMarks(uint16_t marksleft);
-    int SetrightMarks(uint16_t marksright);
-    int SetMapFinished(bool mapfinished);
-    int SetTotalLeftMarks(uint16_t totalmarks);
-    int SetInitialMark(int32_t initialmark);
-    int SetFinalMark(int32_t finalmark);
     int SetMarkDataReg(struct MapData markreg, int regnum);
-    int setData( struct SLatMarks SLatData);
-    int leftPassedInc();
-    int rightPassedInc();
-    uint16_t getleftMarks();
-    uint16_t getrightMarks();
+
+    void leftPassedInc();
+    void rightPassedInc();
+
+    int setData(struct SLatMarks SLatData);
     struct SLatMarks getData();
-
-
-    
 
 private:
     std::string name;
     const char *tag = "dataSLatMarks";
-    SemaphoreHandle_t xSemaphorelatesqPass;
-    bool latesqPass  = false;
-    SemaphoreHandle_t xSemaphorelatdirPass;
-    bool latdirPass  = false;
-    uint16_t leftMarks = 0;
-    SemaphoreHandle_t xSemaphoreleftMarks;
-    uint16_t rightMarks = 0;
-    SemaphoreHandle_t xSemaphorerightMarks;
-    struct MapData MarksData[70];
-    SemaphoreHandle_t xSemaphoreMarksData;
-    uint16_t TotalLeftMarks = 0;
-    SemaphoreHandle_t xSemaphoreTotalLeftMarks;
-    int32_t InitialMark = 0;
-    SemaphoreHandle_t xSemaphoreInitialMark;
-    int32_t FinalMark = 0;
-    SemaphoreHandle_t xSemaphoreFinalMark;
-    bool MapFinished = false;
-    SemaphoreHandle_t xSemaphoreMapFinished;
 
+    SemaphoreHandle_t xSemaphoreMarksData;
+    struct MapData MarksData[70];
 };
 
 #endif

@@ -21,8 +21,8 @@ void ESPNOWService::Run()
             strcpy(msgrecebida,"empty");
         }
         else if(cmd.find("map") != -1 && cmd.size() > 0){
-            robot->getSLatMarks()->SetMapFinished(false);
-            robot->getSLatMarks()->SetrightMarks(0);
+            robot->getSLatMarks()->mapFinished->setData(false);
+            robot->getSLatMarks()->rightMarks->setData(0);
             status->robotState->setData(CAR_IN_LINE);
             status->robotMap->setData(true);
             strcpy(msgrecebida,"empty");
@@ -45,7 +45,7 @@ void ESPNOWService::Run()
                         memcpy(&LatMarks,dataReceived,packetReceive.size);
                         robot->getSLatMarks()->setData(LatMarks);
                         status->robotMap->setData(false);
-                        robot->getSLatMarks()->SetrightMarks(0);
+                        robot->getSLatMarks()->rightMarks->setData(0);
                         status->robotState->setData(CAR_IN_LINE);
                         ESP_LOGD(GetName().c_str(),"Comando Recebido: Encoders iniciados");
                         break;
