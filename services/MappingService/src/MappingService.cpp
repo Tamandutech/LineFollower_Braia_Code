@@ -56,7 +56,7 @@ void MappingService::Run()
 
             xInicialTicks = xTaskGetTickCount(); // pegando o tempo inicial
             startTimer = true;
-            InitialMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+            InitialMarkData = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
             latMarks->SetInitialMark(InitialMarkData);
         }
 
@@ -79,7 +79,7 @@ void MappingService::Run()
                 // tempo
                 MarkReg.MapTime = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
                 // media
-                MarkReg.MapEncMedia = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+                MarkReg.MapEncMedia = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
                 // estado
                 if ((marks % 2) == 0)
                 { // Verifica se o carrinho está na curva ou na linha
@@ -112,7 +112,7 @@ void MappingService::Run()
         else if (latMarks->getrightMarks() > 1 && !mapfinish && mapping)
         {
             // ESP_LOGI(GetName().c_str(), "Mapeamento finalizado");
-            FinalMarkData = ((speedMapping->getEncRight()) + (speedMapping->getEncLeft())) / 2;
+            FinalMarkData = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
             latMarks->SetMapFinished(true);
             latMarks->SetFinalMark(FinalMarkData);
             latMarks->SetTotalLeftMarks(marks);

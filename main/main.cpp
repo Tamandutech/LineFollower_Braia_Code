@@ -68,6 +68,9 @@ void app_main(void)
     ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
     ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
     ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
+    ESP_LOGD("main", "Memoria disponivel: %d", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+    ESP_LOGD("main", "Memoria maior bloco: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }

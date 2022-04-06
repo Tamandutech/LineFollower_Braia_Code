@@ -58,6 +58,9 @@ std::string DataAbstract<T>::demangle(const char *mangled)
 }
 
 template class DataAbstract<int16_t>;
+template class DataAbstract<uint16_t>;
+template class DataAbstract<int32_t>;
+template class DataAbstract<int8_t>;
 template class DataAbstract<float>;
 template class DataAbstract<bool>;
 template class DataAbstract<CarState>;

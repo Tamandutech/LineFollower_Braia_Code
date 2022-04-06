@@ -63,7 +63,7 @@ void CarStatusService::Run()
         }
         int32_t FinalMark = latMarks->getFinalMark(); // Media dos encoders da marcação final
         Marks = latMarks->getTotalLeftMarks() + 1;
-        int32_t mediaEnc = (speed->getEncRight() + speed->getEncLeft()) / 2; // calcula media dos encoders
+        int32_t mediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         if (iloop >= 20 && !status->robotMap->getData())
@@ -133,14 +133,14 @@ void CarStatusService::Run()
         {
             mapChanged = false;
 
-            robot->getSpeed()->setSpeedBase(25, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedBase(25, CAR_IN_CURVE);
+            robot->getSpeed()->SpeedBase(CAR_IN_LINE)->setData(25);
+            robot->getSpeed()->SpeedBase(CAR_IN_CURVE)->setData(25);
 
-            robot->getSpeed()->setSpeedMax(50, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
+            robot->getSpeed()->SpeedMax(CAR_IN_LINE)->setData(50);
+            robot->getSpeed()->SpeedMax(CAR_IN_CURVE)->setData(50);
 
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
+            robot->getSpeed()->SpeedMin(CAR_IN_LINE)->setData(5);
+            robot->getSpeed()->SpeedMin(CAR_IN_CURVE)->setData(5);
 
             robot->getPIDRot()->Kd(CAR_IN_LINE)->setData(0.0001);
             robot->getPIDVel()->Kd(CAR_IN_LINE)->setData(0.00);
@@ -161,14 +161,14 @@ void CarStatusService::Run()
         {
             mapChanged = false;
 
-            robot->getSpeed()->setSpeedBase(40, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedBase(20, CAR_IN_CURVE);
+            robot->getSpeed()->SpeedBase(CAR_IN_LINE)->setData(40);
+            robot->getSpeed()->SpeedBase(CAR_IN_CURVE)->setData(20);
 
-            robot->getSpeed()->setSpeedMax(70, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMax(50, CAR_IN_CURVE);
+            robot->getSpeed()->SpeedMax(CAR_IN_LINE)->setData(70);
+            robot->getSpeed()->SpeedMax(CAR_IN_CURVE)->setData(50);
 
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_LINE);
-            robot->getSpeed()->setSpeedMin(5, CAR_IN_CURVE);
+            robot->getSpeed()->SpeedMin(CAR_IN_LINE)->setData(5);
+            robot->getSpeed()->SpeedMin(CAR_IN_CURVE)->setData(5);
 
             robot->getPIDRot()->Kd(CAR_IN_LINE)->setData(0.0001);
             robot->getPIDVel()->Kd(CAR_IN_LINE)->setData(0.00);

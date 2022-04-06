@@ -13,7 +13,7 @@
 
 #include "dataEnums.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 template <class T>
 class DataAbstract

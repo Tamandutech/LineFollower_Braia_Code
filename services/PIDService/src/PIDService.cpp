@@ -61,8 +61,8 @@ void PIDService::Run()
         KdRot = PIDRot->Kd(estado)->getData() / BaseDeTempo;
 
         //Velocidade do carrinho
-        float VelRot = speed->getRPMRight_inst() - speed->getRPMLeft_inst();   // Rotacional
-        float VelTrans = speed->getRPMRight_inst() + speed->getRPMLeft_inst(); //Translacional
+        float VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
+        float VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); //Translacional
 
         //Erros atuais
         PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / 7); // cálculo do setpoint rotacional
@@ -88,9 +88,9 @@ void PIDService::Run()
         errRot_ant = erroVelRot;
         //lastRotPid = PidRot;
 
-        auto speedBase = speed->getSpeedBase(estado);
-        auto speedMin = speed->getSpeedMin(estado);
-        auto speedMax = speed->getSpeedMax(estado);
+        auto speedBase = speed->SpeedBase(estado)->getData();
+        auto speedMin = speed->SpeedMin(estado)->getData();
+        auto speedMax = speed->SpeedMax(estado)->getData();
 
         // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
         PIDTrans->output->setData(constrain(
@@ -101,13 +101,11 @@ void PIDService::Run()
         PIDRot->output->setData(PidRot);
 
         // Calculo de velocidade do motor
-        speed->setSpeedRight(
-            constrain((int16_t)(PIDTrans->output->getData()) + (int16_t)(PIDRot->output->getData()), speedMin, speedMax),
-            estado);
+        speed->SpeedRight(estado)->setData(
+            constrain((int16_t)(PIDTrans->output->getData()) + (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
 
-        speed->setSpeedLeft(
-            constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax),
-            estado);
+        speed->SpeedLeft(estado)->setData(
+            constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
 
         ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);
         ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());

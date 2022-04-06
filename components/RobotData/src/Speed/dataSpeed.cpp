@@ -6,323 +6,116 @@ dataSpeed::dataSpeed(std::string name)
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
 
-    ESP_LOGD(tag, "Criando Semáforos: %s", name.c_str());
-    (xSemaphoreMPR_MotEsq) = xSemaphoreCreateMutex();
-    (xSemaphoreMPR_MotDir) = xSemaphoreCreateMutex();
-    (xSemaphorerevsRight_inst) = xSemaphoreCreateMutex();
-    (xSemaphorerevsLeft_inst) = xSemaphoreCreateMutex();
-    (xSemaphorerevsCar_media) = xSemaphoreCreateMutex();
-    (xSemaphoreright_line) = xSemaphoreCreateMutex();
-    (xSemaphoreleft_line) = xSemaphoreCreateMutex();
-    (xSemaphoremax_line) = xSemaphoreCreateMutex();
-    (xSemaphoremin_line) = xSemaphoreCreateMutex();
-    (xSemaphorebase_line) = xSemaphoreCreateMutex();
-    (xSemaphoreright_curve) = xSemaphoreCreateMutex();
-    (xSemaphoreleft_curve) = xSemaphoreCreateMutex();
-    (xSemaphoremax_curve) = xSemaphoreCreateMutex();
-    (xSemaphoremin_curve) = xSemaphoreCreateMutex();
-    (xSemaphorebase_curve) = xSemaphoreCreateMutex();
-    (xSemaphoreEncLeft) = xSemaphoreCreateMutex();
-    (xSemaphoreEncRight) = xSemaphoreCreateMutex();
+    // Valocidades atuais
+    RPMRight_inst = new DataAbstract<int16_t>("RPMRight_inst", 0);
+    RPMLeft_inst = new DataAbstract<int16_t>("RPMLeft_inst", 0);
+    RPMCar_media = new DataAbstract<int16_t>("RPMCar_media", 0);
+
+    // Contagem atual dos encoders
+    EncRight = new DataAbstract<int32_t>("EncRight", 0);
+    EncLeft = new DataAbstract<int32_t>("EncLeft", 0);
+
+    /*
+     * Variavel que contempla relacao de Revloucoes e reducao
+     * dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
+     * */
+    MPR_MotEsq = new DataAbstract<uint16_t>("MPR_MotEsq", 0);
+    MPR_MotDir = new DataAbstract<uint16_t>("MPR_MotDir", 0);
+
+    // Linha
+    right_line = new DataAbstract<int8_t>("right_line", 0);
+    left_line = new DataAbstract<int8_t>("left_line", 0);
+    max_line = new DataAbstract<int8_t>("max_line", 0);
+    min_line = new DataAbstract<int8_t>("min_line", 0);
+    base_line = new DataAbstract<int8_t>("base_line", 0);
+
+    // Curva
+    right_curve = new DataAbstract<int8_t>("right_curve", 0);
+    left_curve = new DataAbstract<int8_t>("left_curve", 0);
+    max_curve = new DataAbstract<int8_t>("max_curve", 0);
+    min_curve = new DataAbstract<int8_t>("min_curve", 0);
+    base_curve = new DataAbstract<int8_t>("base_curve", 0);
 }
 
 // Metodos de valores variaveis
 
-DataFunction dataSpeed::setSpeedLeft(int8_t value, CarState carState)
+DataAbstract<int8_t> *dataSpeed::SpeedLeft(CarState carState)
 {
     switch (carState)
     {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return setVar(value, &this->left_line, &xSemaphoreleft_line);
-        break;
-
     case CAR_IN_CURVE:
-        return setVar(value, &this->left_curve, &xSemaphoreleft_curve);
+        return this->left_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedLeft não será definido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade da esqueda, retornando valor para linha.", carState);
+    case CAR_STOPPED:
+    case CAR_IN_LINE:
+        return this->left_line;
         break;
     }
 }
-int8_t dataSpeed::getSpeedLeft(CarState carState)
+DataAbstract<int8_t> *dataSpeed::SpeedRight(CarState carState)
 {
     switch (carState)
     {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return getVar(&this->left_line, &xSemaphoreleft_line);
-        break;
-
     case CAR_IN_CURVE:
-        return getVar(&this->left_curve, &xSemaphoreleft_curve);
+        return this->right_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedLeft não será lido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade da direita, retornando valor para linha.", carState);
+    case CAR_STOPPED:
+    case CAR_IN_LINE:
+        return this->right_line;
         break;
     }
 }
-
-DataFunction dataSpeed::setSpeedRight(int8_t value, CarState carState)
+DataAbstract<int8_t> *dataSpeed::SpeedMax(CarState carState)
 {
     switch (carState)
     {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return setVar(value, &this->right_line, &xSemaphoreright_line);
-        break;
-
     case CAR_IN_CURVE:
-        return setVar(value, &this->right_curve, &xSemaphoreright_curve);
+        return this->max_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedRight não será definido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade máxima, retornando valor para linha.", carState);
+    case CAR_STOPPED:
+    case CAR_IN_LINE:
+        return this->max_line;
         break;
     }
 }
-int8_t dataSpeed::getSpeedRight(CarState carState)
+DataAbstract<int8_t> *dataSpeed::SpeedMin(CarState carState)
 {
     switch (carState)
     {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return getVar(&this->right_line, &xSemaphoreright_line);
-        break;
-
     case CAR_IN_CURVE:
-        return getVar(&this->right_curve, &xSemaphoreright_curve);
+        return this->min_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedLeft não será lido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade minima, retornando valor para linha.", carState);
+    case CAR_STOPPED:
+    case CAR_IN_LINE:
+        return this->min_line;
         break;
     }
 }
-
-DataFunction dataSpeed::setSpeedMax(int8_t value, CarState carState)
+DataAbstract<int8_t> *dataSpeed::SpeedBase(CarState carState)
 {
     switch (carState)
     {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return setVar(value, &this->max_line, &xSemaphoremax_line);
-        break;
-
     case CAR_IN_CURVE:
-        return setVar(value, &this->max_curve, &xSemaphoremax_curve);
+        return this->base_curve;
         break;
 
     default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMax não será definido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
-        break;
-    }
-}
-int8_t dataSpeed::getSpeedMax(CarState carState)
-{
-    switch (carState)
-    {
+        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade da esqueda, retornando valor para linha.", carState);
     case CAR_STOPPED:
-case CAR_IN_LINE:
-        return getVar(&this->max_line, &xSemaphoremax_line);
-        break;
-
-    case CAR_IN_CURVE:
-        return getVar(&this->max_curve, &xSemaphoremax_curve);
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMax não será lido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
+    case CAR_IN_LINE:
+        return this->base_line;
         break;
     }
-}
-
-DataFunction dataSpeed::setSpeedMin(int8_t value, CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return setVar(value, &this->min_line, &xSemaphoremin_line);
-        break;
-
-    case CAR_IN_CURVE:
-        return setVar(value, &this->min_curve, &xSemaphoremin_curve);
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMin não será definido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
-        break;
-    }
-}
-int8_t dataSpeed::getSpeedMin(CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return getVar(&this->min_line, &xSemaphoremin_line);
-        break;
-
-    case CAR_IN_CURVE:
-        return getVar(&this->min_curve, &xSemaphoremin_curve);
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaMin não será lido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
-        break;
-    }
-}
-
-DataFunction dataSpeed::setSpeedBase(int8_t value, CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return setVar(value, &this->base_line, &xSemaphorebase_line);
-        break;
-
-    case CAR_IN_CURVE:
-        return setVar(value, &this->base_curve, &xSemaphorebase_curve);
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaBase não será definido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
-        break;
-    }
-}
-int8_t dataSpeed::getSpeedBase(CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_STOPPED:
-case CAR_IN_LINE:
-        return getVar(&this->base_line, &xSemaphorebase_line);
-        break;
-
-    case CAR_IN_CURVE:
-        return getVar(&this->base_curve, &xSemaphorebase_curve);
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d, valor de SpeedMediaBase não será lido!", carState);
-        return RETORNO_ARGUMENTO_INVALIDO;
-        break;
-    }
-}
-
-// Metodos de valores de parametros
-DataFunction dataSpeed::setMPR_MotEsq(uint16_t Revolucao, uint16_t Reducao)
-{
-    for (;;)
-    {
-        if (xSemaphoreTake(xSemaphoreMPR_MotEsq, (TickType_t)10) == pdTRUE)
-        {
-            // Calculo
-            this->MPR_MotEsq = Revolucao * Reducao;
-            xSemaphoreGive(xSemaphoreMPR_MotEsq);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Output ocupada, não foi possível ler valor. Tentando novamente...");
-        }
-    }
-}
-uint16_t dataSpeed::getMPR_MotEsq()
-{
-    uint16_t tempVar = 0;
-
-    for (;;)
-    {
-        if (xSemaphoreTake(xSemaphoreMPR_MotEsq, (TickType_t)10) == pdTRUE)
-        {
-            tempVar = this->MPR_MotEsq;
-            xSemaphoreGive(xSemaphoreMPR_MotEsq);
-            return tempVar;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Output ocupada, não foi possível ler valor. Tentando novamente...");
-        }
-    }
-}
-
-DataFunction dataSpeed::setMPR_MotDir(uint16_t Revolucao, uint16_t Reducao)
-{
-    for (;;)
-    {
-        if (xSemaphoreTake(xSemaphoreMPR_MotDir, (TickType_t)10) == pdTRUE)
-        {
-            this->MPR_MotDir = Revolucao * Reducao;
-            xSemaphoreGive(xSemaphoreMPR_MotDir);
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Output ocupada, não foi possível ler valor. Tentando novamente...");
-        }
-    }
-}
-uint16_t dataSpeed::getMPR_MotDir()
-{
-    uint16_t tempVar = 0;
-
-    for (;;)
-    {
-        if (xSemaphoreTake(xSemaphoreMPR_MotDir, (TickType_t)10) == pdTRUE)
-        {
-            tempVar = this->MPR_MotDir;
-            xSemaphoreGive(xSemaphoreMPR_MotDir);
-            return tempVar;
-        }
-        else
-        {
-            ESP_LOGE(tag, "Variável Output ocupada, não foi possível ler valor. Tentando novamente...");
-        }
-    }
-}
-
-// Metodos de valores de velocidades Atuais
-DataFunction dataSpeed::setRPMRight_inst(int16_t value){
-    return setVar(value, &revsRight_inst, &xSemaphorerevsRight_inst);
-}
-int16_t dataSpeed::getRPMRight_inst(){
-    return getVar(&revsRight_inst, &xSemaphorerevsRight_inst);
-}
-
-DataFunction dataSpeed::setRPMLeft_inst(int16_t value){
-    return setVar(value, &revsLeft_inst, &xSemaphorerevsLeft_inst);
-}
-int16_t dataSpeed::getRPMLeft_inst(){
-    return getVar(&revsLeft_inst, &xSemaphorerevsLeft_inst);
-}
-
-DataFunction dataSpeed::setRPMCar_media(int16_t value){
-    return setVar(value, &revsCar_media, &xSemaphorerevsCar_media);
-}
-int16_t dataSpeed::getRPMCar_media(){
-    return getVar(&revsCar_media, &xSemaphorerevsCar_media);
-}
-DataFunction dataSpeed::setEncRight(int32_t value){
-    return setVar(value, &EncRight, &xSemaphoreEncRight);
-}
-int32_t dataSpeed::getEncRight(){
-    return getVar(&EncRight, &xSemaphoreEncRight);
-}
-DataFunction dataSpeed::setEncLeft(int32_t value){
-    return setVar(value, &EncLeft, &xSemaphoreEncLeft);
-}
-int32_t dataSpeed::getEncLeft(){
-    return getVar(&EncLeft, &xSemaphoreEncLeft);
 }
