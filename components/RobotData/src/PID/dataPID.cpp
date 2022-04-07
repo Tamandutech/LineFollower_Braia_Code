@@ -19,6 +19,17 @@ dataPID::dataPID(std::string name)
     Kp_curve = new DataAbstract<float>("Kp_curve");
     Ki_curve = new DataAbstract<float>("Ki_curve");
     Kd_curve = new DataAbstract<float>("Kd_curve");
+
+    input->saveData("input");
+    output->saveData("output");
+    setpoint->saveData("Setpoint");
+    Kp_line->saveData("Kp_line");
+    Ki_line->saveData("Ki_line");
+    Kd_line->saveData("Kd_line");
+    Kp_curve->saveData("Kp_curve");
+    Ki_curve->saveData("Ki_curve");
+    Kd_curve->saveData("Kd_curve");
+    
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 

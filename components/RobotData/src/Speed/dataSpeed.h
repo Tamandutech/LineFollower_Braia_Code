@@ -16,6 +16,7 @@
 #include "freertos/semphr.h"
 
 #include "DataAbstract.hpp"
+#include "DataStorage.hpp"
 
 class dataSpeed
 {

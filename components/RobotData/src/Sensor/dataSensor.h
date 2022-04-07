@@ -14,6 +14,8 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#include "DataStorage.hpp"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class dataSensor
@@ -53,6 +55,7 @@ private:
     // Valores
     SemaphoreHandle_t xSemaphorechannel;
     std::vector<uint16_t> channel;
+
     SemaphoreHandle_t xSemaphoreline;
     uint16_t line;
 
@@ -61,6 +64,7 @@ private:
 
     SemaphoreHandle_t xSemaphoremaxChannel;
     std::vector<uint16_t> maxChannel;
+
     SemaphoreHandle_t xSemaphoreminChannel;
     std::vector<uint16_t> minChannel;
 };

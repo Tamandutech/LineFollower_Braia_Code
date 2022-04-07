@@ -38,41 +38,63 @@ extern "C"
 
 void app_main(void)
 {
-  braia = new Robot("Braia");
+  // ESP_LOGD("main", "Memoria disponivel: %d", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+  // ESP_LOGD("main", "Memoria maior bloco: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
 
-  ledsService = new LEDsService("LEDsService", braia, 10000, 9);
-  ledsService->Start();
+  // DataAbstract<uint16_t> numu16Test("numu16Test");
+  // DataAbstract<int16_t> num16Test("num16Test");
+  // DataAbstract<const char *> stringTest("stringTest");
+  // DataAbstract<uint8_t> num8Test("numu8Test");
+  // DataAbstract<uint32_t> num32Test("numu32Test");
+  // numu16Test.setData(10);
+  // num16Test.setData(-10);
+  // stringTest.setData("testando");
+  // num8Test.setData(25);
+  // num32Test.setData(51235);
+  // ESP_LOGD("app_main", "num16Test: %d", numu16Test.getData());
+  // ESP_LOGD("app_main", "num16Test: %d", num16Test.getData());
+  // ESP_LOGD("app_main", "stringTest: %s", stringTest.getData());
+  // ESP_LOGD("app_main", "num8Test: %d", num8Test.getData());
+  // ESP_LOGD("app_main", "num32Test: %d", num32Test.getData());
+  // ESP_LOGD("app_main", "Teste finalizado");
 
-  carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
-  mappingService = new MappingService("MappingService", braia, 10000, 9);
-  motorsService = new MotorsService("MotorsService", braia, 10000, 9);
-  speedService = new SpeedService("SpeedService", braia, 10000, 9);
-  pidService = new PIDService("PIDService", braia, 10000, 9);
-  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
-  espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
+  // ESP_LOGD("main", "Memoria disponivel: %d", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+  // ESP_LOGD("main", "Memoria maior bloco: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
 
-  sensorsService->Start();
-  motorsService->Start();
-  pidService->Start();
-  speedService->Start();
-  espnowService->Start();
-  carStatusService->Start();
-  mappingService->Start();
+    braia = new Robot("Braia");
 
-#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-  for (;;)
-  {
-    ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
-    ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
-    ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
-    ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
-    ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
-    ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
-    ESP_LOGD("main", "Memoria disponivel: %d", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-    ESP_LOGD("main", "Memoria maior bloco: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+    ledsService = new LEDsService("LEDsService", braia, 10000, 9);
+    ledsService->Start();
 
+    carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
+    mappingService = new MappingService("MappingService", braia, 10000, 9);
+    motorsService = new MotorsService("MotorsService", braia, 10000, 9);
+    speedService = new SpeedService("SpeedService", braia, 10000, 9);
+    pidService = new PIDService("PIDService", braia, 10000, 9);
+    sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
+    espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-#endif
+    sensorsService->Start();
+    motorsService->Start();
+    pidService->Start();
+    speedService->Start();
+    espnowService->Start();
+    carStatusService->Start();
+    mappingService->Start();
+
+  #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
+    for (;;)
+    {
+      ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
+      ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
+      ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
+      ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
+      ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
+      ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
+      ESP_LOGD("main", "Memoria disponivel: %d", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+      ESP_LOGD("main", "Memoria maior bloco: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+  #endif
 }

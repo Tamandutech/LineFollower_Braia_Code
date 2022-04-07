@@ -2,10 +2,11 @@
 
 Robot::Robot(std::string name)
 {
-    
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = tag;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
+
+    mount_storage();
 
     // Instânciando objetos componentes do Robô.
     ESP_LOGD(tag, "Criando sub-objetos para o %s", "Robô");

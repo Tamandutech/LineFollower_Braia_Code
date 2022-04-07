@@ -15,7 +15,12 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#include "esp_vfs.h"
+#include "esp_vfs_fat.h"
+#include "esp_system.h"
+
 #include "DataAbstract.hpp"
+#include "DataStorage.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 

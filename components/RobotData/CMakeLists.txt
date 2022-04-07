@@ -8,6 +8,10 @@ idf_component_register(
         "src/Status/RobotStatus.cpp" 
         "src/SLatMarks/dataSLatMarks.cpp"
 
+    REQUIRES
+        "vfs"
+        "fatfs"
+
     INCLUDE_DIRS 
         "src"
         "src/dataTypes"

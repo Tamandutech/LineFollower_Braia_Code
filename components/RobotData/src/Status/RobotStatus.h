@@ -15,6 +15,7 @@
 #include "freertos/semphr.h"
 
 #include "DataAbstract.hpp"
+#include "DataStorage.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 

@@ -3,7 +3,7 @@
 dataSLatMarks::dataSLatMarks(std::string name)
 {
     this->name = name;
-    ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
+    ESP_LOGD(name.c_str(), "Criando objeto: %s (%p)", name.c_str(), this);
 
     ESP_LOGD(tag, "Criando Semáforos");
     (xSemaphoreMarksData) = xSemaphoreCreateMutex();
