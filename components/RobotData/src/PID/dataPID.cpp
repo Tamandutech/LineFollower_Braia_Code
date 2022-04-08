@@ -8,28 +8,28 @@ dataPID::dataPID(std::string name)
 
     // Inicializando os ponteiros para os tipos de dados.
     ESP_LOGD(tag, "Inicializando ponteiros para os tipos de dados");
-    input = new DataAbstract<int16_t>("input");
-    output = new DataAbstract<float>("output");
-    setpoint = new DataAbstract<int16_t>("Setpoint");
+    input = new DataAbstract<int16_t>("input", name);
+    output = new DataAbstract<float>("output", name);
+    setpoint = new DataAbstract<int16_t>("Setpoint", name);
 
-    Kp_line = new DataAbstract<float>("Kp_line");
-    Ki_line = new DataAbstract<float>("Ki_line");
-    Kd_line = new DataAbstract<float>("Kd_line");
+    Kp_line = new DataAbstract<float>("Kp_line", name);
+    Ki_line = new DataAbstract<float>("Ki_line", name);
+    Kd_line = new DataAbstract<float>("Kd_line", name);
 
-    Kp_curve = new DataAbstract<float>("Kp_curve");
-    Ki_curve = new DataAbstract<float>("Ki_curve");
-    Kd_curve = new DataAbstract<float>("Kd_curve");
+    Kp_curve = new DataAbstract<float>("Kp_curve", name);
+    Ki_curve = new DataAbstract<float>("Ki_curve", name);
+    Kd_curve = new DataAbstract<float>("Kd_curve", name);
 
-    input->saveData("input");
-    output->saveData("output");
-    setpoint->saveData("Setpoint");
-    Kp_line->saveData("Kp_line");
-    Ki_line->saveData("Ki_line");
-    Kd_line->saveData("Kd_line");
-    Kp_curve->saveData("Kp_curve");
-    Ki_curve->saveData("Ki_curve");
-    Kd_curve->saveData("Kd_curve");
-    
+    input->loadData();
+    output->loadData();
+    setpoint->loadData();
+    Kp_line->loadData();
+    Ki_line->loadData();
+    Kd_line->loadData();
+    Kp_curve->loadData();
+    Ki_curve->loadData();
+    Kd_curve->loadData();
+
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 

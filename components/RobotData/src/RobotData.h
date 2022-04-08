@@ -50,6 +50,8 @@ private:
     RobotStatus *Status;
     std::queue<struct PacketData> PacketstoSend; // Pacotes para envio pelo espnow
     SemaphoreHandle_t xSemaphorepacketstosend;
+
+    DataStorage *storage;
 };
 
 #endif

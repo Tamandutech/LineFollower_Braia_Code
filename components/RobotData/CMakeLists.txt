@@ -1,7 +1,8 @@
 idf_component_register(
     SRCS 
-        "src/RobotData.cpp" 
+        "src/dataTypes/DataStorage.cpp"
         "src/dataTypes/DataAbstract.cpp"
+        "src/RobotData.cpp" 
         "src/PID/dataPID.cpp" 
         "src/Sensor/dataSensor.cpp" 
         "src/Speed/dataSpeed.cpp" 

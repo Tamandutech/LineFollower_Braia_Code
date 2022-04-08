@@ -8,14 +8,23 @@ dataSLatMarks::dataSLatMarks(std::string name)
     ESP_LOGD(tag, "Criando Semáforos");
     (xSemaphoreMarksData) = xSemaphoreCreateMutex();
 
-    latEsqPass = new DataAbstract<bool>("latEsqPass", 0);
-    latDirPass = new DataAbstract<bool>("latDirPass", 0);
-    leftMarks = new DataAbstract<uint16_t>("leftMarks", 0);
-    rightMarks = new DataAbstract<uint16_t>("rightMarks", 0);
-    totalLeftMarks = new DataAbstract<uint16_t>("totalLeftMarks", 0);
-    initialMark = new DataAbstract<int32_t>("initialMark", 0);
-    finalMark = new DataAbstract<int32_t>("finalMark", 0);
-    mapFinished = new DataAbstract<bool>("mapFinished", 0);
+    latEsqPass = new DataAbstract<bool>("latEsqPass", name, 0);
+    latDirPass = new DataAbstract<bool>("latDirPass", name, 0);
+    leftMarks = new DataAbstract<uint16_t>("leftMarks", name, 0);
+    rightMarks = new DataAbstract<uint16_t>("rightMarks", name, 0);
+    totalLeftMarks = new DataAbstract<uint16_t>("totalLeftMarks", name, 0);
+    initialMark = new DataAbstract<int32_t>("initialMark", name, 0);
+    finalMark = new DataAbstract<int32_t>("finalMark", name, 0);
+    mapFinished = new DataAbstract<bool>("mapFinished", name, 0);
+
+    latEsqPass->loadData();
+    latDirPass->loadData();
+    leftMarks->loadData();
+    rightMarks->loadData();
+    totalLeftMarks->loadData();
+    initialMark->loadData();
+    finalMark->loadData();
+    mapFinished->loadData();
 }
 
 void dataSLatMarks::leftPassedInc()

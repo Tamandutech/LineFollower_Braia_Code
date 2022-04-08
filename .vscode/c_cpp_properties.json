@@ -140,7 +140,6 @@
                 "C:/CodigoFonte/LineFollower_Braia_Code/services/SensorsService/src",
                 "C:/CodigoFonte/LineFollower_Braia_Code/components/ESP32Encoder/src",
                 "C:/CodigoFonte/LineFollower_Braia_Code/services/SpeedService/src",
-                "C:/Users/rapha/.platformio/packages/tool-unity",
                 ""
             ],
             "browse": {
@@ -278,7 +277,6 @@
                     "C:/CodigoFonte/LineFollower_Braia_Code/services/SensorsService/src",
                     "C:/CodigoFonte/LineFollower_Braia_Code/components/ESP32Encoder/src",
                     "C:/CodigoFonte/LineFollower_Braia_Code/services/SpeedService/src",
-                    "C:/Users/rapha/.platformio/packages/tool-unity",
                     ""
                 ]
             },
@@ -314,12 +312,11 @@
             ],
             "cStandard": "c99",
             "cppStandard": "c++11",
-            "compilerPath": "C:/Users/rapha/.platformio/packages/toolchain-xtensa-esp32@8.4.0+2021r2-patch2/bin/xtensa-esp32-elf-gcc.exe",
+            "compilerPath": "C:/Users/rapha/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-gcc.exe",
             "compilerArgs": [
                 "-mlongcalls",
                 ""
-            ],
-            "compileCommands": "${workspaceFolder}/.pio/build/ESP32-BraiaV3/compile_commands.json"
+            ]
         }
     ],
     "version": 4
