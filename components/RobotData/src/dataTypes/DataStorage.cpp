@@ -65,37 +65,23 @@ void DataStorage::list_files()
     }
 }
 
-FIL *DataStorage::get_file_pointer(std::string fileName)
-{
-    if (!is_mounted())
-        return nullptr;
-
-    FIL *fp = new FIL();
-    f_open(fp, fileName.c_str(), FA_CREATE_NEW | FA_WRITE | FA_READ);
-
-    if (fp == NULL)
-    {
-        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo %s", fileName.c_str());
-        return NULL;
-    }
-
-    return fp;
-}
-
 void DataStorage::save_data(std::string fileName, char *data, size_t size)
 {
     if (!is_mounted())
         return;
 
-    FIL *fp = get_file_pointer(fileName);
+    FILE *f = fopen((basePath + "/" + fileName).c_str(), "wb");
 
-    if (fp == NULL)
+    if (f == NULL)
+    {
+        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo para escrita");
         return;
+    }
 
-    FRESULT result = f_write(fp, data, size, NULL);
-    ESP_LOGD(name.c_str(), "Escrevendo %s, resultado: %d", fileName.c_str(), result);
+    fwrite(data, size, 1, f);
+    ESP_LOGD(name.c_str(), "Escrito %s, %d bytes", fileName.c_str(), sizeof(*data));
 
-    f_close(fp);
+    fclose(f);
 }
 
 void DataStorage::load_data(std::string fileName, char *data, size_t size)
@@ -103,11 +89,16 @@ void DataStorage::load_data(std::string fileName, char *data, size_t size)
     if (!is_mounted())
         return;
 
-    FIL *file = get_file_pointer(fileName);
-    if (file == NULL)
-        return;
+    FILE *f = fopen((basePath + "/" + fileName).c_str(), "r");
 
-    // ler dados do arquivo
-    FRESULT result = f_read(file, data, size, &size);
-    ESP_LOGD(name.c_str(), "Lendo %s. Resultado: %d", fileName.c_str(), result);
+    if (f == NULL)
+    {
+        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo para escrita");
+        return;
+    }
+
+    fread(data, size, 1, f);
+    ESP_LOGD(name.c_str(), "Lido %s, %d bytes", fileName.c_str(), size);
+
+    fclose(f);
 }

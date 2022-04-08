@@ -52,7 +52,8 @@ private:
     const char *tag = "dataSLatMarks";
 
     SemaphoreHandle_t xSemaphoreMarksData;
-    struct MapData MarksData[70];
+
+    struct MapData MarksData[70]; // salvar
 };
 
 #endif

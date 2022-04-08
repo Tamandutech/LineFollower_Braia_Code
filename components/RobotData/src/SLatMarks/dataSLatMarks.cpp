@@ -16,15 +16,6 @@ dataSLatMarks::dataSLatMarks(std::string name)
     initialMark = new DataAbstract<int32_t>("initialMark", name, 0);
     finalMark = new DataAbstract<int32_t>("finalMark", name, 0);
     mapFinished = new DataAbstract<bool>("mapFinished", name, 0);
-
-    latEsqPass->loadData();
-    latDirPass->loadData();
-    leftMarks->loadData();
-    rightMarks->loadData();
-    totalLeftMarks->loadData();
-    initialMark->loadData();
-    finalMark->loadData();
-    mapFinished->loadData();
 }
 
 void dataSLatMarks::leftPassedInc()

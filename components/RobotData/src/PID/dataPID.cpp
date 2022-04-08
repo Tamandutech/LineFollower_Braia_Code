@@ -6,29 +6,29 @@ dataPID::dataPID(std::string name)
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
 
+    dataManager = dataManager->getInstance();
+
     // Inicializando os ponteiros para os tipos de dados.
     ESP_LOGD(tag, "Inicializando ponteiros para os tipos de dados");
+
     input = new DataAbstract<int16_t>("input", name);
     output = new DataAbstract<float>("output", name);
     setpoint = new DataAbstract<int16_t>("Setpoint", name);
+    dataManager->registerParamData(setpoint);
 
     Kp_line = new DataAbstract<float>("Kp_line", name);
+    dataManager->registerParamData(Kp_line);
     Ki_line = new DataAbstract<float>("Ki_line", name);
+    dataManager->registerParamData(Ki_line);
     Kd_line = new DataAbstract<float>("Kd_line", name);
+    dataManager->registerParamData(Kd_line);
 
     Kp_curve = new DataAbstract<float>("Kp_curve", name);
+    dataManager->registerParamData(Kp_curve);
     Ki_curve = new DataAbstract<float>("Ki_curve", name);
+    dataManager->registerParamData(Ki_curve);
     Kd_curve = new DataAbstract<float>("Kd_curve", name);
-
-    input->loadData();
-    output->loadData();
-    setpoint->loadData();
-    Kp_line->loadData();
-    Ki_line->loadData();
-    Kd_line->loadData();
-    Kp_curve->loadData();
-    Ki_curve->loadData();
-    Kd_curve->loadData();
+    dataManager->registerParamData(Kd_curve);
 
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }

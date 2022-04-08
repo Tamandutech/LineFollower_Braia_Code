@@ -19,6 +19,7 @@
 #include "esp_log.h"
 
 #include "DataStorage.hpp"
+#include "DataManager.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
@@ -52,6 +53,7 @@ private:
     SemaphoreHandle_t xSemaphorepacketstosend;
 
     DataStorage *storage;
+    DataManager *dataManager;
 };
 
 #endif

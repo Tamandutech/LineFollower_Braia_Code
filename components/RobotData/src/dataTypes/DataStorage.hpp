@@ -11,6 +11,8 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+
 class DataStorage
 {
 
@@ -34,7 +36,6 @@ public:
 
     void mount_storage(std::string _basePath);
     void list_files();
-    FIL *get_file_pointer(std::string name);
     void save_data(std::string name, char *data, size_t size);
     void load_data(std::string name, char *data, size_t size);
 

@@ -26,6 +26,7 @@
 
 #include "DataAbstract.hpp"
 #include "DataStorage.hpp"
+#include "DataManager.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
@@ -36,7 +37,7 @@ public:
 
     DataAbstract<int16_t> *input;
     DataAbstract<float> *output;
-    DataAbstract<int16_t> *setpoint;
+    DataAbstract<int16_t> *setpoint; // salvar
 
     DataAbstract<float> *Kp(CarState state);
     DataAbstract<float> *Ki(CarState state);
@@ -45,14 +46,16 @@ public:
 private:
     std::string name;
     const char *tag = "RobotData";
-  
-    DataAbstract<float> *Kp_line;
-    DataAbstract<float> *Ki_line;
-    DataAbstract<float> *Kd_line;
 
-    DataAbstract<float> *Kp_curve;
-    DataAbstract<float> *Ki_curve;
-    DataAbstract<float> *Kd_curve;
+    DataAbstract<float> *Kp_line; // salvar
+    DataAbstract<float> *Ki_line; // salvar
+    DataAbstract<float> *Kd_line; // salvar
+
+    DataAbstract<float> *Kp_curve; // salvar
+    DataAbstract<float> *Ki_curve; // salvar
+    DataAbstract<float> *Kd_curve; // salvar
+
+    DataManager *dataManager;
 };
 
 #endif

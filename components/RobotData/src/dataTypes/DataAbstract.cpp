@@ -13,7 +13,7 @@ DataAbstract<T>::DataAbstract(std::string name, std::string parentObjectName)
 
     this->data = new std::atomic<T>();
 
-    this->storage = storage->getInstance();
+    this->dataStorage = dataStorage->getInstance();
 }
 
 template <class T>
@@ -25,7 +25,7 @@ DataAbstract<T>::DataAbstract(std::string name, std::string parentObjectName, T 
 
     this->data = new std::atomic<T>();
 
-    this->storage = storage->getInstance();
+    this->dataStorage = dataStorage->getInstance();
 }
 
 template <class T>
@@ -33,6 +33,26 @@ DataAbstract<T>::~DataAbstract()
 {
     ESP_LOGD(this->name.c_str(), "Destruindo dado do tipo %s", demangle(typeid(*this).name()).c_str());
     delete this->data;
+}
+
+template <class T>
+void DataAbstract<T>::serialize(const char *buffer)
+{
+    ESP_LOGD(this->name.c_str(), "Serializando dado do tipo %s", demangle(typeid(*this).name()).c_str());
+
+    T tempT = this->getData();
+    memcpy((char *)&tempT, (char *)buffer, sizeof(T));
+}
+
+template <class T>
+void DataAbstract<T>::deserialize(const char *data)
+{
+    ESP_LOGD(this->name.c_str(), "Deserializando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(*data)).c_str());
+
+    T tempT = T();
+    memcpy((char *)data, (char *)&tempT, sizeof(T));
+
+    this->setData(tempT);
 }
 
 template <class T>
@@ -53,42 +73,21 @@ template <class T>
 void DataAbstract<T>::saveData()
 {
     T temp = this->data->load();
-
-    FILE *f = fopen(("/robotdata/" + name).c_str(), "wb");
-    ESP_LOGD(name.c_str(), "Abrindo arquivo %s", name.c_str());
-
-    if (f == NULL)
-    {
-        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo para escrita");
-        return;
-    }
-
-    size_t bytes = fwrite(&temp, sizeof(T), 1, f);
-    ESP_LOGD(name.c_str(), "Escrito %s, %d bytes", name.c_str(), bytes);
-
-    fclose(f);
+    dataStorage->save_data(this->name, (char *)&temp, sizeof(T));
 }
 
 template <class T>
 void DataAbstract<T>::loadData()
 {
     T temp = T();
-
-    FILE *f = fopen(("/robotdata/" + name).c_str(), "r");
-    ESP_LOGD(name.c_str(), "Abrindo arquivo %s", name.c_str());
-
-    if (f == NULL)
-    {
-        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo para leitura");
-        return;
-    }
-
-    size_t bytes = fread(&temp, sizeof(T), 1, f);
-    ESP_LOGD(name.c_str(), "Lido %s, %d bytes", name.c_str(), bytes);
-
+    dataStorage->load_data(this->name, (char *)&temp, sizeof(T));
     this->data->store(temp);
+}
 
-    fclose(f);
+template <class T>
+std::string DataAbstract<T>::getName()
+{
+    return this->name;
 }
 
 template <class T>
