@@ -74,7 +74,7 @@ void DataStorage::save_data(std::string fileName, char *data, size_t size)
 
     if (f == NULL)
     {
-        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo para escrita");
+        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo %s para escrita", fileName.c_str());
         return;
     }
 
@@ -93,7 +93,7 @@ void DataStorage::load_data(std::string fileName, char *data, size_t size)
 
     if (f == NULL)
     {
-        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo para escrita");
+        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo %s para leitura", fileName.c_str());
         return;
     }
 

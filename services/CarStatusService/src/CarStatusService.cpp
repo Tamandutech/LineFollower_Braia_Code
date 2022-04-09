@@ -12,6 +12,7 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     latMarks->finalMark->setData(5472);
     Marks = latMarks->totalLeftMarks->getData() + 1; // marcas laterais esquerda na pista
 
+#if defined(ManualMap)
     struct MapData marktest;
     marktest.MapEncMedia = 0;
     marktest.MapTime = 0;
@@ -52,22 +53,25 @@ void CarStatusService::Run()
         bool bottom = gpio_get_level(GPIO_NUM_0);
 
         ParametersData = robot->GetParams();
-        if(!bottom){   
+        if (!bottom)
+        {
             vTaskDelay(2500 / portTICK_PERIOD_MS);
             bottom = gpio_get_level(GPIO_NUM_0);
-            if(bottom && !status->getMapping()){ // Começa mapeamento
-                status->setState(CAR_IN_LINE);
-                status->setMapping(true);
-                latMarks->SetMapFinished(false);
-                latMarks->SetrightMarks(0);
-                latMarks->SetleftMarks(0);
+            if (bottom && !status->robotMap->getData())
+            { // Começa mapeamento
+                status->robotState->setData(CAR_IN_LINE);
+                status->robotMap->setData(true);
+                latMarks->mapFinished->setData(false);
+                latMarks->rightMarks->setData(0);
+                latMarks->leftMarks->setData(0);
             }
-            else if(!bottom){  // Começa a usar dados do encoder para completar a pista
-                status->setState(CAR_IN_LINE);
-                status->setMapping(false);
-                latMarks->SetMapFinished(true);
-                latMarks->SetrightMarks(0);
-                latMarks->SetleftMarks(0);
+            else if (!bottom)
+            { // Começa a usar dados do encoder para completar a pista
+                status->robotState->setData(CAR_IN_LINE);
+                status->robotMap->setData(false);
+                latMarks->mapFinished->setData(true);
+                latMarks->rightMarks->setData(0);
+                latMarks->leftMarks->setData(0);
             }
         }
         if (lastmapstate != status->robotMap->getData())

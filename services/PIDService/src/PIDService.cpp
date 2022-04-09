@@ -33,14 +33,14 @@ void PIDService::Run()
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-            PIDTrans->setSetpoint(ParametersData.VelTargetRunLine);
+            PIDTrans->setpoint->setData(ParametersData.VelTargetRunLine);
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            PIDTrans->setSetpoint(ParametersData.VelTargetRunCurve);
+            PIDTrans->setpoint->setData(ParametersData.VelTargetRunCurve);
         }
         else if(mapState && estado != CAR_STOPPED){
-            PIDTrans->setSetpoint(ParametersData.VelTargetMap);
+            PIDTrans->setpoint->setData(ParametersData.VelTargetMap);
         }
         
         // Reseta o PID se o carrinho parar

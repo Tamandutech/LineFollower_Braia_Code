@@ -83,7 +83,7 @@ void MappingService::Run()
             ESP_LOGD(GetName().c_str(), "Laterais Esquerdos: %d | %d ", slesq1, slesq2);
             ESP_LOGD(GetName().c_str(), "Laterais Direitos: %d", sldir2);
 #endif
-            ESP_LOGD(GetName().c_str(), "Marcações direita: %d ", latMarks->getrightMarks());
+            ESP_LOGD(GetName().c_str(), "Marcações direita: %d ", latMarks->rightMarks->getData());
             iloop = 0;
         }
         iloop++;
@@ -103,9 +103,9 @@ void MappingService::Run()
                 // tempo
                 MarkReg.MapTime = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
                 // Contagem encoder esquerdo
-                MarkReg.MapEncLeft = speedMapping->getEncLeft();
+                MarkReg.MapEncLeft = speedMapping->EncLeft->getData();
                 // Contagem encoder direito
-                MarkReg.MapEncLeft = speedMapping->getEncRight();
+                MarkReg.MapEncLeft = speedMapping->EncRight->getData();
                 // media
                 MarkReg.MapEncMedia = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
                 // estado
