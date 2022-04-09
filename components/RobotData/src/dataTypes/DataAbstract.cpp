@@ -74,6 +74,7 @@ void DataAbstract<T>::saveData()
 {
     T temp = this->data->load();
     dataStorage->save_data(this->name, (char *)&temp, sizeof(T));
+    ESP_LOGD(this->name.c_str(), "Salvando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(temp)).c_str());
 }
 
 template <class T>
@@ -81,6 +82,7 @@ void DataAbstract<T>::loadData()
 {
     T temp = T();
     dataStorage->load_data(this->name, (char *)&temp, sizeof(T));
+    ESP_LOGD(this->name.c_str(), "Carregando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(temp)).c_str());
     this->data->store(temp);
 }
 
@@ -98,5 +100,12 @@ std::string DataAbstract<T>::demangle(const char *mangled)
         abi::__cxa_demangle(mangled, 0, 0, &status), std::free);
     return result.get() ? std::string(result.get()) : "error occurred";
 }
-
+template <class T>
+void DataAbstract<T>::setData(std::string data)
+{
+    float num = std::stof(data);
+    this->data->store(num);
+    ESP_LOGD(this->name.c_str(), "Confirmando dado salvo: %s", std::to_string(this->data->load()).c_str());
+    
+}
 #endif

@@ -24,7 +24,7 @@ class RobotStatus
 public:
     RobotStatus(CarState initialState, std::string name);
 
-    DataAbstract<CarState> *robotState;
+    DataAbstract<uint8_t> *robotState;
     DataAbstract<bool> *robotMap;
 
 private:

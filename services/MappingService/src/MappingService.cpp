@@ -36,7 +36,7 @@ void MappingService::Run()
     // Loop
     for (;;)
     {
-        CarState Parar = status->robotState->getData(); // Verifica se o mapeamento deve iniciar
+        CarState Parar = (CarState) status->robotState->getData(); // Verifica se o mapeamento deve iniciar
         bool mapping = status->robotMap->getData(); // Verifica se o mapeamento deve iniciar
 #if defined(BRAIA_V2)        
         uint16_t slesq1 = SLat->getChannel(0);

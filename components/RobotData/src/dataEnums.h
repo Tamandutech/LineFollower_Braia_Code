@@ -8,6 +8,14 @@ struct MapData{
     int32_t MapEncRight;
     int32_t MapStatus;
 };
+
+struct ParamData
+{
+    char name[30];
+    char cmdType[20];
+    char value[20];
+};
+
 enum CarState
 {
     CAR_IN_CURVE,

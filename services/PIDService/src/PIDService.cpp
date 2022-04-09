@@ -16,7 +16,7 @@ void PIDService::Run()
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
-        CarState estado = status->robotState->getData();
+        CarState estado = (CarState)status->robotState->getData();
         bool mapState = status->robotMap->getData();
         ParametersData = robot->GetParams();
 
@@ -33,14 +33,14 @@ void PIDService::Run()
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-            PIDTrans->setpoint->setData(ParametersData.VelTargetRunLine);
+           // PIDTrans->setpoint->setData(600);
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            PIDTrans->setpoint->setData(ParametersData.VelTargetRunCurve);
+            //PIDTrans->setpoint->setData(600);
         }
         else if(mapState && estado != CAR_STOPPED){
-            PIDTrans->setpoint->setData(ParametersData.VelTargetMap);
+            //PIDTrans->setpoint->setData(600);
         }
         
         // Reseta o PID se o carrinho parar
@@ -66,7 +66,8 @@ void PIDService::Run()
         float VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); //Translacional
 
         //Erros atuais
-        PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / 7); // cálculo do setpoint rotacional
+        // rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
+        PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / 5); // cálculo do setpoint rotacional
         float erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
         float erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
 

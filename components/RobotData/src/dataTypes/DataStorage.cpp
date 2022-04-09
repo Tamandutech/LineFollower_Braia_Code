@@ -79,7 +79,7 @@ void DataStorage::save_data(std::string fileName, char *data, size_t size)
     }
 
     fwrite(data, size, 1, f);
-    ESP_LOGD(name.c_str(), "Escrito %s, %d bytes", fileName.c_str(), sizeof(*data));
+    ESP_LOGD(name.c_str(), "Escrito %s, %d bytes", fileName.c_str(), size);
 
     fclose(f);
 }
@@ -98,6 +98,7 @@ void DataStorage::load_data(std::string fileName, char *data, size_t size)
     }
 
     fread(data, size, 1, f);
+
     ESP_LOGD(name.c_str(), "Lido %s, %d bytes", fileName.c_str(), size);
 
     fclose(f);

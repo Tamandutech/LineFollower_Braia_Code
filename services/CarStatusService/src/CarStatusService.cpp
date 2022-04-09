@@ -49,7 +49,7 @@ void CarStatusService::Run()
     // Loop
     for (;;)
     {
-        CarState parar = status->robotState->getData(); // Verifica se o carro deve se manter parado
+        CarState parar = (CarState) status->robotState->getData(); // Verifica se o carro deve se manter parado
         bool bottom = gpio_get_level(GPIO_NUM_0);
 
         ParametersData = robot->GetParams();
@@ -150,13 +150,13 @@ void CarStatusService::Run()
         }
         if (mapChanged)
         {
-            mapChanged = false;
-            robot->Setparams(); // Atualiza os parâmetros do robô
+            // mapChanged = false;
+            // robot->Setparams(); // Atualiza os parâmetros do robô
 
-            robot->getPIDRot()->Kp(CAR_IN_LINE)->setData(0.27);
-            robot->getPIDVel()->Kp(CAR_IN_LINE)->setData(0.05);
-            robot->getPIDRot()->Kp(CAR_IN_CURVE)->setData(0.27);
-            robot->getPIDVel()->Kp(CAR_IN_CURVE)->setData(0.05);
+            // robot->getPIDRot()->Kp(CAR_IN_LINE)->setData(0.27);
+            // robot->getPIDVel()->Kp(CAR_IN_LINE)->setData(0.05);
+            // robot->getPIDRot()->Kp(CAR_IN_CURVE)->setData(0.27);
+            // robot->getPIDVel()->Kp(CAR_IN_CURVE)->setData(0.05);
         }
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);

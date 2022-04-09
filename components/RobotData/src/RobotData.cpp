@@ -39,8 +39,8 @@ Robot::Robot(std::string name)
     vSemaphoreCreateBinary(xSemaphoreCarparam);
 
     // Inicializando os parâmetros do robô
-    struct CarParameters initialParams;
-    Setparams(initialParams);
+    // struct CarParameters initialParams;
+    // Setparams(initialParams);
 
     dataManager = dataManager->getInstance();
     dataManager->getRegistredParamDataCount();

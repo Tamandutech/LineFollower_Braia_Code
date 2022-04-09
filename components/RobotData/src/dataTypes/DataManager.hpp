@@ -42,6 +42,7 @@ public:
 
     void saveAllParamData();
     void saveAllRuntimeData();
+    void setParam(std::string name, std::string value);
 
     void loadAllParamData();
     void loadAllRuntimeData();

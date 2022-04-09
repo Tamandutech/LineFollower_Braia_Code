@@ -14,7 +14,7 @@ public:
 
     virtual void saveData() = 0;
     virtual void loadData() = 0;
-
+    virtual void setData(std::string data) = 0;
     virtual std::string getName() = 0;
 };
 

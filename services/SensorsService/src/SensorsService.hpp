@@ -11,7 +11,7 @@
 
 using namespace cpp_freertos;
 
-#define LINE_COLOR_BLACK
+//#define LINE_COLOR_BLACK
 class SensorsService : public Thread
 {
 public:

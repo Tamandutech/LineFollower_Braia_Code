@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "esp_vfs.h"
 #include "esp_vfs_fat.h"
@@ -37,6 +38,7 @@ public:
 
     T getData();
     void setData(T data);
+    void setData(std::string data);
 
     void saveData();
     void loadData();

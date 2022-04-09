@@ -64,7 +64,19 @@ void DataManager::loadAllData(std::vector<IDataAbstract *> *dataList, std::mutex
         data->loadData();
     }
 }
-
+void DataManager::setParam(std::string name, std::string value){
+    ESP_LOGD(name.c_str(), "Setando parametro: %s = %s", name.c_str(), value.c_str());
+    for (auto data : dataParamList)
+    {
+        if (data->getName() == name)
+        {
+            
+            data->setData(value);
+            data->saveData();
+            return;
+        }
+    }
+}
 void DataManager::loadAllParamData()
 {
     ESP_LOGD(name.c_str(), "Carregando dados parametrizados, %d registrados...", dataParamList.size());
