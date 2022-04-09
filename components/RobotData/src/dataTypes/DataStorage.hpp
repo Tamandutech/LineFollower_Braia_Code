@@ -9,9 +9,9 @@
 #include "esp_vfs.h"
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
-#include "esp_log.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#include "esp_log.h"
 
 class DataStorage
 {

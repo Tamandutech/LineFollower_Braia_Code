@@ -2,7 +2,6 @@
 
 #pragma once
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include <driver/gpio.h>
 #include <esp_heap_caps.h>
 #include <driver/adc.h>
@@ -10,6 +9,8 @@
 #include <freertos/task.h>
 #include <mcp3008_driver.h>
 #include <stdint.h>
+
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 /// \brief Emitter behavior when taking readings.

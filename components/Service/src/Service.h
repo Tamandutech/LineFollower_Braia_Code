@@ -1,17 +1,17 @@
 #ifndef ABSTRACT_SERVICE_H
 #define ABSTRACT_SERVICE_H
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
-
 #include <string>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
-#include "esp_log.h"
 
 #include "RobotData.h"
+
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
 
 enum ExecStatus
 {

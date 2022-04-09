@@ -1,8 +1,4 @@
-
-#include "includes.hpp"
-#include "RobotData.h"
-#include "EspNowHandler.h"
-
+// Serviços do Robô
 #include "CarStatusService.hpp"
 #include "MappingService.hpp"
 #include "MotorsService.hpp"
@@ -12,11 +8,25 @@
 #include "ESPNOWService.hpp"
 #include "LEDsService.hpp"
 
-#include "DataAbstract.hpp"
-
+// C/C++
+#include <stdbool.h>
 #include <string>
 
+// Espressif (ESP-IDF)
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+#include "freertos/semphr.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+
+// Data Objects
+#include "RobotData.h"
+#include "DataAbstract.hpp"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#include "esp_log.h"
+
 //#define LINE_COLOR_BLACK
 
 // Componentes de encapsulamento das variaveis

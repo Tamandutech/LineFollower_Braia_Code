@@ -10,11 +10,11 @@
 #include "esp_vfs.h"
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
-#include "esp_log.h"
 
 #include "IDataAbstract.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#include "esp_log.h"
 
 class DataManager
 {

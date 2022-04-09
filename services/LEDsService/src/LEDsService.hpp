@@ -8,9 +8,10 @@
 
 #include "driver/gpio.h"
 
-using namespace cpp_freertos;
-
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
+
+using namespace cpp_freertos;
 
 #define NUM_LEDS 3
 #define DATA_PIN 32

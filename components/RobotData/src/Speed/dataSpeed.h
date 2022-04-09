@@ -1,14 +1,11 @@
 #ifndef DATA_SPEED_H
 #define DATA_SPEED_H
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
-
 #include <stdint.h>
 #include <stddef.h>
 #include <string>
 
 #include "dataEnums.h"
-#include "esp_log.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -18,6 +15,9 @@
 #include "DataAbstract.hpp"
 #include "DataStorage.hpp"
 #include "DataManager.hpp"
+
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
 
 class dataSpeed
 {

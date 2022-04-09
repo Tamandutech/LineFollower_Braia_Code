@@ -14,15 +14,13 @@
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
 
-#include "esp_log.h"
-
 #include "dataEnums.h"
-
 #include "IDataAbstract.hpp"
 #include "DataStorage.hpp"
 #include "DataManager.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#include "esp_log.h"
 
 template <class T>
 class DataAbstract : public IDataAbstract

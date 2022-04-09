@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "dataEnums.h"
-#include "esp_log.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -18,6 +17,7 @@
 #include "DataStorage.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
 
 class RobotStatus
 {

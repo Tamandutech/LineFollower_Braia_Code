@@ -10,6 +10,7 @@ using namespace cpp_freertos;
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
 
 class PIDService : public Thread
 {

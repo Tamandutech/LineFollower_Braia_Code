@@ -26,7 +26,6 @@
 #include <stdio.h>
 
 #include "esp_attr.h"
-#include "esp_log.h"
 #include "esp_system.h"
 
 #include "driver/mcpwm.h"
@@ -34,9 +33,12 @@
 #include "soc/mcpwm_reg.h"
 #include "soc/mcpwm_struct.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
+
 //////// Defines
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+
 #define PWM_FREQ 25000 // PWM Frequency
 
 //////// Class

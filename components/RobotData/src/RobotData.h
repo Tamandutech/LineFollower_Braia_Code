@@ -1,6 +1,8 @@
 #ifndef ROBOT_DATA_H
 #define ROBOT_DATA_H
 
+
+
 #include <stdint.h>
 #include <stddef.h>
 #include <string>
@@ -16,12 +18,11 @@
 #include "dataSensor.h"
 #include "RobotStatus.h"
 
-#include "esp_log.h"
-
 #include "DataStorage.hpp"
 #include "DataManager.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
 
 class Robot
 {
