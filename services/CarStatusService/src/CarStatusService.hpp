@@ -3,20 +3,20 @@
 
 #include "thread.hpp"
 #include "RobotData.h"
-
+#include "dataEnums.h"
 #include "driver/gpio.h"
 
 using namespace cpp_freertos;
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define ManualMap
 
 class CarStatusService : public Thread
 {
 public:
     CarStatusService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority);
-
     void Run() override;
-
+     
 private:
     Robot *robot;
     RobotStatus *status;
@@ -24,6 +24,8 @@ private:
 
     dataSLatMarks *latMarks;
     dataPID *PidTrans;
+
+    CarParameters ParametersData; // Parâmetros do robô
 
     int Marks = 0;
 

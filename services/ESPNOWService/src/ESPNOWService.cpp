@@ -16,6 +16,7 @@ void ESPNOWService::Run()
         // Analisa os comandos recebidos em texto
         std::string cmd="";
         cmd = msgrecebida;
+        struct CarParameters ReceivedParams;
         if(cmd.find("stop") != -1 && cmd.size() > 0){
             status->robotState->setData(CAR_STOPPED);
             strcpy(msgrecebida,"empty");
@@ -25,6 +26,7 @@ void ESPNOWService::Run()
             robot->getSLatMarks()->rightMarks->setData(0);
             status->robotState->setData(CAR_IN_LINE);
             status->robotMap->setData(true);
+            robot->Setparams();
             strcpy(msgrecebida,"empty");
         }
         if (protocolHandler.dataAvailable())
@@ -47,11 +49,57 @@ void ESPNOWService::Run()
                         status->robotMap->setData(false);
                         robot->getSLatMarks()->rightMarks->setData(0);
                         status->robotState->setData(CAR_IN_LINE);
+                        robot->Setparams();
                         ESP_LOGD(GetName().c_str(),"Comando Recebido: Encoders iniciados");
                         break;
                     case CMDTXT:
                         memcpy(msgrecebida,dataReceived,packetReceive.size);
                         ESP_LOGD(GetName().c_str(),"Comando Recebido: %s",msgrecebida);
+                        break;
+                    case ParametersSend:
+                        memcpy(&ReceivedParams,dataReceived,packetReceive.size);
+                        ParamsData = robot->GetParams();
+                        if(packetReceive.version == 1){
+                            ParamsData.KpRotMapLine = ReceivedParams.KpRotMapLine;
+                            ParamsData.KpRotMapCurve = ReceivedParams.KpRotMapCurve;
+                            ParamsData.KpRotRunLine = ReceivedParams.KpRotRunLine;
+                            ParamsData.KpRotRunCurve = ReceivedParams.KpRotRunCurve;
+                            ParamsData.KdRotMapLine = ReceivedParams.KdRotMapLine;
+                            ParamsData.KdRotMapCurve = ReceivedParams.KdRotMapCurve;
+                            ParamsData.KdRotRunLine = ReceivedParams.KdRotRunLine;
+                            ParamsData.KdRotRunCurve = ReceivedParams.KdRotRunCurve;
+                        }
+                        else if(packetReceive.version == 2){
+                            ParamsData.KpVelMapLine = ReceivedParams.KpVelMapLine;
+                            ParamsData.KpVelMapCurve = ReceivedParams.KpVelMapCurve;
+                            ParamsData.KpVelRunLine = ReceivedParams.KpVelRunLine;
+                            ParamsData.KpVelRunCurve = ReceivedParams.KpVelRunCurve;
+                            ParamsData.KdVelMapLine = ReceivedParams.KdVelMapLine;
+                            ParamsData.KdVelMapCurve = ReceivedParams.KdVelMapCurve;
+                            ParamsData.KdVelRunLine = ReceivedParams.KdVelRunLine;
+                            ParamsData.KdVelRunCurve = ReceivedParams.KdVelRunCurve;
+                        }
+                        else if(packetReceive.version == 3){
+                            ParamsData.SpeedMinMapLine = ReceivedParams.SpeedMinMapLine;
+                            ParamsData.SpeedMinMapCurve = ReceivedParams.SpeedMinMapCurve;
+                            ParamsData.SpeedBaseMapLine = ReceivedParams.SpeedBaseMapLine;
+                            ParamsData.SpeedBaseMapCurve = ReceivedParams.SpeedBaseMapCurve;
+                            ParamsData.SpeedMaxMapLine = ReceivedParams.SpeedMaxMapLine;
+                            ParamsData.SpeedMaxMapCurve = ReceivedParams.SpeedMaxMapCurve;
+                            ParamsData.VelTargetMap = ReceivedParams.VelTargetMap;
+                        }
+                        else if(packetReceive.version == 4){
+                            ParamsData.SpeedMinRunLine = ReceivedParams.SpeedMinRunLine;
+                            ParamsData.SpeedMinRunCurve = ReceivedParams.SpeedMinRunCurve;
+                            ParamsData.SpeedBaseRunLine = ReceivedParams.SpeedBaseRunLine;
+                            ParamsData.SpeedBaseRunCurve = ReceivedParams.SpeedBaseRunCurve;
+                            ParamsData.SpeedMaxRunLine = ReceivedParams.SpeedMaxRunLine;
+                            ParamsData.SpeedMaxRunCurve = ReceivedParams.SpeedMaxRunCurve;
+                            ParamsData.VelTargetRunLine = ReceivedParams.VelTargetRunLine;
+                            ParamsData.VelTargetRunCurve = ReceivedParams.VelTargetRunCurve;
+                        }
+                        robot->Setparams(ParamsData);
+                        ESP_LOGD(GetName().c_str(),"Parâmetros Recebidos");
                         break;
                     default:
                         ESP_LOGD(GetName().c_str(),"Comando inválido");

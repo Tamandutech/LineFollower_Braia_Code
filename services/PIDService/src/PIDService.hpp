@@ -3,6 +3,7 @@
 
 #include "thread.hpp"
 #include "RobotData.h"
+#include "dataEnums.h"
 
 using namespace cpp_freertos;
 
@@ -23,6 +24,8 @@ private:
     RobotStatus *status;
     dataPID *PIDTrans;
     dataPID *PIDRot;
+
+    CarParameters ParametersData; // Parâmetros do robô
 
     short const TaskDelay = 10; // 10ms
     float const BaseDeTempo = (TaskDelay * 1E-3);

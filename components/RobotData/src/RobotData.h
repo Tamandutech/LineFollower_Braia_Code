@@ -37,10 +37,15 @@ public:
     struct PacketData getPacketSend();
     int addPacketSend(struct PacketData packet);
     bool PacketSendavailable();
+    int Setparams(struct CarParameters params);
+    int Setparams();
+    struct CarParameters GetParams();
 
 private:
     std::string name;
     const char *tag = "RobotData";
+
+    int Updateparams(struct CarParameters params);
 
     dataSpeed *speed;
     dataPID *PIDVel;
@@ -49,6 +54,8 @@ private:
     dataSLatMarks *sLatMarks;
     dataSensor *sArray;
     RobotStatus *Status;
+    struct CarParameters Carparam; // Parâmetros do robô
+    SemaphoreHandle_t xSemaphoreCarparam;
     std::queue<struct PacketData> PacketstoSend; // Pacotes para envio pelo espnow
     SemaphoreHandle_t xSemaphorepacketstosend;
 

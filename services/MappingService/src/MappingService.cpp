@@ -19,6 +19,8 @@ MappingService::MappingService(const char *name, Robot *robot, uint32_t stackDep
     status = robot->getStatus();
 
     markreg.MapEncMedia = 0;
+    markreg.MapEncLeft = 0;
+    markreg.MapEncRight = 0;
     markreg.MapTime = 0;
     markreg.MapStatus = CAR_IN_LINE;
 
@@ -36,8 +38,16 @@ void MappingService::Run()
     {
         CarState Parar = status->robotState->getData(); // Verifica se o mapeamento deve iniciar
         bool mapping = status->robotMap->getData(); // Verifica se o mapeamento deve iniciar
+#if defined(BRAIA_V2)        
         uint16_t slesq1 = SLat->getChannel(0);
         uint16_t slesq2 = SLat->getChannel(1);
+#elif defined(BRAIA_V3)
+        uint16_t slesq = SLat->getChannel(0);
+        uint16_t sldir = SLat->getChannel(1);
+#else
+        uint16_t slesq1 = SLat->getChannel(0);
+        uint16_t slesq2 = SLat->getChannel(1);
+#endif
 
 #ifdef ESP32_QEMU
         // bool sldir1 = gpio_get_level(GPIO_NUM_17);
@@ -63,9 +73,17 @@ void MappingService::Run()
 #if LOG_LOCAL_LEVEL >= ESP_LOG_ERROR
         if (iloop >= 20 && mapping)
         {
+#if defined(BRAIA_V2)
             ESP_LOGD(GetName().c_str(), "Laterais Esquerdos: %d | %d ", slesq1, slesq2);
             ESP_LOGD(GetName().c_str(), "Laterais Direitos: %d", sldir2);
-            ESP_LOGD(GetName().c_str(), "Marcações direita: %d ", latMarks->rightMarks->getData());
+#elif defined(BRAIA_V3)
+            ESP_LOGD(GetName().c_str(), "Laterais Esquerdos: %d", slesq);
+            ESP_LOGD(GetName().c_str(), "Laterais Direitos: %d", sldir);
+#else
+            ESP_LOGD(GetName().c_str(), "Laterais Esquerdos: %d | %d ", slesq1, slesq2);
+            ESP_LOGD(GetName().c_str(), "Laterais Direitos: %d", sldir2);
+#endif
+            ESP_LOGD(GetName().c_str(), "Marcações direita: %d ", latMarks->getrightMarks());
             iloop = 0;
         }
         iloop++;
@@ -73,15 +91,29 @@ void MappingService::Run()
 
         if ((latMarks->rightMarks->getData()) == 1 && mapping && Parar != CAR_STOPPED)
         {
+#if defined(BRAIA_V2)
             if ((slesq1 < 300) && (sldir2) && !leftpassed)
+#elif defined(BRAIA_V3)
+            if ((slesq < 300) && (sldir>600) && !leftpassed)
+#else
+            if ((slesq1 < 300) && (sldir2) && !leftpassed)
+#endif
             {
                 struct MapData MarkReg;
                 // tempo
                 MarkReg.MapTime = (xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS;
+                // Contagem encoder esquerdo
+                MarkReg.MapEncLeft = speedMapping->getEncLeft();
+                // Contagem encoder direito
+                MarkReg.MapEncLeft = speedMapping->getEncRight();
                 // media
                 MarkReg.MapEncMedia = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
                 // estado
+#if defined(ManualMap)
                 if ((marks % 2) == 0)
+#elif defined(AutoMap)
+                if(abs((speedMapping->getEncRight()) - (speedMapping->getEncLeft())) >= 240)  
+#endif
                 { // Verifica se o carrinho está na curva ou na linha
                     MarkReg.MapStatus = CAR_IN_CURVE;
                 }
@@ -100,7 +132,13 @@ void MappingService::Run()
                 marks++;
                 leftpassed = true; // Diz que o carro está em uma marcação esquerda
             }
+#if defined(BRAIA_V2)
             else if (slesq1 > 600)
+#elif defined(BRAIA_V3)
+            else if (slesq > 600)
+#else
+            else if (slesq1 > 600)
+#endif
             {
                 leftpassed = false;
             }
