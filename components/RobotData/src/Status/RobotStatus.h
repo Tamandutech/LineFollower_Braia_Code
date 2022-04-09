@@ -14,6 +14,9 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#include "DataAbstract.hpp"
+#include "DataStorage.hpp"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 class RobotStatus
@@ -21,20 +24,12 @@ class RobotStatus
 public:
     RobotStatus(CarState initialState, std::string name);
 
-    int setState(CarState actualState);
-    CarState getState();
-    
-    int setMapping(bool value);
-    bool getMapping();
-    
+    DataAbstract<CarState> *robotState;
+    DataAbstract<bool> *robotMap;
+
 private:
     std::string name;
     const char *tag = "RobotStatus";
-
-    CarState robotState = CAR_IN_LINE;
-    SemaphoreHandle_t xSemaphoreRobotState;
-    bool robotMap;
-    SemaphoreHandle_t xSemaphoreRobotMap;
 };
 
 #endif

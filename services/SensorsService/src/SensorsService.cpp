@@ -130,10 +130,10 @@ void SensorsService::processSLat(Robot *robot)
         if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
 #endif        
         {
-            if (!(latMarks->getSLatEsq()))
+            if (!(latMarks->leftMarks->getData()))
                 latMarks->leftPassedInc();
-            latMarks->SetSLatEsq(true);
-            latMarks->SetSLatDir(false);
+            latMarks->latEsqPass->setData(true);
+            latMarks->latDirPass->setData(false);
             // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         }
 #if defined(BRAIA_V2)
@@ -144,24 +144,24 @@ void SensorsService::processSLat(Robot *robot)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
 #endif
         {
-            if (!(latMarks->getSLatDir()))
+            if (!(latMarks->rightMarks->getData()))
                 latMarks->rightPassedInc();
-            latMarks->SetSLatDir(true);
-            latMarks->SetSLatEsq(false);
+            latMarks->latDirPass->setData(true);
+            latMarks->latEsqPass->setData(false);
         }
     }
     else
     {
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
-        latMarks->SetSLatDir(false);
-        latMarks->SetSLatEsq(false);
+        latMarks->latDirPass->setData(false);
+        latMarks->latEsqPass->setData(false);
     }
 
-    if (latMarks->getrightMarks() >= 2 && status->getMapping() && status->getState() != CAR_STOPPED)
+    if (latMarks->rightMarks->getData() >= 2 && status->robotMap->getData() && status->robotState->getData() != CAR_STOPPED)
     { // parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);
         // TODO: corrigir parada da TaskPID
         // vTaskSuspend(xTaskPID);
-        status->setState(CAR_STOPPED);
+        status->robotState->setData(CAR_STOPPED);
     }
 }

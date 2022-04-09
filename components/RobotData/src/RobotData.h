@@ -6,6 +6,10 @@
 #include <string>
 #include <queue>
 
+#include "esp_vfs.h"
+#include "esp_vfs_fat.h"
+#include "esp_system.h"
+
 #include "dataSLatMarks.h"
 #include "dataSpeed.h"
 #include "dataPID.h"
@@ -13,6 +17,9 @@
 #include "RobotStatus.h"
 
 #include "esp_log.h"
+
+#include "DataStorage.hpp"
+#include "DataManager.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
@@ -34,7 +41,6 @@ public:
     int Setparams();
     struct CarParameters GetParams();
 
-
 private:
     std::string name;
     const char *tag = "RobotData";
@@ -52,6 +58,9 @@ private:
     SemaphoreHandle_t xSemaphoreCarparam;
     std::queue<struct PacketData> PacketstoSend; // Pacotes para envio pelo espnow
     SemaphoreHandle_t xSemaphorepacketstosend;
+
+    DataStorage *storage;
+    DataManager *dataManager;
 };
 
 #endif

@@ -5,6 +5,7 @@ dataSensor::dataSensor(uint16_t qtdChannels, std::string name)
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = name;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
+
     this->qtdChannels = qtdChannels;
     // Alocando espaço para as variáveis
     ESP_LOGD(tag, "Alocando espaço na memória paras as variáveis, quantidade de canais: %d", qtdChannels);
@@ -13,10 +14,10 @@ dataSensor::dataSensor(uint16_t qtdChannels, std::string name)
     minChannel.reserve(qtdChannels);
 
     ESP_LOGD(tag, "Criando Semáforos");
-    vSemaphoreCreateBinary(xSemaphorechannel);
-    vSemaphoreCreateBinary(xSemaphoreline);
-    vSemaphoreCreateBinary(xSemaphoremaxChannel);
-    vSemaphoreCreateBinary(xSemaphoreminChannel);
+    (xSemaphorechannel) = xSemaphoreCreateMutex();
+    (xSemaphoreline) = xSemaphoreCreateMutex();
+    (xSemaphoremaxChannel) = xSemaphoreCreateMutex();
+    (xSemaphoreminChannel) = xSemaphoreCreateMutex();
 }
 
 int dataSensor::setLine(uint16_t value)

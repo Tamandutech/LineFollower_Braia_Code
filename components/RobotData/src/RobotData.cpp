@@ -2,10 +2,15 @@
 
 Robot::Robot(std::string name)
 {
-    
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = tag;
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
+
+    storage = storage->getInstance();
+
+    storage->mount_storage("/robotdata");
+
+    storage->list_files();
 
     // Instânciando objetos componentes do Robô.
     ESP_LOGD(tag, "Criando sub-objetos para o %s", "Robô");
@@ -37,6 +42,9 @@ Robot::Robot(std::string name)
     struct CarParameters initialParams;
     Setparams(initialParams);
 
+    dataManager = dataManager->getInstance();
+    dataManager->getRegistredParamDataCount();
+    dataManager->loadAllParamData();
 }
 
 dataSLatMarks *Robot::getSLatMarks()
@@ -73,7 +81,8 @@ RobotStatus *Robot::getStatus()
 {
     return this->Status;
 }
-bool Robot::PacketSendavailable(){
+bool Robot::PacketSendavailable()
+{
     bool tempvar = false;
     if (xSemaphoreTake(xSemaphorepacketstosend, (TickType_t)10) == pdTRUE)
     {
@@ -88,7 +97,8 @@ bool Robot::PacketSendavailable(){
     }
 }
 
-struct PacketData Robot::getPacketSend(){
+struct PacketData Robot::getPacketSend()
+{
     struct PacketData tempvar;
     if (xSemaphoreTake(xSemaphorepacketstosend, (TickType_t)10) == pdTRUE)
     {
@@ -104,7 +114,8 @@ struct PacketData Robot::getPacketSend(){
     }
 }
 
-int Robot::addPacketSend(struct PacketData packet){
+int Robot::addPacketSend(struct PacketData packet)
+{
     if (xSemaphoreTake(xSemaphorepacketstosend, (TickType_t)10) == pdTRUE)
     {
         PacketstoSend.push(packet);

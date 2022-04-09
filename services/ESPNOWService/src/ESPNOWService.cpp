@@ -18,14 +18,14 @@ void ESPNOWService::Run()
         cmd = msgrecebida;
         struct CarParameters ReceivedParams;
         if(cmd.find("stop") != -1 && cmd.size() > 0){
-            status->setState(CAR_STOPPED);
+            status->robotState->setData(CAR_STOPPED);
             strcpy(msgrecebida,"empty");
         }
         else if(cmd.find("map") != -1 && cmd.size() > 0){
-            robot->getSLatMarks()->SetMapFinished(false);
-            robot->getSLatMarks()->SetrightMarks(0);
-            status->setState(CAR_IN_LINE);
-            status->setMapping(true);
+            robot->getSLatMarks()->mapFinished->setData(false);
+            robot->getSLatMarks()->rightMarks->setData(0);
+            status->robotState->setData(CAR_IN_LINE);
+            status->robotMap->setData(true);
             robot->Setparams();
             strcpy(msgrecebida,"empty");
         }
@@ -46,9 +46,9 @@ void ESPNOWService::Run()
                         struct SLatMarks LatMarks;
                         memcpy(&LatMarks,dataReceived,packetReceive.size);
                         robot->getSLatMarks()->setData(LatMarks);
-                        status->setMapping(false);
-                        robot->getSLatMarks()->SetrightMarks(0);
-                        status->setState(CAR_IN_LINE);
+                        status->robotMap->setData(false);
+                        robot->getSLatMarks()->rightMarks->setData(0);
+                        status->robotState->setData(CAR_IN_LINE);
                         robot->Setparams();
                         ESP_LOGD(GetName().c_str(),"Comando Recebido: Encoders iniciados");
                         break;

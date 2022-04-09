@@ -34,6 +34,9 @@
 
 	"mounts": [
 		// Mount the host's device to this container's.
-		"source=/dev,target=/dev,type=bind,consistency=consistent"
-	]
+		"source=/dev,target=/dev,type=bind,consistency=consistent",
+		"source=vscode-pio,target=${containerWorkspaceFolder}/.pio,type=volume"
+	],
+
+	"postCreateCommand": "sudo chown vscode .pio"
 }

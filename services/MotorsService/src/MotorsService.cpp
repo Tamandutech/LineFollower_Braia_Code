@@ -20,12 +20,12 @@ void MotorsService::Run()
   // Loop
   for (;;)
   {
-    if (status->getState() != CAR_STOPPED) // verificar se o carrinho deveria se mover
+    if (status->robotState->getData() != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
       motors.motorForward(0);                                         // motor 0 ligado para frente
       motors.motorForward(1);                                         // motor 1 ligado para frente
-      motors.motorSpeed(0, speed->getSpeedLeft(status->getState()));  // velocidade do motor 0
-      motors.motorSpeed(1, speed->getSpeedRight(status->getState())); // velocidade do motor 1
+      motors.motorSpeed(0, speed->SpeedLeft(status->robotState->getData())->getData());  // velocidade do motor 0
+      motors.motorSpeed(1, speed->SpeedRight(status->robotState->getData())->getData()); // velocidade do motor 1
     }
     else
     {

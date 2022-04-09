@@ -12,7 +12,11 @@
 #include "ESPNOWService.hpp"
 #include "LEDsService.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "DataAbstract.hpp"
+
+#include <string>
+
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 //#define LINE_COLOR_BLACK
 
 // Componentes de encapsulamento das variaveis
