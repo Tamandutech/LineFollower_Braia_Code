@@ -50,8 +50,6 @@ void app_main(void)
 {
   braia = new Robot("Braia");
 
-  
-
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
   mappingService = new MappingService("MappingService", braia, 10000, 9);
   motorsService = new MotorsService("MotorsService", braia, 10000, 9);
