@@ -7,7 +7,7 @@ std::string DataStorage::name;
 DataStorage::DataStorage()
 {
     s_wl_handle = WL_INVALID_HANDLE;
-    basePath = "/robotdata";
+    basePath = "/data";
     this->name = "DataStorage";
 
     mount_config.format_if_mount_failed = true;
@@ -28,6 +28,12 @@ bool DataStorage::is_mounted()
 
 void DataStorage::mount_storage(std::string _basePath)
 {
+    if (is_mounted)
+    {
+        ESP_LOGE(name.c_str(), "FATFS já montado em %s. Para montar em %s primeiro desmonte o path anterior.", basePath.c_str(), _basePath.c_str());
+        return;
+    }
+
     basePath = _basePath.at(0) == '/' ? _basePath : "/" + _basePath;
 
     esp_err_t err = esp_vfs_fat_spiflash_mount(basePath.c_str(), "storage", &mount_config, &s_wl_handle);

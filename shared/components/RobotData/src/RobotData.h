@@ -8,10 +8,6 @@
 #include <string>
 #include <queue>
 
-#include "esp_vfs.h"
-#include "esp_vfs_fat.h"
-#include "esp_system.h"
-
 #include "dataSLatMarks.h"
 #include "dataSpeed.h"
 #include "dataPID.h"

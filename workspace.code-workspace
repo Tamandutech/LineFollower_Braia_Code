@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "robot"
+		},
+		{
+			"path": "gateway"
+		},
+		{
+			"path": "shared"
+		}
+	],
+	"settings": {}
+}

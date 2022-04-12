@@ -19,9 +19,13 @@ class DataStorage
 public:
     static DataStorage *getInstance()
     {
+        ESP_LOGD(name.c_str(), "Adquirindo instância...");
+
         DataStorage *sin = instance.load(std::memory_order_acquire);
         if (!sin)
         {
+            ESP_LOGD(name.c_str(), "Instância não existe, criando...");
+
             std::lock_guard<std::mutex> myLock(myMutex);
             sin = instance.load(std::memory_order_relaxed);
             if (!sin)

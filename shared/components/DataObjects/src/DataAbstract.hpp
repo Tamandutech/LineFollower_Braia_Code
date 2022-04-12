@@ -15,7 +15,6 @@
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
 
-#include "dataEnums.h"
 #include "IDataAbstract.hpp"
 #include "DataStorage.hpp"
 #include "DataManager.hpp"
