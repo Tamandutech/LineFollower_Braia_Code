@@ -1,12 +1,10 @@
 idf_component_register(
     REQUIRES 
         "Service"
-        "console"
-        "cmd_system"
+        "CMDWrapper"
 
     SRCS 
         "src/SerialService.cpp" 
-        "src/cmd_wifi.c" 
 
     INCLUDE_DIRS 
         "src"

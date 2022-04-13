@@ -10,5 +10,18 @@
 			"path": "shared"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"chrono": "cpp",
+			"future": "cpp",
+			"system_error": "cpp",
+			"xlocale": "cpp",
+			"typeinfo": "cpp",
+			"ios": "cpp",
+			"*.ipp": "cpp",
+			"*.tcc": "cpp",
+			"iostream": "cpp",
+			"vector": "cpp"
+		}
+	}
 }

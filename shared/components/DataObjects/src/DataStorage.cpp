@@ -28,7 +28,7 @@ bool DataStorage::is_mounted()
 
 void DataStorage::mount_storage(std::string _basePath)
 {
-    if (is_mounted)
+    if (is_mounted())
     {
         ESP_LOGE(name.c_str(), "FATFS já montado em %s. Para montar em %s primeiro desmonte o path anterior.", basePath.c_str(), _basePath.c_str());
         return;

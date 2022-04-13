@@ -29,7 +29,7 @@ private:
     uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     char msgrecebida[60]; // comandos recebidos em texto 24:6f:28:b2:23:d0
     struct CarParameters ParamsData; // Parâmetros do robô
-    EspNowHandler protocolHandler;
+    EspNowHandler *protocolHandler;
     struct PacketData packetReceive;
     struct PacketData packetSend;
     uint8_t *dataReceived; // preparo dos dados recebidos

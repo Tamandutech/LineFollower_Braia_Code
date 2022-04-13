@@ -14,7 +14,14 @@
 
 #include "SerialService.hpp"
 
+#include "cmd_system.hpp"
+#include "cmd_robot.hpp"
+
+#include "EspNowHandler.h"
+
 SerialService *serialService;
+
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 extern "C"
 {
@@ -23,6 +30,11 @@ extern "C"
 
 void app_main(void)
 {
+    EspNowHandler::getInstance()->EspNowInit(1, broadcastAddress, false);
+
+    register_system();
+    register_cmd_robot();
+
     serialService = new SerialService("SerialService", 10000, 9);
     serialService->Start();
 }

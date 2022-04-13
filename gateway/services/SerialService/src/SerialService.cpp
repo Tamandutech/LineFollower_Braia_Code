@@ -15,9 +15,7 @@ void SerialService::Run()
     this->initialize_console();
 
     /* Register commands */
-    esp_console_register_help_command();
-    register_system();
-    register_wifi();
+    better_console_register_help_command();
 
     /* Prompt to be printed before each line.
      * This can be customized, made dynamic, etc.
@@ -70,7 +68,8 @@ void SerialService::Run()
 
         /* Try to run the command */
         int ret;
-        esp_err_t err = esp_console_run(line, &ret);
+        esp_err_t err = better_console_run(line, &ret);
+
         if (err == ESP_ERR_NOT_FOUND)
         {
             printf("Unrecognized command\n");
@@ -92,7 +91,7 @@ void SerialService::Run()
     }
 
     ESP_LOGE(this->GetName().c_str(), "Error or end-of-input, terminating console");
-    esp_console_deinit();
+    better_console_deinit();
 }
 
 void SerialService::initialize_console(void)
@@ -133,7 +132,7 @@ void SerialService::initialize_console(void)
     esp_vfs_dev_uart_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
 
     /* Initialize the console */
-    esp_console_config_t console_config;
+    better_console_config_t console_config;
 
     console_config.max_cmdline_args = 8;
     console_config.max_cmdline_length = 256;
@@ -141,7 +140,7 @@ void SerialService::initialize_console(void)
     console_config.hint_color = atoi(LOG_COLOR_CYAN);
 #endif
 
-    ESP_ERROR_CHECK(esp_console_init(&console_config));
+    ESP_ERROR_CHECK(better_console_init(&console_config));
 
     /* Configure linenoise line completion library */
     /* Enable multiline editing. If not set, long commands will scroll within
@@ -150,8 +149,8 @@ void SerialService::initialize_console(void)
     linenoiseSetMultiLine(1);
 
     /* Tell linenoise where to get command completions and hints */
-    linenoiseSetCompletionCallback(&esp_console_get_completion);
-    linenoiseSetHintsCallback((linenoiseHintsCallback *)&esp_console_get_hint);
+    linenoiseSetCompletionCallback(&better_console_get_completion);
+    linenoiseSetHintsCallback((linenoiseHintsCallback *)&better_console_get_hint);
 
     /* Set command history size */
     linenoiseHistorySetMaxLen(100);

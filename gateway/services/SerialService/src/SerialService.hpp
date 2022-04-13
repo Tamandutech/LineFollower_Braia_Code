@@ -3,12 +3,11 @@
 
 #include "thread.hpp"
 
-#include "esp_console.h"
+#include "better_console.hpp"
 #include "esp_vfs_dev.h"
 #include "driver/uart.h"
 #include "linenoise/linenoise.h"
 #include "argtable3/argtable3.h"
-#include "cmd_decl.h"
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
 

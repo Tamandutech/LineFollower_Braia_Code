@@ -1,5 +1,8 @@
 #include "EspNowHandler.h"
 
+std::atomic<EspNowHandler *> EspNowHandler::instance;
+std::mutex EspNowHandler::instanceMutex;
+
 std::queue<struct PacketData> EspNowHandler::PacketsReceived;
 SemaphoreHandle_t EspNowHandler::xSemaphorepacketreceived;
 
@@ -53,6 +56,7 @@ esp_err_t EspNowHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
 {
     esp_err_t sendreturn = ESP_ERR_ESPNOW_NOT_INIT;
     esp_now_peer_info_t peer;
+
     if (xSemaphoreTake(xSemaphorePeerProtocol, (TickType_t)10) == pdTRUE)
     {
         peer = this->peerProtocol;
@@ -63,17 +67,21 @@ esp_err_t EspNowHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
         ESP_LOGE("EspNowHandler", "Variável PeerProtocol ocupada, não foi possível definir valor.");
         return sendreturn;
     }
+
     struct PacketData Packet;
-    size_t TotalDataSize = sizeof(Packet);
-    uint8_t *dataToSend = (uint8_t *)malloc(TotalDataSize);
-    uint8_t *msgData = (uint8_t *)msgSend;
     Packet.cmd = code;
     Packet.version = ver;
     Packet.packetsToReceive = ceil((float)dataSize / (float)sizeof(Packet.data)) - 1;
     Packet.size = dataSize;
+
+    size_t TotalDataSize = sizeof(Packet);
+    uint8_t *dataToSend = (uint8_t *)malloc(TotalDataSize);
+    uint8_t *msgData = (uint8_t *)msgSend;
+
     uint16_t packets = Packet.packetsToReceive;
     uint16_t ptrAdvance = 0;                                                              // qtd de bytes que o ponteiro precisa avançar para receber novos dados
     uint16_t lastPacketSize = dataSize - (Packet.packetsToReceive * sizeof(Packet.data)); // Tamanho em bytes do último pacote, os outros pacotes terão um tamanho fixo
+
     for (int i = packets; i >= 0; i--)
     {
         if (i == 0)
@@ -92,6 +100,7 @@ esp_err_t EspNowHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
         ptrAdvance += sizeof(Packet.data);
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
+
     free(dataToSend);
     return sendreturn;
 }

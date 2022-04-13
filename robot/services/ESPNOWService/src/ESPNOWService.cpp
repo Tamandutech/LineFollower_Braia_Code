@@ -4,8 +4,11 @@ ESPNOWService::ESPNOWService(const char *name, Robot *robot, uint32_t stackDepth
 {
     this->robot = robot;
     status = robot->getStatus();
+
     dataManager = dataManager->getInstance();
-    protocolHandler.EspNowInit(1, broadcastAddress, false);
+
+    protocolHandler = protocolHandler->getInstance();
+    protocolHandler->EspNowInit(1, broadcastAddress, false);
 };
 
 void ESPNOWService::Run()
@@ -30,13 +33,13 @@ void ESPNOWService::Run()
             robot->getSLatMarks()->rightMarks->setData(0);
             status->robotState->setData(CAR_IN_LINE);
             status->robotMap->setData(true);
-            //robot->Setparams();
+            // robot->Setparams();
             strcpy(msgrecebida, "empty");
         }
 
-        if (protocolHandler.dataAvailable())
+        if (protocolHandler->dataAvailable())
         {
-            packetReceive = protocolHandler.getPacketReceived();
+            packetReceive = protocolHandler->getPacketReceived();
             if (!newData)
             { // Prepara o ponteiro para o recebimento dos dados nos pacotes
                 dataReceived = (uint8_t *)malloc(packetReceive.size);
@@ -56,7 +59,7 @@ void ESPNOWService::Run()
                     status->robotMap->setData(false);
                     robot->getSLatMarks()->rightMarks->setData(0);
                     status->robotState->setData(CAR_IN_LINE);
-                    //robot->Setparams();
+                    // robot->Setparams();
                     ESP_LOGD(GetName().c_str(), "Comando Recebido: Encoders iniciados");
                     break;
                 case CMDTXT:
@@ -98,7 +101,7 @@ void ESPNOWService::Run()
             default:
                 break;
             }
-            esp_err_t erro = protocolHandler.EspSend(packetSend.cmd, packetSend.version, packetSend.size, datatoSend);
+            esp_err_t erro = protocolHandler->EspSend(packetSend.cmd, packetSend.version, packetSend.size, datatoSend);
             char erroMsg[150];
             ESP_LOGE(GetName().c_str(), "Error: %d", erro);
             esp_err_to_name_r(erro, erroMsg, 150);
