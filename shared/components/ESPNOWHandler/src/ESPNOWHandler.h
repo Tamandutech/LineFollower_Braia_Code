@@ -12,6 +12,7 @@
 #include <mutex>
 
 #include "dataEnums.h"
+#include "thread.hpp"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -23,22 +24,24 @@
 #include "tcpip_adapter.h"
 #include "esp_system.h"
 
+using namespace cpp_freertos;
+
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-class EspNowHandler
+class ESPNOWHandler : public Thread
 {
 public:
-    static EspNowHandler *getInstance()
+    static ESPNOWHandler *getInstance()
     {
-        EspNowHandler *sin = instance.load(std::memory_order_acquire);
+        ESPNOWHandler *sin = instance.load(std::memory_order_acquire);
         if (!sin)
         {
             std::lock_guard<std::mutex> myLock(instanceMutex);
             sin = instance.load(std::memory_order_relaxed);
             if (!sin)
             {
-                sin = new EspNowHandler();
+                sin = new ESPNOWHandler();
                 instance.store(sin, std::memory_order_release);
             }
         }
@@ -46,7 +49,7 @@ public:
         return sin;
     };
 
-    void EspNowInit(uint8_t canal, uint8_t *Mac, bool criptografia);                 // Inicia o espnow e registra os dados do peer
+    void Run() override;
     
     esp_err_t EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, void *msgSend); // envia dados para o gateway
     bool dataAvailable();                                                            // verifica se existe novo dado para ler
@@ -55,22 +58,29 @@ public:
 private:
     std::string name;
 
-    static std::atomic<EspNowHandler *> instance;
+    static std::atomic<ESPNOWHandler *> instance;
     static std::mutex instanceMutex;
 
-    const char *tag = "EspNowHandler";
+    const char *tag = "ESPNOWHandler";
 
-    EspNowHandler(std::string name = "EspNowProtocol");
-    void wifiInit(void);
-    void espNowInit();
+    ESPNOWHandler(std::string name = "ESPNOWHandler", uint32_t stackDepth = 10000, UBaseType_t priority = 9);
+    
+    void ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia); // Inicia o espnow e registra os dados do peer
+
     static void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);    // Evento para enviar o dado
     static void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len); // Evento de dado Recebido
-    esp_now_peer_info_t peerInfo;                                                     // Variável para adicionar o peer
+
+    esp_now_peer_info_t peerInfo; // Variável para adicionar o peer
     SemaphoreHandle_t xSemaphorePeerInfo;
+
     esp_now_peer_info_t peerProtocol; // Variável para ler dados do peeer nos métodos da classe
     SemaphoreHandle_t xSemaphorePeerProtocol;
+
     static std::queue<struct PacketData> PacketsReceived;
-    static SemaphoreHandle_t xSemaphorepacketreceived;
+    static SemaphoreHandle_t xSemaphorePacketsReceived;
+
+    static std::queue<struct PacketData> PacketsToSend;
+    static SemaphoreHandle_t xSemaphorePacketsToSend;
 };
 
 #endif

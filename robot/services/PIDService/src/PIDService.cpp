@@ -18,7 +18,6 @@ void PIDService::Run()
     {
         CarState estado = (CarState)status->robotState->getData();
         bool mapState = status->robotMap->getData();
-        ParametersData = robot->GetParams();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         if (iloop > 50)

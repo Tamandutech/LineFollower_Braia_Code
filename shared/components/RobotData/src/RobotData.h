@@ -1,8 +1,6 @@
 #ifndef ROBOT_DATA_H
 #define ROBOT_DATA_H
 
-
-
 #include <stdint.h>
 #include <stddef.h>
 #include <string>
@@ -31,12 +29,6 @@ public:
     dataPID *getPIDRot();
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
-    struct PacketData getPacketSend();
-    int addPacketSend(struct PacketData packet);
-    bool PacketSendavailable();
-    int Setparams(struct CarParameters params);
-    int Setparams();
-    struct CarParameters GetParams();
 
 private:
     std::string name;
@@ -52,9 +44,6 @@ private:
     dataSensor *sArray;
     RobotStatus *Status;
     struct CarParameters Carparam; // Parâmetros do robô
-    SemaphoreHandle_t xSemaphoreCarparam;
-    std::queue<struct PacketData> PacketstoSend; // Pacotes para envio pelo espnow
-    SemaphoreHandle_t xSemaphorepacketstosend;
 
     DataStorage *storage;
     DataManager *dataManager;

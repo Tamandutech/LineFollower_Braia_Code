@@ -76,6 +76,8 @@ void DataManager::setParam(std::string name, std::string value){
             return;
         }
     }
+
+    ESP_LOGE(name.c_str(), "Parametro %s não encontrado.", name.c_str());
 }
 void DataManager::loadAllParamData()
 {

@@ -52,7 +52,6 @@ void CarStatusService::Run()
         CarState parar = (CarState) status->robotState->getData(); // Verifica se o carro deve se manter parado
         bool bottom = gpio_get_level(GPIO_NUM_0);
 
-        ParametersData = robot->GetParams();
         if (!bottom)
         {
             vTaskDelay(2500 / portTICK_PERIOD_MS);

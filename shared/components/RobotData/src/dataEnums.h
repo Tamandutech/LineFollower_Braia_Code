@@ -39,9 +39,9 @@ enum ProtocolCodes
     dataSpeedSend,
     RobotStatusSend,
     ParametersSend,
+    ParametersGet,
     CMDTXT,
     MarkData
-
 };
 
 struct CarParameters{
@@ -93,7 +93,6 @@ struct PacketData{
     uint8_t cmd;  // Comando
     uint8_t version; // Versão do comando
     uint16_t packetsToReceive;  // Quantidade de pacotes para receber ainda
-    uint16_t size;  // Tamanho total do dado que será enviado pelos pacotes
     uint8_t packetsize; // Tamanho do dado contido no pacote
     uint8_t data[230]; //Mensagem
 };

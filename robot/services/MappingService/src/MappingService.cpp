@@ -123,12 +123,14 @@ void MappingService::Run()
                 }
                 ESP_LOGI(GetName().c_str(), "%d, %d, %d", MarkReg.MapTime, MarkReg.MapEncMedia, MarkReg.MapStatus);
                 latMarks->SetMarkDataReg(MarkReg, marks + 1); // Salva os dados da marcação na struct MapData
-                struct PacketData markData;
-                markData.cmd = MarkData;
-                markData.version = 1;
-                markData.size = sizeof(MarkReg);
-                memcpy(markData.data, &MarkReg, sizeof(MarkReg));
-                robot->addPacketSend(markData);
+
+                // struct PacketData markData;
+                // markData.cmd = MarkData;
+                // markData.version = 1;
+                // markData.size = sizeof(MarkReg);
+                // memcpy(markData.data, &MarkReg, sizeof(MarkReg));
+                // robot->addPacketSend(markData);
+                
                 marks++;
                 leftpassed = true; // Diz que o carro está em uma marcação esquerda
             }
@@ -154,19 +156,21 @@ void MappingService::Run()
             latMarks->mapFinished->setData(true);
             latMarks->finalMark->setData(FinalMarkData);
             latMarks->totalLeftMarks->setData(marks);
-            struct PacketData mapPacket;
-            mapPacket.cmd = MapDataSend;
-            mapPacket.version = 1;
-            mapPacket.size = sizeof(struct SLatMarks);
-            robot->addPacketSend(mapPacket);
+            
+            // struct PacketData mapPacket;
+            // mapPacket.cmd = MapDataSend;
+            // mapPacket.version = 1;
+            // mapPacket.size = sizeof(struct SLatMarks);
+            // robot->addPacketSend(mapPacket);
         }
         if (!bottom && latMarks->mapFinished->getData())
         {
-            struct PacketData mapPacket;
-            mapPacket.cmd = MapDataSend;
-            mapPacket.version = 1;
-            mapPacket.size = sizeof(struct SLatMarks);
-            robot->addPacketSend(mapPacket);
+            // struct PacketData mapPacket;
+            // mapPacket.cmd = MapDataSend;
+            // mapPacket.version = 1;
+            // mapPacket.size = sizeof(struct SLatMarks);
+            // robot->addPacketSend(mapPacket);
+
             ESP_LOGI("", "Tempo, Média, Estado");
             for (int i = 0; i < marks + 1; i++)
             {

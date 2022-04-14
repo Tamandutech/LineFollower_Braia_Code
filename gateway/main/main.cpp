@@ -15,9 +15,9 @@
 #include "SerialService.hpp"
 
 #include "cmd_system.hpp"
-#include "cmd_robot.hpp"
+#include "cmd_param.hpp"
 
-#include "EspNowHandler.h"
+#include "ESPNOWHandler.h"
 
 SerialService *serialService;
 
@@ -30,10 +30,10 @@ extern "C"
 
 void app_main(void)
 {
-    EspNowHandler::getInstance()->EspNowInit(1, broadcastAddress, false);
+    ESPNOWHandler::getInstance()->EspNowInit(1, broadcastAddress, false);
 
     register_system();
-    register_cmd_robot();
+    register_cmd_param();
 
     serialService = new SerialService("SerialService", 10000, 9);
     serialService->Start();
