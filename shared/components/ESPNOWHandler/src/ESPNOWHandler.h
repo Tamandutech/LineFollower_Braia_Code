@@ -51,7 +51,7 @@ public:
 
     void Run() override;
     
-    esp_err_t EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, void *msgSend); // envia dados para o gateway
+    esp_err_t Send(uint8_t code, uint16_t ver, uint16_t dataSize, void *msgSend); // envia dados para o gateway
     bool dataAvailable();                                                            // verifica se existe novo dado para ler
     struct PacketData getPacketReceived();                                           // obtém o próximo pacote da fila com os pacotes de dados recebidos
 

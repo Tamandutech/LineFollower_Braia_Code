@@ -51,7 +51,7 @@ static int param_set(int argc, char **argv)
 
         memcpy(&packetDataSendcmd.data, &ParamsSend, sizeof(ParamsSend));
 
-        ESPNOWHandler::getInstance()->EspSend(packetDataSendcmd.cmd, packetDataSendcmd.version, sizeof(packetDataSendcmd), &packetDataSendcmd.data);
+        ESPNOWHandler::getInstance()->Send(packetDataSendcmd.cmd, packetDataSendcmd.version, sizeof(packetDataSendcmd), &packetDataSendcmd.data);
 
         return 0;
     }

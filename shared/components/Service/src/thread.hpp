@@ -183,7 +183,6 @@ namespace cpp_freertos
                         SchedulerActive = false;
                 }
 
-#if (INCLUDE_vTaskSuspend == 1)
                 /**
                  *  Suspend this thread.
                  *
@@ -202,7 +201,6 @@ namespace cpp_freertos
                 {
                         vTaskResume(GetHandle());
                 }
-#endif
 
 #if (INCLUDE_xTaskResumeFromISR == 1)
                 /**

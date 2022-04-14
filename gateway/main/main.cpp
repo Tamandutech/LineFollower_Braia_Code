@@ -30,7 +30,7 @@ extern "C"
 
 void app_main(void)
 {
-    ESPNOWHandler::getInstance()->EspNowInit(1, broadcastAddress, false);
+    ESPNOWHandler::getInstance();
 
     register_system();
     register_cmd_param();

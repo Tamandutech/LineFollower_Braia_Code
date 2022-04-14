@@ -25,6 +25,21 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
 
 void ESPNOWHandler::Run()
 {
+    // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a conGetName().c_str()em de pulsos da CPU
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    // Loop
+    for (;;)
+    {
+        if(PacketsReceived.size() > 0){
+
+        }
+        else
+            this->Suspend();
+
+        xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+    }
 }
 
 void ESPNOWHandler::ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia)
@@ -41,6 +56,7 @@ void ESPNOWHandler::ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia)
     {
         ESP_LOGE("ESPNOWHandler", "Variável PeerInfo ocupada, não foi possível definir valor.");
     }
+
     if (xSemaphoreTake(xSemaphorePeerProtocol, (TickType_t)10) == pdTRUE)
     {
         memcpy(this->peerProtocol.peer_addr, Mac, 6);
@@ -53,6 +69,7 @@ void ESPNOWHandler::ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia)
     {
         ESP_LOGE("ESPNOWHandler", "Variável PeerProtocol ocupada, não foi possível definir valor.");
     }
+
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -97,9 +114,9 @@ void ESPNOWHandler::ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia)
 #endif
 }
 
-esp_err_t ESPNOWHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, void *msgSend)
+esp_err_t ESPNOWHandler::Send(uint8_t code, uint16_t ver, uint16_t dataSize, void *msgSend)
 {
-    esp_err_t sendreturn = ESP_ERR_ESPNOW_NOT_INIT;
+    esp_err_t sendReturn = ESP_ERR_ESPNOW_NOT_INIT;
     esp_now_peer_info_t peer;
 
     if (xSemaphoreTake(xSemaphorePeerProtocol, (TickType_t)10) == pdTRUE)
@@ -110,7 +127,7 @@ esp_err_t ESPNOWHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
     else
     {
         ESP_LOGE("ESPNOWHandler", "Variável PeerProtocol ocupada, não foi possível definir valor.");
-        return sendreturn;
+        return sendReturn;
     }
 
     struct PacketData Packet;
@@ -139,21 +156,26 @@ esp_err_t ESPNOWHandler::EspSend(uint8_t code, uint16_t ver, uint16_t dataSize, 
             Packet.packetsize = sizeof(Packet.data);
         }
         memcpy(dataToSend, &Packet, TotalDataSize);
-        sendreturn = esp_now_send(peer.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
+        sendReturn = esp_now_send(peer.peer_addr, (uint8_t *)dataToSend, TotalDataSize);
         Packet.packetsToReceive--;
         ptrAdvance += sizeof(Packet.data);
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
     free(dataToSend);
-    return sendreturn;
+
+    this->Resume();
+
+    return sendReturn;
 }
 
 void ESPNOWHandler::OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
     ESP_LOGD("ESP-NOW", "Mensagem recebida, bytes: %d", len);
+
     struct PacketData packetIncome;
     memcpy(&packetIncome, incomingData, len);
+
     if (xSemaphoreTake(xSemaphorePacketsReceived, (TickType_t)10) == pdTRUE)
     {
         ESPNOWHandler::PacketsReceived.push(packetIncome);

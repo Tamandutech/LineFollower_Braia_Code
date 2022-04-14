@@ -1,0 +1,16 @@
+{
+    "name": "BraiaV3",
+    "version": "2021.11.0",
+    "new_install_prompt_erase": false,
+    "builds": [
+      {
+        "chipFamily": "ESP32",
+        "parts": [
+          { "path": "bootloader.bin", "offset": 4096 },
+          { "path": "partitions.bin", "offset": 32768 },
+          { "path": "ota.bin", "offset": 57344 },
+          { "path": "firmware.bin", "offset": 65536 }
+        ]
+      }
+    ]
+  }
