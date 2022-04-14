@@ -8,7 +8,6 @@ ESPNOWService::ESPNOWService(const char *name, Robot *robot, uint32_t stackDepth
     dataManager = dataManager->getInstance();
 
     protocolHandler = protocolHandler->getInstance();
-    protocolHandler->ESPNOWInit(1, broadcastAddress, false);
 };
 
 void ESPNOWService::Run()

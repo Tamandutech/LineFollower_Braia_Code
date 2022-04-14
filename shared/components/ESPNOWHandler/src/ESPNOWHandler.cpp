@@ -20,7 +20,7 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
     (xSemaphorePacketsReceived) = xSemaphoreCreateMutex();
     (xSemaphorePacketsToSend) = xSemaphoreCreateMutex();
 
-    this->ESPNOWInit();
+    this->ESPNOWInit(1, broadcastAddress, false);
 }
 
 void ESPNOWHandler::Run()
