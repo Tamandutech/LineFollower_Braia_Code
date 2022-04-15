@@ -1,7 +1,8 @@
 #ifndef DATA_ENUMS_H
 #define DATA_ENUMS_H
 
-struct MapData{
+struct MapData
+{
     int32_t MapTime;
     int32_t MapEncMedia;
     int32_t MapEncLeft;
@@ -9,12 +10,12 @@ struct MapData{
     int32_t MapStatus;
 };
 
-struct ParamData
-{
-    char name[30];
-    char cmdType[20];
-    char value[20];
-};
+// struct ParamData
+// {
+//     char name[30];
+//     char cmdType[20];
+//     char value[20];
+// };
 
 enum CarState
 {
@@ -32,19 +33,8 @@ enum DataFunction
     RETORNO_VARIAVEL_OCUPADA
 };
 
-enum ProtocolCodes
+struct CarParameters
 {
-    MapDataSend,
-    dataPidSend,
-    dataSpeedSend,
-    RobotStatusSend,
-    ParametersSend,
-    ParametersGet,
-    CMDTXT,
-    MarkData
-};
-
-struct CarParameters{
     float KpRotMapLine = 0.27;
     float KpVelMapLine = 0.05;
 
@@ -89,15 +79,22 @@ struct CarParameters{
     int SpeedMinRunCurve = 5;
 };
 
-struct PacketData{
-    uint8_t cmd;  // Comando
-    uint8_t version; // Versão do comando
-    uint16_t packetsToReceive;  // Quantidade de pacotes para receber ainda
-    uint8_t packetsize; // Tamanho do dado contido no pacote
-    uint8_t data[230]; //Mensagem
+enum PacketType
+{
+    PAKCET_TYPE_CMD,
+    PAKCET_TYPE_RETURN
 };
 
-struct SLatMarks{
+struct PacketData
+{
+    uint8_t id;    // ID do pacote
+    uint8_t type;  // Tipo do pacote
+    uint8_t size;  // Tamanho do pacote
+    uint8_t data[240]; // Dados do pacote
+};
+
+struct SLatMarks
+{
     uint16_t leftMarks;
     uint16_t rightMarks;
     struct MapData MarksData[70];

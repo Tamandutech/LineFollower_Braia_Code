@@ -16,6 +16,7 @@
 
 #include "cmd_system.hpp"
 #include "cmd_param.hpp"
+#include "cmd_remote.hpp"
 
 #include "ESPNOWHandler.h"
 
@@ -34,6 +35,7 @@ void app_main(void)
 
     register_system();
     register_cmd_param();
+    register_cmd_remote();
 
     serialService = new SerialService("SerialService", 10000, 9);
     serialService->Start();

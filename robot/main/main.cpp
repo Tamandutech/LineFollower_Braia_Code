@@ -6,7 +6,12 @@
 #include "SensorsService.hpp"
 #include "SpeedService.hpp"
 #include "ESPNOWService.hpp"
+#include "ESPNOWHandler.h"
 #include "LEDsService.hpp"
+
+#include "cmd_system.hpp"
+#include "cmd_param.hpp"
+#include "better_console.hpp"
 
 // C/C++
 #include <stdbool.h>
@@ -38,8 +43,9 @@ MotorsService *motorsService;
 PIDService *pidService;
 SensorsService *sensorsService;
 SpeedService *speedService;
-ESPNOWService *espnowService;
 LEDsService *ledsService;
+ESPNOWHandler *espNowHandler;
+// ESPNOWService *espnowService;
 
 extern "C"
 {
@@ -48,6 +54,20 @@ extern "C"
 
 void app_main(void)
 {
+  /* VERIFICAR */
+  better_console_config_t console_config;
+
+  console_config.max_cmdline_args = 8;
+  console_config.max_cmdline_length = 256;
+#if CONFIG_LOG_COLORS
+  console_config.hint_color = atoi(LOG_COLOR_CYAN);
+#endif
+
+  ESP_ERROR_CHECK(better_console_init(&console_config));
+
+  register_system();
+  register_cmd_param();
+
   braia = new Robot("Braia");
 
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
@@ -56,18 +76,20 @@ void app_main(void)
   speedService = new SpeedService("SpeedService", braia, 10000, 9);
   pidService = new PIDService("PIDService", braia, 10000, 9);
   sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
-  espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
+  espNowHandler = ESPNOWHandler::getInstance();
+  // espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
 
   ledsService = new LEDsService("LEDsService", braia, 10000, 9);
   ledsService->Start();
-  
+
   sensorsService->Start();
   motorsService->Start();
   pidService->Start();
   speedService->Start();
-  espnowService->Start();
   carStatusService->Start();
   mappingService->Start();
+  espNowHandler->Start();
+  // espnowService->Start();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)
