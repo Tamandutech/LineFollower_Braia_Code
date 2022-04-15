@@ -24,11 +24,13 @@
 #include "cmd_system.hpp"
 #include "sdkconfig.h"
 
+#include "DataStorage.hpp"
+
 #ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
 #define WITH_TASKS_INFO 1
 #endif
 
-static const char *TAG = "cmd_system";
+static const char *TAG = "CMD_SYSTEM";
 
 static void register_free(void);
 static void register_heap(void);
@@ -37,6 +39,7 @@ static void register_restart(void);
 #if WITH_TASKS_INFO
 static void register_tasks(void);
 #endif
+static void register_delete_data(void);
 
 void register_system_common(void)
 {
@@ -47,6 +50,7 @@ void register_system_common(void)
 #if WITH_TASKS_INFO
     register_tasks();
 #endif
+    register_delete_data();
 }
 
 void register_system(void)
@@ -176,3 +180,40 @@ static void register_tasks(void)
 }
 
 #endif // WITH_TASKS_INFO
+
+static struct
+{
+    struct arg_str *filename;
+    struct arg_end *end;
+} delete_data_args;
+
+static int delete_data(int argc, char **argv)
+{
+    int nerrors = arg_parse(argc, argv, (void **)&delete_data_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, delete_data_args.end, argv[0]);
+        return 1;
+    }
+
+    ESP_LOGI(TAG, "Excluindo arquivo: %s", delete_data_args.filename->sval[0]);
+
+    DataStorage::getInstance()->delete_data(delete_data_args.filename->sval[0]);
+
+    return 0;
+}
+
+void register_delete_data(void)
+{
+    delete_data_args.filename = arg_str1(NULL, NULL, "<arquivo>", "Nome do arquivo a ser excluído.");
+    delete_data_args.end = arg_end(2);
+
+    const better_console_cmd_t delete_data_cmd = {
+        .command = "delete_data",
+        .help = "Apaga um arquivo da memória flash.",
+        .hint = NULL,
+        .func = &delete_data,
+        .argtable = &delete_data_args};
+
+    better_console_cmd_register(&delete_data_cmd);
+}

@@ -30,11 +30,6 @@ public:
     DataAbstract(std::string name, std::string parentObjectName, T value);
     virtual ~DataAbstract();
 
-    // metodos de serialização e deserialização
-
-    void serialize(const char *buffer);
-    void deserialize(const char *data);
-
     T getData();
     void setData(T data);
     void setData(std::string data);
@@ -43,16 +38,14 @@ public:
     void loadData();
 
     std::string getName();
+    std::string getDataString();
 
 protected:
 private:
-    std::string name;
     std::atomic<T> *data;
 
     DataStorage *dataStorage;
     DataManager *dataManager;
-
-    std::string demangle(const char *mangled);
 };
 
 #include "DataAbstract.cpp"

@@ -48,6 +48,7 @@ public:
     void loadAllRuntimeData();
 
     uint8_t getRegistredParamDataCount();
+    void listRegistredParamData();
 
 private:
     static std::atomic<DataManager *> instance;

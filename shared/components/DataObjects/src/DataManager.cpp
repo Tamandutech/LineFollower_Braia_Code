@@ -64,20 +64,20 @@ void DataManager::loadAllData(std::vector<IDataAbstract *> *dataList, std::mutex
         data->loadData();
     }
 }
-void DataManager::setParam(std::string name, std::string value){
-    ESP_LOGD(name.c_str(), "Setando parametro: %s = %s", name.c_str(), value.c_str());
+void DataManager::setParam(std::string name, std::string value)
+{
+    ESP_LOGD(this->name.c_str(), "Setando parametro: %s = %s", name.c_str(), value.c_str());
     for (auto data : dataParamList)
     {
         if (data->getName() == name)
         {
-            
             data->setData(value);
             data->saveData();
             return;
         }
     }
 
-    ESP_LOGE(name.c_str(), "Parametro %s não encontrado.", name.c_str());
+    ESP_LOGE(this->name.c_str(), "Parametro %s não encontrado.", name.c_str());
 }
 void DataManager::loadAllParamData()
 {
@@ -95,4 +95,15 @@ uint8_t DataManager::getRegistredParamDataCount()
 {
     ESP_LOGD(name.c_str(), "Quantidade de dados parametrizados registrados: %d", dataParamList.size());
     return dataParamList.size();
+}
+
+void DataManager::listRegistredParamData()
+{
+    uint8_t qtd = getRegistredParamDataCount();
+
+    ESP_LOGD(name.c_str(), "Listando dados parametrizados registrados: %d", qtd);
+    for (uint8_t i = 0; i < qtd; i++)
+    {
+        ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s: %s", i, dataParamList[i], dataParamList[i]->getName().c_str(), dataParamList[i]->getDataString().c_str());
+    }
 }

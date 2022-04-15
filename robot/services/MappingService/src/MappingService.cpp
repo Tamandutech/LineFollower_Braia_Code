@@ -36,9 +36,9 @@ void MappingService::Run()
     // Loop
     for (;;)
     {
-        CarState Parar = (CarState) status->robotState->getData(); // Verifica se o mapeamento deve iniciar
-        bool mapping = status->robotMap->getData(); // Verifica se o mapeamento deve iniciar
-#if defined(BRAIA_V2)        
+        CarState Parar = (CarState)status->robotState->getData(); // Verifica se o mapeamento deve iniciar
+        bool mapping = status->robotMap->getData();               // Verifica se o mapeamento deve iniciar
+#if defined(BRAIA_V2)
         uint16_t slesq1 = SLat->getChannel(0);
         uint16_t slesq2 = SLat->getChannel(1);
 #elif defined(BRAIA_V3)
@@ -66,8 +66,6 @@ void MappingService::Run()
 
             xInicialTicks = xTaskGetTickCount(); // pegando o tempo inicial
             startTimer = true;
-            InitialMarkData = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
-            latMarks->initialMark->setData(InitialMarkData);
         }
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_ERROR
@@ -94,7 +92,7 @@ void MappingService::Run()
 #if defined(BRAIA_V2)
             if ((slesq1 < 300) && (sldir2) && !leftpassed)
 #elif defined(BRAIA_V3)
-            if ((slesq < 300) && (sldir>600) && !leftpassed)
+            if ((slesq < 300) && (sldir > 600) && !leftpassed)
 #else
             if ((slesq1 < 300) && (sldir2) && !leftpassed)
 #endif
@@ -105,14 +103,14 @@ void MappingService::Run()
                 // Contagem encoder esquerdo
                 MarkReg.MapEncLeft = speedMapping->EncLeft->getData();
                 // Contagem encoder direito
-                MarkReg.MapEncLeft = speedMapping->EncRight->getData();
+                MarkReg.MapEncRight = speedMapping->EncRight->getData();
                 // media
                 MarkReg.MapEncMedia = ((speedMapping->EncRight->getData()) + (speedMapping->EncLeft->getData())) / 2;
                 // estado
 #if defined(ManualMap)
                 if ((marks % 2) == 0)
 #elif defined(AutoMap)
-                if(abs((speedMapping->getEncRight()) - (speedMapping->getEncLeft())) >= 240)  
+                if (abs((speedMapping->getEncRight()) - (speedMapping->getEncLeft())) >= 240)
 #endif
                 { // Verifica se o carrinho está na curva ou na linha
                     MarkReg.MapStatus = CAR_IN_CURVE;
@@ -130,7 +128,7 @@ void MappingService::Run()
                 // markData.size = sizeof(MarkReg);
                 // memcpy(markData.data, &MarkReg, sizeof(MarkReg));
                 // robot->addPacketSend(markData);
-                
+
                 marks++;
                 leftpassed = true; // Diz que o carro está em uma marcação esquerda
             }
@@ -156,7 +154,7 @@ void MappingService::Run()
             latMarks->mapFinished->setData(true);
             latMarks->finalMark->setData(FinalMarkData);
             latMarks->totalLeftMarks->setData(marks);
-            
+
             // struct PacketData mapPacket;
             // mapPacket.cmd = MapDataSend;
             // mapPacket.version = 1;
@@ -177,7 +175,6 @@ void MappingService::Run()
                 struct MapData markreg = latMarks->getMarkDataReg(i);
                 ESP_LOGI("", "%d, %d, %d", markreg.MapTime, markreg.MapEncMedia, markreg.MapStatus);
             }
-            ESP_LOGI("Initial Mark (média dos encoders) ", " %d ", latMarks->initialMark->getData());
             ESP_LOGI("Final Mark (média dos encoders) ", " %d ", latMarks->finalMark->getData());
             ESP_LOGI("Total de marcações esquerdas ", " %d ", latMarks->totalLeftMarks->getData());
         }

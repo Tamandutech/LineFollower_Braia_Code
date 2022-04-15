@@ -19,12 +19,12 @@ class DataStorage
 public:
     static DataStorage *getInstance()
     {
-        ESP_LOGD(name.c_str(), "Adquirindo instância...");
+        ESP_LOGD("DataStorage", "Adquirindo instância...");
 
         DataStorage *sin = instance.load(std::memory_order_acquire);
         if (!sin)
         {
-            ESP_LOGD(name.c_str(), "Instância não existe, criando...");
+            ESP_LOGD("DataStorage", "Instância não existe, criando...");
 
             std::lock_guard<std::mutex> myLock(myMutex);
             sin = instance.load(std::memory_order_relaxed);
@@ -40,8 +40,13 @@ public:
 
     void mount_storage(std::string _basePath);
     void list_files();
+
     void save_data(std::string name, char *data, size_t size);
+
     void load_data(std::string name, char *data, size_t size);
+    void load_data(std::string name, char *data, size_t *size);
+
+    void delete_data(std::string name);
 
 private:
     static std::atomic<DataStorage *> instance;

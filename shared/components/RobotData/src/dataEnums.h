@@ -1,14 +1,14 @@
 #ifndef DATA_ENUMS_H
 #define DATA_ENUMS_H
 
-struct MapData
-{
-    int32_t MapTime;
-    int32_t MapEncMedia;
-    int32_t MapEncLeft;
-    int32_t MapEncRight;
-    int32_t MapStatus;
-};
+// struct MapData
+// {
+//     int32_t MapTime;
+//     int32_t MapEncMedia;
+//     int32_t MapEncLeft;
+//     int32_t MapEncRight;
+//     uint8_t MapStatus;
+// };
 
 // struct ParamData
 // {
@@ -89,18 +89,18 @@ struct PacketData
 {
     uint8_t id;    // ID do pacote
     uint8_t type;  // Tipo do pacote
-    uint8_t size;  // Tamanho do pacote
+    uint8_t size;  // Tamanho do dado
     uint8_t data[240]; // Dados do pacote
 };
 
-struct SLatMarks
-{
-    uint16_t leftMarks;
-    uint16_t rightMarks;
-    struct MapData MarksData[70];
-    uint16_t TotalLeftMarks;
-    int32_t InitialMark;
-    int32_t FinalMark;
-    bool MapFinished;
-};
+// struct SLatMarks
+// {
+//     uint16_t leftMarks;
+//     uint16_t rightMarks;
+//     struct MapData MarksData[70];
+//     uint16_t TotalLeftMarks;
+//     int32_t InitialMark;
+//     int32_t FinalMark;
+//     bool MapFinished;
+// };
 #endif

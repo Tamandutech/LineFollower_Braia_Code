@@ -109,3 +109,45 @@ void DataStorage::load_data(std::string fileName, char *data, size_t size)
 
     fclose(f);
 }
+
+void DataStorage::load_data(std::string fileName, char *data, size_t *size)
+{
+    if (!is_mounted())
+        return;
+
+    FILE *f = fopen((basePath + "/" + fileName).c_str(), "r");
+
+    if (f == NULL)
+    {
+        ESP_LOGE(name.c_str(), "Falha ao abrir arquivo %s para leitura", fileName.c_str());
+        return;
+    }
+
+    fseek(f, 0, SEEK_END);
+    (*size) = ftell(f);
+
+    free(data);
+    data = (char *)malloc((*size) * sizeof(char));
+
+    fseek(f, 0, SEEK_SET);
+
+    fread(data, *size, 1, f);
+
+    ESP_LOGD(name.c_str(), "Lido %s, %d bytes", fileName.c_str(), *size);
+
+    fclose(f);
+}
+
+void DataStorage::delete_data(std::string fileName)
+{
+    if (!is_mounted())
+        return;
+
+    if (remove((basePath + "/" + fileName).c_str()) != 0)
+    {
+        ESP_LOGE(name.c_str(), "Falha ao remover arquivo %s", fileName.c_str());
+        return;
+    }
+
+    ESP_LOGI(name.c_str(), "Removido %s", fileName.c_str());
+}

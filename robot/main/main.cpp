@@ -5,7 +5,6 @@
 #include "PIDService.hpp"
 #include "SensorsService.hpp"
 #include "SpeedService.hpp"
-#include "ESPNOWService.hpp"
 #include "ESPNOWHandler.h"
 #include "LEDsService.hpp"
 
@@ -45,7 +44,6 @@ SensorsService *sensorsService;
 SpeedService *speedService;
 LEDsService *ledsService;
 ESPNOWHandler *espNowHandler;
-// ESPNOWService *espnowService;
 
 extern "C"
 {
@@ -77,7 +75,6 @@ void app_main(void)
   pidService = new PIDService("PIDService", braia, 10000, 9);
   sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
   espNowHandler = ESPNOWHandler::getInstance();
-  // espnowService = new ESPNOWService("EspNowService", braia, 10000, 9);
 
   ledsService = new LEDsService("LEDsService", braia, 10000, 9);
   ledsService->Start();

@@ -4,6 +4,10 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
 {
     this->robot = robot;
 
+    latMarks = robot->getSLatMarks();
+    SLat = robot->getsLat();
+    status = robot->getStatus();
+
     // Definindo GPIOs e configs para sensor Array
     sArray.setTypeMCP3008();
     sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, (gpio_num_t)ADC_DOUT, (gpio_num_t)ADC_DIN, (gpio_num_t)ADC_CLK, (gpio_num_t)ADC_CS, 1350000, VSPI_HOST);
@@ -95,19 +99,17 @@ void SensorsService::processSLat(Robot *robot)
     bool sldir2 = false;
 #endif
 
-    auto SLat = robot->getsLat();
-    auto status = robot->getStatus();
-#if defined(BRAIA_V2)        
-        uint16_t slesq1 = SLat->getChannel(0);
-        uint16_t slesq2 = SLat->getChannel(1);
+#if defined(BRAIA_V2)
+    uint16_t slesq1 = SLat->getChannel(0);
+    uint16_t slesq2 = SLat->getChannel(1);
 #elif defined(BRAIA_V3)
-        uint16_t slesq = SLat->getChannel(0);
-        uint16_t sldir = SLat->getChannel(1);
+    uint16_t slesq = SLat->getChannel(0);
+    uint16_t sldir = SLat->getChannel(1);
 #else
-        uint16_t slesq1 = SLat->getChannel(0);
-        uint16_t slesq2 = SLat->getChannel(1);
+    uint16_t slesq1 = SLat->getChannel(0);
+    uint16_t slesq2 = SLat->getChannel(1);
 #endif
-    auto latMarks = robot->getSLatMarks();
+
 #if defined(BRAIA_V2)
     ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
     ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
@@ -115,23 +117,24 @@ void SensorsService::processSLat(Robot *robot)
 #elif defined(BRAIA_V3)
     ESP_LOGD("processSLat", "Laterais (Direita): %d", sldir);
     ESP_LOGD("processSLat", "Laterais (esquerda): %d", slesq);
-    if (slesq < 300 || sldir > 600) // leitura de faixas brancas sensores laterais
+    if (slesq < 300 || sldir > 600)              // leitura de faixas brancas sensores laterais
 #else
     ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
     ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
-    if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
+    if (slesq1 < 300 || !sldir2)              // leitura de faixas brancas sensores laterais
 #endif
     {
 #if defined(BRAIA_V2)
         if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
 #elif defined(BRAIA_V3)
-        if ((slesq < 300) && (sldir > 600)) // lendo sLat esq. branco e dir. preto
+        if ((slesq < 300) && (sldir > 600))      // lendo sLat esq. branco e dir. preto
 #else
-        if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
-#endif        
+        if ((slesq1 < 300) && (sldir2))       // lendo sLat esq. branco e dir. preto
+#endif
         {
-            if (!(latMarks->leftMarks->getData()))
+            if (!(latMarks->latEsqPass->getData()))
                 latMarks->leftPassedInc();
+
             latMarks->latEsqPass->setData(true);
             latMarks->latDirPass->setData(false);
             // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
@@ -144,8 +147,9 @@ void SensorsService::processSLat(Robot *robot)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
 #endif
         {
-            if (!(latMarks->rightMarks->getData()))
+            if (!(latMarks->latDirPass->getData()))
                 latMarks->rightPassedInc();
+
             latMarks->latDirPass->setData(true);
             latMarks->latEsqPass->setData(false);
         }
@@ -157,6 +161,7 @@ void SensorsService::processSLat(Robot *robot)
         latMarks->latEsqPass->setData(false);
     }
 
+    // TODO: Mover para CarStatus
     if (latMarks->rightMarks->getData() >= 2 && status->robotMap->getData() && status->robotState->getData() != CAR_STOPPED)
     { // parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);

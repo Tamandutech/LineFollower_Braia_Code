@@ -26,6 +26,10 @@ private:
 
   Robot *robot;
 
+  dataSLatMarks *latMarks;
+  dataSensor *SLat;
+  RobotStatus *status;
+
   void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot);
 
   void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot);

@@ -16,6 +16,7 @@
 
 #include "DataAbstract.hpp"
 #include "DataStorage.hpp"
+#include "DataMap.hpp"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
@@ -27,10 +28,11 @@ public:
 
     DataAbstract<bool> *latEsqPass;
     DataAbstract<bool> *latDirPass;
+
     DataAbstract<uint16_t> *leftMarks;
     DataAbstract<uint16_t> *rightMarks;
+
     DataAbstract<uint16_t> *totalLeftMarks;
-    DataAbstract<int32_t> *initialMark;
     DataAbstract<int32_t> *finalMark;
     DataAbstract<bool> *mapFinished;
 
@@ -40,16 +42,19 @@ public:
     void leftPassedInc();
     void rightPassedInc();
 
-    int setData(struct SLatMarks SLatData);
-    struct SLatMarks getData();
+    // int setData(struct SLatMarks SLatData);
+    // struct SLatMarks getData();
 
 private:
     std::string name;
     const char *tag = "dataSLatMarks";
+    
+    DataManager *dataManager;
 
     SemaphoreHandle_t xSemaphoreMarksData;
 
-    struct MapData MarksData[70]; // salvar
+    DataMap *marks;
+    // struct MapData MarksData[70]; // salvar
 };
 
 #endif

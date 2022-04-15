@@ -22,11 +22,10 @@ public:
 
 private:
     Robot *robot;
+    
     dataSpeed *speedMapping;
-
     dataSensor *SLat;
     dataSLatMarks *latMarks;
-
     RobotStatus *status;
 
     struct MapData markreg;

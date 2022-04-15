@@ -15,6 +15,7 @@ static const char *name = "CMD_PARAM";
 void register_cmd_param(void)
 {
     register_param_set();
+    register_param_list();
 }
 
 static struct
@@ -35,7 +36,6 @@ static int param_set(int argc, char **argv)
 
     ESP_LOGD(name, "Definido parâmetro local %s com valor %s", param_set_args.name->sval[0], param_set_args.value->sval[0]);
     DataManager::getInstance()->setParam(param_set_args.name->sval[0], param_set_args.value->sval[0]);
-    return 0;
 
     return 0;
 }
@@ -54,4 +54,23 @@ void register_param_set(void)
         .argtable = &param_set_args};
 
     better_console_cmd_register(&param_set_cmd);
+}
+
+static int param_list(int argc, char **argv)
+{
+    DataManager::getInstance()->listRegistredParamData();
+
+    return 0;
+}
+
+void register_param_list(void)
+{
+    const better_console_cmd_t param_list_cmd = {
+        .command = "param_list",
+        .help = "Lista todos os parâmetros registrado.",
+        .hint = NULL,
+        .func = &param_list,
+        .argtable = NULL};
+
+    better_console_cmd_register(&param_list_cmd);
 }
