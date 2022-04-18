@@ -26,8 +26,6 @@ private:
     dataPID *PIDTrans;
     dataPID *PIDRot;
 
-    CarParameters ParametersData; // Parâmetros do robô
-
     short const TaskDelay = 10; // 10ms
     float const BaseDeTempo = (TaskDelay * 1E-3);
 
@@ -40,6 +38,7 @@ private:
     float errTrans_ant = 0; //errTrans_ant2 = 0;
 
     //Variáveis para cálculo do pid rot e trans
+    float rotK = 5;
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
     float PidRot = 0;

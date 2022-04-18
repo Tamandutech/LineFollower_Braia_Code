@@ -32,7 +32,7 @@ private:
 
     MappingService *mappingService;
 
-    int Marks = 0;
+    int numMarks = 0; // Número total de marcações laterais na pista
 
     bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
 

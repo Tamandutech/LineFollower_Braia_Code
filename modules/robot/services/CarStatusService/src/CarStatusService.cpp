@@ -27,7 +27,9 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     else
     {
         status->robotIsMapping->setData(false);
-        mediaEncFinal = latMarks->marks->getData(latMarks->marks->getSize() - 1).MapEncMedia;
+        numMarks = latMarks->marks->getSize();
+        mediaEncFinal = latMarks->marks->getData(numMarks- 1).MapEncMedia;
+        
     }
 
     status->robotState->setData(CAR_STOPPED);
@@ -106,62 +108,37 @@ void CarStatusService::Run()
         iloop++;
 #endif
 
-        if (mediaEncActual >= mediaEncFinal && !status->robotIsMapping->getData() && actualCarState != CAR_STOPPED)
+
+
+        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED)
         {
-            vTaskDelay(500 / portTICK_PERIOD_MS);
-
-            // TODO: Encontrar forma bonita de suspender os outros serviços.
-            // vTaskSuspend(xTaskPID);
-            // vTaskSuspend(xTaskSensors);
-
-            robot->getStatus()->robotState->setData(CAR_STOPPED);
-        }
-
-        if (!status->robotIsMapping->getData() && mediaEncActual < mediaEncFinal && actualCarState != CAR_STOPPED)
-        {
-            // define o status do carrinho se o mapeamento não estiver ocorrendo
-            int mark = 0;
-
-            for (mark = 0; mark < Marks; mark++)
+            if (mediaEncActual >= mediaEncFinal)
             {
-                // Verifica a conGetName().c_str()em do encoder e atribui o estado ao robô
-                if (mark < Marks - 1)
+                status->robotState->setData(CAR_IN_LINE);
+                vTaskDelay(500 / portTICK_PERIOD_MS);
+
+                // TODO: Encontrar forma bonita de suspender os outros serviços.
+                // vTaskSuspend(xTaskPID);
+                // vTaskSuspend(xTaskSensors);
+
+                robot->getStatus()->robotState->setData(CAR_STOPPED);
+            }
+            if(mediaEncActual < mediaEncFinal){
+            // define o status do carrinho se o mapeamento não estiver ocorrendo
+                int mark = 0;
+                for (mark = 0; mark < numMarks - 1; mark++)
                 {
+                    // Verifica a conGetName().c_str()em do encoder e atribui o estado ao robô
+
                     int32_t Manualmedia = latMarks->marks->getData(mark).MapEncMedia;        // Média dos encoders na chave mark
                     int32_t ManualmediaNxt = latMarks->marks->getData(mark + 1).MapEncMedia; // Média dos encoders na chave mark + 1
 
                     if (mediaEncActual >= Manualmedia && mediaEncActual <= ManualmediaNxt)
                     {                                                                 // análise do valor das médias dos encoders
-                        int32_t mapstatus = latMarks->marks->getData(mark).MapStatus; // status do robô
-                        CarState estado;
-
-                        if (mapstatus == CAR_IN_LINE)
-                        {
-                            estado = CAR_IN_LINE;
-                        }
-                        else
-                        {
-                            estado = CAR_IN_CURVE;
-                        }
-
-                        status->robotState->setData(estado);
+                        status->robotState->setData((CarState)latMarks->marks->getData(mark).MapStatus); // Atualiza estado do robô
                         break;
                     }
-                }
-                else
-                {
-                    int32_t mapstatus = latMarks->marks->getData(mark).MapStatus; // status do robô
-                    CarState estado;
-                    if (mapstatus == CAR_IN_LINE)
-                    {
-                        estado = CAR_IN_LINE;
-                    }
-                    else
-                    {
-                        estado = CAR_IN_CURVE;
-                    }
-                    status->robotState->setData(estado);
-                    break;
+                    
                 }
             }
         }

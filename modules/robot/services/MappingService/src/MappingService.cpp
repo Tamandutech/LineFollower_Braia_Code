@@ -76,6 +76,8 @@ esp_err_t MappingService::createNewMark()
         this->Resume();
         return ESP_OK;
     }
+    return ESP_OK;
+
 }
 
 void MappingService::Run()

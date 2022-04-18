@@ -14,7 +14,14 @@ dataPID::dataPID(std::string name)
     input = new DataAbstract<int16_t>("input", name);
     output = new DataAbstract<float>("output", name);
     setpoint = new DataAbstract<int16_t>("Setpoint", name);
-    dataManager->registerParamData(setpoint);
+    setpointLine = new DataAbstract<int16_t>("SetpointLine", name, 400);
+    setpointCurve = new DataAbstract<int16_t>("SetpointCurve", name, 400);
+    setpointMap = new DataAbstract<int16_t>("SetpointMap", name, 400);
+    Krot = new DataAbstract<float>("Krot", name, 5);
+    dataManager->registerParamData(setpointLine);
+    dataManager->registerParamData(setpointCurve);
+    dataManager->registerParamData(setpointMap);
+    dataManager->registerParamData(Krot);
 
     Kp_line = new DataAbstract<float>("Kp_line", name);
     dataManager->registerParamData(Kp_line);

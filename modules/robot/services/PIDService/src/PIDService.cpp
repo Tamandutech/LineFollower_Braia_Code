@@ -9,6 +9,7 @@ PIDService::PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBas
     this->PIDRot = robot->getPIDRot();
 
     this->PIDRot->input->setData(this->robot->getsArray()->getLine());
+    rotK = PIDTrans->Krot->getData();
 };
 
 void PIDService::Run()
@@ -32,14 +33,14 @@ void PIDService::Run()
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-           // PIDTrans->setpoint->setData(600);
+           PIDTrans->setpoint->setData(PIDTrans->setpointLine->getData());
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            //PIDTrans->setpoint->setData(600);
+            PIDTrans->setpoint->setData(PIDTrans->setpointCurve->getData());
         }
         else if(mapState && estado != CAR_STOPPED){
-            //PIDTrans->setpoint->setData(600);
+            PIDTrans->setpoint->setData(PIDTrans->setpointMap->getData());
         }
         
         // Reseta o PID se o carrinho parar
@@ -66,7 +67,7 @@ void PIDService::Run()
 
         //Erros atuais
         // rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
-        PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / 5); // cálculo do setpoint rotacional
+        PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / rotK); // cálculo do setpoint rotacional
         float erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
         float erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
 

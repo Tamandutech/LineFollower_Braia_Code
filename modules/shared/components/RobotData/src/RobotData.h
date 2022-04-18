@@ -63,7 +63,6 @@ private:
     dataSLatMarks *sLatMarks;
     dataSensor *sArray;
     RobotStatus *Status;
-    struct CarParameters Carparam; // Parâmetros do robô
 
     DataStorage *storage;
     DataManager *dataManager;

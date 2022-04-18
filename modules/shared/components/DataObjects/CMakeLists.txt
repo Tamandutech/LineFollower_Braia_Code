@@ -8,6 +8,7 @@ idf_component_register(
     REQUIRES
         "vfs"
         "fatfs"
+        "newlib"
 
     INCLUDE_DIRS 
         "src"
