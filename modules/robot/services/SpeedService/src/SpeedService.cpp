@@ -21,6 +21,7 @@ void SpeedService::Run()
     // Quando for começar a utilizar, necessario limpeza da contagem.
     enc_motEsq.clearCount();
     enc_motDir.clearCount();
+
     // Loop
     for (;;)
     {
@@ -38,6 +39,7 @@ void SpeedService::Run()
         lastTicksRevsCalc = xTaskGetTickCount();
 
         deltaTimeMS_media = (xTaskGetTickCount() - initialTicksCar) * portTICK_PERIOD_MS;
+
         // Calculos de velocidade instantanea (RPM)
         speed->RPMLeft_inst->setData(                   // -> Calculo velocidade instantanea motor esquerdo
             (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
@@ -57,9 +59,10 @@ void SpeedService::Run()
 
         // Calculo de velocidade media do carro (RPM)
         speed->RPMCar_media->setData(                                                                                            // -> Calculo velocidade media do carro
-            (((lastPulseRight / (float)speed->MPR_MotDir->getData() + lastPulseLeft / (float)speed->MPR_MotEsq->getData())) / 2) // Revolucoes media desde inicializacao
+            (((lastPulseRight / (float)speed->MPR->getData() + lastPulseLeft / (float)speed->MPR->getData())) / 2) // Revolucoes media desde inicializacao
             / ((float)deltaTimeMS_media / (float)60000)                                                                          // Divisao do delta tempo em minutos para calculo de RPM
         );
+
         if (iloop >= 200)
         {
             ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motDir.getCount());
@@ -69,6 +72,7 @@ void SpeedService::Run()
             iloop = 0;
         }
         iloop++;
+
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
     }

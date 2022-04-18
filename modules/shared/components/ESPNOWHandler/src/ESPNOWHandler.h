@@ -64,11 +64,10 @@ public:
 private:
     std::string name;
 
-    uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
     static std::atomic<ESPNOWHandler *> instance;
     static std::mutex instanceMutex;
 
+    uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t uniqueIdCounter = 0;
 
     ESPNOWHandler(std::string name = "ESPNOWHandler", uint32_t stackDepth = 10000, UBaseType_t priority = 9);

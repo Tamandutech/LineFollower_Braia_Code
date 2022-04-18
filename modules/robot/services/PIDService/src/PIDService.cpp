@@ -17,7 +17,7 @@ void PIDService::Run()
     for (;;)
     {
         CarState estado = (CarState)status->robotState->getData();
-        bool mapState = status->robotMap->getData();
+        bool mapState = status->robotIsMapping->getData();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         if (iloop > 50)
@@ -89,9 +89,11 @@ void PIDService::Run()
         errRot_ant = erroVelRot;
         //lastRotPid = PidRot;
 
-        auto speedBase = speed->SpeedBase(estado)->getData();
-        auto speedMin = speed->SpeedMin(estado)->getData();
-        auto speedMax = speed->SpeedMax(estado)->getData();
+        auto speedBase = speed->base->getData();
+        auto speedMin = speed->min->getData();
+        auto speedMax = speed->max->getData();
+
+
 
         // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
         PIDTrans->output->setData(constrain(
@@ -102,10 +104,10 @@ void PIDService::Run()
         PIDRot->output->setData(PidRot);
 
         // Calculo de velocidade do motor
-        speed->SpeedRight(estado)->setData(
+        speed->right->setData(
             constrain((int16_t)(PIDTrans->output->getData()) + (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
 
-        speed->SpeedLeft(estado)->setData(
+        speed->left->setData(
             constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
 
         ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);

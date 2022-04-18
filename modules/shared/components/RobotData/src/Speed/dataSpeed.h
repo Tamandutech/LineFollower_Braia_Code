@@ -33,19 +33,24 @@ public:
     DataAbstract<int32_t> *EncRight;
     DataAbstract<int32_t> *EncLeft;
 
-    /*
-     * Variavel que contempla relacao de Revloucoes e reducao
-     * dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
-     * */
-    DataAbstract<uint16_t> *MPR_MotEsq; // salvar
-    DataAbstract<uint16_t> *MPR_MotDir; // salvar
+    // Variavel que contempla relacao de Revloucoes e reducao dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
+    DataAbstract<uint16_t> *MPR;
 
-    // Valores variaveis
-    DataAbstract<int8_t> *SpeedLeft(CarState carState);
-    DataAbstract<int8_t> *SpeedRight(CarState carState);
-    DataAbstract<int8_t> *SpeedMax(CarState carState);
-    DataAbstract<int8_t> *SpeedMin(CarState carState);
-    DataAbstract<int8_t> *SpeedBase(CarState carState);
+    // Diâmetro das rodas
+    DataAbstract<uint8_t> *WheelDiameter;
+
+    DataAbstract<int8_t> *max;
+    DataAbstract<int8_t> *min;
+    DataAbstract<int8_t> *base;
+
+    // Velocidade atual da roda direita em PMW
+    DataAbstract<int8_t> *right;
+    // Velocidade atual da roda esquerda em PMW
+    DataAbstract<int8_t> *left;
+
+    void setToLine();
+    void setToCurve();
+    void setToMapping();
 
 private:
     std::string name;
@@ -54,18 +59,19 @@ private:
     DataManager *dataManager;
 
     // Linha
-    DataAbstract<int8_t> *right_line; // salvar
-    DataAbstract<int8_t> *left_line;  // salvar
-    DataAbstract<int8_t> *max_line;   // salvar
-    DataAbstract<int8_t> *min_line;   // salvar
-    DataAbstract<int8_t> *base_line;  // salvar
+    DataAbstract<int8_t> *max_line;  // salvar
+    DataAbstract<int8_t> *min_line;  // salvar
+    DataAbstract<int8_t> *base_line; // salvar
 
     // Curva
-    DataAbstract<int8_t> *right_curve; // salvar
-    DataAbstract<int8_t> *left_curve;  // salvar
-    DataAbstract<int8_t> *max_curve;   // salvar
-    DataAbstract<int8_t> *min_curve;   // salvar
-    DataAbstract<int8_t> *base_curve;  // salvar
+    DataAbstract<int8_t> *max_curve;  // salvar
+    DataAbstract<int8_t> *min_curve;  // salvar
+    DataAbstract<int8_t> *base_curve; // salvar
+
+    // Mapeamento
+    DataAbstract<int8_t> *max_mapping;  // salvar
+    DataAbstract<int8_t> *min_mapping;  // salvar
+    DataAbstract<int8_t> *base_mapping; // salvar
 };
 
 #endif

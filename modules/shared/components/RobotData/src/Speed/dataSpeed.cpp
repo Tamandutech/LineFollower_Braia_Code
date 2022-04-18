@@ -21,16 +21,22 @@ dataSpeed::dataSpeed(std::string name)
      * Variavel que contempla relacao de Revloucoes e reducao
      * dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
      * */
-    MPR_MotEsq = new DataAbstract<uint16_t>("MPR_MotEsq", name, 0);
-    dataManager->registerParamData(MPR_MotEsq);
-    MPR_MotDir = new DataAbstract<uint16_t>("MPR_MotDir", name, 0);
-    dataManager->registerParamData(MPR_MotDir);
+    MPR = new DataAbstract<uint16_t>("MPR", name, 0);
+    dataManager->registerParamData(MPR);
+
+    WheelDiameter = new DataAbstract<uint8_t>("WheelDiameter", name, 0);
+    dataManager->registerParamData(WheelDiameter);
+
+    max = new DataAbstract<int8_t>("max", name, 0);
+    min = new DataAbstract<int8_t>("min", name, 0);
+    base = new DataAbstract<int8_t>("base", name, 0);
+
+    right = new DataAbstract<int8_t>("right", name, 0);
+    dataManager->registerRuntimeData(right);
+    left = new DataAbstract<int8_t>("left", name, 0);
+    dataManager->registerRuntimeData(left);
 
     // Linha
-    right_line = new DataAbstract<int8_t>("right_line", name, 0);
-    dataManager->registerParamData(right_line);
-    left_line = new DataAbstract<int8_t>("left_line", name, 0);
-    dataManager->registerParamData(left_line);
     max_line = new DataAbstract<int8_t>("max_line", name, 0);
     dataManager->registerParamData(max_line);
     min_line = new DataAbstract<int8_t>("min_line", name, 0);
@@ -39,97 +45,42 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(base_line);
 
     // Curva
-    right_curve = new DataAbstract<int8_t>("right_curve", name, 0);
-    dataManager->registerParamData(right_curve);
-    left_curve = new DataAbstract<int8_t>("left_curve", name, 0);
-    dataManager->registerParamData(left_curve);
     max_curve = new DataAbstract<int8_t>("max_curve", name, 0);
     dataManager->registerParamData(max_curve);
     min_curve = new DataAbstract<int8_t>("min_curve", name, 0);
     dataManager->registerParamData(min_curve);
     base_curve = new DataAbstract<int8_t>("base_curve", name, 0);
     dataManager->registerParamData(base_curve);
+
+    // Mapeamento
+    max_mapping = new DataAbstract<int8_t>("max_mapping", name, 0);
+    dataManager->registerParamData(max_mapping);
+    min_mapping = new DataAbstract<int8_t>("min_mapping", name, 0);
+    dataManager->registerParamData(min_mapping);
+    base_mapping = new DataAbstract<int8_t>("base_mapping", name, 0);
+    dataManager->registerParamData(base_mapping);
 }
 
-// Metodos de valores variaveis
-
-DataAbstract<int8_t> *dataSpeed::SpeedLeft(CarState carState)
+void dataSpeed::setToLine()
 {
-    switch (carState)
-    {
-    case CAR_IN_CURVE:
-        return this->left_curve;
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade da esqueda, retornando valor para linha.", carState);
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        return this->left_line;
-        break;
-    }
+    ESP_LOGD(tag, "Setando para linha");
+    max = max_line;
+    min = min_line;
+    base = base_line;
 }
-DataAbstract<int8_t> *dataSpeed::SpeedRight(CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_IN_CURVE:
-        return this->right_curve;
-        break;
 
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade da direita, retornando valor para linha.", carState);
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        return this->right_line;
-        break;
-    }
+void dataSpeed::setToCurve()
+{
+    ESP_LOGD(tag, "Setando para curva");
+    max = max_curve;
+    min = min_curve;
+    base = base_curve;
 }
-DataAbstract<int8_t> *dataSpeed::SpeedMax(CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_IN_CURVE:
-        return this->max_curve;
-        break;
 
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade máxima, retornando valor para linha.", carState);
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        return this->max_line;
-        break;
-    }
-}
-DataAbstract<int8_t> *dataSpeed::SpeedMin(CarState carState)
+void dataSpeed::setToMapping()
 {
-    switch (carState)
-    {
-    case CAR_IN_CURVE:
-        return this->min_curve;
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade minima, retornando valor para linha.", carState);
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        return this->min_line;
-        break;
-    }
-}
-DataAbstract<int8_t> *dataSpeed::SpeedBase(CarState carState)
-{
-    switch (carState)
-    {
-    case CAR_IN_CURVE:
-        return this->base_curve;
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter a velocidade da esqueda, retornando valor para linha.", carState);
-    case CAR_STOPPED:
-    case CAR_IN_LINE:
-        return this->base_line;
-        break;
-    }
+    ESP_LOGD(tag, "Setando para mapeamento");
+    max = max_mapping;
+    min = min_mapping;
+    base = base_mapping;
 }

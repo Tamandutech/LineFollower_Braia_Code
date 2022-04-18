@@ -1,5 +1,13 @@
 #include "CarStatusService.hpp"
 
+QueueHandle_t CarStatusService::gpio_evt_queue;
+
+void IRAM_ATTR CarStatusService::gpio_isr_handler(void *arg)
+{
+    uint32_t gpio_num = (uint32_t)arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}
+
 CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     this->robot = robot;
@@ -8,94 +16,97 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     this->latMarks = robot->getSLatMarks();
     this->PidTrans = robot->getPIDVel();
 
-    latMarks->totalLeftMarks->setData(3);
-    latMarks->finalMark->setData(5472);
-    Marks = latMarks->totalLeftMarks->getData() + 1; // marcas laterais esquerda na pista
+    mappingService = MappingService::getInstance();
 
-#if defined(ManualMap)
-    struct MapData marktest;
-    marktest.MapEncMedia = 0;
-    marktest.MapTime = 0;
-    marktest.MapStatus = CAR_IN_LINE;
-    latMarks->SetMarkDataReg(marktest, 0);
-    marktest.MapEncMedia = 1100;
-    marktest.MapTime = 990;
-    marktest.MapStatus = CAR_IN_CURVE;
-    latMarks->SetMarkDataReg(marktest, 1);
-    marktest.MapEncMedia = 2554;
-    marktest.MapTime = 3210;
-    marktest.MapStatus = CAR_IN_LINE;
-    latMarks->SetMarkDataReg(marktest, 2);
-    marktest.MapEncMedia = 4999;
-    marktest.MapTime = 7470;
-    marktest.MapStatus = CAR_IN_CURVE;
-    latMarks->SetMarkDataReg(marktest, 3);
-#endif
+    latMarks->marks->loadData();
 
-    status->robotMap->setData(false);
+    if (latMarks->marks->getSize() <= 0)
+    {
+        status->robotIsMapping->setData(true);
+    }
+    else
+    {
+        status->robotIsMapping->setData(false);
+        mediaEncFinal = latMarks->marks->getData(latMarks->marks->getSize() - 1).MapEncMedia;
+    }
+
     status->robotState->setData(CAR_STOPPED);
-    latMarks->mapFinished->setData(false);
 
-    mapChanged = true;
-    lastmapstate = status->robotMap->getData();
+    stateChanged = true;
+    lastState = status->robotState->getData();
+
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.pin_bit_mask = GPIO_NUM_0;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    gpio_config(&io_conf);
+
+    gpio_install_isr_service(0);
+
+    gpio_isr_handler_add(GPIO_NUM_0, gpio_isr_handler, (void *)GPIO_NUM_0);
 }
 
 void CarStatusService::Run()
 {
     // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a conGetName().c_str()em de pulsos da CPU
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    int32_t PlusPulses = 0; // Pulsos a mais para a parada
+
     int iloop = 0;
+
+    uint32_t io_num;
+    do
+    {
+        xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
+    } while (io_num != GPIO_NUM_0);
+
+    vTaskDelay(2500 / portTICK_PERIOD_MS);
+
+    if (status->robotIsMapping->getData())
+    {
+        // Começa mapeamento
+        mappingService->startNewMapping();
+    }
+
+    status->robotState->setData(CAR_IN_LINE);
+
     // Loop
     for (;;)
     {
-        CarState parar = (CarState) status->robotState->getData(); // Verifica se o carro deve se manter parado
-        bool bottom = gpio_get_level(GPIO_NUM_0);
+        if (lastMappingState != status->robotIsMapping->getData())
+        {
+            lastMappingState = status->robotIsMapping->getData();
 
-        if (!bottom)
-        {
-            vTaskDelay(2500 / portTICK_PERIOD_MS);
-            bottom = gpio_get_level(GPIO_NUM_0);
-            if (bottom && !status->robotMap->getData())
-            { // Começa mapeamento
-                status->robotState->setData(CAR_IN_LINE);
-                status->robotMap->setData(true);
-                latMarks->mapFinished->setData(false);
-                latMarks->rightMarks->setData(0);
-                latMarks->leftMarks->setData(0);
-            }
-            else if (!bottom)
-            { // Começa a usar dados do encoder para completar a pista
-                status->robotState->setData(CAR_IN_LINE);
-                status->robotMap->setData(false);
-                latMarks->mapFinished->setData(true);
-                latMarks->rightMarks->setData(0);
-                latMarks->leftMarks->setData(0);
-            }
+            speed->setToMapping();
         }
-        if (lastmapstate != status->robotMap->getData())
+        else if (lastState != status->robotState->getData())
         {
-            lastmapstate = status->robotMap->getData();
-            mapChanged = true;
+            lastState = status->robotState->getData();
+
+            if (lastState == CAR_IN_LINE)
+                speed->setToLine();
+            else
+                speed->setToCurve();
         }
 
-        int32_t FinalMark = latMarks->finalMark->getData(); // Media dos encoders da marcação final
-        Marks = latMarks->totalLeftMarks->getData() + 1;
-        int32_t mediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
+        mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-        if (iloop >= 20 && !status->robotMap->getData())
+        if (iloop >= 20 && !status->robotIsMapping->getData())
         {
             ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
-            ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEnc);
-            ESP_LOGD(GetName().c_str(), "FinalMark: %d", FinalMark);
+            ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEncActual);
+            ESP_LOGD(GetName().c_str(), "mediaEncFinal: %d", mediaEncFinal);
             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->setpoint->getData());
             iloop = 0;
         }
         iloop++;
 #endif
 
-        if (mediaEnc >= FinalMark + PlusPulses && !status->robotMap->getData() && parar != CAR_STOPPED)
+        if (mediaEncActual >= mediaEncFinal && !status->robotIsMapping->getData() && actualCarState != CAR_STOPPED)
         {
             vTaskDelay(500 / portTICK_PERIOD_MS);
 
@@ -105,19 +116,25 @@ void CarStatusService::Run()
 
             robot->getStatus()->robotState->setData(CAR_STOPPED);
         }
-        if (!status->robotMap->getData() && mediaEnc < FinalMark + PlusPulses && parar != CAR_STOPPED)
-        { // define o status do carrinho se o mapeamento não estiver ocorrendo
+
+        if (!status->robotIsMapping->getData() && mediaEncActual < mediaEncFinal && actualCarState != CAR_STOPPED)
+        {
+            // define o status do carrinho se o mapeamento não estiver ocorrendo
             int mark = 0;
+
             for (mark = 0; mark < Marks; mark++)
-            { // Verifica a conGetName().c_str()em do encoder e atribui o estado ao robô
+            {
+                // Verifica a conGetName().c_str()em do encoder e atribui o estado ao robô
                 if (mark < Marks - 1)
                 {
-                    int32_t Manualmedia = (latMarks->getMarkDataReg(mark)).MapEncMedia;        // Média dos encoders na chave mark
-                    int32_t ManualmediaNxt = (latMarks->getMarkDataReg(mark + 1)).MapEncMedia; // Média dos encoders na chave mark + 1
-                    if (mediaEnc >= Manualmedia && mediaEnc <= ManualmediaNxt)
-                    {                                                                   // análise do valor das médias dos encoders
-                        int32_t mapstatus = (latMarks->getMarkDataReg(mark)).MapStatus; // status do robô
+                    int32_t Manualmedia = latMarks->marks->getData(mark).MapEncMedia;        // Média dos encoders na chave mark
+                    int32_t ManualmediaNxt = latMarks->marks->getData(mark + 1).MapEncMedia; // Média dos encoders na chave mark + 1
+
+                    if (mediaEncActual >= Manualmedia && mediaEncActual <= ManualmediaNxt)
+                    {                                                                 // análise do valor das médias dos encoders
+                        int32_t mapstatus = latMarks->marks->getData(mark).MapStatus; // status do robô
                         CarState estado;
+
                         if (mapstatus == CAR_IN_LINE)
                         {
                             estado = CAR_IN_LINE;
@@ -126,13 +143,14 @@ void CarStatusService::Run()
                         {
                             estado = CAR_IN_CURVE;
                         }
+
                         status->robotState->setData(estado);
                         break;
                     }
                 }
                 else
                 {
-                    int32_t mapstatus = (latMarks->getMarkDataReg(mark)).MapStatus; // status do robô
+                    int32_t mapstatus = latMarks->marks->getData(mark).MapStatus; // status do robô
                     CarState estado;
                     if (mapstatus == CAR_IN_LINE)
                     {
@@ -147,16 +165,7 @@ void CarStatusService::Run()
                 }
             }
         }
-        if (mapChanged)
-        {
-            // mapChanged = false;
-            // robot->Setparams(); // Atualiza os parâmetros do robô
 
-            // robot->getPIDRot()->Kp(CAR_IN_LINE)->setData(0.27);
-            // robot->getPIDVel()->Kp(CAR_IN_LINE)->setData(0.05);
-            // robot->getPIDRot()->Kp(CAR_IN_CURVE)->setData(0.27);
-            // robot->getPIDVel()->Kp(CAR_IN_CURVE)->setData(0.05);
-        }
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
     }

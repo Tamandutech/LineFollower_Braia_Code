@@ -68,14 +68,14 @@ void app_main(void)
   register_system();
   register_cmd_param();
 
-  braia = new Robot("Braia");
+  braia = Robot::getInstance("Braia");
 
+  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
   carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
-  mappingService = new MappingService("MappingService", braia, 10000, 9);
+  mappingService = MappingService::getInstance("MappingService", 10000, 9);
   motorsService = new MotorsService("MotorsService", braia, 10000, 9);
   speedService = new SpeedService("SpeedService", braia, 10000, 9);
   pidService = new PIDService("PIDService", braia, 10000, 9);
-  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
   espNowHandler = ESPNOWHandler::getInstance();
 
   ledsService = new LEDsService("LEDsService", braia, 10000, 9);
@@ -88,7 +88,6 @@ void app_main(void)
   carStatusService->Start();
   mappingService->Start();
   espNowHandler->Start();
-  // espnowService->Start();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)

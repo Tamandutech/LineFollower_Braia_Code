@@ -238,4 +238,17 @@ void DataMap::loadData()
 
     ESP_LOGD(this->name.c_str(), "Dados de mapeamento carregados do storage.");
 }
+
+uint8_t DataMap::getSize()
+{
+    return this->mapDataList.size();
+}
+
+void DataMap::clearAllData()
+{
+    mapDataListMutex.lock();
+    this->mapDataList.clear();
+    mapDataListMutex.unlock();
+}
+
 #endif

@@ -124,6 +124,7 @@ void SensorsService::processSLat(Robot *robot)
     if (slesq1 < 300 || !sldir2)              // leitura de faixas brancas sensores laterais
 #endif
     {
+        
 #if defined(BRAIA_V2)
         if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
 #elif defined(BRAIA_V3)
@@ -162,7 +163,7 @@ void SensorsService::processSLat(Robot *robot)
     }
 
     // TODO: Mover para CarStatus
-    if (latMarks->rightMarks->getData() >= 2 && status->robotMap->getData() && status->robotState->getData() != CAR_STOPPED)
+    if (latMarks->rightMarks->getData() >= 2 && status->robotIsMapping->getData() && status->robotState->getData() != CAR_STOPPED)
     { // parar depois da leitura da segunda linha direita
         vTaskDelay(500 / portTICK_PERIOD_MS);
         // TODO: corrigir parada da TaskPID

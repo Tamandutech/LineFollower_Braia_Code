@@ -24,12 +24,21 @@ class RobotStatus
 public:
     RobotStatus(CarState initialState, std::string name);
 
+    /**
+     * @brief Armazena o estado geral do robô.
+     * @returns Valor do tipo RobotState.
+     */
     DataAbstract<uint8_t> *robotState;
-    DataAbstract<bool> *robotMap;
+
+    /**
+     * @brief Atributo que indica se o robô está mapeando a pista
+     * @retval TRUE Se o robô está mapeando a pista
+     * @retval FALSE Se o robô não está mapeando a pista
+     */
+    DataAbstract<bool> *robotIsMapping;
 
 private:
     std::string name;
-    const char *tag = "RobotStatus";
 };
 
 #endif

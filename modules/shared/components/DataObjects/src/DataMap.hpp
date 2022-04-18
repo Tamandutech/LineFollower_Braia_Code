@@ -59,8 +59,12 @@ public:
     /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
     std::string getDataString(std::string ctrl);
 
+    std::uint8_t getSize();
+
     void saveData();
     void loadData();
+
+    void clearAllData();
 
 protected:
 private:

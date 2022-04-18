@@ -26,35 +26,36 @@ class dataSLatMarks
 public:
     dataSLatMarks(std::string name = "dataSensor");
 
+    // Estado do sensor da lateral esquerda
     DataAbstract<bool> *latEsqPass;
+    // Estado do sensor da lateral direita
     DataAbstract<bool> *latDirPass;
 
+    // Quantidade atual de marcas da lateral esquerda
     DataAbstract<uint16_t> *leftMarks;
+    // Quantidade atual de marcas da lateral direita
     DataAbstract<uint16_t> *rightMarks;
 
-    DataAbstract<uint16_t> *totalLeftMarks;
-    DataAbstract<int32_t> *finalMark;
-    DataAbstract<bool> *mapFinished;
+    // Média da contagem dos encoders para última marcação da pista
+    DataAbstract<int32_t> *finalEncPulses;
 
-    struct MapData getMarkDataReg(int regnum); // Dados das marcações laterais da pista
-    int SetMarkDataReg(struct MapData markreg, int regnum);
+    // Estrutura de dados que armazena os dados de mapeamento
+    DataMap *marks;
 
+    // Parâmetros
+
+    // Limite de variação em milimetros de distância percorrida entre as rodas para considerar que o carro fez uma curva
+    DataAbstract<uint8_t> *thresholdToCurve;
+
+    // Incrementa a contagem de marcas da lateral esquerda
     void leftPassedInc();
+    // Incrementa a contagem de marcas da lateral direita
     void rightPassedInc();
-
-    // int setData(struct SLatMarks SLatData);
-    // struct SLatMarks getData();
 
 private:
     std::string name;
-    const char *tag = "dataSLatMarks";
-    
+
     DataManager *dataManager;
-
-    SemaphoreHandle_t xSemaphoreMarksData;
-
-    DataMap *marks;
-    // struct MapData MarksData[70]; // salvar
 };
 
 #endif

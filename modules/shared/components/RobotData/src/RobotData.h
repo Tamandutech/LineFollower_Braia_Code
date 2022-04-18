@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <string>
 #include <queue>
+#include <atomic>
+#include <mutex>
 
 #include "dataSLatMarks.h"
 #include "dataSpeed.h"
@@ -21,7 +23,23 @@
 class Robot
 {
 public:
-    Robot(std::string name = "NONAME");
+    static Robot *getInstance(std::string name = "RobotData")
+    {
+        Robot *sin = instance.load(std::memory_order_acquire);
+        if (!sin)
+        {
+            std::lock_guard<std::mutex> myLock(instanceMutex);
+            sin = instance.load(std::memory_order_relaxed);
+            if (!sin)
+            {
+                sin = new Robot(name);
+                instance.store(sin, std::memory_order_release);
+            }
+        }
+
+        return sin;
+    };
+
     dataSpeed *getSpeed();
     dataSensor *getsLat();
     dataSensor *getsArray();
@@ -32,7 +50,9 @@ public:
 
 private:
     std::string name;
-    const char *tag = "RobotData";
+
+    static std::atomic<Robot *> instance;
+    static std::mutex instanceMutex;
 
     int Updateparams(struct CarParameters params);
 
@@ -47,6 +67,8 @@ private:
 
     DataStorage *storage;
     DataManager *dataManager;
+
+    Robot(std::string name);
 };
 
 #endif
