@@ -18,7 +18,7 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
 
     mappingService = MappingService::getInstance();
 
-    latMarks->marks->loadData();
+    // latMarks->marks->loadData();
 
     if (latMarks->marks->getSize() <= 0)
     {
@@ -28,8 +28,7 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     {
         status->robotIsMapping->setData(false);
         numMarks = latMarks->marks->getSize();
-        mediaEncFinal = latMarks->marks->getData(numMarks- 1).MapEncMedia;
-        
+        mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
     }
 
     status->robotState->setData(CAR_STOPPED);
@@ -40,10 +39,10 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
     gpio_config_t io_conf = {};
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
-    io_conf.pin_bit_mask = GPIO_NUM_0;
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.pin_bit_mask = (1ULL << GPIO_NUM_0);
     io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     gpio_config(&io_conf);
 
@@ -59,16 +58,23 @@ void CarStatusService::Run()
 
     int iloop = 0;
 
+    ESP_LOGD(GetName().c_str(), "Aguardando pressionamento do botão.");
+
     uint32_t io_num;
     do
     {
         xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
+
+        ESP_LOGD(GetName().c_str(), "Botão %d pressionado.", io_num);
     } while (io_num != GPIO_NUM_0);
 
+    ESP_LOGD(GetName().c_str(), "Iniciando delay de 2500ms");
     vTaskDelay(2500 / portTICK_PERIOD_MS);
 
     if (status->robotIsMapping->getData())
     {
+        ESP_LOGD(GetName().c_str(), "Mapeamento inexistente, iniciando robô em modo mapemaneto.");
+
         // Começa mapeamento
         mappingService->startNewMapping();
     }
@@ -78,20 +84,28 @@ void CarStatusService::Run()
     // Loop
     for (;;)
     {
-        if (lastMappingState != status->robotIsMapping->getData())
+        if (lastMappingState != status->robotIsMapping->getData() && status->robotIsMapping->getData())
         {
             lastMappingState = status->robotIsMapping->getData();
 
+            ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo mapeamento.");
             speed->setToMapping();
         }
-        else if (lastState != status->robotState->getData())
+
+        else if (lastState != status->robotState->getData() && !lastMappingState && status->robotState->getData() != CAR_STOPPED)
         {
             lastState = status->robotState->getData();
 
             if (lastState == CAR_IN_LINE)
+            {
+                ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inLine.");
                 speed->setToLine();
+            }
             else
+            {
+                ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inCurve.");
                 speed->setToCurve();
+            }
         }
 
         mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
@@ -108,8 +122,6 @@ void CarStatusService::Run()
         iloop++;
 #endif
 
-
-
         if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED)
         {
             if (mediaEncActual >= mediaEncFinal)
@@ -123,8 +135,9 @@ void CarStatusService::Run()
 
                 robot->getStatus()->robotState->setData(CAR_STOPPED);
             }
-            if(mediaEncActual < mediaEncFinal){
-            // define o status do carrinho se o mapeamento não estiver ocorrendo
+            if (mediaEncActual < mediaEncFinal)
+            {
+                // define o status do carrinho se o mapeamento não estiver ocorrendo
                 int mark = 0;
                 for (mark = 0; mark < numMarks - 1; mark++)
                 {
@@ -134,11 +147,10 @@ void CarStatusService::Run()
                     int32_t ManualmediaNxt = latMarks->marks->getData(mark + 1).MapEncMedia; // Média dos encoders na chave mark + 1
 
                     if (mediaEncActual >= Manualmedia && mediaEncActual <= ManualmediaNxt)
-                    {                                                                 // análise do valor das médias dos encoders
+                    {                                                                                    // análise do valor das médias dos encoders
                         status->robotState->setData((CarState)latMarks->marks->getData(mark).MapStatus); // Atualiza estado do robô
                         break;
                     }
-                    
                 }
             }
         }

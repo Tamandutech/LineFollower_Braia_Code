@@ -82,9 +82,9 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     robot->getsArray()->setChannels(sArraychannelsVec);
     robot->getsLat()->setChannels(SLatchannelsVec);
 
-    ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
-    ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
-    ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
+    // ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+    // ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
+    // ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
 
     // robot->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
@@ -115,16 +115,25 @@ void SensorsService::processSLat(Robot *robot)
     ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
     if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
 #elif defined(BRAIA_V3)
-    ESP_LOGD("processSLat", "Laterais (Direita): %d", sldir);
-    ESP_LOGD("processSLat", "Laterais (esquerda): %d", slesq);
-    if (slesq < 300 || sldir > 600)              // leitura de faixas brancas sensores laterais
+#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
+    if (iloop >= 100)
+    {
+        ESP_LOGD("processSLat", "Laterais (Direita): %d", sldir);
+        ESP_LOGD("processSLat", "Laterais (esquerda): %d", slesq);
+
+        iloop = 0;
+    }
+    iloop++;
+#endif
+
+    if (slesq < 300 || sldir < 300)              // leitura de faixas brancas sensores laterais
 #else
     ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
     ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
     if (slesq1 < 300 || !sldir2)              // leitura de faixas brancas sensores laterais
 #endif
     {
-        
+
 #if defined(BRAIA_V2)
         if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
 #elif defined(BRAIA_V3)
@@ -160,14 +169,5 @@ void SensorsService::processSLat(Robot *robot)
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
-    }
-
-    // TODO: Mover para CarStatus
-    if (latMarks->rightMarks->getData() >= 2 && status->robotIsMapping->getData() && status->robotState->getData() != CAR_STOPPED)
-    { // parar depois da leitura da segunda linha direita
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        // TODO: corrigir parada da TaskPID
-        // vTaskSuspend(xTaskPID);
-        status->robotState->setData(CAR_STOPPED);
     }
 }

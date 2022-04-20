@@ -117,15 +117,17 @@ std::string DataManager::listRegistredParamData()
 {
     uint8_t qtd = getRegistredParamDataCount();
 
-    std::stringstream ss;
+    std::string list = "";
 
-    ss << "Dados parametrizados registrados: " << qtd << std::endl;
+    list = "Dados parametrizados registrados: " + std::to_string(qtd) + '\n';
+
     ESP_LOGD(name.c_str(), "Listando dados parametrizados registrados: %d", qtd);
+
     for (uint8_t i = 0; i < qtd; i++)
     {
-        ss << "  " << i << " - " << dataParamList[i]->getName() << ": " << dataParamList[i]->getDataString().c_str() << std::endl;
+        list += " " + std::to_string(i) + " - " + dataParamList[i]->getName() + ": " + dataParamList[i]->getDataString() + '\n';
         ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s: %s", i, dataParamList[i], dataParamList[i]->getName().c_str(), dataParamList[i]->getDataString().c_str());
     }
 
-    return ss.str();
+    return list;
 }

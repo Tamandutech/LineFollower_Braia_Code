@@ -122,7 +122,7 @@ esp_err_t DataStorage::load_data(std::string fileName, char *data, size_t *size)
     if (!is_mounted())
         return ESP_FAIL;
 
-    FILE *f = fopen((basePath + "/" + fileName).c_str(), "r");
+    FILE *f = fopen((basePath + "/" + fileName).c_str(), "rb");
 
     if (f == NULL)
     {

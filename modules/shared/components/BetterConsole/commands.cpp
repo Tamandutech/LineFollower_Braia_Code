@@ -270,7 +270,7 @@ esp_err_t better_console_run(const char *cmdline, std::string *cmd_ret)
         free(argv);
         return ESP_ERR_NOT_FOUND;
     }
-    *cmd_ret = (*cmd->func)(argc, argv);
+    (*cmd_ret) = (*cmd->func)(argc, argv);
     free(argv);
     return ESP_OK;
 }

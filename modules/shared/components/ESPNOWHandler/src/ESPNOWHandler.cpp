@@ -41,7 +41,7 @@ void ESPNOWHandler::Run()
                 {
                 case PACKET_TYPE_CMD:
                     std::string ret;
-                    const char *line = (const char *)malloc(packet->size);
+                    char *line = (char *)malloc(packet->size);
 
                     memcpy((void *)line, (void *)packet->data, packet->size);
 

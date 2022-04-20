@@ -179,13 +179,15 @@ void DataMap::saveData()
         return;
     }
 
-    // Armazena a quantidade de itens
-    dataStorage->save_data(this->name, (char *)&listSize, sizeof(listSize));
+    // // Armazena a quantidade de itens
+    // dataStorage->save_data(this->name, (char *)&listSize, sizeof(listSize));
+
+    dataStorage->delete_data(this->name);
 
     // Armazena os dados fazendo append de cada struct
     for (auto &mapData : this->mapDataList)
     {
-        dataStorage->save_data(this->name, (char *)&mapData, sizeof(mapData), "a+");
+        dataStorage->save_data(this->name, (char *)&mapData, sizeof(mapData), "ab");
         ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus);
     }
 
@@ -221,20 +223,44 @@ void DataMap::loadData()
     ESP_LOGD(this->name.c_str(), "Carregando dados de Mapeamento, tamanho do buffer: %d bytes", size);
 
     // Carrega a quantidade de itens
-    memcpy(&listSize, data, sizeof(listSize));
+    // memcpy(&listSize, data, sizeof(listSize));
 
-    ESP_LOGD(this->name.c_str(), "Quantidade de linhas: %d", listSize);
+    // ESP_LOGD(this->name.c_str(), "Quantidade de linhas: %d", listSize);
 
-    for (int i = 0; i < listSize; i++)
+    // if (listSize < 100)
+    // {
+    
+    // percorre todo o arquivo
+    for (size_t i = 0; i < size; i += sizeof(MapData))
     {
-        MapData mapData;
-        memcpy(&mapData, data + sizeof(listSize) + (i * sizeof(mapData)), sizeof(mapData));
-        ESP_LOGD(this->name.c_str(), "Carregando dados do tipo DataMap: %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus);
+        MapData tempMapData;
+        memcpy(&tempMapData, data + i, sizeof(MapData));
+
+        ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus);
 
         mapDataListMutex.lock();
-        this->mapDataList.push_back(mapData);
+        this->mapDataList.push_back(tempMapData);
         mapDataListMutex.unlock();
     }
+
+    // for (int i = 0; i < listSize; i++)
+    // {
+    //     MapData mapData;
+    //     memcpy(&mapData, data + sizeof(listSize) + (i * sizeof(mapData)), sizeof(mapData));
+    //     ESP_LOGD(this->name.c_str(), "Carregando dados do tipo DataMap: %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus);
+
+    //     mapDataListMutex.lock();
+    //     this->mapDataList.push_back(mapData);
+    //     mapDataListMutex.unlock();
+    // }
+    // }
+    // else
+    // {
+    //     ESP_LOGE(this->name.c_str(), "Quantidade de linhas acima do esperado: %d", listSize);
+    //     return;
+    // }
+
+    free(data);
 
     ESP_LOGD(this->name.c_str(), "Dados de mapeamento carregados do storage.");
 }

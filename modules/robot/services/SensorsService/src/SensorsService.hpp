@@ -6,7 +6,7 @@
 
 #include "QTRSensors.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 using namespace cpp_freertos;
@@ -29,6 +29,8 @@ private:
   dataSLatMarks *latMarks;
   dataSensor *SLat;
   RobotStatus *status;
+
+  int iloop = 0;
 
   void calibAllsensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot);
 

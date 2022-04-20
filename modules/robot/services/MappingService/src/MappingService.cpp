@@ -19,12 +19,13 @@ MappingService::MappingService(std::string name, uint32_t stackDepth, UBaseType_
     status = robot->getStatus();
 };
 
-esp_err_t MappingService::startNewMapping(uint8_t leftMarksToStop, uint8_t rightMarksToStop, int32_t mediaPulsesToStop, uint32_t timeToStop)
+esp_err_t MappingService::startNewMapping(uint8_t leftMarksToStop, int32_t mediaPulsesToStop, uint32_t timeToStop)
 {
+    ESP_LOGD(GetName().c_str(), "Iniciando novo mapeamento.");
+
     status->robotIsMapping->setData(true);
 
     this->leftMarksToStop = leftMarksToStop;
-    this->rightMarksToStop = rightMarksToStop;
     this->mediaPulsesToStop = mediaPulsesToStop;
     this->ticksToStop = timeToStop / portTICK_PERIOD_MS;
 
@@ -48,15 +49,22 @@ esp_err_t MappingService::startNewMapping(uint8_t leftMarksToStop, uint8_t right
 
 esp_err_t MappingService::stopNewMapping()
 {
+    ESP_LOGD(GetName().c_str(), "Parando novo mapeamento.");
+
     status->robotIsMapping->setData(false);
+    status->robotState->setData(CAR_STOPPED);
 
     this->Cleanup();
+
+    this->saveMapping();
 
     return ESP_OK;
 }
 
 esp_err_t MappingService::loadMapping()
 {
+    ESP_LOGD(GetName().c_str(), "Carregando mapeamento da memória.");
+
     latMarks->marks->loadData();
 
     return ESP_OK;
@@ -64,6 +72,8 @@ esp_err_t MappingService::loadMapping()
 
 esp_err_t MappingService::saveMapping()
 {
+    ESP_LOGD(GetName().c_str(), "Salvando mapeamento na memória.");
+
     latMarks->marks->saveData();
 
     return ESP_OK;
@@ -71,13 +81,14 @@ esp_err_t MappingService::saveMapping()
 
 esp_err_t MappingService::createNewMark()
 {
-    if (status->robotIsMapping->getData())
+    if (status->robotIsMapping->getData() && status->robotState->getData() != CAR_STOPPED)
     {
+        ESP_LOGD(GetName().c_str(), "Criando nova marcação.");
+
         this->Resume();
         return ESP_OK;
     }
     return ESP_OK;
-
 }
 
 void MappingService::Run()
@@ -90,6 +101,8 @@ void MappingService::Run()
     initialTicks = xTaskGetTickCount();
 
     latMarks->marks->newData(tempActualMark);
+
+    ESP_LOGD(GetName().c_str(), "Offset iniciais: initialLeftPulses: %d, initialRightPulses: %d, initialMediaPulses: %d, initialTicks: %d", initialLeftPulses, initialRightPulses, initialMediaPulses, initialTicks);
 
     for (;;)
     {
@@ -111,8 +124,12 @@ void MappingService::Run()
 
         latMarks->marks->newData(tempActualMark);
 
-        if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (rightMarksToStop <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
+        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d, MapStatus: %d", tempActualMark.MapEncLeft, tempActualMark.MapEncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime, tempActualMark.MapStatus);
+
+        if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (2 <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
         {
+            ESP_LOGD(GetName().c_str(), "Mapeamento finalizado.");
+
             this->stopNewMapping();
             break;
         }

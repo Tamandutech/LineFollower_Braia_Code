@@ -79,8 +79,10 @@ template <class T>
 void DataAbstract<T>::loadData()
 {
     T temp = T();
-    dataStorage->load_data(this->name, (char *)&temp, sizeof(T));
-    ESP_LOGD(this->name.c_str(), "Carregando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(temp)).c_str());
-    this->data->store(temp);
+    if (ESP_OK == dataStorage->load_data(this->name, (char *)&temp, sizeof(T)))
+    {
+        ESP_LOGD(this->name.c_str(), "Carregando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(temp)).c_str());
+        this->data->store(temp);
+    }
 }
 #endif

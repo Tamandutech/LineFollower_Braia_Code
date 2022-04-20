@@ -99,8 +99,7 @@ void register_param_get(void)
 static std::string param_list(int argc, char **argv)
 {
     DataManager::getInstance()->listRegistredParamData();
-
-    return 0;
+    return "Comando Executado";
 }
 
 void register_param_list(void)
