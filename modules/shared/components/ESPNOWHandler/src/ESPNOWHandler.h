@@ -30,7 +30,7 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 class ESPNOWHandler : public Thread
@@ -58,8 +58,8 @@ public:
     uint8_t SendCMD(uint8_t *data, uint16_t size);
     void SendAwnser(uint8_t id, uint8_t *data, uint16_t size);
 
-    bool dataAvailable();                                         // verifica se existe novo dado para ler
-    struct PacketData getPacketReceived(uint8_t uniqueIdCounter); // obtém o próximo pacote da fila com os pacotes de dados recebidos
+    bool dataAvailable();                                                      // verifica se existe novo dado para ler
+    struct PacketData getPacketReceived(uint8_t uniqueIdCounter, uint8_t num); // obtém o próximo pacote da fila com os pacotes de dados recebidos
 
 private:
     std::string name;
@@ -92,7 +92,10 @@ private:
     esp_now_peer_info_t peerProtocol; // Variável para ler dados do peeer nos métodos da classe
     SemaphoreHandle_t xSemaphorePeerProtocol;
 
-    static std::list<PacketData> PacketsReceived;
+    PacketData packetReceived;
+    static QueueHandle_t queuePacketsReceived;
+
+    static std::list<PacketData> packetsReceived;
     static SemaphoreHandle_t xSemaphorePacketsReceived;
 };
 

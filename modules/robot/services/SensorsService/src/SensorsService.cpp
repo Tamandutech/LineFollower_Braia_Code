@@ -55,10 +55,10 @@ void SensorsService::Run()
     // Loop
     for (;;)
     {
+        vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
+
         getSensors(&sArray, &sLat, robot); // leitura dos sensores
         processSLat(robot);
-
-        vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
     }
 }
 
@@ -82,7 +82,13 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     robot->getsArray()->setChannels(sArraychannelsVec);
     robot->getsLat()->setChannels(SLatchannelsVec);
 
-    // ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+    if (iloop >= 100)
+    {
+        ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+        ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
+        iloop = 0;
+    }
+    iloop++;
     // ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
     // ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
 
@@ -116,14 +122,14 @@ void SensorsService::processSLat(Robot *robot)
     if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
 #elif defined(BRAIA_V3)
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-    if (iloop >= 100)
-    {
-        ESP_LOGD("processSLat", "Laterais (Direita): %d", sldir);
-        ESP_LOGD("processSLat", "Laterais (esquerda): %d", slesq);
+    // if (iloop >= 100)
+    // {
+    //     ESP_LOGD("processSLat", "Laterais (Direita): %d", sldir);
+    //     ESP_LOGD("processSLat", "Laterais (esquerda): %d", slesq);
 
-        iloop = 0;
-    }
-    iloop++;
+    //     iloop = 0;
+    // }
+    // iloop++;
 #endif
 
     if (slesq < 300 || sldir < 300)              // leitura de faixas brancas sensores laterais

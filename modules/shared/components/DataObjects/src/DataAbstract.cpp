@@ -42,35 +42,35 @@ template <class T>
 T DataAbstract<T>::getData()
 {
     // retorna o valor do dado
-    return this->data->load();
+    return this->data->load(std::memory_order_acquire);
 }
 
 template <class T>
 std::string DataAbstract<T>::getDataString(std::string ctrl)
 {
     // retorna o valor do dado
-    return std::to_string(this->data->load());
+    return std::to_string(this->data->load(std::memory_order_acquire));
 }
 
 template <class T>
 void DataAbstract<T>::setData(T data)
 {
     // seta o valor do dado
-    this->data->store(data);
+    this->data->store(data, std::memory_order_release);    
 }
 
 template <class T>
 void DataAbstract<T>::setData(std::string data)
 {
     float num = std::stof(data);
-    this->data->store(num);
-    ESP_LOGD(this->name.c_str(), "Confirmando dado salvo: %s", std::to_string(this->data->load()).c_str());
+    this->data->store(num, std::memory_order_release);
+    ESP_LOGD(this->name.c_str(), "Confirmando dado salvo: %s", std::to_string(this->data->load(std::memory_order_acquire)).c_str());
 }
 
 template <class T>
 void DataAbstract<T>::saveData()
 {
-    T temp = this->data->load();
+    T temp = this->data->load(std::memory_order_acquire);
     dataStorage->save_data(this->name, (char *)&temp, sizeof(T));
     ESP_LOGD(this->name.c_str(), "Salvando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(temp)).c_str());
 }
@@ -82,7 +82,7 @@ void DataAbstract<T>::loadData()
     if (ESP_OK == dataStorage->load_data(this->name, (char *)&temp, sizeof(T)))
     {
         ESP_LOGD(this->name.c_str(), "Carregando dado do tipo %s, valor: %s", demangle(typeid(*this).name()).c_str(), std::string(std::to_string(temp)).c_str());
-        this->data->store(temp);
+        this->data->store(temp, std::memory_order_release);
     }
 }
 #endif

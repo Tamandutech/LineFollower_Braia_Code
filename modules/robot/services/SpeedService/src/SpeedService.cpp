@@ -25,6 +25,8 @@ void SpeedService::Run()
     // Loop
     for (;;)
     {
+        vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
+
         CarState estado = (CarState)robot->getStatus()->robotState->getData();
 
         if (estado == CAR_STOPPED && robot->getSLatMarks()->rightMarks == 0)
@@ -58,22 +60,17 @@ void SpeedService::Run()
         speed->EncRight->setData(lastPulseRight); // Salva pulsos do encoder direito na classe speed
 
         // Calculo de velocidade media do carro (RPM)
-        speed->RPMCar_media->setData(                                                                                            // -> Calculo velocidade media do carro
+        speed->RPMCar_media->setData(                                                                              // -> Calculo velocidade media do carro
             (((lastPulseRight / (float)speed->MPR->getData() + lastPulseLeft / (float)speed->MPR->getData())) / 2) // Revolucoes media desde inicializacao
-            / ((float)deltaTimeMS_media / (float)60000)                                                                          // Divisao do delta tempo em minutos para calculo de RPM
+            / ((float)deltaTimeMS_media / (float)60000)                                                            // Divisao do delta tempo em minutos para calculo de RPM
         );
 
-        if (iloop >= 200)
+        if (iloop >= 100)
         {
-            ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motDir.getCount());
-            ESP_LOGD(GetName().c_str(), "Direito: %d", enc_motEsq.getCount());
             ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
-            ESP_LOGD(GetName().c_str(), "VelEncDir: %d | VelEncEsq: %d", speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
+            ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
             iloop = 0;
         }
         iloop++;
-
-        xLastWakeTime = xTaskGetTickCount();
-        vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
     }
 }

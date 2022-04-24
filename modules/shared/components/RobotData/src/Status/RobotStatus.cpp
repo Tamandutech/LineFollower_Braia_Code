@@ -1,5 +1,7 @@
 #include "RobotStatus.h"
 
+std::mutex RobotStatus::stateMutex;
+
 RobotStatus::RobotStatus(CarState initialState, std::string name)
 {
     // Definindo nome do objeto, para uso nas logs do componente.

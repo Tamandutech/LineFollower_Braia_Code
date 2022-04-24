@@ -6,12 +6,13 @@
 
 #include "QTRSensors.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
+
+//#define LINE_COLOR_BLACK
 
 using namespace cpp_freertos;
 
-//#define LINE_COLOR_BLACK
 class SensorsService : public Thread
 {
 public:

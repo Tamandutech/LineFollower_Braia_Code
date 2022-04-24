@@ -58,7 +58,7 @@
 #include "freertos/semphr.h"
 #include "condition_variable.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 namespace cpp_freertos

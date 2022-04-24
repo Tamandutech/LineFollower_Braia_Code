@@ -8,7 +8,7 @@
 #include "DataManager.hpp"
 #include "dataEnums.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 #include "better_console.hpp"
@@ -46,21 +46,31 @@ static std::string rmt(int argc, char **argv)
         PacketData packet;
         packet.size = 0;
 
-        for (uint8_t i = 0; i < 50; i++)
+        for (size_t numActual = 1, numToReceive = 1; numActual <= numToReceive; numActual++)
         {
-            packet = ESPNOWHandler::getInstance()->getPacketReceived(uniqueId);
-
-            if (packet.size > 0)
+            for (uint8_t i = 0; i < 50; i++)
             {
-                ESP_LOGD(name, "Recebido: %s", (const char *)packet.data);
-                return "OK";
-            }
+                packet = ESPNOWHandler::getInstance()->getPacketReceived(uniqueId, numActual);
 
-            ESP_LOGD(name, "Aguardando resposta do robô...");
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+                if (packet.size > 0 and packet.numActual > 0)
+                {
+                    numToReceive = packet.numToReceive;
+
+                    ESP_LOGD(name, "Recebido pacote ID: %d | %d de %d.", packet.id, packet.numActual, packet.numToReceive);
+
+                    packet.data[packet.size] = '\0';
+
+                    printf("%s", packet.data);
+
+                    break;
+                }
+
+                ESP_LOGD(name, "Aguardando resposta %d do robô...", numActual);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
         }
 
-        ESP_LOGE(name, "Não recebido nenhum pacote de retorno.");
+        printf("\n");
     }
 
     return "NOK: Sem resposta.";

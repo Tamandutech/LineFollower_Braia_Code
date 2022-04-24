@@ -24,6 +24,7 @@ private:
     RobotStatus *status;
 
     ESP32MotorControl motors;
+    CarState state;
 };
 
 #endif

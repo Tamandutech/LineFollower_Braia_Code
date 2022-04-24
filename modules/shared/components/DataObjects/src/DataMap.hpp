@@ -22,7 +22,7 @@
 #include "DataStorage.hpp"
 #include "DataManager.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 struct MapData

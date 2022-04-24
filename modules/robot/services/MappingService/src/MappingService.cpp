@@ -51,13 +51,15 @@ esp_err_t MappingService::stopNewMapping()
 {
     ESP_LOGD(GetName().c_str(), "Parando novo mapeamento.");
 
-    status->robotIsMapping->setData(false);
+    status->stateMutex.lock();
     status->robotState->setData(CAR_STOPPED);
+    status->robotIsMapping->setData(false);
+    status->stateMutex.unlock();
 
     this->Cleanup();
 
     this->saveMapping();
-
+    ESP_LOGD(GetName().c_str(), "Parada do novo mapeamento finalizada");
     return ESP_OK;
 }
 
@@ -108,6 +110,7 @@ void MappingService::Run()
     {
         tempPreviousMark = tempActualMark;
 
+        vTaskDelay(0);
         this->Suspend();
 
         tempActualMark.MapEncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;

@@ -15,24 +15,23 @@ void MotorsService::Run()
 {
   // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  //((xTaskGetTickCount() - xInicialTicks) * portTICK_PERIOD_MS) < 18000
-  //TickType_t xInicialTicks = xTaskGetTickCount();
-  // Loop
+
   for (;;)
   {
-    if (status->robotState->getData() != CAR_STOPPED) // verificar se o carrinho deveria se mover
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
+
+    state = (CarState)status->robotState->getData();
+    ESP_LOGD("MotorsService", "State: %d", state);
+    if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
-      motors.motorForward(0);                                         // motor 0 ligado para frente
-      motors.motorForward(1);                                         // motor 1 ligado para frente
+      motors.motorForward(0);                        // motor 0 ligado para frente
+      motors.motorForward(1);                        // motor 1 ligado para frente
       motors.motorSpeed(0, speed->left->getData());  // velocidade do motor 0
       motors.motorSpeed(1, speed->right->getData()); // velocidade do motor 1
     }
     else
     {
-      motors.motorsStop(); // parar motores
-      //ESP_LOGE("EncData: ", "%d", mediaEnc);
-      //vTaskDelay(1000/ portTICK_PERIOD_MS);
+      motors.motorsStop();
     }
-    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS); //10ms
   }
 }

@@ -100,7 +100,6 @@ void ESP32MotorControl::motorSpeed(uint8_t motor, float speed)
     break;
   }
 
-  mMotorSpeed[motor] = speed;
   ESP_LOGD(TAG, "Motor %u speed %f", motor, speed);
 }
 
@@ -125,8 +124,6 @@ void ESP32MotorControl::motorForward(uint8_t motor)
   default:
     break;
   }
-
-  mMotorForward[motor] = true;
 
   ESP_LOGD(TAG, "Motor %u set to forward", motor);
 }
@@ -153,8 +150,6 @@ void ESP32MotorControl::motorReverse(uint8_t motor)
     break;
   }
 
-  mMotorForward[motor] = false;
-
   ESP_LOGD(TAG, "Motor %u set to forward", motor);
 }
 
@@ -180,9 +175,6 @@ void ESP32MotorControl::motorStop(uint8_t motor)
     break;
   }
 
-  mMotorSpeed[motor] = 0;      // Save it
-  mMotorForward[motor] = true; // For stop
-
   ESP_LOGD(TAG, "Motor %u stop", motor);
 }
 
@@ -192,55 +184,4 @@ void ESP32MotorControl::motorsStop()
   motorStop(1);
 
   ESP_LOGD(TAG, "Motors stop");
-}
-
-uint8_t ESP32MotorControl::getMotorSpeed(uint8_t motor)
-{
-
-  if (!isMotorValid(motor))
-  {
-    return false;
-  }
-  return mMotorSpeed[motor];
-}
-
-bool ESP32MotorControl::isMotorForward(uint8_t motor)
-{
-
-  if (!isMotorValid(motor))
-  {
-    return false;
-  }
-
-  if (isMotorStopped(motor))
-  {
-    return false;
-  }
-  else
-  {
-    return mMotorForward[motor];
-  }
-}
-
-bool ESP32MotorControl::isMotorStopped(uint8_t motor)
-{
-
-  if (!isMotorValid(motor))
-  {
-    return true;
-  }
-  return (mMotorSpeed[motor] == 0);
-}
-
-// Privates
-
-bool ESP32MotorControl::isMotorValid(uint8_t motor)
-{
-
-  if (motor > 1)
-  {
-    return false;
-  }
-
-  return mMotorAttached[motor];
 }

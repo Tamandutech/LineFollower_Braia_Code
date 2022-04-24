@@ -1,5 +1,8 @@
 #include "CarStatusService.hpp"
 
+std::atomic<CarStatusService *> CarStatusService::instance;
+std::mutex CarStatusService::instanceMutex;
+
 QueueHandle_t CarStatusService::gpio_evt_queue;
 
 void IRAM_ATTR CarStatusService::gpio_isr_handler(void *arg)
@@ -8,9 +11,9 @@ void IRAM_ATTR CarStatusService::gpio_isr_handler(void *arg)
     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
 
-CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
+CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-    this->robot = robot;
+    this->robot = Robot::getInstance();
     this->status = robot->getStatus();
     this->speed = robot->getSpeed();
     this->latMarks = robot->getSLatMarks();
@@ -22,11 +25,13 @@ CarStatusService::CarStatusService(const char *name, Robot *robot, uint32_t stac
 
     if (latMarks->marks->getSize() <= 0)
     {
+        encreading = false;
         status->robotIsMapping->setData(true);
     }
     else
     {
         status->robotIsMapping->setData(false);
+        encreading = true;
         numMarks = latMarks->marks->getSize();
         mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
     }
@@ -78,12 +83,19 @@ void CarStatusService::Run()
         // Começa mapeamento
         mappingService->startNewMapping();
     }
+    else{
+        
+    }
 
     status->robotState->setData(CAR_IN_LINE);
 
     // Loop
     for (;;)
     {
+        vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+
+        status->stateMutex.lock();
+
         if (lastMappingState != status->robotIsMapping->getData() && status->robotIsMapping->getData())
         {
             lastMappingState = status->robotIsMapping->getData();
@@ -122,7 +134,7 @@ void CarStatusService::Run()
         iloop++;
 #endif
 
-        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED)
+        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && encreading)
         {
             if (mediaEncActual >= mediaEncFinal)
             {
@@ -155,7 +167,6 @@ void CarStatusService::Run()
             }
         }
 
-        xLastWakeTime = xTaskGetTickCount();
-        vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+        status->stateMutex.unlock();
     }
 }

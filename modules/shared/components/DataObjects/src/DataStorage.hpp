@@ -10,7 +10,7 @@
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 class DataStorage

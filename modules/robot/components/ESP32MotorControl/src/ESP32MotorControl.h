@@ -46,8 +46,6 @@
 class ESP32MotorControl {
 public:
   // Fields
-
-  uint16_t mMotorSpeed[2] = {0, 0};
   bool mMotorForward[2] = {true, true};
 
   // Methods:

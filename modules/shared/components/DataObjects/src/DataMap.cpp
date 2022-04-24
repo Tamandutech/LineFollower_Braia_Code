@@ -198,7 +198,7 @@ void DataMap::saveData()
 
 void DataMap::loadData()
 {
-    char *data = new char;
+    char *data = NULL;
     size_t size = 0;
     size_t listSize = 0;
 
@@ -222,47 +222,25 @@ void DataMap::loadData()
 
     ESP_LOGD(this->name.c_str(), "Carregando dados de Mapeamento, tamanho do buffer: %d bytes", size);
 
-    // Carrega a quantidade de itens
-    // memcpy(&listSize, data, sizeof(listSize));
-
-    // ESP_LOGD(this->name.c_str(), "Quantidade de linhas: %d", listSize);
-
-    // if (listSize < 100)
-    // {
-    
-    // percorre todo o arquivo
-    for (size_t i = 0; i < size; i += sizeof(MapData))
+    if (data)
     {
-        MapData tempMapData;
-        memcpy(&tempMapData, data + i, sizeof(MapData));
+        // percorre todo o arquivo
+        for (size_t i = 0; i < size; i += sizeof(MapData))
+        {
+            MapData tempMapData;
+            memcpy(&tempMapData, data + i, sizeof(MapData));
 
-        ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus);
+            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus);
 
-        mapDataListMutex.lock();
-        this->mapDataList.push_back(tempMapData);
-        mapDataListMutex.unlock();
+            mapDataListMutex.lock();
+            this->mapDataList.push_back(tempMapData);
+            mapDataListMutex.unlock();
+        }
+
+        free(data);
+
+        ESP_LOGD(this->name.c_str(), "Dados de mapeamento carregados do storage.");
     }
-
-    // for (int i = 0; i < listSize; i++)
-    // {
-    //     MapData mapData;
-    //     memcpy(&mapData, data + sizeof(listSize) + (i * sizeof(mapData)), sizeof(mapData));
-    //     ESP_LOGD(this->name.c_str(), "Carregando dados do tipo DataMap: %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus);
-
-    //     mapDataListMutex.lock();
-    //     this->mapDataList.push_back(mapData);
-    //     mapDataListMutex.unlock();
-    // }
-    // }
-    // else
-    // {
-    //     ESP_LOGE(this->name.c_str(), "Quantidade de linhas acima do esperado: %d", listSize);
-    //     return;
-    // }
-
-    free(data);
-
-    ESP_LOGD(this->name.c_str(), "Dados de mapeamento carregados do storage.");
 }
 
 uint8_t DataMap::getSize()

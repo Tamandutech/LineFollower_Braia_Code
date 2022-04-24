@@ -33,8 +33,6 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-//#define LINE_COLOR_BLACK
-
 // Componentes de encapsulamento das variaveis
 Robot *braia;
 
@@ -70,16 +68,16 @@ void app_main(void)
 
   braia = Robot::getInstance("Braia");
 
-  sensorsService = new SensorsService("SensorsService", braia, 10000, 9);
-  carStatusService = new CarStatusService("CarStatusService", braia, 10000, 9);
-  mappingService = MappingService::getInstance("MappingService", 10000, 9);
-  motorsService = new MotorsService("MotorsService", braia, 10000, 9);
-  speedService = new SpeedService("SpeedService", braia, 10000, 9);
-  pidService = new PIDService("PIDService", braia, 10000, 9);
+  sensorsService = new SensorsService("SensorsService", braia, 10000, 20);
+  carStatusService = CarStatusService::getInstance();
+  mappingService = MappingService::getInstance("MappingService", 10000, 18);
+  motorsService = new MotorsService("MotorsService", braia, 10000, 20);
+  speedService = new SpeedService("SpeedService", braia, 10000, 20);
+  pidService = new PIDService("PIDService", braia, 10000, 20);
   espNowHandler = ESPNOWHandler::getInstance();
 
   ledsService = new LEDsService("LEDsService", braia, 10000, 9);
-  ledsService->Start();
+  // ledsService->Start();
 
   sensorsService->Start();
   motorsService->Start();
@@ -87,7 +85,6 @@ void app_main(void)
   speedService->Start();
   carStatusService->Start();
   mappingService->Start();
-  espNowHandler->Start();
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)

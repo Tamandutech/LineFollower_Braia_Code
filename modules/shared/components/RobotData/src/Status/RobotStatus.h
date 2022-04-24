@@ -37,8 +37,11 @@ public:
      */
     DataAbstract<bool> *robotIsMapping;
 
+    static std::mutex stateMutex;
+    
 private:
     std::string name;
+
 };
 
 #endif

@@ -27,22 +27,35 @@ private:
     dataPID *PIDRot;
 
     short const TaskDelay = 10; // 10ms
-    float const BaseDeTempo = (TaskDelay * 1E-3);
 
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
     float KpVel = 0, KiVel = 0, KdVel = 0;
     float KpRot = 0, KiRot = 0, KdRot = 0;
 
-    //erros anteriores
-    float errRot_ant = 0;   //errRot_ant2 = 0;
-    float errTrans_ant = 0; //errTrans_ant2 = 0;
+    // erros anteriores
+    float errRot_ant = 0;   // errRot_ant2 = 0;
+    float errTrans_ant = 0; // errTrans_ant2 = 0;
 
-    //Variáveis para cálculo do pid rot e trans
+    // Variáveis para cálculo do pid rot e trans
     float rotK = 5;
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
     float PidRot = 0;
     float Prot = 0, Irot = 0, Drot = 0;
+
+    int8_t speedBase = 0;
+    int8_t speedMin = 0;
+    int8_t speedMax = 0;
+
+    float VelRot = 0;
+    float VelTrans = 0;
+
+    float erroVelTrans = 0;
+    float erroVelRot = 0;
+
+    bool mapState = false;
+
+    CarState estado = CAR_STOPPED;
 
     int iloop = 0;
 };

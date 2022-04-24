@@ -6,7 +6,7 @@
 #include "DataManager.hpp"
 #include "dataEnums.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 #include "better_console.hpp"
@@ -98,8 +98,7 @@ void register_param_get(void)
 
 static std::string param_list(int argc, char **argv)
 {
-    DataManager::getInstance()->listRegistredParamData();
-    return "Comando Executado";
+    return DataManager::getInstance()->listRegistredParamData();
 }
 
 void register_param_list(void)

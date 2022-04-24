@@ -3,8 +3,8 @@
 std::atomic<ESPNOWHandler *> ESPNOWHandler::instance;
 std::mutex ESPNOWHandler::instanceMutex;
 
-std::list<PacketData> ESPNOWHandler::PacketsReceived;
-SemaphoreHandle_t ESPNOWHandler::xSemaphorePacketsReceived;
+std::list<PacketData> ESPNOWHandler::packetsReceived;
+QueueHandle_t ESPNOWHandler::queuePacketsReceived;
 
 ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
@@ -14,9 +14,11 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
 
     (xSemaphorePeerInfo) = xSemaphoreCreateMutex();
     (xSemaphorePeerProtocol) = xSemaphoreCreateMutex();
-    (xSemaphorePacketsReceived) = xSemaphoreCreateMutex();
+
+    queuePacketsReceived = xQueueCreate(10, sizeof(PacketData));
 
     this->ESPNOWInit(1, broadcastAddress, false);
+    this->Start();
 }
 
 void ESPNOWHandler::Run()
@@ -27,47 +29,36 @@ void ESPNOWHandler::Run()
     // Loop
     for (;;)
     {
-        if (PacketsReceived.size() > 0)
-        {
-            xSemaphoreTake(xSemaphorePacketsReceived, portMAX_DELAY);
-
-            for (auto packet = PacketsReceived.begin(); packet != PacketsReceived.end(); ++packet)
-            {
-                ESP_LOGD(this->name.c_str(), "Recebido pacote de dados");
-                ESP_LOGD(this->name.c_str(), "Tamanho do pacote: %d", packet->size);
-                ESP_LOGD(this->name.c_str(), "Dados: %s", packet->data);
-
-                switch (packet->type)
-                {
-                case PACKET_TYPE_CMD:
-                    std::string ret;
-                    char *line = (char *)malloc(packet->size);
-
-                    memcpy((void *)line, (void *)packet->data, packet->size);
-
-                    ESP_LOGD(this->name.c_str(), "Comando recebido via ESPNOW: %s", line);
-
-                    esp_err_t err = better_console_run(line, &ret);
-
-                    ESP_LOGD(this->name.c_str(), "Retorno do comando: %s, retorno da execução: %s", ret.c_str(), esp_err_to_name(err));
-
-                    this->SendAwnser(packet->id, (uint8_t *)ret.c_str(), ret.size() + 1);
-
-                    free((void *)line);
-
-                    PacketsReceived.erase(packet);
-
-                    break;
-                }
-            }
-
-            xSemaphoreGive(xSemaphorePacketsReceived);
-        }
-        else
-            this->Suspend();
-
-        xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+
+        xQueueReceive(queuePacketsReceived, &packetReceived, portMAX_DELAY);
+
+        ESP_LOGD(this->name.c_str(), "Recebido pacote de dados");
+        ESP_LOGD(this->name.c_str(), "Tamanho do pacote: %d", packetReceived.size);
+        ESP_LOGD(this->name.c_str(), "Dados: %s", packetReceived.data);
+
+        if (packetReceived.type == PACKET_TYPE_CMD)
+        {
+            std::string ret;
+            char *line = (char *)malloc(packetReceived.size);
+
+            memcpy((void *)line, (void *)packetReceived.data, packetReceived.size);
+
+            ESP_LOGD(this->name.c_str(), "Comando recebido via ESPNOW: %s", line);
+
+            esp_err_t err = better_console_run(line, &ret);
+
+            ESP_LOGD(this->name.c_str(), "Retorno do comando: %s, retorno da execução: %s", ret.c_str(), esp_err_to_name(err));
+
+            this->SendAwnser(packetReceived.id, (uint8_t *)ret.c_str(), ret.size() + 1);
+
+            free((void *)line);
+        }
+        else if (packetReceived.type == PACKET_TYPE_RETURN)
+        {
+            ESP_LOGD(this->name.c_str(), "Retorno recebido via ESPNOW, ID: %d", packetReceived.id);
+            packetsReceived.push_back(packetReceived);
+        }
     }
 }
 
@@ -166,37 +157,26 @@ void ESPNOWHandler::Send(uint8_t id, uint16_t type, uint16_t size, uint8_t *data
     Packet.id = id;
     Packet.type = type;
     Packet.size = size;
-    memcpy(Packet.data, data, size);
+    Packet.numToReceive = size / sizeof(Packet.data) + (size % sizeof(Packet.data) > 0);
 
-    ESP_LOGD(this->name.c_str(), "Enviando pacote de ID: %d, tipo: %d, tamanho: %d, mensagem: %s", Packet.id, Packet.type, Packet.size, (const char *)Packet.data);
+    for (size_t i = 0, j = 1; i < size; i += sizeof(Packet.data), j++)
+    {
+        ESP_LOGD(this->name.c_str(), "Enviando ID: %d | pacote %d de %d", id, j, Packet.numToReceive);
 
-    esp_now_send(peer.peer_addr, (uint8_t *)&Packet, sizeof(PacketData));
+        Packet.numActual = j;
+        memcpy(Packet.data, data + i, size);
+
+        esp_now_send(peer.peer_addr, (uint8_t *)&Packet, sizeof(PacketData));
+    }
 }
 
 void ESPNOWHandler::OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
     ESP_LOGD("ESPNOWHandler", "Mensagem recebida, bytes: %d", len);
 
-    if (xSemaphoreTake(xSemaphorePacketsReceived, (TickType_t)10) == pdTRUE)
-    {
-        PacketData packet;
+    PacketData *Packet = (PacketData *)incomingData;
 
-        packet.id = ((PacketData *)incomingData)->id;
-        packet.type = ((PacketData *)incomingData)->type;
-        packet.size = ((PacketData *)incomingData)->size;
-        memcpy(packet.data, ((PacketData *)incomingData)->data, packet.size);
-
-        ESP_LOGD("ESPNOWHandler", "Recebido pacote de ID: %d, tipo: %d, tamanho: %d, mensagem: %s", packet.id, packet.type, packet.size, (const char *)packet.data);
-
-        ESPNOWHandler::PacketsReceived.push_back(packet);
-        xSemaphoreGive(xSemaphorePacketsReceived);
-
-        ESPNOWHandler::getInstance()->Resume();
-    }
-    else
-    {
-        ESP_LOGE("ESPNOWHandler", "Variável packetsreceived ocupada, não foi possível definir valor.");
-    }
+    xQueueSend(queuePacketsReceived, Packet, 0);
 }
 
 void ESPNOWHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -205,16 +185,16 @@ void ESPNOWHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t st
     ESP_LOGD("OnDataSent", "%s", status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
-PacketData ESPNOWHandler::getPacketReceived(uint8_t uniqueIdCounter)
+PacketData ESPNOWHandler::getPacketReceived(uint8_t uniqueIdCounter, uint8_t num)
 {
-    // busca pacote com o id na lista de pacotes recebidos
-    auto it = std::find_if(PacketsReceived.begin(), PacketsReceived.end(), [uniqueIdCounter](PacketData &p)
-                           { return p.id == uniqueIdCounter; });
+    // busca pacote com o id e numActual na lista de pacotes recebidos
+    auto it = std::find_if(packetsReceived.begin(), packetsReceived.end(), [uniqueIdCounter, num](PacketData &p)
+                           { return (p.id == uniqueIdCounter and p.numActual == num); });
 
-    if (it != PacketsReceived.end())
+    if (it != packetsReceived.end())
     {
         PacketData Packet = *it;
-        PacketsReceived.erase(it);
+        packetsReceived.erase(it);
         return Packet;
     }
     else
@@ -222,6 +202,8 @@ PacketData ESPNOWHandler::getPacketReceived(uint8_t uniqueIdCounter)
         PacketData Packet;
         Packet.id = 0;
         Packet.type = 0;
+        Packet.numActual = 0;
+        Packet.numToReceive = 0;
         Packet.size = 0;
         return Packet;
     }
