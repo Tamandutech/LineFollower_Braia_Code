@@ -12,6 +12,7 @@
 #include "cmd_remote.hpp"
 
 #include "ESPNOWHandler.h"
+#include "WifiHandler.h"
 
 SerialService *serialService;
 
@@ -25,6 +26,7 @@ extern "C"
 void app_main(void)
 {
     ESPNOWHandler::getInstance();
+    WiFiHandler::getInstance();
 
     register_system();
     register_cmd_param();
