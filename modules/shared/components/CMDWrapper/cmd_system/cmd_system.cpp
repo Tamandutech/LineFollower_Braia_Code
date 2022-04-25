@@ -81,8 +81,6 @@ static std::string get_version(int argc, char **argv)
     ss << std::endl;
     ss << "    Revision: " << info.revision << std::endl;
 
-    printf("%s", ss.str().c_str());
-
     return ss.str();
 }
 
@@ -121,7 +119,6 @@ static void register_restart(void)
 
 static std::string free_mem(int argc, char **argv)
 {
-    printf("%d\n", esp_get_free_heap_size());
     return std::to_string(esp_get_free_heap_size());
 }
 
@@ -139,9 +136,7 @@ static void register_free(void)
 /* 'heap' command prints minumum heap size */
 static std::string heap_size(int argc, char **argv)
 {
-    uint32_t heap_size = heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT);
-    printf("min heap size: %u\n", heap_size);
-    return std::to_string(heap_size);
+    return std::to_string(heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
 }
 
 static void register_heap(void)
@@ -162,20 +157,26 @@ static std::string tasks_info(int argc, char **argv)
 {
     const size_t bytes_per_task = 40; /* see vTaskList description */
     char *task_list_buffer = (char *)malloc(uxTaskGetNumberOfTasks() * bytes_per_task);
+
+    std::stringstream ss;
+
     if (task_list_buffer == NULL)
     {
-        ESP_LOGE(TAG, "failed to allocate buffer for vTaskList output");
-        return "OK";
+        return "Falha ao alocar memória para vTaskList";
     }
-    fputs("Nome da Task\tStatus\tPrio\tStack\tTask\tCore", stdout);
-    fputs("\n", stdout);
+
+    // fputs("Nome da Task\tStatus\tPrio\tStack\tTask\tCore", stdout);
+    ss << "Nome da Task\tStatus\tPrio\tStack\tTask\tCore";
+    // fputs("\n", stdout);
+    ss << "\n";
 
     vTaskList(task_list_buffer);
-    fputs(task_list_buffer, stdout);
-    fputs("\n", stdout);
+    // fputs(task_list_buffer, stdout);
+    ss << task_list_buffer;
+    // fputs("\n", stdout);
 
     free(task_list_buffer);
-    return "NOK";
+    return ss.str();
 }
 
 static void register_tasks(void)
