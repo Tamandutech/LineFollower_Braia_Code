@@ -13,7 +13,6 @@
 
 #include "DataStorage.hpp"
 
-static const char *TAG = "example";
 #define PROMPT_STR "robotGateway"
 
 #define HISTORY_PATH "/data/history.txt"

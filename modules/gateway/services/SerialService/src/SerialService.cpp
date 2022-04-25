@@ -54,8 +54,8 @@ void SerialService::Run()
          */
         char *line = linenoise(prompt);
         if (line == NULL)
-        { /* Break on EOF or error */
-            break;
+        { /* Ignore empty lines */
+            continue;
         }
 
         /* Add the command to the history if not empty*/
@@ -72,16 +72,18 @@ void SerialService::Run()
 
         if (err == ESP_ERR_NOT_FOUND)
         {
-            printf("Unrecognized command\n");
+            printf("Comando não reconhecido.\n");
         }
         else if (err == ESP_ERR_INVALID_ARG)
         {
             // command was empty
         }
+#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         else if (err == ESP_OK)
         {
             printf("Retorno do comando: (%s)\n", ret.c_str());
         }
+#endif
         else if (err != ESP_OK)
         {
             printf("Internal error: %s\n", esp_err_to_name(err));
@@ -89,9 +91,6 @@ void SerialService::Run()
         /* linenoise allocates line buffer on the heap, so need to free it */
         linenoiseFree(line);
     }
-
-    ESP_LOGE(this->GetName().c_str(), "Error or end-of-input, terminating console");
-    better_console_deinit();
 }
 
 void SerialService::initialize_console(void)

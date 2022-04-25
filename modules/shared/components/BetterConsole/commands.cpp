@@ -270,7 +270,11 @@ esp_err_t better_console_run(const char *cmdline, std::string *cmd_ret)
         free(argv);
         return ESP_ERR_NOT_FOUND;
     }
+
+    ESP_LOGD("BetterConsole", "Executando comando '%s' e armazenando retorno.", cmd->command);
     (*cmd_ret) = (*cmd->func)(argc, argv);
+    ESP_LOGD("BetterConsole", "Comando executado e retorno armazenado.");
+    
     free(argv);
     return ESP_OK;
 }

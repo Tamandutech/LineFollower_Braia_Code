@@ -82,13 +82,13 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     robot->getsArray()->setChannels(sArraychannelsVec);
     robot->getsLat()->setChannels(SLatchannelsVec);
 
-    if (iloop >= 100)
-    {
-        ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
-        ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
-        iloop = 0;
-    }
-    iloop++;
+    // if (iloop >= 100)
+    // {
+    //     ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+    //     ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
+    //     iloop = 0;
+    // }
+    // iloop++;
     // ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
     // ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
 

@@ -20,6 +20,10 @@
 #include "sdkconfig.h"
 #include "esp_err.h"
 
+
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#include "esp_log.h"
+
 // Forward declaration. Definition in linenoise/linenoise.h.
 typedef struct linenoiseCompletions linenoiseCompletions;
 

@@ -98,7 +98,9 @@ void register_param_get(void)
 
 static std::string param_list(int argc, char **argv)
 {
-    return DataManager::getInstance()->listRegistredParamData();
+    std::string ret = DataManager::getInstance()->listRegistredParamData();
+    ESP_LOGD(name, "Tamanho da lista: %d", ret.length());
+    return ret;
 }
 
 void register_param_list(void)

@@ -8,7 +8,7 @@
 #include "DataManager.hpp"
 #include "dataEnums.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 #include "better_console.hpp"
@@ -46,7 +46,11 @@ static std::string rmt(int argc, char **argv)
         PacketData packet;
         packet.size = 0;
 
-        for (size_t numActual = 1, numToReceive = 1; numActual <= numToReceive; numActual++)
+        uint8_t numActual, numToReceive;
+
+        char *bufferAwnser = NULL;
+
+        for (numActual = 1, numToReceive = 1; numActual <= numToReceive; numActual++)
         {
             for (uint8_t i = 0; i < 50; i++)
             {
@@ -58,9 +62,10 @@ static std::string rmt(int argc, char **argv)
 
                     ESP_LOGD(name, "Recebido pacote ID: %d | %d de %d.", packet.id, packet.numActual, packet.numToReceive);
 
-                    packet.data[packet.size] = '\0';
+                    if (bufferAwnser == NULL)
+                        bufferAwnser = (char *)malloc(sizeof(packet.data) * packet.numToReceive);
 
-                    printf("%s", packet.data);
+                    memcpy(bufferAwnser + (packet.numActual - 1) * sizeof(packet.data), packet.data, sizeof(packet.data));
 
                     break;
                 }
@@ -70,10 +75,24 @@ static std::string rmt(int argc, char **argv)
             }
         }
 
-        printf("\n");
-    }
+        printf("%s\n", bufferAwnser);
 
-    return "NOK: Sem resposta.";
+        free(bufferAwnser);
+
+        if (packet.size == 0)
+            return "Sem resposta.";
+        else
+        {
+            if ((numActual - 1) == numToReceive)
+                return "Resposta recebida com sucesso.";
+            else
+                return "Resposta incompleta, %d de %d pacotes recebidos.";
+        }
+    }
+    else
+    {
+        return "Comando enviado.";
+    }
 }
 
 void register_rmt(void)

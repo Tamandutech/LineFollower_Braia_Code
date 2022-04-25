@@ -158,24 +158,24 @@ static void register_heap(void)
 /** 'tasks' command prints the list of tasks and related information */
 #if WITH_TASKS_INFO
 
-static int tasks_info(int argc, char **argv)
+static std::string tasks_info(int argc, char **argv)
 {
     const size_t bytes_per_task = 40; /* see vTaskList description */
-    char *task_list_buffer = malloc(uxTaskGetNumberOfTasks() * bytes_per_task);
+    char *task_list_buffer = (char *)malloc(uxTaskGetNumberOfTasks() * bytes_per_task);
     if (task_list_buffer == NULL)
     {
         ESP_LOGE(TAG, "failed to allocate buffer for vTaskList output");
-        return 1;
+        return "OK";
     }
-    fputs("Task Name\tStatus\tPrio\tHWM\tTask#", stdout);
-#ifdef CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID
-    fputs("\tAffinity", stdout);
-#endif
+    fputs("Nome da Task\tStatus\tPrio\tStack\tTask\tCore", stdout);
     fputs("\n", stdout);
+
     vTaskList(task_list_buffer);
     fputs(task_list_buffer, stdout);
+    fputs("\n", stdout);
+
     free(task_list_buffer);
-    return 0;
+    return "NOK";
 }
 
 static void register_tasks(void)

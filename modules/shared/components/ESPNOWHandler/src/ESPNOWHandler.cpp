@@ -23,14 +23,10 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
 
 void ESPNOWHandler::Run()
 {
-    // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a conGetName().c_str()em de pulsos da CPU
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-
     // Loop
     for (;;)
     {
-        vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
-
+        vTaskDelay(0);
         xQueueReceive(queuePacketsReceived, &packetReceived, portMAX_DELAY);
 
         ESP_LOGD(this->name.c_str(), "Recebido pacote de dados");
@@ -164,9 +160,11 @@ void ESPNOWHandler::Send(uint8_t id, uint16_t type, uint16_t size, uint8_t *data
         ESP_LOGD(this->name.c_str(), "Enviando ID: %d | pacote %d de %d", id, j, Packet.numToReceive);
 
         Packet.numActual = j;
-        memcpy(Packet.data, data + i, size);
+        memcpy(Packet.data, data + i, j == i ? size - i : sizeof(Packet.data));
 
         esp_now_send(peer.peer_addr, (uint8_t *)&Packet, sizeof(PacketData));
+
+        vTaskDelay(0);
     }
 }
 
@@ -181,8 +179,7 @@ void ESPNOWHandler::OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, 
 
 void ESPNOWHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-    ESP_LOGD("OnDataSent", "\r\nLast Packet Send Status:\t");
-    ESP_LOGD("OnDataSent", "%s", status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+    ESP_LOGD("ESPNOWHandler", "Status do envio: %s", status == ESP_NOW_SEND_SUCCESS ? "SUCESSO" : "FALHA");
 }
 
 PacketData ESPNOWHandler::getPacketReceived(uint8_t uniqueIdCounter, uint8_t num)

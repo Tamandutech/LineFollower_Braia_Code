@@ -129,5 +129,7 @@ std::string DataManager::listRegistredParamData()
         ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s: %s", i, dataParamList[i], dataParamList[i]->getName().c_str(), dataParamList[i]->getDataString().c_str());
     }
 
+    ESP_LOGD(name.c_str(), "Retornando a lista.");
+
     return list;
 }
