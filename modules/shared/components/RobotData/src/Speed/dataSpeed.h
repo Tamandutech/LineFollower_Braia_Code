@@ -39,6 +39,7 @@ public:
     // Diâmetro das rodas
     DataAbstract<uint8_t> *WheelDiameter;
 
+    DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<int8_t> *max;
     DataAbstract<int8_t> *min;
     DataAbstract<int8_t> *base;

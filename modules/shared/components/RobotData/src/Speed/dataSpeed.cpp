@@ -24,6 +24,9 @@ dataSpeed::dataSpeed(std::string name)
     MPR = new DataAbstract<uint16_t>("MPR", name, 0);
     dataManager->registerParamData(MPR);
 
+    accelration = new DataAbstract<float>("accel", name, 6000);
+    dataManager->registerParamData(accelration);
+
     WheelDiameter = new DataAbstract<uint8_t>("WheelDiameter", name, 0);
     dataManager->registerParamData(WheelDiameter);
 
