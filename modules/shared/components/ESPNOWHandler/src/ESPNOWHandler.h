@@ -29,9 +29,11 @@
 
 #include "better_console.hpp"
 
+#include "WiFiHandler.h"
+
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 class ESPNOWHandler : public Thread
@@ -67,6 +69,7 @@ private:
 
     static std::atomic<ESPNOWHandler *> instance;
     static std::mutex instanceMutex;
+
 
     uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t uniqueIdCounter = 0;

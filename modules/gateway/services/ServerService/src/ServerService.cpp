@@ -1,24 +1,16 @@
 #include "ServerService.hpp"
 
+std::list<web_socket_packet_t> ServerService::packetsReceived;
+QueueHandle_t ServerService::queuePacketsReceived;
+
 /* A simple example that demonstrates using websocket echo server
  */
 static const char *TAG = "ws_echo_server";
 
 /*
- * Structure holding server handle
- * and internal socket fd in order
- * to use out of request send
- */
-struct async_resp_arg
-{
-    httpd_handle_t hd;
-    int fd;
-};
-
-/*
  * async send function, which we put into the httpd work queue
  */
-static void ws_async_send(void *arg)
+void ServerService::ws_async_send(void *arg)
 {
     static const char *data = "Async data";
     struct async_resp_arg *resp_arg = (async_resp_arg *)arg;
@@ -34,58 +26,62 @@ static void ws_async_send(void *arg)
     free(resp_arg);
 }
 
-static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
-{
-    struct async_resp_arg *resp_arg = (async_resp_arg *)malloc(sizeof(struct async_resp_arg));
-    resp_arg->hd = req->handle;
-    resp_arg->fd = httpd_req_to_sockfd(req);
-    return httpd_queue_work(handle, ws_async_send, resp_arg);
-}
-
 /*
  * This handler echos back the received ws data
  * and triggers an async send if certain message received
  */
-static esp_err_t echo_handler(httpd_req_t *req)
+esp_err_t ServerService::ws_handler(httpd_req_t *req)
 {
-    uint8_t buf[128] = {0};
-    httpd_ws_frame_t ws_pkt;
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = buf;
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-    esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 128);
+    uint8_t *buf = (uint8_t *)malloc(sizeof(uint8_t) * 128);
+    web_socket_packet_t tempPacket;
+
+    tempPacket.hd = req->handle;
+    tempPacket.fd = httpd_req_to_sockfd(req);
+    memset(&tempPacket.packet, 0, sizeof(httpd_ws_frame_t));
+    tempPacket.packet.type = HTTPD_WS_TYPE_TEXT;
+    tempPacket.packet.payload = buf;
+
+    esp_err_t ret = httpd_ws_recv_frame(req, &tempPacket.packet, 128);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "httpd_ws_recv_frame failed with %d", ret);
         return ret;
     }
-    ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
-    ESP_LOGI(TAG, "Packet type: %d", ws_pkt.type);
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT &&
-        strcmp((char *)ws_pkt.payload, "Trigger async") == 0)
-    {
-        return trigger_async_send(req->handle, req);
-    }
 
-    ret = httpd_ws_send_frame(req, &ws_pkt);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "httpd_ws_send_frame failed with %d", ret);
-    }
-    return ret;
+    tempPacket.packet.payload[tempPacket.packet.len] = '\0';
+
+    ESP_LOGI(TAG, "Pacote: %s", tempPacket.packet.payload);
+    ESP_LOGI(TAG, "Tipo: %d", tempPacket.packet.type);
+
+    xQueueSend(queuePacketsReceived, &tempPacket, 0);
+
+    // if (ws_pkt.type == HTTPD_WS_TYPE_TEXT &&
+    //     strcmp((char *)ws_pkt.payload, "Trigger async") == 0)
+    // {
+    //     return trigger_async_send(req->handle, req);
+    // }
+
+    // ret = httpd_ws_send_frame(req, &ws_pkt);
+
+    // if (ret != ESP_OK)
+    // {
+    //     ESP_LOGE(TAG, "httpd_ws_send_frame failed with %d", ret);
+    // }
+
+    return ESP_OK;
 }
 
-static const httpd_uri_t ws = {
-    .uri = "/ws",
-    .method = HTTP_GET,
-    .handler = echo_handler,
-    .user_ctx = NULL,
-    .is_websocket = true};
-
-static httpd_handle_t start_webserver(void)
+httpd_handle_t ServerService::start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+
+    httpd_uri_t ws = {
+        .uri = "/ws",
+        .method = HTTP_GET,
+        .handler = ws_handler,
+        .user_ctx = NULL,
+        .is_websocket = true};
 
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
@@ -101,61 +97,55 @@ static httpd_handle_t start_webserver(void)
     return NULL;
 }
 
-static void stop_webserver(httpd_handle_t server)
-{
-    // Stop the httpd server
-    httpd_stop(server);
-}
-
-static void disconnect_handler(void *arg, esp_event_base_t event_base,
-                               int32_t event_id, void *event_data)
-{
-    httpd_handle_t *server = (httpd_handle_t *)arg;
-    if (*server)
-    {
-        ESP_LOGI(TAG, "Stopping webserver");
-        stop_webserver(*server);
-        *server = NULL;
-    }
-}
-
-static void connect_handler(void *arg, esp_event_base_t event_base,
-                            int32_t event_id, void *event_data)
-{
-    httpd_handle_t *server = (httpd_handle_t *)arg;
-    if (*server == NULL)
-    {
-        ESP_LOGI(TAG, "Starting webserver");
-        *server = start_webserver();
-    }
-}
-
 ServerService::ServerService(const char *name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     static httpd_handle_t server = NULL;
 
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
-    // example_connect();
+    queuePacketsReceived = xQueueCreate(10, sizeof(web_socket_packet_t));
 
-    /* Register event handlers to stop the server when Wi-Fi or Ethernet is disconnected,
-     * and re-start it upon connection.
-     */
-#ifdef CONFIG_EXAMPLE_CONNECT_WIFI
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
-#endif // CONFIG_EXAMPLE_CONNECT_WIFI
-#ifdef CONFIG_EXAMPLE_CONNECT_ETHERNET
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &connect_handler, &server));
-    ESP_ERROR_CHECK(esp_event_handler_register(ETH_EVENT, ETHERNET_EVENT_DISCONNECTED, &disconnect_handler, &server));
-#endif // CONFIG_EXAMPLE_CONNECT_ETHERNET
-
-    /* Start the server for the first time */
     server = start_webserver();
+
+    this->Start();
 }
 
 void ServerService::Run()
 {
+    // Loop
+    for (;;)
+    {
+        vTaskDelay(0);
+        xQueueReceive(queuePacketsReceived, &packetReceived, portMAX_DELAY);
+
+        ESP_LOGD(GetName().c_str(), "Recebido pacote de dados");
+        ESP_LOGD(GetName().c_str(), "Tamanho do pacote: %d", packetReceived.packet.len);
+        ESP_LOGD(GetName().c_str(), "Dados:\n%s\n", packetReceived.packet.payload);
+
+        std::string ret;
+        
+        char *line = (char *)malloc(packetReceived.packet.len + 1);
+        strcpy(line, (char *)packetReceived.packet.payload);
+
+        ESP_LOGD(GetName().c_str(), "Comando recebido via WebSocket: %s", line);
+
+        esp_err_t err = better_console_run(line, &ret);
+
+        ESP_LOGD(GetName().c_str(), "Retorno do comando:\n%s\nRetorno da execução: %s", ret.c_str(), esp_err_to_name(err));
+
+        if (err == ESP_OK)
+        {
+            ESP_LOGD(GetName().c_str(), "Enviando pacote de dados");
+            httpd_ws_frame_t ws_pkt;
+            memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+            ws_pkt.payload = (uint8_t *)ret.c_str();
+            ws_pkt.len = ret.length();
+            ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+
+            httpd_ws_send_frame_async(packetReceived.hd, packetReceived.fd, &ws_pkt);
+        }
+
+        // this->SendAwnser(packetReceived.id, (uint8_t *)ret.c_str(), ret.size() + 1);
+
+        free((void *)line);
+        free((void *)packetReceived.packet.payload);
+    }
 }

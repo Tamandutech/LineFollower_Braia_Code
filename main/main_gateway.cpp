@@ -6,6 +6,7 @@
 #include "esp_log.h"
 
 #include "SerialService.hpp"
+#include "ServerService.hpp"
 
 #include "cmd_system.hpp"
 #include "cmd_param.hpp"
@@ -15,6 +16,9 @@
 #include "WifiHandler.h"
 
 SerialService *serialService;
+ServerService *serverService;
+
+WiFiHandler *wifiHandler;
 
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -25,8 +29,11 @@ extern "C"
 
 void app_main(void)
 {
+    wifiHandler = WiFiHandler::getInstance();
+    // wifiHandler->wifi_init_softap("ESP32-AP", "12345678");
+    wifiHandler->wifi_init_sta("RFREITAS", "963443530");
+
     ESPNOWHandler::getInstance();
-    WiFiHandler::getInstance();
 
     register_system();
     register_cmd_param();
@@ -34,6 +41,9 @@ void app_main(void)
 
     serialService = new SerialService("SerialService", 10000, 9);
     serialService->Start();
+
+    serverService = new ServerService("ServerService", 10000, 9);
+    serverService->Start();
 }
 
 #endif
