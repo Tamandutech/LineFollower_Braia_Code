@@ -13,11 +13,10 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
     ESP_LOGD(this->name.c_str(), "Criando Semáforos");
 
     (xSemaphorePeerInfo) = xSemaphoreCreateMutex();
-    (xSemaphorePeerProtocol) = xSemaphoreCreateMutex();
 
     queuePacketsReceived = xQueueCreate(10, sizeof(PacketData));
 
-    this->ESPNOWInit(1, broadcastAddress, false);
+    this->ESPNOWInit(11, broadcastAddress, false);
     this->Start();
 }
 
@@ -77,19 +76,6 @@ void ESPNOWHandler::ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia)
         ESP_LOGE("ESPNOWHandler", "Variável PeerInfo ocupada, não foi possível definir valor.");
     }
 
-    if (xSemaphoreTake(xSemaphorePeerProtocol, (TickType_t)10) == pdTRUE)
-    {
-        memcpy(this->peerProtocol.peer_addr, Mac, 6);
-        this->peerProtocol.channel = canal;
-        this->peerProtocol.encrypt = criptografia;
-        this->peerProtocol.ifidx = WIFI_IF_STA;
-        xSemaphoreGive(xSemaphorePeerProtocol);
-    }
-    else
-    {
-        ESP_LOGE("ESPNOWHandler", "Variável PeerProtocol ocupada, não foi possível definir valor.");
-    }
-
 #ifndef ESP32_QEMU
     WiFiHandler::getInstance()->wifi_init_sta();
 
@@ -131,9 +117,6 @@ void ESPNOWHandler::SendAwnser(uint8_t id, uint8_t *data, uint16_t size)
 
 void ESPNOWHandler::Send(uint8_t id, uint16_t type, uint16_t size, uint8_t *data)
 {
-    esp_now_peer_info_t peer;
-    peer = this->peerProtocol;
-
     PacketData Packet;
     Packet.id = id;
     Packet.type = type;
@@ -147,7 +130,7 @@ void ESPNOWHandler::Send(uint8_t id, uint16_t type, uint16_t size, uint8_t *data
         Packet.numActual = j;
         memcpy(Packet.data, data + i, j == i ? size - i : sizeof(Packet.data));
 
-        esp_now_send(peer.peer_addr, (uint8_t *)&Packet, sizeof(PacketData));
+        esp_now_send(this->peerInfo.peer_addr, (uint8_t *)&Packet, sizeof(PacketData));
 
         vTaskDelay(0);
     }

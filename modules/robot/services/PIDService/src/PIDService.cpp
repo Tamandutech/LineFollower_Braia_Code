@@ -12,7 +12,7 @@ PIDService::PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBas
     rotK = PIDRot->Krot->getData();
     accel = speed->accelration->getData();
     PIDTrans->setpoint->setData(0);
-    setpointTarget = 0;
+    setpointPIDTransTarget = 0;
 };
 
 void PIDService::Run()
@@ -29,7 +29,6 @@ void PIDService::Run()
         speedMin = speed->min->getData();
         speedMax = speed->max->getData();
 
-
         // Reseta o PID se o carrinho parar
         if (estado == CAR_STOPPED)
         {
@@ -40,7 +39,7 @@ void PIDService::Run()
             Drot = 0;
             Irot = 0;
             PIDTrans->setpoint->setData(0);
-            setpointTarget = 0;
+            setpointPIDTransTarget = 0;
         }
 
         // Variaveis de calculo para os pids da velocidade rotacional e translacional
@@ -56,13 +55,13 @@ void PIDService::Run()
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
         VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
 
-        //Erros atuais
-        // rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
+        // Erros atuais
+        //  rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
         PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / rotK); // cálculo do setpoint rotacional
         erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
         erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
         // erroVelRot = 3500 - robot->getsArray()->getLine();
-        
+
         // calculando Pids rotacional e translacional
         Ptrans = KpVel * erroVelTrans;
         Itrans += KiVel * erroVelTrans;
@@ -89,33 +88,36 @@ void PIDService::Run()
 
         speed->left->setData(
             constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
-        
+
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState)
         {
-            //ESP_LOGD(GetName().c_str(), "Setando setpointLine");
-            setpointTarget = PIDTrans->setpointLine->getData();
+            // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
+            setpointPIDTransTarget = PIDTrans->setpointLine->getData();
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
-            //ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
-            setpointTarget = PIDTrans->setpointCurve->getData();
-            
+            // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
+            setpointPIDTransTarget = PIDTrans->setpointCurve->getData();
         }
         else if (mapState && estado != CAR_STOPPED)
         {
-            //ESP_LOGD(GetName().c_str(), "Setando setpoint Map");
-            setpointTarget = PIDTrans->setpointMap->getData();
-            
+            // ESP_LOGD(GetName().c_str(), "Setando setpoint Map");
+            setpointPIDTransTarget = PIDTrans->setpointMap->getData();
         }
+
+        setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
+
         // Rampeia a velocidade translacional
-        if(VelTrans <= setpointTarget && estado != CAR_STOPPED){
-            newSetpoint = VelTrans + (accel * (TaskDelay/1000));
-            PIDTrans->setpoint->setData(constrain(newSetpoint, VelTrans, setpointTarget));
+        if (VelTrans <= setpointPIDTransTarget && estado != CAR_STOPPED)
+        {
+            newSetpoint = VelTrans + (accel * (TaskDelay / 1000));
+            PIDTrans->setpoint->setData(constrain(newSetpoint, VelTrans, setpointPIDTransTarget));
         }
-        else{
-            newSetpoint = VelTrans - (accel * (TaskDelay/1000));
-            PIDTrans->setpoint->setData(constrain(newSetpoint, setpointTarget, VelTrans));
+        else
+        {
+            newSetpoint = VelTrans - (accel * (TaskDelay / 1000));
+            PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, VelTrans));
         }
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG

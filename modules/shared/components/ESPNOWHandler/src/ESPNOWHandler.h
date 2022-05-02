@@ -93,9 +93,6 @@ private:
     esp_now_peer_info_t peerInfo; // Variável para adicionar o peer
     SemaphoreHandle_t xSemaphorePeerInfo;
 
-    esp_now_peer_info_t peerProtocol; // Variável para ler dados do peeer nos métodos da classe
-    SemaphoreHandle_t xSemaphorePeerProtocol;
-
     PacketData packetReceived;
     static QueueHandle_t queuePacketsReceived;
 

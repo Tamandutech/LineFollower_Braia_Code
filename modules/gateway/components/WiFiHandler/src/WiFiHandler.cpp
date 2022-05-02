@@ -11,7 +11,7 @@ EventGroupHandle_t WiFiHandler::s_wifi_event_group;
 */
 #define EXAMPLE_ESP_WIFI_SSID "BraiaGateway"
 #define EXAMPLE_ESP_WIFI_PASS "BraiaGateway"
-#define EXAMPLE_ESP_WIFI_CHANNEL 1
+#define EXAMPLE_ESP_WIFI_CHANNEL 11
 #define EXAMPLE_MAX_STA_CONN 5
 
 #define WIFI_CONNECTED_BIT BIT0
@@ -77,6 +77,7 @@ void WiFiHandler::wifi_init_sta(void)
         ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_start());
+        ESP_ERROR_CHECK(esp_wifi_set_channel(EXAMPLE_ESP_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE));
 
         wifiAlreadyInit = true;
     }
