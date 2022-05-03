@@ -8,7 +8,7 @@
 #include "DataManager.hpp"
 #include "dataEnums.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 #include "better_console.hpp"
@@ -48,7 +48,9 @@ static std::string rmt(int argc, char **argv)
 
         uint8_t numActual, numToReceive;
 
-        char *bufferAwnser = NULL;
+        std::string bufferAwnser;
+
+        // char *bufferAwnser = NULL;
 
         for (numActual = 1, numToReceive = 1; numActual <= numToReceive; numActual++)
         {
@@ -62,10 +64,12 @@ static std::string rmt(int argc, char **argv)
 
                     ESP_LOGD(name, "Recebido pacote ID: %d | %d de %d.", packet.id, packet.numActual, packet.numToReceive);
 
-                    if (bufferAwnser == NULL)
-                        bufferAwnser = (char *)malloc(sizeof(packet.data) * packet.numToReceive);
+                    if (bufferAwnser.size() < packet.size)
+                        bufferAwnser.reserve(packet.size);
 
-                    memcpy(bufferAwnser + (packet.numActual - 1) * sizeof(packet.data), packet.data, sizeof(packet.data));
+                    bufferAwnser.append((char *)packet.data, numActual < numToReceive ? sizeof(packet.data) : packet.size - ((numToReceive - numActual) * sizeof(packet.data)));
+
+                    // memcpy(bufferAwnser + (packet.numActual - 1) * sizeof(packet.data), packet.data, sizeof(packet.data));
 
                     break;
                 }
@@ -75,16 +79,21 @@ static std::string rmt(int argc, char **argv)
             }
         }
 
-        printf("%s\n", bufferAwnser);
-
-        free(bufferAwnser);
+        // if (bufferAwnser)
+        // {
+        //     printf("%s\n", bufferAwnser);
+        //     free(bufferAwnser);
+        // }
 
         if (packet.size == 0)
             return "Sem resposta.";
         else
         {
             if ((numActual - 1) == numToReceive)
-                return "Resposta recebida com sucesso.";
+            {
+                bufferAwnser.resize(packet.size);
+                return bufferAwnser;
+            }
             else
                 return "Resposta incompleta, %d de %d pacotes recebidos.";
         }

@@ -11,7 +11,7 @@ EventGroupHandle_t WiFiHandler::s_wifi_event_group;
 */
 #define EXAMPLE_ESP_WIFI_SSID "BraiaGateway"
 #define EXAMPLE_ESP_WIFI_PASS "BraiaGateway"
-#define EXAMPLE_ESP_WIFI_CHANNEL 11
+#define EXAMPLE_ESP_WIFI_CHANNEL 6
 #define EXAMPLE_MAX_STA_CONN 5
 
 #define WIFI_CONNECTED_BIT BIT0
@@ -76,6 +76,7 @@ void WiFiHandler::wifi_init_sta(void)
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
         ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+        ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
         ESP_ERROR_CHECK(esp_wifi_start());
         ESP_ERROR_CHECK(esp_wifi_set_channel(EXAMPLE_ESP_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE));
 
@@ -120,6 +121,7 @@ void WiFiHandler::wifi_init_sta(std::string ssid, std::string password)
 
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+        ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
         ESP_ERROR_CHECK(esp_wifi_start());
 
         ESP_LOGI(GetName().c_str(), "Estação inicializada.");
@@ -197,6 +199,7 @@ void WiFiHandler::wifi_init_softap(std::string ssid, std::string password)
 
         esp_wifi_set_mode(WIFI_MODE_APSTA);
         esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+        ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
         esp_wifi_start();
 
         ESP_LOGI(GetName().c_str(), "AP criada. SSID:%s Senha:%s Canal:%d",

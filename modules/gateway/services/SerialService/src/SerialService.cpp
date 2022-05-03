@@ -81,7 +81,7 @@ void SerialService::Run()
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
         else if (err == ESP_OK)
         {
-            printf("Retorno do comando:\n%s", ret.c_str());
+            printf("Retorno do comando:\n%s\n", ret.c_str());
         }
 #endif
         else if (err != ESP_OK)

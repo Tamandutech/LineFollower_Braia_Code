@@ -36,7 +36,7 @@ struct PacketData
     uint8_t type;         // Tipo do pacote
     uint8_t numActual;    // Numero atual do pacote
     uint8_t numToReceive; // Numero total de pacotes
-    uint8_t size;         // Tamanho do dado
+    size_t size;         // Tamanho do dado
     uint8_t data[240];    // Dados do pacote
 };
 

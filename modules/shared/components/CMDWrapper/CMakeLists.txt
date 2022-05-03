@@ -3,6 +3,7 @@ idf_component_register(
         "cmd_system/cmd_system.cpp"
         "cmd_param/cmd_param.cpp"
         "cmd_remote/cmd_remote.cpp"
+        "cmd_wifi/cmd_wifi.cpp"
 
     REQUIRES
         "BetterConsole" 
@@ -13,4 +14,5 @@ idf_component_register(
         "cmd_system"
         "cmd_param"
         "cmd_remote"
+        "cmd_wifi"
 )

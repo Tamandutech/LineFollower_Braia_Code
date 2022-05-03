@@ -16,7 +16,7 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
 
     queuePacketsReceived = xQueueCreate(10, sizeof(PacketData));
 
-    this->ESPNOWInit(11, broadcastAddress, false);
+    this->ESPNOWInit(6, broadcastAddress, false);
     this->Start();
 }
 
@@ -43,7 +43,7 @@ void ESPNOWHandler::Run()
 
             esp_err_t err = better_console_run(line, &ret);
 
-            ESP_LOGD(this->name.c_str(), "Retorno do comando:\n%s\nRetorno da execução: %s", ret.c_str(), esp_err_to_name(err));
+            ESP_LOGD(this->name.c_str(), "Retorno do comando:\n%s\nRetorno da execução: %s\n", ret.c_str(), esp_err_to_name(err));
 
             this->SendAwnser(packetReceived.id, (uint8_t *)ret.c_str(), ret.size() + 1);
 

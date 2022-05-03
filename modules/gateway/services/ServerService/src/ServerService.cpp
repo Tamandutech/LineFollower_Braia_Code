@@ -129,11 +129,12 @@ void ServerService::Run()
 
         esp_err_t err = better_console_run(line, &ret);
 
-        ESP_LOGD(GetName().c_str(), "Retorno do comando:\n%s\nRetorno da execução: %s", ret.c_str(), esp_err_to_name(err));
+        ESP_LOGD(GetName().c_str(), "Retorno do comando:\n%s\nRetorno da execução: %s\n", ret.c_str(), esp_err_to_name(err));
 
         if (err == ESP_OK)
         {
-            ESP_LOGD(GetName().c_str(), "Enviando pacote de dados");
+            ESP_LOGD(GetName().c_str(), "Enviando pacote de dados, tamanho: %d", ret.length());
+            
             httpd_ws_frame_t ws_pkt;
             memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
             ws_pkt.payload = (uint8_t *)ret.c_str();
