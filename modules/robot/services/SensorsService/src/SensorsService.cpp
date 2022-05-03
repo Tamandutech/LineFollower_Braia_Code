@@ -8,6 +8,10 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
     SLat = robot->getsLat();
     status = robot->getStatus();
 
+    // Definindo configs do ADC1 no GPIO36
+    adc1_config_width(ADC_WIDTH_12Bit);
+    adc1_config_channel_atten(ADC1_CHANNEL_0,ADC_ATTEN_11db);
+    
     // Definindo GPIOs e configs para sensor Array
     sArray.setTypeMCP3008();
     sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, (gpio_num_t)ADC_DOUT, (gpio_num_t)ADC_DIN, (gpio_num_t)ADC_CLK, (gpio_num_t)ADC_CS, 1350000, VSPI_HOST);

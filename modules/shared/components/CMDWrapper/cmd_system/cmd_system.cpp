@@ -19,6 +19,7 @@
 #include "esp_spi_flash.h"
 #include "driver/rtc_io.h"
 #include "driver/uart.h"
+#include "driver/adc.h"
 #include "argtable3/argtable3.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -37,6 +38,7 @@ static void register_free(void);
 static void register_heap(void);
 static void register_version(void);
 static void register_restart(void);
+static void register_bat_voltage(void);
 #if WITH_TASKS_INFO
 static void register_tasks(void);
 #endif
@@ -48,6 +50,7 @@ void register_system_common(void)
     register_heap();
     register_version();
     register_restart();
+    register_bat_voltage();
 #if WITH_TASKS_INFO
     register_tasks();
 #endif
@@ -91,6 +94,22 @@ static void register_version(void)
         .help = "Get version of chip and SDK",
         .hint = NULL,
         .func = &get_version,
+    };
+    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
+}
+
+static std::string bat_voltage(int argc, char **argv){
+    float Vbat = (adc1_get_raw(ADC1_CHANNEL_0) * (2.45/4095)) * 3.7;
+    return std::to_string(Vbat);
+}
+
+static void register_bat_voltage(void)
+{
+    const better_console_cmd_t cmd = {
+        .command = "bat_voltage",
+        .help = "Obtém a tensão da bateria",
+        .hint = NULL,
+        .func = &bat_voltage,
     };
     ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
 }

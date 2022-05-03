@@ -109,18 +109,22 @@ void PIDService::Run()
         setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
 
         // Rampeia a velocidade translacional
-        if (VelTrans <= setpointPIDTransTarget && estado != CAR_STOPPED)
-        {
-            newSetpoint = VelTrans + (accel * (TaskDelay / 1000));
-            PIDTrans->setpoint->setData(constrain(newSetpoint, VelTrans, setpointPIDTransTarget));
+        SetpointTransactual = VelTrans;
+        //SetpointTransactual =  PIDTrans->setpoint->getData();
+        if(estado != CAR_STOPPED){
+            if (SetpointTransactual <= setpointPIDTransTarget)
+            {
+                newSetpoint = SetpointTransactual + (accel * (TaskDelay / 1000));
+                PIDTrans->setpoint->setData(constrain(newSetpoint, SetpointTransactual, setpointPIDTransTarget));
+            }
+            else
+            {
+                newSetpoint = SetpointTransactual - (accel * (TaskDelay / 1000));
+                PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, SetpointTransactual));
+            }
         }
-        else
-        {
-            newSetpoint = VelTrans - (accel * (TaskDelay / 1000));
-            PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, VelTrans));
-        }
-
-#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
+        
+#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
         if (iloop > 100)
         {
             // ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
@@ -132,6 +136,14 @@ void PIDService::Run()
             iloop = 0;
         }
         iloop++;
+#else
+        if (iloop > 5)
+        {
+            ESP_LOGI("","%d,%d,%d,%d\n",VelTrans,xTaskGetTickCount()*portTICK_PERIOD_MS,PIDTrans->setpoint->getData(),3500 - robot->getsArray()->getLine());  // VelTrans,time(ms),VelTransSetpoint,LineValue\n
+            iloop = 0;
+        }
+        iloop++;
 #endif
+
     }
 }

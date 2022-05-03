@@ -10,6 +10,7 @@ using namespace cpp_freertos;
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+//#define GRAPH_DATA
 #include "esp_log.h"
 
 class PIDService : public Thread
@@ -41,6 +42,7 @@ private:
     float accel = 6000; // aceleração em rpm/s
     int16_t setpointPIDTransTarget = 0;
     int16_t newSetpoint = 0;
+    int16_t SetpointTransactual = 0;
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
     float PidRot = 0;
@@ -61,6 +63,7 @@ private:
     CarState estado = CAR_STOPPED;
 
     int iloop = 0;
+    int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos 
 };
 
 #endif
