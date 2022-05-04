@@ -69,7 +69,7 @@ void app_main(void)
   mappingService = MappingService::getInstance("MappingService", 2048, 18);
   motorsService = new MotorsService("MotorsService", braia, 2048, 20);
   speedService = new SpeedService("SpeedService", braia, 2048, 20);
-  pidService = new PIDService("PIDService", braia, 2048, 20);
+  pidService = new PIDService("PIDService", braia, 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
   ledsService = new LEDsService("LEDsService", braia, 2048, 9);

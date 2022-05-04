@@ -9,6 +9,7 @@ idf_component_register(
         "BetterConsole" 
         "spi_flash"
         "ESPNOWHandler"
+        "esp_adc_cal"
 
     INCLUDE_DIRS 
         "cmd_system"

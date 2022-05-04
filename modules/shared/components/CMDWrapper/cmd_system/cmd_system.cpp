@@ -17,6 +17,7 @@
 #include "esp_system.h"
 #include "esp_sleep.h"
 #include "esp_spi_flash.h"
+#include "esp_adc_cal.h"
 #include "driver/rtc_io.h"
 #include "driver/uart.h"
 #include "driver/adc.h"
@@ -98,9 +99,16 @@ static void register_version(void)
     ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
 }
 
-static std::string bat_voltage(int argc, char **argv){
-    float Vbat = (adc1_get_raw(ADC1_CHANNEL_0) * (2.45/4095)) * 3.7;
-    return std::to_string(Vbat);
+static std::string bat_voltage(int argc, char **argv)
+{
+    esp_adc_cal_characteristics_t *adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, adc_chars);
+    uint32_t calVoltage = 0;
+    esp_adc_cal_get_voltage(ADC_CHANNEL_0, adc_chars, &calVoltage);
+
+    calVoltage *= 3.7;
+
+    return (std::to_string(calVoltage) + "mV");
 }
 
 static void register_bat_voltage(void)
@@ -110,6 +118,7 @@ static void register_bat_voltage(void)
         .help = "Obtém a tensão da bateria",
         .hint = NULL,
         .func = &bat_voltage,
+        .argtable = NULL
     };
     ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
 }

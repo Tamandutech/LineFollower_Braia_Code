@@ -59,6 +59,10 @@ void PIDService::Run()
         //  rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
         PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / rotK); // cálculo do setpoint rotacional
         erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
+        if (iloop > 100)
+        {
+            ESP_LOGD(GetName().c_str(), "PIDTrans->setpoint: %d", PIDTrans->setpoint->getData());
+        }
         erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
         // erroVelRot = 3500 - robot->getsArray()->getLine();
 
@@ -109,41 +113,40 @@ void PIDService::Run()
         setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
 
         // Rampeia a velocidade translacional
-        SetpointTransactual = VelTrans;
-        //SetpointTransactual =  PIDTrans->setpoint->getData();
-        if(estado != CAR_STOPPED){
+        SetpointTransactual = PIDTrans->setpoint->getData();
+        if (estado != CAR_STOPPED)
+        {
             if (SetpointTransactual <= setpointPIDTransTarget)
             {
-                newSetpoint = SetpointTransactual + (accel * (TaskDelay / 1000));
+                newSetpoint = SetpointTransactual + (accel * ((float)TaskDelay / (float)1000));
                 PIDTrans->setpoint->setData(constrain(newSetpoint, SetpointTransactual, setpointPIDTransTarget));
             }
             else
             {
-                newSetpoint = SetpointTransactual - (accel * (TaskDelay / 1000));
+                newSetpoint = SetpointTransactual - (accel * ((float)TaskDelay / (float)1000));
                 PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, SetpointTransactual));
             }
         }
-        
+
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
         if (iloop > 100)
         {
             // ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
-            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d, SetPointRot: %d", PIDTrans->setpoint->getData(), PIDRot->setpoint->getData());
+            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
             // ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);
             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
             ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
-            ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f", VelTrans, VelRot);
+            ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
             iloop = 0;
         }
         iloop++;
 #else
         if (iloop > 5)
         {
-            ESP_LOGI("","%d,%d,%d,%d\n",VelTrans,xTaskGetTickCount()*portTICK_PERIOD_MS,PIDTrans->setpoint->getData(),3500 - robot->getsArray()->getLine());  // VelTrans,time(ms),VelTransSetpoint,LineValue\n
+            ESP_LOGI("", "%d,%d,%d,%d\n", VelTrans, xTaskGetTickCount() * portTICK_PERIOD_MS, PIDTrans->setpoint->getData(), 3500 - robot->getsArray()->getLine()); // VelTrans,time(ms),VelTransSetpoint,LineValue\n
             iloop = 0;
         }
         iloop++;
 #endif
-
     }
 }
