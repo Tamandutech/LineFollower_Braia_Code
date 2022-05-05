@@ -121,7 +121,9 @@ void ServerService::Run()
         ESP_LOGD(GetName().c_str(), "Dados:\n%s\n", packetReceived.packet.payload);
 
         std::string ret;
-        
+
+        std::string wsMsg;
+
         char *line = (char *)malloc(packetReceived.packet.len + 1);
         strcpy(line, (char *)packetReceived.packet.payload);
 
@@ -133,15 +135,25 @@ void ServerService::Run()
 
         if (err == ESP_OK)
         {
-            ESP_LOGD(GetName().c_str(), "Enviando pacote de dados, tamanho: %d", ret.length());
-            
+            cJSON *root;
+            root = cJSON_CreateObject();
+            cJSON_AddStringToObject(root, "cmdExecd", line);
+            cJSON_AddStringToObject(root, "data", ret.c_str());
+
+            char *my_json_string = cJSON_Print(root);
+
+            ESP_LOGD(GetName().c_str(), "Enviando pacote de dados, tamanho: %d", strlen(my_json_string));
+
             httpd_ws_frame_t ws_pkt;
             memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-            ws_pkt.payload = (uint8_t *)ret.c_str();
-            ws_pkt.len = ret.length();
+            ws_pkt.payload = (uint8_t *)my_json_string;
+            ws_pkt.len = strlen(my_json_string);
             ws_pkt.type = HTTPD_WS_TYPE_TEXT;
 
             httpd_ws_send_frame_async(packetReceived.hd, packetReceived.fd, &ws_pkt);
+
+            cJSON_Delete(root);
+            cJSON_free(my_json_string);
         }
 
         // this->SendAwnser(packetReceived.id, (uint8_t *)ret.c_str(), ret.size() + 1);
