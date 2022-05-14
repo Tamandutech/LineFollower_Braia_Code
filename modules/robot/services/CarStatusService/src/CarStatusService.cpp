@@ -8,7 +8,12 @@ QueueHandle_t CarStatusService::gpio_evt_queue;
 void IRAM_ATTR CarStatusService::gpio_isr_handler(void *arg)
 {
     uint32_t gpio_num = (uint32_t)arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+    uint8_t carstate = 0;
+    if (gpio_num == GPIO_NUM_0)
+    {
+        carstate = CAR_IN_LINE;
+    }
+    xQueueSendFromISR(gpio_evt_queue, &carstate, NULL);
 }
 
 CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
@@ -65,13 +70,14 @@ void CarStatusService::Run()
 
     ESP_LOGD(GetName().c_str(), "Aguardando pressionamento do botão.");
 
-    uint32_t io_num;
+    uint8_t num;
     do
     {
-        xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
+        xQueueReceive(gpio_evt_queue, &num, portMAX_DELAY);
+        ESP_LOGD(GetName().c_str(), " Aguardando inicialização");
+        if(status->robotState->getData() != CAR_STOPPED) break;
+    } while (num != CAR_IN_LINE);
 
-        ESP_LOGD(GetName().c_str(), "Botão %d pressionado.", io_num);
-    } while (io_num != GPIO_NUM_0 && status->robotState->getData() == CAR_STOPPED);
     status->ColorLed0->setData(CRGB::Yellow);
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 2500ms");
     vTaskDelay(2500 / portTICK_PERIOD_MS);

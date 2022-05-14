@@ -9,9 +9,7 @@ EventGroupHandle_t WiFiHandler::s_wifi_event_group;
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
-#define EXAMPLE_ESP_WIFI_SSID "BraiaGateway"
-#define EXAMPLE_ESP_WIFI_PASS "BraiaGateway"
-#define EXAMPLE_ESP_WIFI_CHANNEL 6
+#define EXAMPLE_ESP_WIFI_CHANNEL 11
 #define EXAMPLE_MAX_STA_CONN 5
 
 #define WIFI_CONNECTED_BIT BIT0
@@ -192,7 +190,7 @@ void WiFiHandler::wifi_init_softap(std::string ssid, std::string password)
         wifi_config.ap.ssid_len = strlen((char *)wifi_config.ap.ssid);
         strcpy((char *)wifi_config.ap.password, password.c_str());
 
-        if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0)
+        if (strlen(password.c_str()) == 0)
         {
             wifi_config.ap.authmode = WIFI_AUTH_OPEN;
         }

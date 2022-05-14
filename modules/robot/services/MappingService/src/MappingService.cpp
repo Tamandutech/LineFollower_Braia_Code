@@ -51,10 +51,10 @@ esp_err_t MappingService::stopNewMapping()
 {
     ESP_LOGD(GetName().c_str(), "Parando novo mapeamento.");
 
-    status->stateMutex.lock();
-    status->robotState->setData(CAR_STOPPED);
-    status->robotIsMapping->setData(false);
-    status->stateMutex.unlock();
+    // status->stateMutex.lock();
+    // status->robotState->setData(CAR_STOPPED);
+    // status->robotIsMapping->setData(false);
+    // status->stateMutex.unlock();
 
     this->Cleanup();
 

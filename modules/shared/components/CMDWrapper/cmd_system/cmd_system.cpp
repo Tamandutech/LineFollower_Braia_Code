@@ -30,6 +30,7 @@
 #include "DataStorage.hpp"
 #include "RobotData.h"
 #include "SensorsService.hpp"
+#include  "CarStatusService.hpp"
 
 #ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
 #define WITH_TASKS_INFO 1
@@ -139,7 +140,9 @@ static std::string start(int argc, char **argv)
     auto latMarks =  Robot::getInstance()->getSLatMarks();
     status->robotIsMapping->setData(false);
     status->encreading->setData(false);
+    SensorsService::getInstance()->Suspend();
     SensorsService::getInstance()->calibAllsensors();
+    SensorsService::getInstance()->Resume();
     if (latMarks->marks->getSize() <= 0)
     {
         status->encreading->setData(false);
@@ -151,6 +154,8 @@ static std::string start(int argc, char **argv)
         status->encreading->setData(true);
     }
     status->robotState->setData(CAR_IN_LINE);
+    auto carstate = status->robotState->getData();
+    xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
     return ("O robô começará a se mover");
 }
 
@@ -181,6 +186,9 @@ static std::string resume(int argc, char **argv)
         status->encreading->setData(true);
     }
     status->robotState->setData(CAR_IN_LINE);
+    auto carstate = status->robotState->getData();
+    xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
+
     return ("O robô voltará a andar");
 }
 
@@ -221,7 +229,9 @@ static std::string calibrate(int argc, char **argv)
     auto status = Robot::getInstance()->getStatus();
     status->robotIsMapping->setData(false);
     status->encreading->setData(false);
+    SensorsService::getInstance()->Suspend();
     SensorsService::getInstance()->calibAllsensors();
+    SensorsService::getInstance()->Resume();
     return ("O robô será calibrado");
 }
 

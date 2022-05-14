@@ -64,6 +64,10 @@ void app_main(void)
 
   braia = Robot::getInstance("Braia"); 
 
+  
+  ledsService = new LEDsService("LEDsService", braia, 2048, 9);
+  ledsService->Start();
+
   sensorsService = SensorsService::getInstance("SensorsService", 8192,20);
   carStatusService = CarStatusService::getInstance();
   mappingService = MappingService::getInstance("MappingService", 2048, 18);
@@ -71,9 +75,8 @@ void app_main(void)
   speedService = new SpeedService("SpeedService", braia, 2048, 20);
   pidService = new PIDService("PIDService", braia, 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
-  ledsService = new LEDsService("LEDsService", braia, 2048, 9);
+
   
-  // ledsService->Start();
   sensorsService->Start();
   motorsService->Start();
   pidService->Start();

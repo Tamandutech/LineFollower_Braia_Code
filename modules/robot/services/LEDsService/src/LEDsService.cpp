@@ -32,7 +32,7 @@ void LEDsService::Run()
     for (;;)
     {
 #ifndef ESP32_QEMU
-        // ws2812fx->service();
+        ws2812fx->service();
 #endif
         if(status->robotIsMapping->getData() || status->encreading->getData())
         {

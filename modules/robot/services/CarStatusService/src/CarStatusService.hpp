@@ -38,6 +38,7 @@ public:
     };
 
     void Run() override;
+    static QueueHandle_t gpio_evt_queue;
 
 private:
     static std::atomic<CarStatusService *> instance;
@@ -65,8 +66,6 @@ private:
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
 
-
-    static QueueHandle_t gpio_evt_queue;
     static void IRAM_ATTR gpio_isr_handler(void *arg);
 };
 

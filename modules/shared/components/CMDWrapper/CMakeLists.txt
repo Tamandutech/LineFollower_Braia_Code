@@ -11,6 +11,7 @@ idf_component_register(
         "ESPNOWHandler"
         "esp_adc_cal"
         "SensorsService"
+        "CarStatusService"
 
     INCLUDE_DIRS 
         "cmd_system"

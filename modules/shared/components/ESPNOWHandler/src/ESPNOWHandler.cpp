@@ -16,7 +16,7 @@ ESPNOWHandler::ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t 
 
     queuePacketsReceived = xQueueCreate(10, sizeof(PacketData));
 
-    this->ESPNOWInit(6, broadcastAddress, false);
+    this->ESPNOWInit(11, broadcastAddress, false);
     this->Start();
 }
 
@@ -65,7 +65,7 @@ void ESPNOWHandler::ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia)
 {
     if (xSemaphoreTake(xSemaphorePeerInfo, (TickType_t)10) == pdTRUE)
     {
-        memcpy(this->peerInfo.peer_addr, Mac, 6);
+        memcpy(this->peerInfo.peer_addr, Mac, canal);
         this->peerInfo.channel = canal;
         this->peerInfo.encrypt = criptografia;
         this->peerInfo.ifidx = WIFI_IF_STA;
