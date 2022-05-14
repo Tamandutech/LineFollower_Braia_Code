@@ -28,6 +28,8 @@
 #include "sdkconfig.h"
 
 #include "DataStorage.hpp"
+#include "RobotData.h"
+#include "SensorsService.hpp"
 
 #ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
 #define WITH_TASKS_INFO 1
@@ -40,6 +42,10 @@ static void register_heap(void);
 static void register_version(void);
 static void register_restart(void);
 static void register_bat_voltage(void);
+static void register_start(void);
+static void register_resume(void);
+static void register_pause(void);
+static void register_calibrate(void);
 #if WITH_TASKS_INFO
 static void register_tasks(void);
 #endif
@@ -51,6 +57,10 @@ void register_system_common(void)
     register_heap();
     register_version();
     register_restart();
+    register_start();
+    register_resume();
+    register_pause();
+    register_calibrate();
     register_bat_voltage();
 #if WITH_TASKS_INFO
     register_tasks();
@@ -118,6 +128,110 @@ static void register_bat_voltage(void)
         .help = "Obtém a tensão da bateria",
         .hint = NULL,
         .func = &bat_voltage,
+        .argtable = NULL
+    };
+    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
+}
+
+static std::string start(int argc, char **argv)
+{
+    auto status = Robot::getInstance()->getStatus();
+    auto latMarks =  Robot::getInstance()->getSLatMarks();
+    status->robotIsMapping->setData(false);
+    status->encreading->setData(false);
+    SensorsService::getInstance()->calibAllsensors();
+    if (latMarks->marks->getSize() <= 0)
+    {
+        status->encreading->setData(false);
+        status->robotIsMapping->setData(true);
+    }
+    else
+    {
+        status->robotIsMapping->setData(false);
+        status->encreading->setData(true);
+    }
+    status->robotState->setData(CAR_IN_LINE);
+    return ("O robô começará a se mover");
+}
+
+static void register_start(void)
+{
+    const better_console_cmd_t cmd = {
+        .command = "start",
+        .help = "Calibra e faz o robô se mover",
+        .hint = NULL,
+        .func = &start,
+        .argtable = NULL
+    };
+    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
+}
+
+static std::string resume(int argc, char **argv)
+{
+    auto status = Robot::getInstance()->getStatus();
+    auto latMarks =  Robot::getInstance()->getSLatMarks();
+    if (latMarks->marks->getSize() <= 0)
+    {
+        status->encreading->setData(false);
+        status->robotIsMapping->setData(true);
+    }
+    else
+    {
+        status->robotIsMapping->setData(false);
+        status->encreading->setData(true);
+    }
+    status->robotState->setData(CAR_IN_LINE);
+    return ("O robô voltará a andar");
+}
+
+static void register_resume(void)
+{
+    const better_console_cmd_t cmd = {
+        .command = "resume",
+        .help = "Faz o robô voltar a se mover",
+        .hint = NULL,
+        .func = &resume,
+        .argtable = NULL
+    };
+    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
+}
+
+static std::string pause(int argc, char **argv)
+{
+    auto status = Robot::getInstance()->getStatus();
+    status->robotIsMapping->setData(false);
+    status->encreading->setData(false);
+    return ("O robô será pausado");
+}
+
+static void register_pause(void)
+{
+    const better_console_cmd_t cmd = {
+        .command = "pause",
+        .help = "Faz o robô parar de se mover",
+        .hint = NULL,
+        .func = &pause,
+        .argtable = NULL
+    };
+    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
+}
+
+static std::string calibrate(int argc, char **argv)
+{
+    auto status = Robot::getInstance()->getStatus();
+    status->robotIsMapping->setData(false);
+    status->encreading->setData(false);
+    SensorsService::getInstance()->calibAllsensors();
+    return ("O robô será calibrado");
+}
+
+static void register_calibrate(void)
+{
+    const better_console_cmd_t cmd = {
+        .command = "calibrate",
+        .help = "Faz o robô começar a calibração e pausa ele",
+        .hint = NULL,
+        .func = &calibrate,
         .argtable = NULL
     };
     ESP_ERROR_CHECK(better_console_cmd_register(&cmd));

@@ -9,8 +9,6 @@ PIDService::PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBas
     this->PIDRot = robot->getPIDRot();
 
     this->PIDRot->input->setData(this->robot->getsArray()->getLine());
-    rotK = PIDRot->Krot->getData();
-    accel = speed->accelration->getData();
     PIDTrans->setpoint->setData(0);
     setpointPIDTransTarget = 0;
 };
@@ -28,6 +26,9 @@ void PIDService::Run()
         speedBase = speed->base->getData();
         speedMin = speed->min->getData();
         speedMax = speed->max->getData();
+        
+        accel = speed->accelration->getData();
+        rotK = PIDRot->Krot->getData();
 
         // Reseta o PID se o carrinho parar
         if (estado == CAR_STOPPED)

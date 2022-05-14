@@ -36,6 +36,16 @@ public:
      * @retval FALSE Se o robô não está mapeando a pista
      */
     DataAbstract<bool> *robotIsMapping;
+     /**
+     * @brief Atributo que indica se o robô está lendo o mapeamento para identificar as curvas e retas
+     * @retval TRUE Se o robô está lendo o mapeamento
+     * @retval FALSE Se o robô não está lendo o mapeamento
+     */
+    DataAbstract<bool> *encreading;
+
+    DataAbstract<uint32_t> *ColorLed0;
+    DataAbstract<uint32_t> *ColorLed1;
+    DataAbstract<uint32_t> *ColorLed2;
 
     static std::mutex stateMutex;
     

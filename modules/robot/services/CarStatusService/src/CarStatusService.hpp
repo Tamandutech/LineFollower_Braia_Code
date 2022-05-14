@@ -7,6 +7,7 @@
 #include "driver/gpio.h"
 
 #include "MappingService.hpp"
+#include "LEDsService.hpp"
 #include "RobotData.h"
 
 using namespace cpp_freertos;
@@ -60,7 +61,6 @@ private:
 
     uint8_t lastState; // armazena último estado do mapeamento
     bool lastMappingState;
-    bool encreading = false;
 
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;

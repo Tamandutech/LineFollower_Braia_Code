@@ -25,13 +25,13 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
 
     if (latMarks->marks->getSize() <= 0)
     {
-        encreading = false;
+        status->encreading->setData(false);
         status->robotIsMapping->setData(true);
     }
     else
     {
         status->robotIsMapping->setData(false);
-        encreading = true;
+        status->encreading->setData(true);
         numMarks = latMarks->marks->getSize();
         mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
     }
@@ -71,10 +71,11 @@ void CarStatusService::Run()
         xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
 
         ESP_LOGD(GetName().c_str(), "Botão %d pressionado.", io_num);
-    } while (io_num != GPIO_NUM_0);
-
+    } while (io_num != GPIO_NUM_0 && status->robotState->getData() == CAR_STOPPED);
+    status->ColorLed0->setData(CRGB::Yellow);
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 2500ms");
     vTaskDelay(2500 / portTICK_PERIOD_MS);
+    status->ColorLed0->setData(CRGB::Black);
 
     if (status->robotIsMapping->getData())
     {
@@ -133,8 +134,11 @@ void CarStatusService::Run()
         }
         iloop++;
 #endif
+        if(!status->robotIsMapping->getData() && !status->encreading->getData()){
+            robot->getStatus()->robotState->setData(CAR_STOPPED);
+        }
 
-        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && encreading)
+        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && status->encreading->getData())
         {
             if (mediaEncActual >= mediaEncFinal)
             {

@@ -1,8 +1,10 @@
 #include "SensorsService.hpp"
+std::atomic<SensorsService *> SensorsService::instance;
+std::mutex SensorsService::instanceMutex;
 
-SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
+SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-    this->robot = robot;
+    this->robot = Robot::getInstance();
 
     latMarks = robot->getSLatMarks();
     SLat = robot->getsLat();
@@ -29,7 +31,29 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
     sLat.setSensorPins((const adc1_channel_t[]){(adc1_channel_t)SL1, (adc1_channel_t)SL2}, 2);
     sLat.setSamplesPerSensor(5);
 
+    calibAllsensors();
+   
+}
+
+void SensorsService::Run()
+{
+    // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    // Loop
+    for (;;)
+    {
+        vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
+
+        getSensors(&sArray, &sLat, robot); // leitura dos sensores
+        processSLat(robot);
+    }
+}
+
+void SensorsService::calibAllsensors()
+{
     // Calibração dos dos sensores laterais e array
+    status->ColorLed0->setData(CRGB::Blue);
     for (uint16_t i = 0; i < 20; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p) | sLat: (%p)", this, &sArray, &sLat);
@@ -49,21 +73,8 @@ SensorsService::SensorsService(const char *name, Robot *robot, uint32_t stackDep
     robot->getsArray()->setChannelsMins(sArrayMins);
     robot->getsLat()->setChannelsMaxes(SLatMaxes);
     robot->getsLat()->setChannelsMins(SLatMins);
-}
 
-void SensorsService::Run()
-{
-    // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-
-    // Loop
-    for (;;)
-    {
-        vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
-
-        getSensors(&sArray, &sLat, robot); // leitura dos sensores
-        processSLat(robot);
-    }
+    status->ColorLed0->setData(CRGB::Black);
 }
 
 void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot) // função leitura dos sensores
@@ -152,6 +163,8 @@ void SensorsService::processSLat(Robot *robot)
         if ((slesq1 < 300) && (sldir2))       // lendo sLat esq. branco e dir. preto
 #endif
         {
+            status->ColorLed1->setData(CRGB::Red);
+            status->ColorLed2->setData(CRGB::Black);
             if (!(latMarks->latEsqPass->getData()))
                 latMarks->leftPassedInc();
 
@@ -167,6 +180,8 @@ void SensorsService::processSLat(Robot *robot)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
 #endif
         {
+            status->ColorLed1->setData(CRGB::Black);
+            status->ColorLed2->setData(CRGB::Red);
             if (!(latMarks->latDirPass->getData()))
                 latMarks->rightPassedInc();
 
@@ -177,6 +192,8 @@ void SensorsService::processSLat(Robot *robot)
     else
     {
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+        status->ColorLed1->setData(CRGB::Black);
+        status->ColorLed2->setData(CRGB::Black);
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
     }

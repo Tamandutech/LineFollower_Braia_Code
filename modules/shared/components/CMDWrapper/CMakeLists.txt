@@ -10,6 +10,7 @@ idf_component_register(
         "spi_flash"
         "ESPNOWHandler"
         "esp_adc_cal"
+        "SensorsService"
 
     INCLUDE_DIRS 
         "cmd_system"

@@ -62,19 +62,18 @@ void app_main(void)
   register_system();
   register_cmd_param();
 
-  braia = Robot::getInstance("Braia");
+  braia = Robot::getInstance("Braia"); 
 
-  sensorsService = new SensorsService("SensorsService", braia, 8192, 20);
+  sensorsService = SensorsService::getInstance("SensorsService", 8192,20);
   carStatusService = CarStatusService::getInstance();
   mappingService = MappingService::getInstance("MappingService", 2048, 18);
   motorsService = new MotorsService("MotorsService", braia, 2048, 20);
   speedService = new SpeedService("SpeedService", braia, 2048, 20);
   pidService = new PIDService("PIDService", braia, 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
-
   ledsService = new LEDsService("LEDsService", braia, 2048, 9);
+  
   // ledsService->Start();
-
   sensorsService->Start();
   motorsService->Start();
   pidService->Start();
