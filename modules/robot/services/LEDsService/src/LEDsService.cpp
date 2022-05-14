@@ -4,25 +4,11 @@ LEDsService::LEDsService(const char *name, Robot *robot, uint32_t stackDepth, UB
 {
     this->robot = robot;
     this->status = robot->getStatus();
+    uint8_t *colorsRGB = (uint8_t *) malloc(3);
+    REG_WRITE(GPIO_ENABLE_REG, BIT32);
 
 #ifndef ESP32_QEMU
-    FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
-    FastLED.setMaxPowerInVoltsAndMilliamps(8, 2000);
 
-    ws2812fx = new WS2812FX();
-    segments = ws2812fx->getSegments();
-
-    ws2812fx->init(NUM_LEDS, leds, false); // type was configured before
-
-    ws2812fx->setBrightness(BRIGHTNESS);
-    ws2812fx->setMode(0 /*segid*/, FX_MODE_STATIC);
-    ws2812fx->setMode(1 /*segid*/, FX_MODE_STATIC);
-    ws2812fx->setMode(2 /*segid*/, FX_MODE_STATIC);
-    segments[0].colors[0] = CRGB::Black;
-    status->ColorLed0->setData(CRGB::Black);
-    status->ColorLed1->setData(CRGB::Black);
-    status->ColorLed2->setData(CRGB::Black);
-    ws2812fx->service();
 #endif
 }
 
@@ -32,21 +18,74 @@ void LEDsService::Run()
     for (;;)
     {
 #ifndef ESP32_QEMU
-        ws2812fx->service();
+
 #endif
-        if(status->robotIsMapping->getData() || status->encreading->getData())
+        if (status->robotIsMapping->getData() || status->encreading->getData())
         {
-            if(status->robotState->getData() == CAR_IN_LINE){
-                 status->ColorLed0->setData(CRGB::Green);
+            if (status->robotState->getData() == CAR_IN_LINE)
+            {
+                status->ColorLed0->setData(0xFF0000);
             }
-            else if(status->robotState->getData() == CAR_IN_CURVE){
-                 status->ColorLed0->setData(CRGB::White);
+            else if (status->robotState->getData() == CAR_IN_CURVE)
+            {
+                status->ColorLed0->setData(0x00FF00);
             }
         }
-        segments[0].colors[0] = status->ColorLed0->getData();
-        segments[1].colors[0] = status->ColorLed1->getData();
-        segments[2].colors[0] = status->ColorLed2->getData();
+        uint32_t colors0 = status->ColorLed0->getData();
+        memcpy(colorsRGB, &colors0, 3);
+        setLEDColor(0, colorsRGB[0], colorsRGB[1], colorsRGB[2]);
+        uint32_t colors1 = status->ColorLed1->getData();
+        memcpy(colorsRGB, &colors1, 3);
+        setLEDColor(0, colorsRGB[0], colorsRGB[1], colorsRGB[2]);
+        uint32_t colors2 = status->ColorLed2->getData();
+        memcpy(colorsRGB, &colors2, 3);
+        setLEDColor(0, colorsRGB[0], colorsRGB[1], colorsRGB[2]);
+        sendToLEDs();
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
     }
+}
+
+esp_err_t LEDsService::setLEDColor(uint8_t led, uint8_t red, uint8_t green, uint8_t blue){
+    if (led < NUM_LEDS)
+    {
+        LEDs[led].red = red;
+        LEDs[led].green = green;
+        LEDs[led].blue = blue;
+        return ESP_OK;
+    }
+    else
+    {
+        return ESP_FAIL;
+    }
+}
+
+esp_err_t LEDsService::sendToLEDs(){
+    uint32_t cyclesoffset = 0;
+    uint32_t color;
+    for (int i = 0; i < NUM_LEDS; i++)
+    {
+        memcpy(&color, &LEDs[i], 3);
+        for (int bitpos = 0; bitpos < 24; bitpos++)
+        {
+            bool bit = color & (1 << bitpos);
+            if (bit)
+            {
+                REG_WRITE(GPIO_OUT_W1TS_REG, BIT32);
+                cyclesoffset = xthal_get_ccount();
+                while(xthal_get_ccount() - cyclesoffset < CYCLES_800_T1H);
+                REG_WRITE(GPIO_OUT_W1TC_REG, BIT32);
+            }
+            else
+            {
+                REG_WRITE(GPIO_OUT_W1TS_REG, BIT32);
+                cyclesoffset = xthal_get_ccount();
+                while(xthal_get_ccount() - cyclesoffset< CYCLES_800_T0H);
+                REG_WRITE(GPIO_OUT_W1TC_REG, BIT32);
+            }
+            while(xthal_get_ccount() - cyclesoffset < CYCLES_800);
+        }
+        vTaskDelay(1);
+    }
+   return ESP_OK;
 }

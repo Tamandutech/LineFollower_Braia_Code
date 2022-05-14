@@ -4,9 +4,8 @@
 #include "thread.hpp"
 #include "RobotData.h"
 
-#include "FX.h"
-
 #include "driver/gpio.h"
+#include "esp32-hal.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
@@ -20,24 +19,18 @@ using namespace cpp_freertos;
 #define COLOR_ORDER RGB
 #define N_COLORS 17
 
-static const CRGB colors[N_COLORS] = {
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::White,
-    CRGB::AliceBlue,
-    CRGB::ForestGreen,
-    CRGB::Lavender,
-    CRGB::MistyRose,
-    CRGB::DarkOrchid,
-    CRGB::DarkOrange,
-    CRGB::Black,
-    CRGB::Teal,
-    CRGB::Violet,
-    CRGB::Lime,
-    CRGB::Chartreuse,
-    CRGB::BlueViolet,
-    CRGB::Aqua};
+#define CYCLES_800_T0H  (F_CPU / 2500001) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250001) // 0.8us
+#define CYCLES_800      (F_CPU /  800001) // 1.25us per bit
+
+
+struct LEDColor {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+};
+
+
 
 class LEDsService : public Thread
 {
@@ -49,11 +42,11 @@ public:
 private:
     Robot *robot;
     RobotStatus *status;
+    uint8_t *colorsRGB;
+    LEDColor LEDs[NUM_LEDS];
 
-    CRGB leds[NUM_LEDS];
-
-    WS2812FX *ws2812fx;
-    WS2812FX::Segment *segments;
+    esp_err_t setLEDColor(uint8_t led, uint8_t red, uint8_t green, uint8_t blue);
+    esp_err_t sendToLEDs();
 };
 
 #endif

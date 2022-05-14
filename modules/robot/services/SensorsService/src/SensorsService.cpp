@@ -53,7 +53,7 @@ void SensorsService::Run()
 void SensorsService::calibAllsensors()
 {
     // Calibração dos dos sensores laterais e array
-    status->ColorLed0->setData(CRGB::Blue);
+    status->ColorLed0->setData(0x0000FF);
     for (uint16_t i = 0; i < 20; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p) | sLat: (%p)", this, &sArray, &sLat);
@@ -74,7 +74,7 @@ void SensorsService::calibAllsensors()
     robot->getsLat()->setChannelsMaxes(SLatMaxes);
     robot->getsLat()->setChannelsMins(SLatMins);
 
-    status->ColorLed0->setData(CRGB::Black);
+    status->ColorLed0->setData(0);
 }
 
 void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot) // função leitura dos sensores
@@ -163,8 +163,8 @@ void SensorsService::processSLat(Robot *robot)
         if ((slesq1 < 300) && (sldir2))       // lendo sLat esq. branco e dir. preto
 #endif
         {
-            status->ColorLed1->setData(CRGB::Red);
-            status->ColorLed2->setData(CRGB::Black);
+            status->ColorLed1->setData(0xFF0000);
+            status->ColorLed2->setData(0);
             if (!(latMarks->latEsqPass->getData()))
                 latMarks->leftPassedInc();
 
@@ -180,8 +180,8 @@ void SensorsService::processSLat(Robot *robot)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
 #endif
         {
-            status->ColorLed1->setData(CRGB::Black);
-            status->ColorLed2->setData(CRGB::Red);
+            status->ColorLed1->setData(0);
+            status->ColorLed2->setData(0xFF0000);
             if (!(latMarks->latDirPass->getData()))
                 latMarks->rightPassedInc();
 
@@ -192,8 +192,8 @@ void SensorsService::processSLat(Robot *robot)
     else
     {
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
-        status->ColorLed1->setData(CRGB::Black);
-        status->ColorLed2->setData(CRGB::Black);
+        status->ColorLed1->setData(0);
+        status->ColorLed2->setData(0);
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
     }

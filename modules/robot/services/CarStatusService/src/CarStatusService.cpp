@@ -78,10 +78,10 @@ void CarStatusService::Run()
         if(status->robotState->getData() != CAR_STOPPED) break;
     } while (num != CAR_IN_LINE);
 
-    status->ColorLed0->setData(CRGB::Yellow);
+    status->ColorLed0->setData(0x00FFFF);
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 2500ms");
     vTaskDelay(2500 / portTICK_PERIOD_MS);
-    status->ColorLed0->setData(CRGB::Black);
+    status->ColorLed0->setData(0x00FFFF);
 
     if (status->robotIsMapping->getData())
     {
