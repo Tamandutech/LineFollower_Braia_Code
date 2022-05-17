@@ -86,7 +86,7 @@ esp_err_t LEDsService::sendToLEDs(){
                 while(((uint32_t)(xthal_get_ccount() - cyclesoffset)) < CYCLES_800_T0H);
                 REG_WRITE(GPIO_OUT_W1TC_REG, BIT32);
             }
-            while(xthal_get_ccount() - cyclesoffset < CYCLES_800);
+            while(((uint32_t)(xthal_get_ccount() - cyclesoffset)) < CYCLES_800);
         }
         vTaskDelay(1);
     }
