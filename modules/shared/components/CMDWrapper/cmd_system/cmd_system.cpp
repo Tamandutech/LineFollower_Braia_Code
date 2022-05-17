@@ -209,6 +209,7 @@ static std::string pause(int argc, char **argv)
     auto status = Robot::getInstance()->getStatus();
     status->robotIsMapping->setData(false);
     status->encreading->setData(false);
+    status->ColorLed0->setData(0);
     return ("O robô será pausado");
 }
 

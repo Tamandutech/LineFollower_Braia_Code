@@ -6,6 +6,9 @@ LEDsService::LEDsService(const char *name, Robot *robot, uint32_t stackDepth, UB
     this->status = robot->getStatus();
     uint8_t *colorsRGB = (uint8_t *) malloc(3);
     REG_WRITE(GPIO_ENABLE_REG, BIT32);
+    status->ColorLed0->setData(0xFFFFFF);
+    status->ColorLed1->setData(0xFFFFFF);
+    status->ColorLed2->setData(0xFFFFFF);
 
 #ifndef ESP32_QEMU
 
@@ -33,13 +36,13 @@ void LEDsService::Run()
         }
         uint32_t colors0 = status->ColorLed0->getData();
         memcpy(colorsRGB, &colors0, 3);
-        setLEDColor(0, colorsRGB[0], colorsRGB[1], colorsRGB[2]);
+        setLEDColor(0, colorsRGB[2], colorsRGB[1], colorsRGB[0]);
         uint32_t colors1 = status->ColorLed1->getData();
         memcpy(colorsRGB, &colors1, 3);
-        setLEDColor(0, colorsRGB[0], colorsRGB[1], colorsRGB[2]);
+        setLEDColor(1, colorsRGB[2], colorsRGB[1], colorsRGB[0]);
         uint32_t colors2 = status->ColorLed2->getData();
         memcpy(colorsRGB, &colors2, 3);
-        setLEDColor(0, colorsRGB[0], colorsRGB[1], colorsRGB[2]);
+        setLEDColor(2, colorsRGB[2], colorsRGB[1], colorsRGB[0]);
         sendToLEDs();
         xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
@@ -73,14 +76,14 @@ esp_err_t LEDsService::sendToLEDs(){
             {
                 REG_WRITE(GPIO_OUT_W1TS_REG, BIT32);
                 cyclesoffset = xthal_get_ccount();
-                while(xthal_get_ccount() - cyclesoffset < CYCLES_800_T1H);
+                while(((uint32_t)(xthal_get_ccount() - cyclesoffset)) < CYCLES_800_T1H);
                 REG_WRITE(GPIO_OUT_W1TC_REG, BIT32);
             }
             else
             {
                 REG_WRITE(GPIO_OUT_W1TS_REG, BIT32);
                 cyclesoffset = xthal_get_ccount();
-                while(xthal_get_ccount() - cyclesoffset< CYCLES_800_T0H);
+                while(((uint32_t)(xthal_get_ccount() - cyclesoffset)) < CYCLES_800_T0H);
                 REG_WRITE(GPIO_OUT_W1TC_REG, BIT32);
             }
             while(xthal_get_ccount() - cyclesoffset < CYCLES_800);
