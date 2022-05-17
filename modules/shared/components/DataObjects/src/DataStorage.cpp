@@ -11,7 +11,7 @@ DataStorage::DataStorage()
     this->name = "DataStorage";
 
     mount_config.format_if_mount_failed = true;
-    mount_config.max_files = 20;
+    mount_config.max_files = 5;
     mount_config.allocation_unit_size = CONFIG_WL_SECTOR_SIZE;
     mounted = false;
 }
