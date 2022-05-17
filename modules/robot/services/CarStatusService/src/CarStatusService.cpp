@@ -156,6 +156,7 @@ void CarStatusService::Run()
                 // vTaskSuspend(xTaskSensors);
 
                 robot->getStatus()->robotState->setData(CAR_STOPPED);
+                status->ColorLed0->setData(0);
             }
             if (mediaEncActual < mediaEncFinal)
             {
