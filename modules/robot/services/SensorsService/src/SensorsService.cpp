@@ -53,7 +53,12 @@ void SensorsService::Run()
 void SensorsService::calibAllsensors()
 {
     // Calibração dos dos sensores laterais e array
-    status->ColorLed0->setData(0x0000FF);
+    command.led[0] = LED_POSITION_FRONT;
+    command.led[1] = LED_POSITION_NONE;
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    command.color = LED_COLOR_BLUE;
+    LEDsService::getInstance()->queueCommand(command);
     for (uint16_t i = 0; i < 20; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p) | sLat: (%p)", this, &sArray, &sLat);
@@ -74,7 +79,13 @@ void SensorsService::calibAllsensors()
     robot->getsLat()->setChannelsMaxes(SLatMaxes);
     robot->getsLat()->setChannelsMins(SLatMins);
 
-    status->ColorLed0->setData(0);
+    command.led[0] = LED_POSITION_FRONT;
+    command.led[1] = LED_POSITION_NONE;
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    command.color = LED_COLOR_BLACK;
+    LEDsService::getInstance()->queueCommand(command);
+
 }
 
 void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot) // função leitura dos sensores
@@ -163,13 +174,20 @@ void SensorsService::processSLat(Robot *robot)
         if ((slesq1 < 300) && (sldir2))       // lendo sLat esq. branco e dir. preto
 #endif
         {
-            status->ColorLed1->setData(0xFF0000);
-            status->ColorLed2->setData(0);
             if (!(latMarks->latEsqPass->getData()))
                 latMarks->leftPassedInc();
 
             latMarks->latEsqPass->setData(true);
             latMarks->latDirPass->setData(false);
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 1;
+            command.led[1] = LED_POSITION_NONE;
+            command.led[0] = LED_POSITION_LEFT;
+            command.color = LED_COLOR_RED;
+            LEDsService::getInstance()->queueCommand(command);
+            command.led[0] = LED_POSITION_RIGHT;
+            command.color = LED_COLOR_BLACK;
+            LEDsService::getInstance()->queueCommand(command);
             // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         }
 #if defined(BRAIA_V2)
@@ -180,21 +198,36 @@ void SensorsService::processSLat(Robot *robot)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
 #endif
         {
-            status->ColorLed1->setData(0);
-            status->ColorLed2->setData(0xFF0000);
             if (!(latMarks->latDirPass->getData()))
                 latMarks->rightPassedInc();
 
             latMarks->latDirPass->setData(true);
             latMarks->latEsqPass->setData(false);
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 1;
+            command.led[1] = LED_POSITION_NONE;
+            command.led[0] = LED_POSITION_RIGHT;
+            command.color = LED_COLOR_RED;
+            LEDsService::getInstance()->queueCommand(command);
+            command.led[0] = LED_POSITION_LEFT;
+            command.color = LED_COLOR_BLACK;
+            LEDsService::getInstance()->queueCommand(command);
         }
     }
     else
     {
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
-        status->ColorLed1->setData(0);
-        status->ColorLed2->setData(0);
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
+        command.effect = LED_EFFECT_SET;
+        command.brightness = 1;
+        command.led[1] = LED_POSITION_NONE;
+        command.led[0] = LED_POSITION_LEFT;
+        command.color = LED_COLOR_BLACK;
+        LEDsService::getInstance()->queueCommand(command);
+        command.led[0] = LED_POSITION_RIGHT;
+        command.color = LED_COLOR_BLACK;
+        LEDsService::getInstance()->queueCommand(command);
+
     }
 }

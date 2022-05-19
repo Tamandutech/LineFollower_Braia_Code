@@ -78,10 +78,17 @@ void CarStatusService::Run()
         if(status->robotState->getData() != CAR_STOPPED) break;
     } while (num != CAR_IN_LINE);
 
-    status->ColorLed0->setData(0x00FFFF);
+    command.led[0] = LED_POSITION_FRONT;
+    command.led[1] = LED_POSITION_NONE;
+    command.color = LED_COLOR_YELLOW;
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    LEDsService::getInstance()->queueCommand(command);
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 2500ms");
     vTaskDelay(2500 / portTICK_PERIOD_MS);
-    status->ColorLed0->setData(0x00FFFF);
+    command.brightness = 0.5;
+    command.color = LED_COLOR_GREEN;
+    LEDsService::getInstance()->queueCommand(command);
 
     if (status->robotIsMapping->getData())
     {
@@ -102,7 +109,6 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
 
         status->stateMutex.lock();
-
         if (lastMappingState != status->robotIsMapping->getData() && status->robotIsMapping->getData())
         {
             lastMappingState = status->robotIsMapping->getData();
@@ -119,10 +125,22 @@ void CarStatusService::Run()
             {
                 ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inLine.");
                 speed->setToLine();
+                command.led[0] = LED_POSITION_FRONT;
+                command.led[1] = LED_POSITION_NONE;
+                command.color = LED_COLOR_GREEN;
+                command.effect = LED_EFFECT_SET;
+                command.brightness = 0.5;
+                LEDsService::getInstance()->queueCommand(command);
             }
             else
             {
                 ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inCurve.");
+                command.led[0] = LED_POSITION_FRONT;
+                command.led[1] = LED_POSITION_NONE;
+                command.color = LED_COLOR_RED;
+                command.effect = LED_EFFECT_SET;
+                command.brightness = 0.5;
+                LEDsService::getInstance()->queueCommand(command);
                 speed->setToCurve();
             }
         }
@@ -156,7 +174,12 @@ void CarStatusService::Run()
                 // vTaskSuspend(xTaskSensors);
 
                 robot->getStatus()->robotState->setData(CAR_STOPPED);
-                status->ColorLed0->setData(0);
+                command.led[0] = LED_POSITION_FRONT;
+                command.led[1] = LED_POSITION_NONE;
+                command.color = LED_COLOR_BLACK;
+                command.effect = LED_EFFECT_SET;
+                command.brightness = 1;
+                LEDsService::getInstance()->queueCommand(command);
             }
             if (mediaEncActual < mediaEncFinal)
             {

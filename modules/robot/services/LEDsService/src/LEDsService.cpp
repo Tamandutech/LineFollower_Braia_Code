@@ -26,6 +26,8 @@ LEDsService::LEDsService(std::string name, uint32_t stackDepth, UBaseType_t prio
     setLEDColor(1, 0x00, 0x00, 0x00);
     setLEDColor(2, 0x00, 0x00, 0x00);
     sendToLEDs();
+    sendToLEDs();
+    sendToLEDs();
 
     queueLedCommands = xQueueCreate(10, sizeof(ledCommand));
 
@@ -54,11 +56,11 @@ void LEDsService::Run()
             break;
 
         case LED_EFFECT_BLINK:
-            /* code */
+            led_effect_blink();
             break;
 
         case LED_EFFECT_FADE:
-            /* code */
+            led_effect_fade();
             break;
 
         default:
@@ -91,6 +93,37 @@ void LEDsService::led_effect_set()
     }
 
     sendToLEDs();
+}
+void LEDsService::led_effect_blink(){
+    ESP_LOGD("LEDsService", "led_effect_blink");
+    led_effect_set();
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    for (size_t i = 0; i < NUM_LEDS; i++)
+    {
+        if (ledCommand.led[i] >= 0)
+        {
+            setLEDColor(ledCommand.led[i], 0, 0, 0);
+        }
+    }
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+}
+
+void LEDsService::led_effect_fade(){
+    ESP_LOGD("LEDsService", "led_effect_fade");
+    for(float intensity = 0; intensity <= ledCommand.brightness; intensity += 0.1)
+    {
+        for (size_t i = 0; i < NUM_LEDS; i++)
+        {
+            if (ledCommand.led[i] >= 0)
+            {
+                setLEDColor(ledCommand.led[i], intensity * (*((uint8_t *)(&ledCommand.color) + 2)), intensity * (*((uint8_t *)(&ledCommand.color) + 1)), intensity * (*(uint8_t *)(&ledCommand.color)));
+            }
+        }
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+    led_effect_set();
+
 }
 
 esp_err_t LEDsService::setLEDColor(uint8_t led, uint8_t red, uint8_t green, uint8_t blue)

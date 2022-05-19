@@ -30,7 +30,7 @@
 #include "DataStorage.hpp"
 #include "RobotData.h"
 #include "SensorsService.hpp"
-#include  "CarStatusService.hpp"
+#include "CarStatusService.hpp"
 
 #ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
 #define WITH_TASKS_INFO 1
@@ -209,7 +209,13 @@ static std::string pause(int argc, char **argv)
     auto status = Robot::getInstance()->getStatus();
     status->robotIsMapping->setData(false);
     status->encreading->setData(false);
-    status->ColorLed0->setData(0);
+    led_command_t command;
+    command.led[0] = LED_POSITION_FRONT;
+    command.led[1] = LED_POSITION_NONE;
+    command.color = LED_COLOR_BLACK;
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    LEDsService::getInstance()->queueCommand(command);
     return ("O robô será pausado");
 }
 

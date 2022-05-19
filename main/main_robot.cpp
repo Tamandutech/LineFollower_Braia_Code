@@ -69,7 +69,6 @@ void app_main(void)
 
   led_command_t command;
   command.led[0] = LED_POSITION_FRONT;
-  command.led[1] = LED_POSITION_LEFT;
   command.color = LED_COLOR_RED;
   command.effect = LED_EFFECT_SET;
   command.brightness = 1;

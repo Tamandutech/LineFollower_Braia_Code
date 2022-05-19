@@ -54,6 +54,8 @@ private:
   dataSensor *SLat;
   RobotStatus *status;
 
+  led_command_t command;
+  
   int iloop = 0;
 
   void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot);

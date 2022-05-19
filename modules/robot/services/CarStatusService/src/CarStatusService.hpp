@@ -66,6 +66,8 @@ private:
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
 
+    led_command_t command;
+
     static void IRAM_ATTR gpio_isr_handler(void *arg);
 };
 

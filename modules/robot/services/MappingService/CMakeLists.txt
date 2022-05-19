@@ -1,5 +1,5 @@
 idf_component_register(
-    REQUIRES "Service"
+    REQUIRES "Service" "LEDsService"
     SRCS "src/MappingService.cpp" 
     INCLUDE_DIRS "src"
 )

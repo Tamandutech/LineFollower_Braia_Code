@@ -54,8 +54,13 @@ esp_err_t MappingService::stopNewMapping()
     //status->stateMutex.lock();
     //status->robotState->setData(CAR_STOPPED);
     //status->robotIsMapping->setData(false);
-    //status->ColorLed0->setData(0);
     //status->stateMutex.unlock();
+    //command.led[0] = LED_POSITION_FRONT;
+    //command.led[1] = LED_POSITION_NONE;
+    //command.color = LED_COLOR_BLACK;
+    //command.effect = LED_EFFECT_SET;
+    //command.brightness = 1;
+    //LEDsService::getInstance()->queueCommand(command);
 
     this->Cleanup();
 

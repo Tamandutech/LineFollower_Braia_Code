@@ -20,7 +20,7 @@ using namespace cpp_freertos;
 #define N_COLORS 17
 
 #define CYCLES_T0H (F_CPU * 0.0000004)     // 0.4us
-#define CYCLES_RESET (F_CPU * 0.0002)      // 200us
+#define CYCLES_RESET (F_CPU * 0.000120)      // 120us
 #define CYCLES_T1H (F_CPU * 0.0000008)     // 0.8us
 #define CYCLES_PERIOD (F_CPU * 0.00000125) // 1.25us per bit
 
@@ -35,7 +35,6 @@ enum led_color_t
     LED_COLOR_CYAN = 0x00FFFF,
     LED_COLOR_MAGENTA = 0xFF00FF,
     LED_COLOR_WHITE = 0xFFFFFF,
-    LED_COLOR_BLACK = 0x000000,
     LED_COLOR_PURPLE = 0x7F007F,
     LED_COLOR_ORANGE = 0xFF7F00,
     LED_COLOR_BROWN = 0x7F3F00,
@@ -111,6 +110,8 @@ private:
     static QueueHandle_t queueLedCommands;
 
     void led_effect_set();
+    void led_effect_blink();
+    void led_effect_fade();
 
     esp_err_t setLEDColor(uint8_t led, uint8_t red, uint8_t green, uint8_t blue);
     esp_err_t sendToLEDs();

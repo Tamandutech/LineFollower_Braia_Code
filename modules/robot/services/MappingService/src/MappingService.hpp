@@ -8,6 +8,7 @@
 
 #include "thread.hpp"
 #include "RobotData.h"
+#include "LEDsService.hpp"
 
 #include "driver/gpio.h"
 
@@ -77,6 +78,8 @@ private:
     // variáveis de calculos temporárias
     uint32_t tempDeltaPulses = 0;
     uint32_t tempMilimiterInPulses = 0;
+
+    led_command_t command;
 
     MappingService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 };

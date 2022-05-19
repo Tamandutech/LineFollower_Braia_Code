@@ -43,10 +43,6 @@ public:
      */
     DataAbstract<bool> *encreading;
 
-    DataAbstract<uint32_t> *ColorLed0;
-    DataAbstract<uint32_t> *ColorLed1;
-    DataAbstract<uint32_t> *ColorLed2;
-
     static std::mutex stateMutex;
     
 private:
