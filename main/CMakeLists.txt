@@ -13,4 +13,5 @@ list(
 		REQUIRES 
 			"DebugService"
 			"RobotData"
+			"WiFiHandler"
 )
