@@ -12,15 +12,17 @@ LEDsService::LEDsService(std::string name, uint32_t stackDepth, UBaseType_t prio
 
     ESP_LOGD("LEDsService", "Constructor Start");
 
+    vTaskSuspendAll();
+
     REG_WRITE(GPIO_ENABLE1_REG, BIT0);
 
-    REG_WRITE(GPIO_OUT1_W1TS_REG, BIT0);
-    vTaskDelay(1 / portTICK_PERIOD_MS);
     REG_WRITE(GPIO_OUT1_W1TC_REG, BIT0);
 
     cyclesoffset = xthal_get_ccount();
     while (((uint32_t)(xthal_get_ccount() - cyclesoffset)) < CYCLES_RESET)
         ;
+
+    xTaskResumeAll();
 
     setLEDColor(0, 0x00, 0x00, 0x00);
     setLEDColor(1, 0x00, 0x00, 0x00);
@@ -90,11 +92,16 @@ void LEDsService::led_effect_set()
             ESP_LOGD(GetName().c_str(), "led_effect_set: ledCommand.led[%d] = %d, R = %d, G = %d, B = %d", i, ledCommand.led[i], (*((uint8_t *)(&ledCommand.color) + 2)), (*((uint8_t *)(&ledCommand.color) + 1)), (*(uint8_t *)(&ledCommand.color)));
             setLEDColor(ledCommand.led[i], ledCommand.brightness * (*((uint8_t *)(&ledCommand.color) + 2)), ledCommand.brightness * (*((uint8_t *)(&ledCommand.color) + 1)), ledCommand.brightness * (*(uint8_t *)(&ledCommand.color)));
         }
+        else
+        {
+            break;
+        }
     }
 
     sendToLEDs();
 }
-void LEDsService::led_effect_blink(){
+void LEDsService::led_effect_blink()
+{
     ESP_LOGD("LEDsService", "led_effect_blink");
     led_effect_set();
     vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -106,12 +113,12 @@ void LEDsService::led_effect_blink(){
         }
     }
     vTaskDelay(500 / portTICK_PERIOD_MS);
-
 }
 
-void LEDsService::led_effect_fade(){
+void LEDsService::led_effect_fade()
+{
     ESP_LOGD("LEDsService", "led_effect_fade");
-    for(float intensity = 0; intensity <= ledCommand.brightness; intensity += 0.1)
+    for (float intensity = 0; intensity <= ledCommand.brightness; intensity += 0.1)
     {
         for (size_t i = 0; i < NUM_LEDS; i++)
         {
@@ -123,7 +130,6 @@ void LEDsService::led_effect_fade(){
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
     led_effect_set();
-
 }
 
 esp_err_t LEDsService::setLEDColor(uint8_t led, uint8_t red, uint8_t green, uint8_t blue)
@@ -152,6 +158,8 @@ esp_err_t LEDsService::sendToLEDs()
         memcpy(&color[i], &LEDs[i], 3);
 
     ESP_LOGD("LEDsService", "sendToLEDs");
+    for (size_t i = 0; i < NUM_LEDS; i++)
+        ESP_LOGD(GetName().c_str(), "sendToLEDs: LEDs[%d] = %x", i, color[i]);
 
     vTaskSuspendAll();
     for (int i = 0; i < NUM_LEDS; i++)

@@ -30,7 +30,7 @@
 #include "cmd_param.hpp"
 #include "better_console.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 // Componentes de encapsulamento das variaveis
@@ -64,15 +64,18 @@ void app_main(void)
 
   braia = Robot::getInstance("Braia");
 
-  ledsService = LEDsService::getInstance("LEDsService", 2048, 9);
+  ledsService = LEDsService::getInstance("LEDsService", 4096, 9);
   ledsService->Start();
 
   led_command_t command;
   command.led[0] = LED_POSITION_FRONT;
+  command.led[1] = LED_POSITION_NONE;
+  command.led[2] = LED_POSITION_NONE;
   command.color = LED_COLOR_RED;
   command.effect = LED_EFFECT_SET;
   command.brightness = 1;
 
+  ESP_LOGD("MAIN", "LED Vermelho");
   ledsService->queueCommand(command);
 
   sensorsService = SensorsService::getInstance("SensorsService", 8192, 20);
@@ -83,6 +86,7 @@ void app_main(void)
   pidService = new PIDService("PIDService", braia, 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
+  ESP_LOGD("MAIN", "LED Laranja");
   command.color = LED_COLOR_ORANGE;
   ledsService->queueCommand(command);
 
@@ -93,11 +97,13 @@ void app_main(void)
   carStatusService->Start();
   mappingService->Start();
 
-  command.color = LED_COLOR_GREEN;
+  ESP_LOGD("MAIN", "LED Magenta");
+  command.color = LED_COLOR_MAGENTA;
   ledsService->queueCommand(command);
 
-  vTaskDelay(2000);
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
 
+  ESP_LOGD("MAIN", "Apagando LEDs");
   command.color = LED_COLOR_BLACK;
   ledsService->queueCommand(command);
 

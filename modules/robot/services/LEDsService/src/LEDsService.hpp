@@ -62,9 +62,9 @@ enum led_effect_t
 
 struct LEDColor
 {
-    uint8_t blue;
-    uint8_t red;
-    uint8_t green;
+    uint8_t blue = 0;
+    uint8_t red = 0;
+    uint8_t green = 0;
 };
 
 struct led_command_t
