@@ -69,10 +69,13 @@ void app_main(void)
 
   led_command_t command;
   command.led[0] = LED_POSITION_FRONT;
+  command.led[1] = LED_POSITION_NONE;
+  command.led[2] = LED_POSITION_NONE;
   command.color = LED_COLOR_RED;
   command.effect = LED_EFFECT_SET;
   command.brightness = 1;
 
+  ESP_LOGD("MAIN", "LED Vermelho");
   ledsService->queueCommand(command);
 
   carStatusService = CarStatusService::getInstance("CarStatusService",10000,19);
@@ -83,6 +86,7 @@ void app_main(void)
   pidService = PIDService::getInstance("PIDService", 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
+  ESP_LOGD("MAIN", "LED Laranja");
   command.color = LED_COLOR_ORANGE;
   ledsService->queueCommand(command);
 
@@ -93,11 +97,13 @@ void app_main(void)
   carStatusService->Start();
   mappingService->Start();
 
-  command.color = LED_COLOR_GREEN;
+  ESP_LOGD("MAIN", "LED Magenta");
+  command.color = LED_COLOR_MAGENTA;
   ledsService->queueCommand(command);
 
   vTaskDelay(2000 / portTICK_PERIOD_MS);
 
+  ESP_LOGD("MAIN", "Apagando LEDs");
   command.color = LED_COLOR_BLACK;
   ledsService->queueCommand(command);
 

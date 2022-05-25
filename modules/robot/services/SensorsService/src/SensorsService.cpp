@@ -10,8 +10,8 @@ SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_
 
     // Definindo configs do ADC1 no GPIO36
     adc1_config_width(ADC_WIDTH_12Bit);
-    adc1_config_channel_atten(ADC1_CHANNEL_0,ADC_ATTEN_11db);
-    
+    adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_11db);
+
     // Definindo GPIOs e configs para sensor Array
     sArray.setTypeMCP3008();
     sArray.setSensorPins((const uint8_t[]){0, 1, 2, 3, 4, 5, 6, 7}, 8, (gpio_num_t)ADC_DOUT, (gpio_num_t)ADC_DIN, (gpio_num_t)ADC_CLK, (gpio_num_t)ADC_CS, 1350000, VSPI_HOST);
@@ -30,7 +30,6 @@ SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_
     sLat.setSamplesPerSensor(5);
 
     calibAllsensors();
-   
 }
 
 void SensorsService::Run()
@@ -83,7 +82,6 @@ void SensorsService::calibAllsensors()
     command.brightness = 1;
     command.color = LED_COLOR_BLACK;
     LEDsService::getInstance()->queueCommand(command);
-
 }
 
 void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot) // função leitura dos sensores
@@ -204,12 +202,16 @@ void SensorsService::processSLat(Robot *robot)
 
                 latMarks->latDirPass->setData(true);
                 latMarks->latEsqPass->setData(false);
+
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 1;
+
                 command.led[1] = LED_POSITION_NONE;
+                
                 command.led[0] = LED_POSITION_RIGHT;
                 command.color = LED_COLOR_RED;
                 LEDsService::getInstance()->queueCommand(command);
+
                 command.led[0] = LED_POSITION_LEFT;
                 command.color = LED_COLOR_BLACK;
                 LEDsService::getInstance()->queueCommand(command);
@@ -218,6 +220,16 @@ void SensorsService::processSLat(Robot *robot)
     }
     else
     {
+        if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
+        {
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 1;
+            command.led[1] = LED_POSITION_RIGHT;
+            command.led[0] = LED_POSITION_LEFT;
+            command.color = LED_COLOR_BLACK;
+            LEDsService::getInstance()->queueCommand(command);
+        }
+
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
         if(latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
         {
@@ -231,6 +243,5 @@ void SensorsService::processSLat(Robot *robot)
         }
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
-
     }
 }
