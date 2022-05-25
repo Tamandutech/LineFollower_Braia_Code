@@ -36,25 +36,11 @@ using namespace cpp_freertos;
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-class ESPNOWHandler : public Thread
+class ESPNOWHandler : public Thread<ESPNOWHandler>
 {
 public:
-    static ESPNOWHandler *getInstance(std::string name = "ESPNOWHandler", uint32_t stackDepth = 10000, UBaseType_t priority = 9)
-    {
-        ESPNOWHandler *sin = instance.load(std::memory_order_acquire);
-        if (!sin)
-        {
-            std::lock_guard<std::mutex> myLock(instanceMutex);
-            sin = instance.load(std::memory_order_relaxed);
-            if (!sin)
-            {
-                sin = new ESPNOWHandler(name, stackDepth, priority);
-                instance.store(sin, std::memory_order_release);
-            }
-        }
 
-        return sin;
-    };
+    ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
 
@@ -67,14 +53,8 @@ public:
 private:
     std::string name;
 
-    static std::atomic<ESPNOWHandler *> instance;
-    static std::mutex instanceMutex;
-
-
     uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t uniqueIdCounter = 0;
-
-    ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia); // Inicia o espnow e registra os dados do peer
 

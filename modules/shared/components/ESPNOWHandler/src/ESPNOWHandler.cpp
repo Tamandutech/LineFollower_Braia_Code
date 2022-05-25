@@ -1,8 +1,5 @@
 #include "ESPNOWHandler.h"
 
-std::atomic<ESPNOWHandler *> ESPNOWHandler::instance;
-std::mutex ESPNOWHandler::instanceMutex;
-
 std::list<PacketData> ESPNOWHandler::packetsReceived;
 QueueHandle_t ESPNOWHandler::queuePacketsReceived;
 

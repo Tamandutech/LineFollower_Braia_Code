@@ -19,7 +19,7 @@ using namespace cpp_freertos;
 
 #define ManualMap
 
-class MappingService : public Thread
+class MappingService : public Thread<MappingService>
 {
 public:
     static MappingService *getInstance(std::string name = "MappingService", uint32_t stackDepth = 10000, UBaseType_t priority = 9)

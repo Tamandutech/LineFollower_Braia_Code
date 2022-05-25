@@ -24,10 +24,10 @@ using namespace cpp_freertos;
 
 #define ManualMap
 
-class SerialService : public Thread
+class SerialService : public Thread<SerialService>
 {
 public:
-    SerialService(const char *name, uint32_t stackDepth, UBaseType_t priority);
+    SerialService(std::string name, uint32_t stackDepth, UBaseType_t priority);
     void Run() override;
 
 private:

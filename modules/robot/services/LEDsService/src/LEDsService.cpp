@@ -1,8 +1,5 @@
 #include "LEDsService.hpp"
 
-std::atomic<LEDsService *> LEDsService::instance;
-std::mutex LEDsService::instanceMutex;
-
 QueueHandle_t LEDsService::queueLedCommands;
 led_command_t LEDsService::ledCommand;
 

@@ -15,34 +15,17 @@
 
 using namespace cpp_freertos;
 
-class SensorsService : public Thread
+class SensorsService : public Thread<SensorsService>
 {
 public:
-  static SensorsService *getInstance(std::string name = "SensorsService", uint32_t stackDepth = 10000, UBaseType_t priority = 9)
-    {
-        SensorsService *sin = instance.load(std::memory_order_acquire);
-        if (!sin)
-        {
-            std::lock_guard<std::mutex> myLock(instanceMutex);
-            sin = instance.load(std::memory_order_relaxed);
-            if (!sin)
-            {
-                sin = new SensorsService(name, stackDepth, priority);
-                instance.store(sin, std::memory_order_release);
-            }
-        }
 
-        return sin;
-    };
+  SensorsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
   void Run() override;
   void calibAllsensors();
 
 
 private:
-
-  static std::atomic<SensorsService *> instance;
-  static std::mutex instanceMutex;
 
   // Componente de gerenciamento dos sensores
   QTRSensors sArray;
@@ -62,7 +45,6 @@ private:
 
   void processSLat(Robot *robot);
 
-  SensorsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 };
 
 #endif

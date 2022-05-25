@@ -60,10 +60,10 @@ struct web_socket_packet_t
     httpd_ws_frame_t packet;
 };
 
-class ServerService : public Thread
+class ServerService : public Thread<ServerService>
 {
 public:
-    ServerService(const char *name, uint32_t stackDepth, UBaseType_t priority);
+    ServerService(std::string name, uint32_t stackDepth, UBaseType_t priority);
     void Run() override;
 
     /*

@@ -1,8 +1,5 @@
 #include "CarStatusService.hpp"
 
-std::atomic<CarStatusService *> CarStatusService::instance;
-std::mutex CarStatusService::instanceMutex;
-
 QueueHandle_t CarStatusService::gpio_evt_queue;
 
 void IRAM_ATTR CarStatusService::gpio_isr_handler(void *arg)

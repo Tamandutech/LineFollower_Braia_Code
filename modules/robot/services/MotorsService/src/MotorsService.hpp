@@ -11,10 +11,10 @@ using namespace cpp_freertos;
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-class MotorsService : public Thread
+class MotorsService : public Thread<MotorsService>
 {
 public:
-    MotorsService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority);
+    MotorsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
 

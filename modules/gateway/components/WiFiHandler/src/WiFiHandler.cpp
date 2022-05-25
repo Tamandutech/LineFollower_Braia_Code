@@ -1,8 +1,5 @@
 #include "WiFiHandler.h"
 
-std::atomic<WiFiHandler *> WiFiHandler::instance;
-std::mutex WiFiHandler::instanceMutex;
-
 EventGroupHandle_t WiFiHandler::s_wifi_event_group;
 
 /* The examples use WiFi configuration that you can set via project configuration menu.

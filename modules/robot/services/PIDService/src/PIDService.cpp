@@ -1,8 +1,8 @@
 #include "PIDService.hpp"
 
-PIDService::PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
+PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-    this->robot = robot;
+    this->robot = Robot::getInstance();;
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
     this->PIDTrans = robot->getPIDVel();

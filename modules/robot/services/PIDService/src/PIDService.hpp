@@ -9,14 +9,14 @@ using namespace cpp_freertos;
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 //#define GRAPH_DATA
 #include "esp_log.h"
 
-class PIDService : public Thread
+class PIDService : public Thread<PIDService>
 {
 public:
-    PIDService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority);
+    PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
 

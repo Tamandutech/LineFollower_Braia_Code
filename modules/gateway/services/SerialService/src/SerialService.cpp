@@ -1,6 +1,6 @@
 #include "SerialService.hpp"
 
-SerialService::SerialService(const char *name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
+SerialService::SerialService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     ESP_LOGD(this->GetName().c_str(), "Inicializando armazenamento...");
 

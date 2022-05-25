@@ -35,21 +35,27 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  ***************************************************************************/
+#ifndef CTHREAD_CPP
+#define CTHREAD_CPP
 
 #include <cstring>
 #include "thread.hpp"
 
 using namespace cpp_freertos;
 
-volatile bool Thread::SchedulerActive = false;
-MutexStandard Thread::StartGuardLock;
+template<class T> volatile bool Thread<T>::SchedulerActive = false;
+template<class T> MutexStandard Thread<T>::StartGuardLock;
+
+template<class T> std::atomic<T*> Thread<T>::instance;
+template<class T> std::mutex Thread<T>::instanceMutex;
 
 //
 //  We want to use C++ strings. This is the default.
 //
 #ifndef CPP_FREERTOS_NO_CPP_STRINGS
 
-Thread::Thread(const std::string pcName,
+template <class T>
+Thread<T>::Thread(const std::string pcName,
                uint16_t usStackDepth,
                UBaseType_t uxPriority)
     : Name(pcName),
@@ -62,7 +68,8 @@ Thread::Thread(const std::string pcName,
 #endif
 }
 
-Thread::Thread(uint16_t usStackDepth,
+template <class T>
+Thread<T>::Thread(uint16_t usStackDepth,
                UBaseType_t uxPriority)
     : Name("Default"),
       StackDepth(usStackDepth),
@@ -79,7 +86,8 @@ Thread::Thread(uint16_t usStackDepth,
 //
 #else
 
-Thread::Thread(const char *pcName,
+template <class T>
+Thread<T>::Thread(const char *pcName,
                uint16_t usStackDepth,
                UBaseType_t uxPriority)
     : StackDepth(usStackDepth),
@@ -100,7 +108,8 @@ Thread::Thread(const char *pcName,
 #endif
 }
 
-Thread::Thread(uint16_t usStackDepth,
+template <class T>
+Thread<T>::Thread(uint16_t usStackDepth,
                UBaseType_t uxPriority)
     : StackDepth(usStackDepth),
       Priority(uxPriority),
@@ -114,7 +123,8 @@ Thread::Thread(uint16_t usStackDepth,
 
 #endif
 
-bool Thread::Start()
+template <class T>
+bool Thread<T>::Start()
 {
     //
     //  If the Scheduler is on, we need to lock before checking
@@ -173,11 +183,14 @@ bool Thread::Start()
 //
 //  Deliberately empty. If this is needed, it will be overloaded.
 //
-void Thread::Cleanup()
+
+template <class T>
+void Thread<T>::Cleanup()
 {
 }
 
-Thread::~Thread()
+template <class T>
+Thread<T>::~Thread()
 {
     ESP_LOGD(Name.c_str(), "(%p): Finalizando Thread", this);
     vTaskDelete(handle);
@@ -186,7 +199,8 @@ Thread::~Thread()
 
 #else
 
-Thread::~Thread()
+template <class T>
+Thread<T>::~Thread()
 {
     configASSERT(!"Cannot actually delete a thread object "
                   "if INCLUDE_vTaskDelete is not defined.");
@@ -194,9 +208,10 @@ Thread::~Thread()
 
 #endif
 
-void Thread::TaskFunctionAdapter(void *pvParameters)
+template <class T>
+void Thread<T>::TaskFunctionAdapter(void *pvParameters)
 {
-    Thread *thread = static_cast<Thread *>(pvParameters);
+    Thread<T> *thread = static_cast<Thread<T> *>(pvParameters);
 
     thread->Run();
 
@@ -214,7 +229,8 @@ void Thread::TaskFunctionAdapter(void *pvParameters)
 
 #if (INCLUDE_vTaskDelayUntil == 1)
 
-void Thread::DelayUntil(const TickType_t Period)
+template <class T>
+void Thread<T>::DelayUntil(const TickType_t Period)
 {
     if (!delayUntilInitialized)
     {
@@ -225,16 +241,19 @@ void Thread::DelayUntil(const TickType_t Period)
     vTaskDelayUntil(&delayUntilPreviousWakeTime, Period);
 }
 
-void Thread::ResetDelayUntil()
+template <class T>
+void Thread<T>::ResetDelayUntil()
 {
     delayUntilInitialized = false;
 }
+
 
 #endif
 
 #ifdef CPP_FREERTOS_CONDITION_VARIABLES
 
-bool Thread::Wait(ConditionVariable &Cv,
+template <class T>
+bool Thread<T>::Wait(ConditionVariable &Cv,
                   Mutex &CvLock,
                   TickType_t Timeout)
 {
@@ -259,4 +278,5 @@ bool Thread::Wait(ConditionVariable &Cv,
     return timed_out;
 }
 
+#endif
 #endif

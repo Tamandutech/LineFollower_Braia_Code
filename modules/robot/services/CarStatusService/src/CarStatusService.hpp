@@ -12,39 +12,21 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 #define ManualMap
 
-class CarStatusService : public Thread
+class CarStatusService : public Thread<CarStatusService>
 {
 public:
-    static CarStatusService *getInstance(std::string name = "CarStatusService", uint32_t stackDepth = 10000, UBaseType_t priority = 19)
-    {
-        CarStatusService *sin = instance.load(std::memory_order_acquire);
-        if (!sin)
-        {
-            std::lock_guard<std::mutex> myLock(instanceMutex);
-            sin = instance.load(std::memory_order_relaxed);
-            if (!sin)
-            {
-                sin = new CarStatusService(name, stackDepth, priority);
-                instance.store(sin, std::memory_order_release);
-            }
-        }
-
-        return sin;
-    };
+    
+    CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
     static QueueHandle_t gpio_evt_queue;
 
 private:
-    static std::atomic<CarStatusService *> instance;
-    static std::mutex instanceMutex;
-
-    CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     Robot *robot;
     RobotStatus *status;

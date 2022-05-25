@@ -30,7 +30,7 @@
 #include "cmd_param.hpp"
 #include "better_console.hpp"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 // Componentes de encapsulamento das variaveis
@@ -64,7 +64,7 @@ void app_main(void)
 
   braia = Robot::getInstance("Braia");
 
-  ledsService = LEDsService::getInstance("LEDsService", 2048, 9);
+  ledsService = LEDsService::getInstance("LEDsService", 4096, 9);
   ledsService->Start();
 
   led_command_t command;
@@ -75,12 +75,12 @@ void app_main(void)
 
   ledsService->queueCommand(command);
 
+  carStatusService = CarStatusService::getInstance("CarStatusService",10000,19);
   sensorsService = SensorsService::getInstance("SensorsService", 8192, 20);
-  carStatusService = CarStatusService::getInstance();
   mappingService = MappingService::getInstance("MappingService", 2048, 18);
-  motorsService = new MotorsService("MotorsService", braia, 2048, 20);
-  speedService = new SpeedService("SpeedService", braia, 2048, 20);
-  pidService = new PIDService("PIDService", braia, 4096, 20);
+  motorsService = MotorsService::getInstance("MotorsService", 2048, 20);
+  speedService = SpeedService::getInstance("SpeedService", 2048, 20);
+  pidService = PIDService::getInstance("PIDService", 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
   command.color = LED_COLOR_ORANGE;
@@ -96,23 +96,23 @@ void app_main(void)
   command.color = LED_COLOR_GREEN;
   ledsService->queueCommand(command);
 
-  vTaskDelay(2000);
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
 
   command.color = LED_COLOR_BLACK;
   ledsService->queueCommand(command);
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-  // for (;;)
-  // {
-  //   ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
-  //   ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
-  //   ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
-  //   ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
-  //   ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
-  //   ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
+  for (;;)
+   {
+     ESP_LOGD("main", "carStatusService: %d", eTaskGetState(carStatusService->GetHandle()));
+     ESP_LOGD("main", "mappingService: %d", eTaskGetState(mappingService->GetHandle()));
+     ESP_LOGD("main", "motorsService: %d", eTaskGetState(motorsService->GetHandle()));
+     ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
+     ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
+     ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
 
-  //   vTaskDelay(1000 / portTICK_PERIOD_MS);
-  // }
+     vTaskDelay(1000 / portTICK_PERIOD_MS);
+   }
 #endif
 }
 

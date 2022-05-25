@@ -55,6 +55,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "mutex.hpp"
+#include <atomic>
+#include <mutex>
 #include "freertos/semphr.h"
 #include "condition_variable.hpp"
 
@@ -76,7 +78,7 @@ namespace cpp_freertos
          *  is not desirable, define CPP_FREERTOS_NO_CPP_STRINGS and the class
          *  will fall back to C character arrays.
          */
-        class Thread
+        template<class T> class Thread
         {
 
                 /////////////////////////////////////////////////////////////////////////
@@ -200,6 +202,23 @@ namespace cpp_freertos
                 inline void Resume()
                 {
                         vTaskResume(GetHandle());
+                }
+
+                static  T *getInstance(std::string _name = "Thread", uint32_t _stackDepth = 1000, UBaseType_t _priority = 0)
+                {
+                        T *sin = instance.load(std::memory_order_acquire);
+                        if (!sin)
+                        {
+                                std::lock_guard<std::mutex> myLock(instanceMutex);
+                                sin = instance.load(std::memory_order_relaxed);
+                                if (!sin)
+                                {
+                                        sin = new T(_name,_stackDepth,_priority);
+                                        instance.store(sin, std::memory_order_release);
+                                }
+                        }
+
+                        return sin;
                 }
 
 #if (INCLUDE_xTaskResumeFromISR == 1)
@@ -406,13 +425,17 @@ namespace cpp_freertos
                 static MutexStandard StartGuardLock;
 
                 /**
+                 * Variables to create a singleton class
+                 */
+                static std::atomic<T *> instance;
+                static std::mutex instanceMutex;
+                /**
                  *  Adapter function that allows you to write a class
                  *  specific Run() function that interfaces with FreeRTOS.
                  *  Look at the implementation of the constructors and this
                  *  code to see how the interface between C and C++ is performed.
                  */
                 static void TaskFunctionAdapter(void *pvParameters);
-
 #if (INCLUDE_vTaskDelayUntil == 1)
                 /**
                  *  Flag denoting if we've setup delay until yet.
@@ -454,4 +477,5 @@ namespace cpp_freertos
         };
 
 }
+#include "cthread.cpp"
 #endif

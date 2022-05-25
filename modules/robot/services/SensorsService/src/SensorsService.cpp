@@ -1,6 +1,4 @@
 #include "SensorsService.hpp"
-std::atomic<SensorsService *> SensorsService::instance;
-std::mutex SensorsService::instanceMutex;
 
 SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
@@ -175,20 +173,22 @@ void SensorsService::processSLat(Robot *robot)
 #endif
         {
             if (!(latMarks->latEsqPass->getData()))
+            {
                 latMarks->leftPassedInc();
 
-            latMarks->latEsqPass->setData(true);
-            latMarks->latDirPass->setData(false);
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            command.led[1] = LED_POSITION_NONE;
-            command.led[0] = LED_POSITION_LEFT;
-            command.color = LED_COLOR_RED;
-            LEDsService::getInstance()->queueCommand(command);
-            command.led[0] = LED_POSITION_RIGHT;
-            command.color = LED_COLOR_BLACK;
-            LEDsService::getInstance()->queueCommand(command);
-            // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+                latMarks->latEsqPass->setData(true);
+                latMarks->latDirPass->setData(false);
+                command.effect = LED_EFFECT_SET;
+                command.brightness = 1;
+                command.led[1] = LED_POSITION_NONE;
+                command.led[0] = LED_POSITION_LEFT;
+                command.color = LED_COLOR_RED;
+                LEDsService::getInstance()->queueCommand(command);
+                command.led[0] = LED_POSITION_RIGHT;
+                command.color = LED_COLOR_BLACK;
+                LEDsService::getInstance()->queueCommand(command);
+                // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+            }
         }
 #if defined(BRAIA_V2)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
@@ -199,35 +199,38 @@ void SensorsService::processSLat(Robot *robot)
 #endif
         {
             if (!(latMarks->latDirPass->getData()))
+            {
                 latMarks->rightPassedInc();
 
-            latMarks->latDirPass->setData(true);
-            latMarks->latEsqPass->setData(false);
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            command.led[1] = LED_POSITION_NONE;
-            command.led[0] = LED_POSITION_RIGHT;
-            command.color = LED_COLOR_RED;
-            LEDsService::getInstance()->queueCommand(command);
-            command.led[0] = LED_POSITION_LEFT;
-            command.color = LED_COLOR_BLACK;
-            LEDsService::getInstance()->queueCommand(command);
+                latMarks->latDirPass->setData(true);
+                latMarks->latEsqPass->setData(false);
+                command.effect = LED_EFFECT_SET;
+                command.brightness = 1;
+                command.led[1] = LED_POSITION_NONE;
+                command.led[0] = LED_POSITION_RIGHT;
+                command.color = LED_COLOR_RED;
+                LEDsService::getInstance()->queueCommand(command);
+                command.led[0] = LED_POSITION_LEFT;
+                command.color = LED_COLOR_BLACK;
+                LEDsService::getInstance()->queueCommand(command);
+            }
         }
     }
     else
     {
         // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+        if(latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
+        {
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 1;
+            command.led[0] = LED_POSITION_RIGHT;
+            command.led[1] = LED_POSITION_LEFT;
+            command.led[2] = LED_POSITION_NONE;
+            command.color = LED_COLOR_BLACK;
+            LEDsService::getInstance()->queueCommand(command);
+        }
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
-        command.effect = LED_EFFECT_SET;
-        command.brightness = 1;
-        command.led[1] = LED_POSITION_NONE;
-        command.led[0] = LED_POSITION_LEFT;
-        command.color = LED_COLOR_BLACK;
-        LEDsService::getInstance()->queueCommand(command);
-        command.led[0] = LED_POSITION_RIGHT;
-        command.color = LED_COLOR_BLACK;
-        LEDsService::getInstance()->queueCommand(command);
 
     }
 }

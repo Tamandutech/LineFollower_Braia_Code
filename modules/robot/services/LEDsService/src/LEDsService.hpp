@@ -75,33 +75,17 @@ struct led_command_t
     float brightness;
 };
 
-class LEDsService : public Thread
+class LEDsService : public Thread<LEDsService>
 {
 public:
-    static LEDsService *getInstance(std::string name = "LEDsService", uint32_t stackDepth = 10000, UBaseType_t priority = 9)
-    {
-        LEDsService *sin = instance.load(std::memory_order_acquire);
-        if (!sin)
-        {
-            std::lock_guard<std::mutex> myLock(instanceMutex);
-            sin = instance.load(std::memory_order_relaxed);
-            if (!sin)
-            {
-                sin = new LEDsService(name, stackDepth, priority);
-                instance.store(sin, std::memory_order_release);
-            }
-        }
 
-        return sin;
-    };
+    LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     esp_err_t queueCommand(led_command_t command);
 
     void Run() override;
 
 private:
-    static std::atomic<LEDsService *> instance;
-    static std::mutex instanceMutex;
 
     uint8_t *colorsRGB;
     LEDColor LEDs[NUM_LEDS];
@@ -116,7 +100,6 @@ private:
     esp_err_t setLEDColor(uint8_t led, uint8_t red, uint8_t green, uint8_t blue);
     esp_err_t sendToLEDs();
 
-    LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 };
 
 #endif

@@ -461,7 +461,7 @@ httpd_handle_t ServerService::start_webserver(std::string base_path)
     return NULL;
 }
 
-ServerService::ServerService(const char *name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
+ServerService::ServerService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     static httpd_handle_t server = NULL;
 

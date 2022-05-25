@@ -1,8 +1,8 @@
 #include "MotorsService.hpp"
 
-MotorsService::MotorsService(const char *name, Robot *robot, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
+MotorsService::MotorsService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-  this->robot = robot;
+  this->robot = Robot::getInstance();
   this->speed = robot->getSpeed();
   this->status = robot->getStatus();
 
