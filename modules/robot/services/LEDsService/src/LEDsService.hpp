@@ -179,9 +179,7 @@ private:
     static QueueHandle_t queueLedCommands;
 
     void led_effect_set();
-
-    LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
-
+    
     // Driver para LED WS2812(B)
     led_strip_t *led_strip_new_rmt_ws2812(const led_strip_config_t *config);
 
