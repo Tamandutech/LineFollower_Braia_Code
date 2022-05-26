@@ -121,11 +121,11 @@ void MappingService::Run()
 
         tempActualMark.MapEncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;
         tempActualMark.MapEncRight = speedMapping->EncRight->getData() - initialRightPulses;
-        tempActualMark.MapEncMedia = ((tempActualMark.MapEncLeft + tempActualMark.MapEncRight) / 2) - initialMediaPulses;
+        tempActualMark.MapEncMedia = ((tempActualMark.MapEncLeft + tempActualMark.MapEncRight) / 2);
         tempActualMark.MapTime = ((xTaskGetTickCount() - initialTicks) / portTICK_PERIOD_MS);
 
         // variação de encoder em pulsos
-        tempDeltaPulses = std::abs(tempActualMark.MapEncRight - tempPreviousMark.MapEncRight) - (tempActualMark.MapEncLeft - tempPreviousMark.MapEncLeft);
+        tempDeltaPulses = std::abs((tempActualMark.MapEncRight - tempPreviousMark.MapEncRight) - (tempActualMark.MapEncLeft - tempPreviousMark.MapEncLeft));
         // Quantidade de pulsos que o encoder precisa dar para avançar "x" milimetros
         tempMilimiterInPulses = (speedMapping->MPR->getData() * latMarks->thresholdToCurve->getData()) / (M_PI * speedMapping->WheelDiameter->getData());
 

@@ -43,6 +43,8 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     stateChanged = true;
     lastState = status->robotState->getData();
 
+    firstmark = false;
+
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
     gpio_config_t io_conf = {};
@@ -106,6 +108,12 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
 
         status->stateMutex.lock();
+        if(latMarks->rightMarks->getData() >= 1 && !firstmark)
+        {
+            firstmark = true;
+            initialmediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
+        }
+
         if (lastMappingState != status->robotIsMapping->getData() && status->robotIsMapping->getData())
         {
             lastMappingState = status->robotIsMapping->getData();
@@ -161,7 +169,7 @@ void CarStatusService::Run()
 
         if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && status->encreading->getData())
         {
-            if (mediaEncActual >= mediaEncFinal)
+            if ((mediaEncActual - initialmediaEnc) >= mediaEncFinal)
             {
                 status->robotState->setData(CAR_IN_LINE);
                 vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -178,18 +186,18 @@ void CarStatusService::Run()
                 command.brightness = 1;
                 LEDsService::getInstance()->queueCommand(command);
             }
-            if (mediaEncActual < mediaEncFinal)
+            if ((mediaEncActual - initialmediaEnc) < mediaEncFinal)
             {
                 // define o status do carrinho se o mapeamento não estiver ocorrendo
                 int mark = 0;
                 for (mark = 0; mark < numMarks - 1; mark++)
                 {
-                    // Verifica a conGetName().c_str()em do encoder e atribui o estado ao robô
+                    // Verifica a contagem do encoder e atribui o estado ao robô
 
                     int32_t Manualmedia = latMarks->marks->getData(mark).MapEncMedia;        // Média dos encoders na chave mark
                     int32_t ManualmediaNxt = latMarks->marks->getData(mark + 1).MapEncMedia; // Média dos encoders na chave mark + 1
 
-                    if (mediaEncActual >= Manualmedia && mediaEncActual <= ManualmediaNxt)
+                    if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt)
                     {                                                                                    // análise do valor das médias dos encoders
                         status->robotState->setData((CarState)latMarks->marks->getData(mark).MapStatus); // Atualiza estado do robô
                         break;

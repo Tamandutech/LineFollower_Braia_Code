@@ -14,7 +14,7 @@
 #include "cmd_wifi.hpp"
 
 #include "ESPNOWHandler.h"
-#include "WifiHandler.h"
+#include "WiFiHandler.h"
 
 SerialService *serialService;
 ServerService *serverService;

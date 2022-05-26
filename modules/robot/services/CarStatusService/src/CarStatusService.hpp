@@ -47,6 +47,8 @@ private:
 
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
+    int32_t initialmediaEnc = 0;
+    bool firstmark = false;
 
     led_command_t command;
 
