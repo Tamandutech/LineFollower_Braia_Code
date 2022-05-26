@@ -117,7 +117,7 @@ esp_err_t DataStorage::load_data(std::string fileName, char *data, size_t size)
     return ESP_OK;
 }
 
-esp_err_t DataStorage::load_data(std::string fileName, char *data, size_t *size)
+esp_err_t DataStorage::load_data(std::string fileName, char **data, size_t *size)
 {
     if (!is_mounted())
         return ESP_FAIL;
@@ -133,14 +133,15 @@ esp_err_t DataStorage::load_data(std::string fileName, char *data, size_t *size)
     fseek(f, 0, SEEK_END);
     (*size) = ftell(f);
 
-    free(data);
-    data = (char *)malloc((*size) * sizeof(char));
+    free(*data);
+    *data = (char *)malloc((*size) * sizeof(char));
 
     fseek(f, 0, SEEK_SET);
 
-    fread(data, *size, 1, f);
+    fread(*data, *size, 1, f);
 
     ESP_LOGD(name.c_str(), "Lido %s, %d bytes", fileName.c_str(), *size);
+
 
     fclose(f);
 

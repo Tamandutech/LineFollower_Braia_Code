@@ -101,6 +101,7 @@ esp_err_t MappingService::createNewMark()
 
 void MappingService::Run()
 {
+    
     this->Suspend();
 
     initialLeftPulses = speedMapping->EncLeft->getData();

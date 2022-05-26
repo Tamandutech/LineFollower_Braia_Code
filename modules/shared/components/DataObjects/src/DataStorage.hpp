@@ -44,7 +44,7 @@ public:
     esp_err_t save_data(std::string name, char *data, size_t size, const char *mode = "wb");
 
     esp_err_t load_data(std::string name, char *data, size_t size);
-    esp_err_t load_data(std::string name, char *data, size_t *size);
+    esp_err_t load_data(std::string name, char **data, size_t *size);
 
     esp_err_t delete_data(std::string name);
 

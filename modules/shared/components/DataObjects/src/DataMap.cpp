@@ -171,7 +171,7 @@ void DataMap::saveData()
 
     size_t listSize = this->mapDataList.size();
 
-    if (listSize < 100)
+    if (listSize < 200)
         ESP_LOGD(this->name.c_str(), "Quantidade de linhas: %d", listSize);
     else
     {
@@ -202,7 +202,7 @@ void DataMap::loadData()
     size_t size = 0;
     size_t listSize = 0;
 
-    dataStorage->load_data(this->name, data, &size);
+    dataStorage->load_data(this->name, &data, &size);
 
     if (size == 0)
     {
@@ -210,7 +210,7 @@ void DataMap::loadData()
         return;
     }
 
-    if (size > 100 * sizeof(MapData))
+    if (size > 200 * sizeof(MapData))
     {
         ESP_LOGE(this->name.c_str(), "Erro ao carregar dados do tipo DataMap. Tamanho do dado maior que o esperado.");
         return;
