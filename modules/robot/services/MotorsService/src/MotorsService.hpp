@@ -2,6 +2,7 @@
 #define MOTORS_SERVICE_H
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 
 #include "ESP32MotorControl.h"
@@ -11,7 +12,7 @@ using namespace cpp_freertos;
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-class MotorsService : public Thread<MotorsService>
+class MotorsService : public Thread, public Singleton<MotorsService>
 {
 public:
     MotorsService(std::string name, uint32_t stackDepth, UBaseType_t priority);

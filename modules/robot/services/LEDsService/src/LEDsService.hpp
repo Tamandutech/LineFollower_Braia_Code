@@ -2,6 +2,7 @@
 #define LEDS_SERVICE_H
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 
 #include "driver/gpio.h"
@@ -158,7 +159,7 @@ typedef struct
     uint8_t buffer[0];
 } ws2812_t;
 
-class LEDsService : public Thread<LEDsService>
+class LEDsService : public Thread, public Singleton<LEDsService>
 {
 public:
 

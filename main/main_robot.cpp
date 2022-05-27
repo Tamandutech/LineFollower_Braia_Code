@@ -116,6 +116,7 @@ void app_main(void)
      ESP_LOGD("main", "pidService: %d", eTaskGetState(pidService->GetHandle()));
      ESP_LOGD("main", "sensorsService: %d", eTaskGetState(sensorsService->GetHandle()));
      ESP_LOGD("main", "speedService: %d", eTaskGetState(speedService->GetHandle()));
+     ESP_LOGD("main", "ledsService: %d", eTaskGetState(ledsService->GetHandle()));
 
      vTaskDelay(1000 / portTICK_PERIOD_MS);
    }

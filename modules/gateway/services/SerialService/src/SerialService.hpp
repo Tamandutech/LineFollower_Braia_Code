@@ -2,6 +2,7 @@
 #define SERIAL_SERVICE_HPP
 
 #include "thread.hpp"
+#include "singleton.hpp"
 
 #include "better_console.hpp"
 #include "esp_vfs_dev.h"
@@ -24,7 +25,7 @@ using namespace cpp_freertos;
 
 #define ManualMap
 
-class SerialService : public Thread<SerialService>
+class SerialService : public Thread, public Singleton<SerialService>
 {
 public:
     SerialService(std::string name, uint32_t stackDepth, UBaseType_t priority);

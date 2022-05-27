@@ -2,6 +2,7 @@
 #define SPEED_SERVICE_H
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 
 #include "ESP32Encoder.h"
@@ -11,7 +12,7 @@ using namespace cpp_freertos;
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-class SpeedService : public Thread<SpeedService>
+class SpeedService : public Thread, public Singleton<SpeedService>
 {
 public:
     SpeedService(std::string name, uint32_t stackDepth, UBaseType_t priority);

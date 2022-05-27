@@ -226,21 +226,11 @@ void SensorsService::processSLat(Robot *robot)
             command.brightness = 1;
             command.led[1] = LED_POSITION_RIGHT;
             command.led[0] = LED_POSITION_LEFT;
-            command.color = LED_COLOR_BLACK;
-            LEDsService::getInstance()->queueCommand(command);
-        }
-
-        // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
-        if(latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
-        {
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            command.led[0] = LED_POSITION_RIGHT;
-            command.led[1] = LED_POSITION_LEFT;
             command.led[2] = LED_POSITION_NONE;
             command.color = LED_COLOR_BLACK;
             LEDsService::getInstance()->queueCommand(command);
         }
+
         latMarks->latDirPass->setData(false);
         latMarks->latEsqPass->setData(false);
     }

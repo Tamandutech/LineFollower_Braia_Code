@@ -2,6 +2,7 @@
 #define WEB_SOCKET_SERVICE_HPP
 
 #include "thread.hpp"
+#include "singleton.hpp"
 
 #include <esp_event.h>
 #include <esp_log.h>
@@ -60,7 +61,7 @@ struct web_socket_packet_t
     httpd_ws_frame_t packet;
 };
 
-class ServerService : public Thread<ServerService>
+class ServerService : public Thread, public Singleton<ServerService>
 {
 public:
     ServerService(std::string name, uint32_t stackDepth, UBaseType_t priority);

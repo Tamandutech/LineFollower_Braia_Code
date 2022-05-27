@@ -7,6 +7,7 @@
 #include <limits.h>
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 #include "LEDsService.hpp"
 
@@ -19,7 +20,7 @@ using namespace cpp_freertos;
 
 #define ManualMap
 
-class MappingService : public Thread<MappingService>
+class MappingService : public Thread, public Singleton<MappingService>
 {
 public:
     static MappingService *getInstance(std::string name = "MappingService", uint32_t stackDepth = 10000, UBaseType_t priority = 9)

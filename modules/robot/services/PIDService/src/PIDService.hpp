@@ -2,6 +2,7 @@
 #define PID_SERVICE_H
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 #include "dataEnums.h"
 
@@ -13,7 +14,7 @@ using namespace cpp_freertos;
 //#define GRAPH_DATA
 #include "esp_log.h"
 
-class PIDService : public Thread<PIDService>
+class PIDService : public Thread, public Singleton<PIDService>
 {
 public:
     PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority);

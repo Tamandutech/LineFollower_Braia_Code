@@ -203,7 +203,7 @@ class WorkQueue {
         /**
          *  An internal derived Thread class, in which we do our real work.
          */
-        class CWorkerThread : public Thread<CWorkerThread> {
+        class CWorkerThread : public Thread {
 
             public:
                 CWorkerThread(  const char * const Name,

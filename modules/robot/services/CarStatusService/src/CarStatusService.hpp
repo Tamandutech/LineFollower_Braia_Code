@@ -2,6 +2,7 @@
 #define CAR_STATUS_SERVICE_H
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 #include "dataEnums.h"
 #include "driver/gpio.h"
@@ -17,7 +18,7 @@ using namespace cpp_freertos;
 
 #define ManualMap
 
-class CarStatusService : public Thread<CarStatusService>
+class CarStatusService : public Thread, public Singleton<CarStatusService>
 {
 public:
     

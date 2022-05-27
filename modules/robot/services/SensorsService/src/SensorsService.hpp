@@ -3,6 +3,7 @@
 #define SENSORS_SERVICE_H
 
 #include "thread.hpp"
+#include "singleton.hpp"
 #include "RobotData.h"
 #include "LEDsService.hpp"
 
@@ -15,7 +16,7 @@
 
 using namespace cpp_freertos;
 
-class SensorsService : public Thread<SensorsService>
+class SensorsService : public Thread, public Singleton<SensorsService>
 {
 public:
 

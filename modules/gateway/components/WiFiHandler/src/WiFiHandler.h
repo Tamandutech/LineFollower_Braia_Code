@@ -18,13 +18,14 @@
 #include "lwip/sys.h"
 
 #include "thread.hpp"
+#include "singleton.hpp"
 
 using namespace cpp_freertos;
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
-class WiFiHandler : public Thread<WiFiHandler>
+class WiFiHandler : public Thread, public Singleton<WiFiHandler>
 {
 public:
 

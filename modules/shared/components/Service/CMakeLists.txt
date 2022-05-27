@@ -12,10 +12,10 @@ idf_component_register(
         "src/cthread.cpp"
         "src/ctimer.cpp"
         "src/cworkqueue.cpp"
-
+        
     REQUIRES 
         "RobotData"
 
     INCLUDE_DIRS 
-        "src"
+        "src" "src/Injector"
 )

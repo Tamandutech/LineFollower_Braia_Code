@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include "dataEnums.h"
+#include "singleton.hpp"
 #include "thread.hpp"
 
 #include "freertos/FreeRTOS.h"
@@ -36,7 +37,7 @@ using namespace cpp_freertos;
 #define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
-class ESPNOWHandler : public Thread<ESPNOWHandler>
+class ESPNOWHandler : public Thread, public Singleton<ESPNOWHandler>
 {
 public:
 
