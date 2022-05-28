@@ -21,9 +21,10 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     this->latMarks = robot->getSLatMarks();
     this->PidTrans = robot->getPIDVel();
 
-    mappingService = MappingService::getInstance();
+   // mappingService = MappingService::getInstance();
 
-    // latMarks->marks->loadData();
+    //DataStorage::getInstance()->delete_data("sLatMarks.marks");
+    latMarks->marks->loadData();
 
     if (latMarks->marks->getSize() <= 0)
     {
@@ -36,11 +37,13 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
         status->encreading->setData(true);
         numMarks = latMarks->marks->getSize();
         mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
+        speed->setToLine();
     }
 
     status->robotState->setData(CAR_STOPPED);
 
     stateChanged = true;
+    lastMappingState = false;
     lastState = status->robotState->getData();
 
     firstmark = false;
@@ -156,7 +159,9 @@ void CarStatusService::Run()
         if (iloop >= 20 && !status->robotIsMapping->getData())
         {
             ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
+            ESP_LOGD(GetName().c_str(), "initialEncMedia: %d", initialmediaEnc);
             ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEncActual);
+            ESP_LOGD(GetName().c_str(), "EncMediaoffset: %d", mediaEncActual-initialmediaEnc);
             ESP_LOGD(GetName().c_str(), "mediaEncFinal: %d", mediaEncFinal);
             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->setpoint->getData());
             iloop = 0;
@@ -167,10 +172,12 @@ void CarStatusService::Run()
             robot->getStatus()->robotState->setData(CAR_STOPPED);
         }
 
-        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && status->encreading->getData())
+        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && status->encreading->getData() && firstmark)
         {
             if ((mediaEncActual - initialmediaEnc) >= mediaEncFinal)
             {
+                ESP_LOGD(GetName().c_str(), "Parando o robô");
+                status->encreading->setData(false);
                 status->robotState->setData(CAR_IN_LINE);
                 vTaskDelay(500 / portTICK_PERIOD_MS);
 

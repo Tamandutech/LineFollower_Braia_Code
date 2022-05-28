@@ -78,9 +78,9 @@ void app_main(void)
   ESP_LOGD("MAIN", "LED Vermelho");
   ledsService->queueCommand(command);
 
+  mappingService = MappingService::getInstance("MappingService", 8192, 18);
   carStatusService = CarStatusService::getInstance("CarStatusService",10000,19);
   sensorsService = SensorsService::getInstance("SensorsService", 8192, 20);
-  mappingService = MappingService::getInstance("MappingService", 2048, 18);
   motorsService = MotorsService::getInstance("MotorsService", 2048, 20);
   speedService = SpeedService::getInstance("SpeedService", 2048, 20);
   pidService = PIDService::getInstance("PIDService", 4096, 20);
@@ -98,7 +98,7 @@ void app_main(void)
   mappingService->Start();
 
   ESP_LOGD("MAIN", "LED Magenta");
-  command.color = LED_COLOR_MAGENTA;
+  command.color = LED_COLOR_PURPLE;
   ledsService->queueCommand(command);
 
   vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -106,7 +106,13 @@ void app_main(void)
   ESP_LOGD("MAIN", "Apagando LEDs");
   command.color = LED_COLOR_BLACK;
   ledsService->queueCommand(command);
-
+  ESP_LOGD(MappingService::getInstance()->GetName().c_str(), "Mapeamento");
+  ESP_LOGD(CarStatusService::getInstance()->GetName().c_str(), "CarStatusService");
+  ESP_LOGD(MotorsService::getInstance()->GetName().c_str(), "MotorsService");
+  ESP_LOGD(SpeedService::getInstance()->GetName().c_str(), "SpeedService");
+  ESP_LOGD(PIDService::getInstance()->GetName().c_str(), "PIDService");
+  ESP_LOGD(ESPNOWHandler::getInstance()->GetName().c_str(), "ESPNOWHandler");
+  ESP_LOGD(LEDsService::getInstance()->GetName().c_str(), "LEDsService");
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)
    {

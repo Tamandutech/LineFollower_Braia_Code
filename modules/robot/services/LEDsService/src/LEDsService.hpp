@@ -162,7 +162,6 @@ typedef struct
 class LEDsService : public Thread, public Singleton<LEDsService>
 {
 public:
-
     LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     esp_err_t queueCommand(led_command_t command);
@@ -180,7 +179,7 @@ private:
     static QueueHandle_t queueLedCommands;
 
     void led_effect_set();
-    
+
     // Driver para LED WS2812(B)
     led_strip_t *led_strip_new_rmt_ws2812(const led_strip_config_t *config);
 

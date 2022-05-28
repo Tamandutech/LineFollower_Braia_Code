@@ -21,7 +21,16 @@ void MotorsService::Run()
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
 
     state = (CarState)status->robotState->getData();
-    ESP_LOGD("MotorsService", "State: %d", state);
+
+    #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
+        if (iloop >= 200 && !status->robotIsMapping->getData())
+        {
+            iloop = 0;
+            ESP_LOGD("MotorsService", "State: %d", state);
+        }
+        iloop++;
+#endif
+
     if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
       motors.motorForward(0);                        // motor 0 ligado para frente

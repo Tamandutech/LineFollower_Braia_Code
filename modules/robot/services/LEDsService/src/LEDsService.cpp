@@ -43,7 +43,7 @@ void LEDsService::Run()
         vTaskDelay(0);
         xQueueReceive(queueLedCommands, &ledCommand, portMAX_DELAY);
 
-        ESP_LOGD(GetName().c_str(), "Run: ledCommand.effect = %d", ledCommand.effect);
+        //ESP_LOGD(GetName().c_str(), "Run: ledCommand.effect = %d", ledCommand.effect);
 
         switch (ledCommand.effect)
         {
@@ -74,7 +74,7 @@ esp_err_t LEDsService::queueCommand(led_command_t command)
 void LEDsService::led_effect_set()
 {
     ESP_LOGD("LEDsService", "led_effect_set");
-
+    vTaskDelay(1);
     for (size_t i = 0; i < NUM_LEDS; i++)
     {
         if (ledCommand.led[i] >= 0)
@@ -87,7 +87,6 @@ void LEDsService::led_effect_set()
             break;
         }
     }
-
     ESP_ERROR_CHECK(this->strip->refresh(strip, 100));
 }
 
@@ -172,7 +171,6 @@ esp_err_t LEDsService::ws2812_refresh(led_strip_t *strip, uint32_t timeout_ms)
         ESP_LOGE(LEDsService::getInstance()->GetName().c_str(), "Falha ao transmitir pacotes do RMT.");
         return ESP_FAIL;
     }
-
     return rmt_wait_tx_done(ws2812->rmt_channel, pdMS_TO_TICKS(timeout_ms));
 }
 

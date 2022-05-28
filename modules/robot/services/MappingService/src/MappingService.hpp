@@ -23,23 +23,9 @@ using namespace cpp_freertos;
 class MappingService : public Thread, public Singleton<MappingService>
 {
 public:
-    static MappingService *getInstance(std::string name = "MappingService", uint32_t stackDepth = 10000, UBaseType_t priority = 9)
-    {
-        MappingService *sin = instance.load(std::memory_order_acquire);
-        if (!sin)
-        {
-            std::lock_guard<std::mutex> myLock(instanceMutex);
-            sin = instance.load(std::memory_order_relaxed);
-            if (!sin)
-            {
-                sin = new MappingService(name, stackDepth, priority);
-                instance.store(sin, std::memory_order_release);
-            }
-        }
 
-        return sin;
-    };
-
+    MappingService(std::string name, uint32_t stackDepth, UBaseType_t priority);
+    
     void Run() override;
 
     esp_err_t startNewMapping(uint8_t leftMarksToStop = CHAR_MAX, int32_t mediaPulsesToStop = LONG_MAX, uint32_t timeToStop = (portMAX_DELAY / portTICK_PERIOD_MS));
@@ -52,9 +38,6 @@ public:
 
 private:
     std::string name;
-
-    static std::atomic<MappingService *> instance;
-    static std::mutex instanceMutex;
 
     Robot *robot;
     dataSpeed *speedMapping;
@@ -82,7 +65,6 @@ private:
 
     led_command_t command;
 
-    MappingService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 };
 
 #endif

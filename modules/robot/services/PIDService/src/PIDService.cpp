@@ -111,7 +111,7 @@ void PIDService::Run()
             setpointPIDTransTarget = PIDTrans->setpointMap->getData();
         }
 
-        setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
+        if(mapState) setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
 
         // Rampeia a velocidade translacional
         SetpointTransactual = PIDTrans->setpoint->getData();
@@ -132,9 +132,9 @@ void PIDService::Run()
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
         if (iloop > 100)
         {
-            // ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
+            ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
-            // ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);
+            ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);
             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
             ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);

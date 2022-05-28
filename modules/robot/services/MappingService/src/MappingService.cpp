@@ -1,8 +1,5 @@
 #include "MappingService.hpp"
 
-std::atomic<MappingService *> MappingService::instance;
-std::mutex MappingService::instanceMutex;
-
 MappingService::MappingService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     this->robot = Robot::getInstance();
@@ -51,16 +48,16 @@ esp_err_t MappingService::stopNewMapping()
 {
     ESP_LOGD(GetName().c_str(), "Parando novo mapeamento.");
 
-    //status->stateMutex.lock();
-    //status->robotState->setData(CAR_STOPPED);
-    //status->robotIsMapping->setData(false);
-    //status->stateMutex.unlock();
-    //command.led[0] = LED_POSITION_FRONT;
-    //command.led[1] = LED_POSITION_NONE;
-    //command.color = LED_COLOR_BLACK;
-    //command.effect = LED_EFFECT_SET;
-    //command.brightness = 1;
-    //LEDsService::getInstance()->queueCommand(command);
+    status->stateMutex.lock();
+    status->robotState->setData(CAR_STOPPED);
+    status->robotIsMapping->setData(false);
+    status->stateMutex.unlock();
+    command.led[0] = LED_POSITION_FRONT;
+    command.led[1] = LED_POSITION_NONE;
+    command.color = LED_COLOR_BLACK;
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    LEDsService::getInstance()->queueCommand(command);
 
     this->Cleanup();
 
