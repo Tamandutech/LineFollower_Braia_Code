@@ -1,4 +1,0 @@
-[submodule "Arduino Component"]
-	path = ESP-IDF/components/arduino
-	url = https://github.com/espressif/arduino-esp32
-	branch = idf-release/v4.0
