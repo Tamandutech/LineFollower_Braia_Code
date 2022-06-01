@@ -1,12 +1,12 @@
 # DataObjects
 Essa pasta contém as classes utilizadas para lidar com o armazenamento de dados na memória Ram e flash do robô, sendo todos os parâmetros do robô criados com base nessas classes. As classes contidas nessa pasta são:
 
-- DataAbstract: Classe responsável por lidar com os parâmetros do robô, permitindo a leitura e escrita deles em tempo de execução, funcionando como um tipo genérico para diferentes tipos de parâmetros. 
+- [DataAbstract](./src/DataAbstract.hpp): Classe responsável por lidar com os parâmetros do robô, permitindo a leitura e escrita deles em tempo de execução, funcionando como um tipo genérico para diferentes tipos de parâmetros. 
 
-- DataMap: Classe responsável por lidar com os dados do mapeamento.
+- [DataMap](./src/DataMap.hpp): Classe responsável por lidar com os dados do mapeamento.
 
-- DataStorage: Responsável por carregar parâmetros da flash ou salvá-los nela, através de arquivos.
+- [DataStorage](./src/DataStorage.hpp): Responsável por carregar parâmetros da flash ou salvá-los nela, através de arquivos.
 
-- DataManager: Responsável por gerenciar os parâmetros do robô através de uma lista de parâmetros que o permite facilmente acessá-los quando necessário.
+- [DataManager](./src/DataManager.hpp): Responsável por gerenciar os parâmetros do robô através de uma lista de parâmetros que o permite facilmente acessá-los quando necessário.
 
-- IDataAbstract: Interface utilizada como base para a classe DataMap e DataAbstract.
+- [IDataAbstract](./src/IDataAbstract.hpp): Interface utilizada como base para a classe DataMap e DataAbstract.
