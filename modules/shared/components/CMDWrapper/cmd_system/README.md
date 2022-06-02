@@ -1,0 +1,2 @@
+# cmd_system
+Esta pasta contém os comandos de texto relacionados com a obtenção de informações do sistema em que o comando foi executado e outros comandos para o controle de algumas ações como, por exemplo, a parada ou a calibração do robô.

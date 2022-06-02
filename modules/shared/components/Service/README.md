@@ -1,0 +1,2 @@
+# Service
+Essa pasta contém as bibliotecas necessárias para a criação dos serviços, permitindo a utilização das funções e recursos do freeRTOS de uma maneira mais simples e organizada. Sendo a principal classe utilizada no momento pelos serviços a [thread.hpp](./src/thread.hpp).

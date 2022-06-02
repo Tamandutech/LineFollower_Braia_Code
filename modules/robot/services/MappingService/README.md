@@ -1,0 +1,2 @@
+# MappingService
+Essa pasta contém o serviço responsável por tratar e armazenar os dados relacionados com as marcações laterais da pista, permitindo que o robô saiba quais trechos da pista são retas, curvas ou ponto de parada.
