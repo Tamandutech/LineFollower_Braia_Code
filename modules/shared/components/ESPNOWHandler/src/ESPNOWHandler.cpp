@@ -119,16 +119,14 @@ void ESPNOWHandler::Send(uint8_t id, uint16_t type, uint16_t size, uint8_t *data
     Packet.type = type;
     Packet.size = size;
     Packet.numToReceive = size / sizeof(Packet.data) + (size % sizeof(Packet.data) > 0);
-
     for (size_t i = 0, j = 1; i < size; i += sizeof(Packet.data), j++)
     {
         ESP_LOGD(this->name.c_str(), "Enviando ID: %d | pacote %d de %d", id, j, Packet.numToReceive);
-
+        ESP_LOGD("ESP-NOW", "Mac Destino : %x|%x|%x|%x|%x|%x ", this->peerInfo.peer_addr[0], this->peerInfo.peer_addr[1], this->peerInfo.peer_addr[2], this->peerInfo.peer_addr[3], this->peerInfo.peer_addr[4], this->peerInfo.peer_addr[5]);
         Packet.numActual = j;
         memcpy(Packet.data, data + i, j == i ? size - i : sizeof(Packet.data));
 
         esp_now_send(this->peerInfo.peer_addr, (uint8_t *)&Packet, sizeof(PacketData));
-
         vTaskDelay(0);
     }
 }
@@ -144,6 +142,7 @@ void ESPNOWHandler::OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, 
 
 void ESPNOWHandler::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
+    ESP_LOGD("ESP-NOW", "Mac Destino : %x|%x|%x|%x|%x|%x ", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
     ESP_LOGD("ESPNOWHandler", "Status do envio: %s", status == ESP_NOW_SEND_SUCCESS ? "SUCESSO" : "FALHA");
 }
 

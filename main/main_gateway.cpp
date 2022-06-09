@@ -33,7 +33,7 @@ void app_main(void)
     wifiHandler = WiFiHandler::getInstance("WiFiHandler", 10000, 9);
     // wifiHandler->wifi_init_softap("ESP32-AP", "12345678");
     // wifiHandler->wifi_init_sta("BraiaServer", "braiamaster");
-    wifiHandler->wifi_init_sta("BraiaServer", "braiamaster");
+    wifiHandler->wifi_init_sta("Syrus", "15631563");
 
     ESPNOWHandler::getInstance("ESPNOWHandler", 10000, 9);
 
