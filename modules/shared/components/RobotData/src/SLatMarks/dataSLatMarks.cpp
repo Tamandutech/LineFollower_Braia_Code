@@ -26,12 +26,12 @@ void dataSLatMarks::leftPassedInc()
 {
     this->leftMarks->setData(this->leftMarks->getData() + 1);
 
-    MappingService::getInstance()->createNewMark();
+    // MappingService::getInstance()->createNewMark();
 }
 
 void dataSLatMarks::rightPassedInc()
 {
     this->rightMarks->setData(this->rightMarks->getData() + 1);
 
-    MappingService::getInstance()->createNewMark();
+    // MappingService::getInstance()->createNewMark();
 }
