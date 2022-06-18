@@ -1,4 +1,4 @@
-FROM espressif/idf:release-v4.4
+FROM ubuntu:latest
 LABEL Name=linefollowerbraiacode Version=0.0.1
 
 ARG USERNAME=vscode
@@ -9,32 +9,22 @@ ARG DEBIAN_FRONTEND=nointeractive
 RUN apt-get update \
     && apt-get -qqy install \
         # Common stuff
-        apt-utils \
-        build-essential \
-        ca-certificates \
         curl \
-        dialog \
+        bzip2 \
         git \
         sudo \
         unzip \
         wget \
         # for platformio
-        bc \
-        build-essential \
-        clang \
-        curl \
-        gcc \
         python3 \
-        python3-dev \
         python3-distutils \
         python3-pip \
-        srecord \
-        xz-utils \
         # for QEMU
         cmake \
         libglib2.0-0 \
         libnuma1 \
         libpixman-1-0 \
+        libpython2.7 \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
@@ -55,7 +45,7 @@ ENV QEMU_URL=https://github.com/espressif/qemu/releases/download/${QEMU_REL}/${Q
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-ENV IDF_PYTHON_ENV_PATH=/opt/esp/python_env/idf4.4_py3.8_env
+ENV IDF_PYTHON_ENV_PATH=/opt/esp/python_env/idf4.3_py3.8_env
 
 RUN wget --no-verbose ${QEMU_URL} \
   && echo "${QEMU_SHA256} *${QEMU_DIST}" | sha256sum --check --strict - \
