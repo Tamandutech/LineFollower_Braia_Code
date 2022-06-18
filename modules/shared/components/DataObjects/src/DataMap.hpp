@@ -65,6 +65,7 @@ public:
     void loadData();
 
     void clearAllData();
+    void clearData(uint8_t pos);
 
 protected:
 private:

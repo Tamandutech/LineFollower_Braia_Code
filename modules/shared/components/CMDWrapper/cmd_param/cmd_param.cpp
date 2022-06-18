@@ -27,6 +27,8 @@ void register_cmd_param(void)
     register_map_add();
     register_map_SaveRuntime();
     register_map_clear();
+    register_map_clearFlash();
+    register_map_clearAtIndex();
 }
 
 static std::string map_SaveRuntime(int argc, char **argv)
@@ -65,7 +67,12 @@ static std::string map_add(int argc, char **argv)
     }
     std::string MapString = map_add_args.MapString->sval[0];
     DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->newData(MapString);
+    std::stringstream ss(MapString);
+    std::string s;
+    while (std::getline(ss, s, ';'))
+    {
+        MapMarks->newData(s);
+    }
     return "OK";
 }
 
@@ -188,6 +195,59 @@ void register_map_clear(void)
 
     better_console_cmd_register(&map_clear_cmd);
 
+}
+static std::string map_clearFlash(int argc, char **argv)
+{
+    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
+    MapMarks->clearAllData();
+    DataStorage::getInstance()->delete_data("sLatMarks.marks");
+    return "OK";
+}
+
+void register_map_clearFlash(void)
+{
+    const better_console_cmd_t map_clearFlash_cmd = {
+        .command = "map_clearFlash",
+        .help = "limpa todos os registros do mapeamento armazenados na flash e na Ram.",
+        .hint = NULL,
+        .func = &map_clearFlash,
+        .argtable = NULL};
+
+    better_console_cmd_register(&map_clearFlash_cmd);
+
+}
+static struct
+{
+    struct arg_str *pos;
+    struct arg_end *end;
+} map_clearAtIndex_args;
+
+static std::string map_clearAtIndex(int argc, char **argv)
+{
+    int nerrors = arg_parse(argc, argv, (void **)&map_clearAtIndex_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, map_clearAtIndex_args.end, argv[0]);
+        return "NOK";
+    }
+    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
+    MapMarks->clearData(std::stoi(map_clearAtIndex_args.pos->sval[0]));
+    return "OK";
+}
+
+void register_map_clearAtIndex(void)
+{
+    map_clearAtIndex_args.pos = arg_str1(NULL, NULL, "<pos>", "index do registro do mapeamento que será deletado da ram.");
+    map_clearAtIndex_args.end = arg_end(2);
+
+    const better_console_cmd_t map_clearAtIndex_cmd = {
+        .command = "map_clearAtIndex",
+        .help = "deleta um registro do mapeamento na ram em uma determinada posição.",
+        .hint = NULL,
+        .func = &map_clearAtIndex,
+        .argtable = &map_clearAtIndex_args};
+
+    better_console_cmd_register(&map_clearAtIndex_cmd);
 }
 static struct
 {

@@ -254,5 +254,18 @@ void DataMap::clearAllData()
     this->mapDataList.clear();
     mapDataListMutex.unlock();
 }
+void DataMap::clearData(uint8_t pos)
+{
+    mapDataListMutex.lock();
+    if (mapDataList.size() <= pos)
+    {
+        ESP_LOGE(this->name.c_str(), "Não há dados nessa posição.");
+        return;
+    }
+    auto it = this->mapDataList.begin();
+    std::advance(it, pos);
+    this->mapDataList.erase(it);
+    mapDataListMutex.unlock();
+}
 
 #endif
