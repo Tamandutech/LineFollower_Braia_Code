@@ -71,10 +71,11 @@ void WiFiHandler::wifi_init_sta(void)
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
         ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+#ifndef ESP32_QEMU
         ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
         ESP_ERROR_CHECK(esp_wifi_start());
         ESP_ERROR_CHECK(esp_wifi_set_channel(EXAMPLE_ESP_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE));
-
+#endif
         wifiAlreadyInit = true;
     }
     else
@@ -116,8 +117,10 @@ void WiFiHandler::wifi_init_sta(std::string ssid, std::string password)
 
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+#ifndef ESP32_QEMU
         ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
         ESP_ERROR_CHECK(esp_wifi_start());
+#endif
 
         ESP_LOGI(GetName().c_str(), "Estação inicializada.");
 
