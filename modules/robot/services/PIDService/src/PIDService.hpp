@@ -55,6 +55,8 @@ private:
 
     float VelRot = 0;
     float VelTrans = 0;
+    float lastVelRot = 0;
+    float lastVelTrans = 0;
 
     float erroVelTrans = 0;
     float erroVelRot = 0;

@@ -65,23 +65,26 @@ void PIDService::Run()
             ESP_LOGD(GetName().c_str(), "PIDTrans->setpoint: %d", PIDTrans->setpoint->getData());
         }
         erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
-        // erroVelRot = 3500 - robot->getsArray()->getLine();
 
         // calculando Pids rotacional e translacional
         Ptrans = KpVel * erroVelTrans;
         Itrans += KiVel * erroVelTrans;
         constrain(Itrans, (float)speedMin, (float)speedMax);
         Dtrans = KdVel * (erroVelTrans - errTrans_ant);
+        //Dtrans = KdVel * (lastVelTrans - VelTrans);
         PidTrans = Ptrans + Itrans + Dtrans;
         errTrans_ant = erroVelTrans;
+        lastVelTrans = VelTrans;
 
         Prot = KpRot * erroVelRot;
         Irot += KiRot * erroVelRot;
         constrain(Irot, (float)speedMin, (float)speedMax);
         Drot = KdRot * (erroVelRot - errRot_ant);
+        //Drot = KdRot * (lastVelRot - VelRot);
         PidRot = Prot + Irot + Drot;
         errRot_ant = erroVelRot;
-        // lastRotPid = PidRot;
+        lastVelRot = VelRot;
+        
 
         // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
         PIDTrans->output->setData(constrain((PidTrans) + speedBase, speedMin, speedMax));
