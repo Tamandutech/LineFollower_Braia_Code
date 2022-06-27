@@ -23,6 +23,7 @@ esp_err_t MappingService::startNewMapping(uint8_t leftMarksToStop, int32_t media
     status->robotIsMapping->setData(true);
 
     this->leftMarksToStop = leftMarksToStop;
+    //this->rightMarksToStop = latMarks->MarkstoStop->getData();
     this->mediaPulsesToStop = mediaPulsesToStop;
     this->ticksToStop = timeToStop / portTICK_PERIOD_MS;
 

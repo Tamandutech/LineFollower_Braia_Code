@@ -21,7 +21,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     this->latMarks = robot->getSLatMarks();
     this->PidTrans = robot->getPIDVel();
 
-   // mappingService = MappingService::getInstance();
+    mappingService = MappingService::getInstance();
 
     //DataStorage::getInstance()->delete_data("sLatMarks.marks");
     latMarks->marks->loadData();
@@ -111,6 +111,7 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
 
         status->stateMutex.lock();
+        //pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
         if(latMarks->rightMarks->getData() >= 1 && !firstmark)
         {
             firstmark = true;

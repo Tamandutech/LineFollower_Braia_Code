@@ -38,6 +38,11 @@ public:
 
     // Média da contagem dos encoders para última marcação da pista
     DataAbstract<int32_t> *finalEncPulses;
+    
+    //Número de marcações direita para a parada 
+    DataAbstract<uint8_t> *MarkstoStop;
+    //Pulsos antes de inicar uma curva para iniciar a desaceleração
+    DataAbstract<uint32_t> *PulsesBeforeCurve;
 
     // Estrutura de dados que armazena os dados de mapeamento
     DataMap *marks;

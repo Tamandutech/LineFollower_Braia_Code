@@ -50,6 +50,7 @@ private:
 
     // atributos de filtro
     uint8_t leftMarksToStop;
+    uint8_t rightMarksToStop;
     int32_t mediaPulsesToStop;
     TickType_t ticksToStop;
 
