@@ -56,7 +56,7 @@ void SensorsService::calibAllsensors()
     command.brightness = 1;
     command.color = LED_COLOR_BLUE;
     LEDsService::getInstance()->queueCommand(command);
-    for (uint16_t i = 0; i < 20; i++)
+    for (uint16_t i = 0; i < 40; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p) | sLat: (%p)", this, &sArray, &sLat);
         sArray.calibrate();
@@ -170,7 +170,7 @@ void SensorsService::processSLat(Robot *robot)
         if ((slesq1 < 300) && (sldir2))       // lendo sLat esq. branco e dir. preto
 #endif
         {
-            if (!(latMarks->latEsqPass->getData()))
+            if (!(latMarks->latEsqPass->getData()) && status->robotState->getData() != CAR_STOPPED)
             {
                 latMarks->leftPassedInc();
 
@@ -196,7 +196,7 @@ void SensorsService::processSLat(Robot *robot)
         else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
 #endif
         {
-            if (!(latMarks->latDirPass->getData()))
+            if (!(latMarks->latDirPass->getData()) && status->robotState->getData() != CAR_STOPPED)
             {
                 latMarks->rightPassedInc();
 

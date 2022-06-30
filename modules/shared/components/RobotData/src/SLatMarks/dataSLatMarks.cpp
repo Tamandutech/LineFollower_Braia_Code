@@ -26,6 +26,9 @@ dataSLatMarks::dataSLatMarks(std::string name)
 
     PulsesBeforeCurve = new DataAbstract<uint32_t>("PulsesBeforeCurve", name, 200);
     dataManager->registerParamData(PulsesBeforeCurve);
+
+    PulsesAfterCurve = new DataAbstract<uint32_t>("PulsesAfterCurve", name, 200);
+    dataManager->registerParamData(PulsesAfterCurve);
 }
 
 void dataSLatMarks::leftPassedInc()

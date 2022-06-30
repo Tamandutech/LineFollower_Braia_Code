@@ -50,6 +50,7 @@ private:
     int32_t mediaEncFinal = 0;
     int32_t initialmediaEnc = 0;
     int32_t pulsesBeforeCurve = 200;
+    int32_t pulsesAfterCurve = 200;
     bool firstmark = false;
 
     led_command_t command;

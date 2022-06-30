@@ -121,7 +121,7 @@ void MappingService::Run()
         tempActualMark.MapEncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;
         tempActualMark.MapEncRight = speedMapping->EncRight->getData() - initialRightPulses;
         tempActualMark.MapEncMedia = ((tempActualMark.MapEncLeft + tempActualMark.MapEncRight) / 2);
-        tempActualMark.MapTime = ((xTaskGetTickCount() - initialTicks) / portTICK_PERIOD_MS);
+        tempActualMark.MapTime = ((xTaskGetTickCount() - initialTicks) * portTICK_PERIOD_MS);
 
         // variação de encoder em pulsos
         tempDeltaPulses = std::abs((tempActualMark.MapEncRight - tempPreviousMark.MapEncRight) - (tempActualMark.MapEncLeft - tempPreviousMark.MapEncLeft));
@@ -134,7 +134,7 @@ void MappingService::Run()
 
         ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d, MapStatus: %d", tempActualMark.MapEncLeft, tempActualMark.MapEncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime, tempActualMark.MapStatus);
 
-        if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (2 <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
+        if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (latMarks->MarkstoStop->getData() <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
         {
             ESP_LOGD(GetName().c_str(), "Mapeamento finalizado.");
 

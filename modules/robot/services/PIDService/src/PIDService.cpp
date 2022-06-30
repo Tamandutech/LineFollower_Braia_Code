@@ -28,6 +28,7 @@ void PIDService::Run()
         speedMax = speed->max->getData();
         
         accel = speed->accelration->getData();
+        desaccel = speed->desaccelration->getData();
         rotK = PIDRot->Krot->getData();
 
         // Reseta o PID se o carrinho parar
@@ -70,8 +71,8 @@ void PIDService::Run()
         Ptrans = KpVel * erroVelTrans;
         Itrans += KiVel * erroVelTrans;
         constrain(Itrans, (float)speedMin, (float)speedMax);
-        Dtrans = KdVel * (erroVelTrans - errTrans_ant);
-        //Dtrans = KdVel * (lastVelTrans - VelTrans);
+        //Dtrans = KdVel * (erroVelTrans - errTrans_ant);
+        Dtrans = KdVel * (lastVelTrans - VelTrans);
         PidTrans = Ptrans + Itrans + Dtrans;
         errTrans_ant = erroVelTrans;
         lastVelTrans = VelTrans;
@@ -79,8 +80,8 @@ void PIDService::Run()
         Prot = KpRot * erroVelRot;
         Irot += KiRot * erroVelRot;
         constrain(Irot, (float)speedMin, (float)speedMax);
-        Drot = KdRot * (erroVelRot - errRot_ant);
-        //Drot = KdRot * (lastVelRot - VelRot);
+        //Drot = KdRot * (erroVelRot - errRot_ant);
+        Drot = KdRot * (lastVelRot - VelRot);
         PidRot = Prot + Irot + Drot;
         errRot_ant = erroVelRot;
         lastVelRot = VelRot;
@@ -127,17 +128,17 @@ void PIDService::Run()
             }
             else
             {
-                newSetpoint = SetpointTransactual - (accel * ((float)TaskDelay / (float)1000));
+                newSetpoint = SetpointTransactual - (desaccel * ((float)TaskDelay / (float)1000));
                 PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, SetpointTransactual));
             }
         }
 
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
-        if (iloop > 100)
+        if (iloop > 30)
         {
             ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
-            ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d", speedMin, speedMax);
+            ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
             ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);

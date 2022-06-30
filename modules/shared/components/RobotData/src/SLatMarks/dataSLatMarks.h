@@ -44,6 +44,10 @@ public:
     //Pulsos antes de inicar uma curva para iniciar a desaceleração
     DataAbstract<uint32_t> *PulsesBeforeCurve;
 
+    //Pulsos após sair de uma curva para iniciar a aceleração
+    DataAbstract<uint32_t> *PulsesAfterCurve;
+
+
     // Estrutura de dados que armazena os dados de mapeamento
     DataMap *marks;
 
