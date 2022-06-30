@@ -41,6 +41,7 @@ private:
     // Variáveis para cálculo do pid rot e trans
     float rotK = 5;
     float accel = 6000; // aceleração em rpm/s
+    float desaccel = 6000; // aceleração em rpm/s
     int16_t setpointPIDTransTarget = 0;
     int16_t newSetpoint = 0;
     int16_t SetpointTransactual = 0;
@@ -55,6 +56,8 @@ private:
 
     float VelRot = 0;
     float VelTrans = 0;
+    float lastVelRot = 0;
+    float lastVelTrans = 0;
 
     float erroVelTrans = 0;
     float erroVelRot = 0;

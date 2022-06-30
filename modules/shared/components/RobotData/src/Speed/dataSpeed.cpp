@@ -26,6 +26,8 @@ dataSpeed::dataSpeed(std::string name)
 
     accelration = new DataAbstract<float>("accel", name, 6000);
     dataManager->registerParamData(accelration);
+    desaccelration = new DataAbstract<float>("desaccel", name, 6000);
+    dataManager->registerParamData(desaccelration);
 
     WheelDiameter = new DataAbstract<uint8_t>("WheelDiameter", name, 0);
     dataManager->registerParamData(WheelDiameter);

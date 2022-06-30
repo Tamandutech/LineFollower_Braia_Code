@@ -20,6 +20,15 @@ dataSLatMarks::dataSLatMarks(std::string name)
 
     thresholdToCurve = new DataAbstract<uint8_t>("thresholdToCurve", name, 25);
     dataManager->registerParamData(thresholdToCurve);
+
+    MarkstoStop = new DataAbstract<uint8_t>("MarkstoStop", name, 2);
+    dataManager->registerParamData(MarkstoStop);
+
+    PulsesBeforeCurve = new DataAbstract<uint32_t>("PulsesBeforeCurve", name, 200);
+    dataManager->registerParamData(PulsesBeforeCurve);
+
+    PulsesAfterCurve = new DataAbstract<uint32_t>("PulsesAfterCurve", name, 200);
+    dataManager->registerParamData(PulsesAfterCurve);
 }
 
 void dataSLatMarks::leftPassedInc()

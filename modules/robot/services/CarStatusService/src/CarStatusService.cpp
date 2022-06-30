@@ -21,7 +21,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     this->latMarks = robot->getSLatMarks();
     this->PidTrans = robot->getPIDVel();
 
-   // mappingService = MappingService::getInstance();
+    mappingService = MappingService::getInstance();
 
     //DataStorage::getInstance()->delete_data("sLatMarks.marks");
     latMarks->marks->loadData();
@@ -37,7 +37,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
         status->encreading->setData(true);
         numMarks = latMarks->marks->getSize();
         mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
-        speed->setToLine();
+        speed->setToCurve();
     }
 
     status->robotState->setData(CAR_STOPPED);
@@ -99,11 +99,8 @@ void CarStatusService::Run()
         // Começa mapeamento
         mappingService->startNewMapping();
     }
-    else{
-        
-    }
 
-    status->robotState->setData(CAR_IN_LINE);
+    status->robotState->setData(CAR_IN_CURVE);
 
     // Loop
     for (;;)
@@ -111,6 +108,8 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
 
         status->stateMutex.lock();
+        pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
+        pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
         if(latMarks->rightMarks->getData() >= 1 && !firstmark)
         {
             firstmark = true;
@@ -178,7 +177,7 @@ void CarStatusService::Run()
             {
                 ESP_LOGD(GetName().c_str(), "Parando o robô");
                 status->encreading->setData(false);
-                status->robotState->setData(CAR_IN_LINE);
+                status->robotState->setData(CAR_IN_CURVE);
                 vTaskDelay(500 / portTICK_PERIOD_MS);
 
                 // TODO: Encontrar forma bonita de suspender os outros serviços.
@@ -200,13 +199,26 @@ void CarStatusService::Run()
                 for (mark = 0; mark < numMarks - 1; mark++)
                 {
                     // Verifica a contagem do encoder e atribui o estado ao robô
-
                     int32_t Manualmedia = latMarks->marks->getData(mark).MapEncMedia;        // Média dos encoders na chave mark
                     int32_t ManualmediaNxt = latMarks->marks->getData(mark + 1).MapEncMedia; // Média dos encoders na chave mark + 1
 
-                    if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt)
-                    {                                                                                    // análise do valor das médias dos encoders
-                        status->robotState->setData((CarState)latMarks->marks->getData(mark).MapStatus); // Atualiza estado do robô
+                    if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt) // análise do valor das médias dos encoders
+                    {
+                        CarState trackType = (CarState)latMarks->marks->getData(mark+1).MapStatus;
+                        status->robotState->setData((CarState)latMarks->marks->getData(mark+1).MapStatus); 
+                        // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
+                        if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE && (mark + 2 < numMarks))
+                        {
+                            if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) trackType = CAR_IN_CURVE;
+                            else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) trackType = CAR_IN_CURVE;
+
+                        }
+                        else if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
+                        {
+                            if((Manualmedia + pulsesAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + pulsesAfterCurve)) trackType = CAR_IN_CURVE;
+                            else if((Manualmedia + pulsesAfterCurve) >= ManualmediaNxt) trackType = CAR_IN_CURVE;
+                        }
+                        status->robotState->setData(trackType); // Atualiza estado do robô
                         break;
                     }
                 }

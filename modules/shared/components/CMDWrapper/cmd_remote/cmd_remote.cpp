@@ -54,7 +54,7 @@ static std::string rmt(int argc, char **argv)
 
         for (numActual = 1, numToReceive = 1; numActual <= numToReceive; numActual++)
         {
-            for (uint8_t i = 0; i < 50; i++)
+            for (uint8_t i = 0; i < 150; i++)
             {
                 packet = ESPNOWHandler::getInstance()->getPacketReceived(uniqueId, numActual);
 

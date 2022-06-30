@@ -13,7 +13,7 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 #define ManualMap
@@ -49,6 +49,8 @@ private:
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
     int32_t initialmediaEnc = 0;
+    int32_t pulsesBeforeCurve = 200;
+    int32_t pulsesAfterCurve = 200;
     bool firstmark = false;
 
     led_command_t command;
