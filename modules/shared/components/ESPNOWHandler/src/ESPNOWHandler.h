@@ -21,7 +21,17 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 #include "nvs_flash.h"
+
+#ifdef ESP32_QEMU
+#include "esp_netif.h"
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
+#else
 #include "esp_now.h"
+#endif
+
 #include "esp_wifi.h"
 #include "tcpip_adapter.h"
 #include "esp_system.h"
@@ -40,7 +50,6 @@ using namespace cpp_freertos;
 class ESPNOWHandler : public Thread, public Singleton<ESPNOWHandler>
 {
 public:
-
     ESPNOWHandler(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
@@ -61,7 +70,9 @@ private:
 
     void ESPNOWInit(uint8_t canal, uint8_t *Mac, bool criptografia); // Inicia o espnow e registra os dados do peer
 
-    static void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);    // Evento para enviar o dado
+#ifndef ESP32_QEMU
+    static void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status); // Evento para enviar o dado
+#endif
     static void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len); // Evento de dado Recebido
 
     /// @brief Envia dados via ESPNOW
@@ -73,7 +84,9 @@ private:
 
     uint8_t GetUniqueID();
 
+#ifndef ESP32_QEMU
     esp_now_peer_info_t peerInfo; // Variável para adicionar o peer
+#endif
     SemaphoreHandle_t xSemaphorePeerInfo;
 
     PacketData packetReceived;

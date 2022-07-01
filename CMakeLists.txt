@@ -8,5 +8,6 @@ list(
         "modules/robot/services"
         "modules/gateway/components"
         "modules/gateway/services"
+        $ENV{IDF_PATH}/examples/common_components/protocol_examples_common
     )
 project(robot)
