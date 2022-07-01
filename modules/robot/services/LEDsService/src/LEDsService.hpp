@@ -6,7 +6,6 @@
 #include "RobotData.h"
 
 #include "driver/gpio.h"
-#include "esp32-hal.h"
 #include "driver/rmt.h"
 #include <sys/cdefs.h>
 

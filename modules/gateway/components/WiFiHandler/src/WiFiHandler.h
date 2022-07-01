@@ -13,6 +13,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "protocol_examples_common.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"

@@ -25,8 +25,11 @@ void LEDsService::Run()
 
     this->config.clk_div = 2;
 
+#ifndef ESP32_QEMU
     ESP_ERROR_CHECK(rmt_config(&this->config));
     ESP_ERROR_CHECK(rmt_driver_install(this->config.channel, 0, 0));
+
+#endif
 
     this->strip_config.max_leds = NUM_LEDS;
     this->strip_config.dev = (led_strip_dev_t)config.channel;
@@ -43,7 +46,7 @@ void LEDsService::Run()
         vTaskDelay(0);
         xQueueReceive(queueLedCommands, &ledCommand, portMAX_DELAY);
 
-        //ESP_LOGD(GetName().c_str(), "Run: ledCommand.effect = %d", ledCommand.effect);
+        // ESP_LOGD(GetName().c_str(), "Run: ledCommand.effect = %d", ledCommand.effect);
 
         switch (ledCommand.effect)
         {
@@ -80,7 +83,9 @@ void LEDsService::led_effect_set()
         if (ledCommand.led[i] >= 0)
         {
             ESP_LOGD(GetName().c_str(), "led_effect_set: ledCommand.led[%d] = %d, R = %d, G = %d, B = %d", i, ledCommand.led[i], (*((uint8_t *)(&ledCommand.color) + 2)), (*((uint8_t *)(&ledCommand.color) + 1)), (*(uint8_t *)(&ledCommand.color)));
+#ifndef ESP32_QEMU
             ESP_ERROR_CHECK(this->strip->set_pixel(this->strip, ledCommand.led[i], ledCommand.brightness * (*((uint8_t *)(&ledCommand.color) + 2)), ledCommand.brightness * (*((uint8_t *)(&ledCommand.color) + 1)), ledCommand.brightness * (*(uint8_t *)(&ledCommand.color))));
+#endif
         }
         else
         {
@@ -166,12 +171,16 @@ esp_err_t LEDsService::ws2812_refresh(led_strip_t *strip, uint32_t timeout_ms)
 {
     ws2812_t *ws2812 = __containerof(strip, ws2812_t, parent);
 
+#ifndef ESP32_QEMU
     if (ESP_OK != rmt_write_sample(ws2812->rmt_channel, ws2812->buffer, ws2812->strip_len * 3, true))
     {
         ESP_LOGE(LEDsService::getInstance()->GetName().c_str(), "Falha ao transmitir pacotes do RMT.");
         return ESP_FAIL;
     }
     return rmt_wait_tx_done(ws2812->rmt_channel, pdMS_TO_TICKS(timeout_ms));
+#else
+    return ESP_OK;
+#endif
 }
 
 esp_err_t LEDsService::ws2812_clear(led_strip_t *strip, uint32_t timeout_ms)
@@ -209,11 +218,13 @@ led_strip_t *LEDsService::led_strip_new_rmt_ws2812(const led_strip_config_t *con
     }
 
     uint32_t counter_clk_hz = 0;
+#ifndef ESP32_QEMU
     if (ESP_OK != rmt_get_counter_clock((rmt_channel_t)config->dev, &counter_clk_hz))
     {
         ESP_LOGE(GetName().c_str(), "Falha ao obter contagem de clock do RMT.");
         return NULL;
     }
+#endif
 
     float ratio = (float)counter_clk_hz / 1e9;
     ws2812_t0h_ticks = (uint32_t)(ratio * WS2812_T0H_NS);
@@ -221,7 +232,9 @@ led_strip_t *LEDsService::led_strip_new_rmt_ws2812(const led_strip_config_t *con
     ws2812_t1h_ticks = (uint32_t)(ratio * WS2812_T1H_NS);
     ws2812_t1l_ticks = (uint32_t)(ratio * WS2812_T1L_NS);
 
+#ifndef ESP32_QEMU
     rmt_translator_init((rmt_channel_t)config->dev, (sample_to_rmt_t)ws2812_rmt_adapter);
+#endif
 
     ws2812->rmt_channel = (rmt_channel_t)config->dev;
     ws2812->strip_len = config->max_leds;
