@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <driver/gpio.h>
 #include "driver/pcnt.h"
+#include <soc/pcnt_struct.h>
 #include "esp_log.h"
 
 #define MAX_ESP32_ENCODERS PCNT_UNIT_MAX
