@@ -207,16 +207,19 @@ void CarStatusService::Run()
                         CarState trackType = (CarState)latMarks->marks->getData(mark+1).MapStatus;
                         status->robotState->setData((CarState)latMarks->marks->getData(mark+1).MapStatus); 
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
-                        if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE && (mark + 2 < numMarks))
-                        {
-                            if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) trackType = CAR_IN_CURVE;
-                            else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) trackType = CAR_IN_CURVE;
-
-                        }
-                        else if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
+                        if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
                         {
                             if((Manualmedia + pulsesAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + pulsesAfterCurve)) trackType = CAR_IN_CURVE;
                             else if((Manualmedia + pulsesAfterCurve) >= ManualmediaNxt) trackType = CAR_IN_CURVE;
+                        }
+                        if(mark + 2 < numMarks)
+                        {
+                            if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE)
+                            {
+                                if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) trackType = CAR_IN_CURVE;
+                                else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) trackType = CAR_IN_CURVE;
+
+                            }
                         }
                         status->robotState->setData(trackType); // Atualiza estado do robô
                         break;
