@@ -9,6 +9,7 @@
 #include "SpeedService.hpp"
 #include "ESPNOWHandler.h"
 #include "LEDsService.hpp"
+#include "BLEService.hpp"
 
 // C/C++
 #include <stdbool.h>
@@ -44,6 +45,7 @@ SensorsService *sensorsService;
 SpeedService *speedService;
 LEDsService *ledsService;
 ESPNOWHandler *espNowHandler;
+BLEService *bleService;
 
 extern "C"
 {
@@ -84,7 +86,8 @@ void app_main(void)
   motorsService = MotorsService::getInstance("MotorsService", 2048, 20);
   speedService = SpeedService::getInstance("SpeedService", 2048, 20);
   pidService = PIDService::getInstance("PIDService", 4096, 20);
-  espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
+  bleService = BLEService::getInstance("BLEService", 4096, 20);
+  // espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
   ESP_LOGD("MAIN", "LED Laranja");
   command.color = LED_COLOR_ORANGE;
@@ -106,12 +109,13 @@ void app_main(void)
   ESP_LOGD("MAIN", "Apagando LEDs");
   command.color = LED_COLOR_BLACK;
   ledsService->queueCommand(command);
+
   ESP_LOGD(MappingService::getInstance()->GetName().c_str(), "Mapeamento");
   ESP_LOGD(CarStatusService::getInstance()->GetName().c_str(), "CarStatusService");
   ESP_LOGD(MotorsService::getInstance()->GetName().c_str(), "MotorsService");
   ESP_LOGD(SpeedService::getInstance()->GetName().c_str(), "SpeedService");
   ESP_LOGD(PIDService::getInstance()->GetName().c_str(), "PIDService");
-  ESP_LOGD(ESPNOWHandler::getInstance()->GetName().c_str(), "ESPNOWHandler");
+  // ESP_LOGD(ESPNOWHandler::getInstance()->GetName().c_str(), "ESPNOWHandler");
   ESP_LOGD(LEDsService::getInstance()->GetName().c_str(), "LEDsService");
 #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
   for (;;)
