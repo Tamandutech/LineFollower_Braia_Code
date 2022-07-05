@@ -9,7 +9,7 @@
 #include "SpeedService.hpp"
 #include "ESPNOWHandler.h"
 #include "LEDsService.hpp"
-#include "BLEService.hpp"
+#include "BLEServerService.hpp"
 
 // C/C++
 #include <stdbool.h>
@@ -45,7 +45,7 @@ SensorsService *sensorsService;
 SpeedService *speedService;
 LEDsService *ledsService;
 ESPNOWHandler *espNowHandler;
-BLEService *bleService;
+BLEServerService *bleServerService;
 
 extern "C"
 {
@@ -86,7 +86,7 @@ void app_main(void)
   motorsService = MotorsService::getInstance("MotorsService", 2048, 20);
   speedService = SpeedService::getInstance("SpeedService", 2048, 20);
   pidService = PIDService::getInstance("PIDService", 4096, 20);
-  bleService = BLEService::getInstance("BLEService", 4096, 20);
+  bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 20);
   // espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
   ESP_LOGD("MAIN", "LED Laranja");
