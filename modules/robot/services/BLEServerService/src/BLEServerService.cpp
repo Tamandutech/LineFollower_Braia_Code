@@ -1,4 +1,7 @@
 #include "BLEServerService.hpp"
+#include "sdkconfig.h"
+
+#if defined(CONFIG_BT_ENABLED)
 
 NimBLEServer *BLEServerService::pServer;
 
@@ -212,3 +215,5 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
 void BLEServerService::Run()
 {
 }
+
+#endif

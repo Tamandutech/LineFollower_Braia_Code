@@ -1,6 +1,10 @@
 #ifndef BLE_SERVICE_H
 #define BLE_SERVICE_H
 
+#include "sdkconfig.h"
+
+#if defined(CONFIG_BT_ENABLED)
+
 #include "thread.hpp"
 #include "singleton.hpp"
 
@@ -29,4 +33,5 @@ private:
     static NimBLEServer *pServer;
 };
 
+#endif
 #endif
