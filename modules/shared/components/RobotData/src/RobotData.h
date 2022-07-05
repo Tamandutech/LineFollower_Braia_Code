@@ -48,6 +48,8 @@ public:
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
 
+    std::string GetName();
+
 private:
     std::string name;
 

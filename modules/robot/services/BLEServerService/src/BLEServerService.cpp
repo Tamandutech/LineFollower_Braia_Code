@@ -1,7 +1,8 @@
-#include "BLEServerService.hpp"
 #include "sdkconfig.h"
 
 #if defined(CONFIG_BT_ENABLED)
+
+#include "BLEServerService.hpp"
 
 NimBLEServer *BLEServerService::pServer;
 
@@ -11,7 +12,7 @@ class ServerCallbacks : public NimBLEServerCallbacks
 {
     void onConnect(NimBLEServer *pServer)
     {
-        printf("Client connected\n");
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client conectado.");
         NimBLEDevice::startAdvertising();
     };
     /** Alternative onConnect() method to extract details of the connection.
@@ -19,7 +20,7 @@ class ServerCallbacks : public NimBLEServerCallbacks
      */
     void onConnect(NimBLEServer *pServer, ble_gap_conn_desc *desc)
     {
-        printf("Client address: %s\n", NimBLEAddress(desc->peer_ota_addr).toString().c_str());
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Endereço do client: %s", NimBLEAddress(desc->peer_ota_addr).toString().c_str());
         /** We can use the connection handle here to ask for different connection parameters.
          *  Args: connection handle, min connection interval, max connection interval
          *  latency, supervision timeout.
@@ -31,19 +32,19 @@ class ServerCallbacks : public NimBLEServerCallbacks
     };
     void onDisconnect(NimBLEServer *pServer)
     {
-        printf("Client disconnected - start advertising\n");
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client disconnected - start advertising");
         NimBLEDevice::startAdvertising();
     };
     void onMTUChange(uint16_t MTU, ble_gap_conn_desc *desc)
     {
-        printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "MTU updated: %u for connection ID: %u", MTU, desc->conn_handle);
     };
 
     /********************* Security handled here **********************
     ****** Note: these are the same return values as defaults ********/
     uint32_t onPassKeyRequest()
     {
-        printf("Server Passkey Request\n");
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Server Passkey Request");
         /** This should return a random 6 digit number for security
          *  or make your own static passkey as done here.
          */
@@ -52,7 +53,7 @@ class ServerCallbacks : public NimBLEServerCallbacks
 
     bool onConfirmPIN(uint32_t pass_key)
     {
-        printf("The passkey YES/NO number: %d\n", pass_key);
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "The passkey YES/NO number: %d", pass_key);
         /** Return false if passkeys don't match. */
         return true;
     };
@@ -64,10 +65,10 @@ class ServerCallbacks : public NimBLEServerCallbacks
         {
             /** NOTE: createServer returns the current server reference unless one is not already created */
             NimBLEDevice::createServer()->disconnect(desc->conn_handle);
-            printf("Encrypt connection failed - disconnecting client\n");
+            ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Encrypt connection failed - disconnecting client");
             return;
         }
-        printf("Starting BLE work!");
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Starting BLE work!");
     };
 };
 
@@ -76,23 +77,23 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
 {
     void onRead(NimBLECharacteristic *pCharacteristic)
     {
-        printf("%s : onRead(), value: %s\n",
-               pCharacteristic->getUUID().toString().c_str(),
-               pCharacteristic->getValue().c_str());
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s : onRead(), value: %s",
+                 pCharacteristic->getUUID().toString().c_str(),
+                 pCharacteristic->getValue().c_str());
     };
 
     void onWrite(NimBLECharacteristic *pCharacteristic)
     {
-        printf("%s : onWrite(), value: %s\n",
-               pCharacteristic->getUUID().toString().c_str(),
-               pCharacteristic->getValue().c_str());
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s : onWrite(), value: %s",
+                 pCharacteristic->getUUID().toString().c_str(),
+                 pCharacteristic->getValue().c_str());
     };
     /** Called before notification or indication is sent,
      *  the value can be changed here before sending if desired.
      */
     void onNotify(NimBLECharacteristic *pCharacteristic)
     {
-        printf("Sending notification to clients\n");
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Sending notification to clients");
     };
 
     /** The status returned in status is defined in NimBLECharacteristic.h.
@@ -100,10 +101,10 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
      */
     void onStatus(NimBLECharacteristic *pCharacteristic, Status status, int code)
     {
-        printf("Notification/Indication status code: %d , return code: %d, %s\n",
-               status,
-               code,
-               NimBLEUtils::returnCodeToString(code));
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Notification/Indication status code: %d , return code: %d, %s",
+                 status,
+                 code,
+                 NimBLEUtils::returnCodeToString(code));
     };
 };
 
@@ -113,12 +114,12 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks
     void onWrite(NimBLEDescriptor *pDescriptor)
     {
         std::string dscVal((char *)pDescriptor->getValue(), pDescriptor->getLength());
-        printf("Descriptor witten value: %s\n", dscVal.c_str());
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Descriptor witten value: %s", dscVal.c_str());
     };
 
     void onRead(NimBLEDescriptor *pDescriptor)
     {
-        printf("%s Descriptor read\n", pDescriptor->getUUID().toString().c_str());
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s Descriptor read", pDescriptor->getUUID().toString().c_str());
     };
     ;
 };
@@ -129,10 +130,11 @@ static CharacteristicCallbacks chrCallbacks;
 
 BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-    printf("Starting NimBLE Server\n");
+    ESP_LOGD(this->GetName().c_str(), "Iniciando servidor GATT...");
 
     /** sets device name */
-    NimBLEDevice::init("TT_LF_BRAIA_V3");
+    NimBLEDevice::init(Robot::getInstance()->GetName());
+    NimBLEDevice::setPower(esp_power_level_t::ESP_PWR_LVL_P9, esp_ble_power_type_t::ESP_BLE_PWR_TYPE_ADV);
 
     /** Set the IO capabilities of the device, each option will trigger a different pairing method.
      *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
@@ -157,10 +159,10 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
     NimBLECharacteristic *pBeefCharacteristic = pDeadService->createCharacteristic(
         "BEEF",
         NIMBLE_PROPERTY::READ |
-        NIMBLE_PROPERTY::WRITE |
-        /** Require a secure connection for read and write access */
-        NIMBLE_PROPERTY::READ_ENC | // only allow reading if paired / encrypted
-        NIMBLE_PROPERTY::WRITE_ENC  // only allow writing if paired / encrypted
+            NIMBLE_PROPERTY::WRITE |
+            /** Require a secure connection for read and write access */
+            NIMBLE_PROPERTY::READ_ENC | // only allow reading if paired / encrypted
+            NIMBLE_PROPERTY::WRITE_ENC  // only allow writing if paired / encrypted
     );
 
     pBeefCharacteristic->setValue("Burger");
@@ -209,7 +211,7 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
     pAdvertising->setScanResponse(true);
     pAdvertising->start();
 
-    printf("Advertising Started\n");
+    ESP_LOGD(this->GetName().c_str(), "Começou a se anunciar...");
 }
 
 void BLEServerService::Run()

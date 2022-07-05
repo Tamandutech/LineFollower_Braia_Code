@@ -1,5 +1,5 @@
-#ifndef BLE_SERVICE_H
-#define BLE_SERVICE_H
+#ifndef BLE_SERVER_SERVICE_H
+#define BLE_SERVER_SERVICE_H
 
 #include "sdkconfig.h"
 
@@ -16,6 +16,8 @@
 
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
+
+#include "RobotData.h"
 
 using namespace cpp_freertos;
 

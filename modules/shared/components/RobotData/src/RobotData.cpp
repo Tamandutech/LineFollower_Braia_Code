@@ -82,3 +82,8 @@ RobotStatus *Robot::getStatus()
 {
     return this->Status;
 }
+
+std::string Robot::GetName()
+{
+    return this->name;
+}
