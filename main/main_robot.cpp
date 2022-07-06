@@ -91,6 +91,7 @@ void app_main(void)
   speedService = SpeedService::getInstance("SpeedService", 2048, 20);
   pidService = PIDService::getInstance("PIDService", 4096, 20);
   bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 20);
+  bleServerService->Start();
   // espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
   ESP_LOGD("MAIN", "LED Laranja");
