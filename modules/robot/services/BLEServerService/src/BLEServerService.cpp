@@ -4,8 +4,6 @@
 
 #include "BLEServerService.hpp"
 
-NimBLEServer *BLEServerService::pServer;
-
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */
 class ServerCallbacks : public NimBLEServerCallbacks
@@ -13,7 +11,7 @@ class ServerCallbacks : public NimBLEServerCallbacks
     void onConnect(NimBLEServer *pServer)
     {
         ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client conectado.");
-        NimBLEDevice::startAdvertising();
+        BLEServerService::getInstance()->deviceConnected = true;
     };
     /** Alternative onConnect() method to extract details of the connection.
      *  See: src/ble_gap.h for the details of the ble_gap_conn_desc struct.
@@ -28,12 +26,12 @@ class ServerCallbacks : public NimBLEServerCallbacks
          *  Latency: number of intervals allowed to skip.
          *  Timeout: 10 millisecond increments, try for 3x interval time for best results.
          */
-        pServer->updateConnParams(desc->conn_handle, 24, 48, 0, 18);
+        BLEServerService::getInstance()->deviceConnected = true;
     };
     void onDisconnect(NimBLEServer *pServer)
     {
         ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client disconnected - start advertising");
-        NimBLEDevice::startAdvertising();
+        BLEServerService::getInstance()->deviceConnected = false;
     };
     void onMTUChange(uint16_t MTU, ble_gap_conn_desc *desc)
     {
@@ -132,90 +130,77 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
 {
     ESP_LOGD(this->GetName().c_str(), "Iniciando servidor GATT...");
 
-    /** sets device name */
     NimBLEDevice::init(Robot::getInstance()->GetName());
     NimBLEDevice::setPower(esp_power_level_t::ESP_PWR_LVL_P9, esp_ble_power_type_t::ESP_BLE_PWR_TYPE_ADV);
-
-    /** Set the IO capabilities of the device, each option will trigger a different pairing method.
-     *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
-     *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
-     *  BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
-     */
-    // NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY); // use passkey
-    // NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_YESNO); //use numeric comparison
-
-    /** 2 different ways to set security - both calls achieve the same result.
-     *  no bonding, no man in the middle protection, secure connections.
-     *
-     *  These are the default values, only shown here for demonstration.
-     */
-    // NimBLEDevice::setSecurityAuth(false, false, true);
-    NimBLEDevice::setSecurityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
 
     pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(new ServerCallbacks());
 
-    NimBLEService *pDeadService = pServer->createService("DEAD");
-    NimBLECharacteristic *pBeefCharacteristic = pDeadService->createCharacteristic(
-        "BEEF",
-        NIMBLE_PROPERTY::READ |
-            NIMBLE_PROPERTY::WRITE |
-            /** Require a secure connection for read and write access */
-            NIMBLE_PROPERTY::READ_ENC | // only allow reading if paired / encrypted
-            NIMBLE_PROPERTY::WRITE_ENC  // only allow writing if paired / encrypted
-    );
+    BLEService *pService = pServer->createService(SERVICE_UART_UUID);
 
-    pBeefCharacteristic->setValue("Burger");
-    pBeefCharacteristic->setCallbacks(&chrCallbacks);
+    // Create a BLE Characteristic
+    pTxCharacteristic = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_TX,
+        /******* Enum Type NIMBLE_PROPERTY now *******
+            BLECharacteristic::PROPERTY_NOTIFY
+            );
+        **********************************************/
+        NIMBLE_PROPERTY::NOTIFY);
 
-    /** 2902 and 2904 descriptors are a special case, when createDescriptor is called with
-     *  either of those uuid's it will create the associated class with the correct properties
-     *  and sizes. However we must cast the returned reference to the correct type as the method
-     *  only returns a pointer to the base NimBLEDescriptor class.
-     */
-    NimBLE2904 *pBeef2904 = (NimBLE2904 *)pBeefCharacteristic->createDescriptor("2904");
-    pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
-    pBeef2904->setCallbacks(&dscCallbacks);
+    /***************************************************
+     NOTE: DO NOT create a 2902 descriptor
+     it will be created automatically if notifications
+     or indications are enabled on a characteristic.
 
-    NimBLEService *pBaadService = pServer->createService("BAAD");
-    NimBLECharacteristic *pFoodCharacteristic = pBaadService->createCharacteristic(
-        "F00D",
-        NIMBLE_PROPERTY::READ |
-            NIMBLE_PROPERTY::WRITE |
-            NIMBLE_PROPERTY::NOTIFY);
+     pCharacteristic->addDescriptor(new BLE2902());
+    ****************************************************/
 
-    pFoodCharacteristic->setValue("Fries");
-    pFoodCharacteristic->setCallbacks(&chrCallbacks);
+    BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_RX,
+        /******* Enum Type NIMBLE_PROPERTY now *******
+                BLECharacteristic::PROPERTY_WRITE
+                );
+        *********************************************/
+        NIMBLE_PROPERTY::WRITE);
 
-    /** Custom descriptor: Arguments are UUID, Properties, max length in bytes of the value */
-    NimBLEDescriptor *pC01Ddsc = pFoodCharacteristic->createDescriptor(
-        "C01D",
-        NIMBLE_PROPERTY::READ |
-            NIMBLE_PROPERTY::WRITE |
-            NIMBLE_PROPERTY::WRITE_ENC, // only allow writing if paired / encrypted
-        20);
-    pC01Ddsc->setValue("Send it back!");
-    pC01Ddsc->setCallbacks(&dscCallbacks);
+    pRxCharacteristic->setCallbacks(new CharacteristicCallbacks());
 
-    /** Start the services when finished creating all Characteristics and Descriptors */
-    pDeadService->start();
-    pBaadService->start();
+    // Start the service
+    pService->start();
 
-    NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
-    /** Add the services to the advertisment data **/
-    pAdvertising->addServiceUUID(pDeadService->getUUID());
-    pAdvertising->addServiceUUID(pBaadService->getUUID());
-    /** If your device is battery powered you may consider setting scan response
-     *  to false as it will extend battery life at the expense of less data sent.
-     */
-    pAdvertising->setScanResponse(true);
-    pAdvertising->start();
+    pServer->getAdvertising()->start();
 
     ESP_LOGD(this->GetName().c_str(), "Começou a se anunciar...");
 }
 
 void BLEServerService::Run()
 {
+    ESP_LOGD(this->GetName().c_str(), "Iniciando Loop...");
+    for (;;)
+    {
+        if (deviceConnected)
+        {
+            std::string teste = "Tempo: " + std::to_string(esp_timer_get_time());
+            pTxCharacteristic->setValue(teste);
+            pTxCharacteristic->notify();
+        }
+
+        // disconnecting
+        if (!deviceConnected && oldDeviceConnected)
+        {
+            pServer->startAdvertising(); // restart advertising
+            ESP_LOGD(this->GetName().c_str(), "start advertising\n");
+            oldDeviceConnected = deviceConnected;
+        }
+        // connecting
+        if (deviceConnected && !oldDeviceConnected)
+        {
+            // do stuff here on connecting
+            oldDeviceConnected = deviceConnected;
+        }
+
+        vTaskDelay(10 / portTICK_PERIOD_MS); // Delay between loops to reset watchdog timer
+    }
 }
 
 #endif
