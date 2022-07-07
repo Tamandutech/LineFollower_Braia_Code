@@ -32,6 +32,12 @@ void ServerService::ws_async_send(void *arg)
  */
 esp_err_t ServerService::ws_handler(httpd_req_t *req)
 {
+    if (req->method == HTTP_GET)
+    {
+        ESP_LOGI(TAG, "Handshake done, the new connection was opened");
+        return ESP_OK;
+    }
+
     uint8_t *buf = (uint8_t *)malloc(sizeof(uint8_t) * 128);
     web_socket_packet_t tempPacket;
 
@@ -121,6 +127,10 @@ esp_err_t ServerService::set_content_type_from_file(httpd_req_t *req, const char
     else if (IS_FILE_EXT(filename, ".jpeg"))
     {
         return httpd_resp_set_type(req, "image/jpeg");
+    }
+    else if (IS_FILE_EXT(filename, ".js"))
+    {
+        return httpd_resp_set_type(req, "application/javascript");
     }
     else if (IS_FILE_EXT(filename, ".ico"))
     {

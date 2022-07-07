@@ -81,8 +81,8 @@ void app_main(void)
   mappingService = MappingService::getInstance("MappingService", 8192, 18);
   carStatusService = CarStatusService::getInstance("CarStatusService",10000,19);
   sensorsService = SensorsService::getInstance("SensorsService", 8192, 20);
-  motorsService = MotorsService::getInstance("MotorsService", 2048, 20);
-  speedService = SpeedService::getInstance("SpeedService", 2048, 20);
+  motorsService = MotorsService::getInstance("MotorsService", 4096, 20);
+  speedService = SpeedService::getInstance("SpeedService", 4096, 20);
   pidService = PIDService::getInstance("PIDService", 4096, 20);
   espNowHandler = ESPNOWHandler::getInstance("ESPNOWHandler", 8192, 9);
 
