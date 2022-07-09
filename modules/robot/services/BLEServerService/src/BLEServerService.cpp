@@ -203,4 +203,11 @@ void BLEServerService::Run()
     }
 }
 
+uint8_t BLEServerService::GetUniqueID()
+{
+    this->uniqueIdCounter = this->uniqueIdCounter > 254 ? 0 : this->uniqueIdCounter + 1;
+
+    return this->uniqueIdCounter;
+}
+
 #endif

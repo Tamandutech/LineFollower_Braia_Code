@@ -43,6 +43,9 @@ private:
     BLECharacteristic *pTxCharacteristic;
 
     uint8_t txValue = 0;
+
+    uint8_t uniqueIdCounter = 0;
+    uint8_t GetUniqueID();
 };
 
 #endif
