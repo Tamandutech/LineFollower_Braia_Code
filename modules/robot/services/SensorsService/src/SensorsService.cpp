@@ -52,7 +52,8 @@ void SensorsService::calibAllsensors()
     // Calibração dos dos sensores laterais e array
     command.led[0] = LED_POSITION_LEFT;
     command.led[1] = LED_POSITION_RIGHT;
-    command.led[2] = LED_POSITION_NONE;
+    command.led[2] = LED_POSITION_FRONT;
+    command.led[3] = LED_POSITION_NONE;
     command.effect = LED_EFFECT_SET;
     command.brightness = 1;
     command.color = LED_COLOR_BLUE;
@@ -79,7 +80,8 @@ void SensorsService::calibAllsensors()
 
     command.led[0] = LED_POSITION_LEFT;
     command.led[1] = LED_POSITION_RIGHT;
-    command.led[2] = LED_POSITION_NONE;
+    command.led[2] = LED_POSITION_FRONT;
+    command.led[3] = LED_POSITION_NONE;
     command.effect = LED_EFFECT_SET;
     command.brightness = 1;
     command.color = LED_COLOR_BLACK;

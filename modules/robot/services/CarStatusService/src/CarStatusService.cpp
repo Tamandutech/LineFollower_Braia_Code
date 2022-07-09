@@ -28,8 +28,8 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
 
     // if (latMarks->marks->getSize() <= 0)
     // {
-        status->encreading->setData(false);
-        status->robotIsMapping->setData(true);
+    status->encreading->setData(false);
+    status->robotIsMapping->setData(true);
     // }
     // else
     // {
@@ -86,7 +86,8 @@ void CarStatusService::Run()
 
     command.led[0] = LED_POSITION_LEFT;
     command.led[1] = LED_POSITION_RIGHT;
-    command.led[2] = LED_POSITION_NONE;
+    command.led[2] = LED_POSITION_FRONT;
+    command.led[3] = LED_POSITION_NONE;
     command.color = LED_COLOR_BROWN;
     command.effect = LED_EFFECT_SET;
     command.brightness = 0.3;
@@ -155,7 +156,8 @@ void CarStatusService::Run()
 
                 command.led[0] = LED_POSITION_LEFT;
                 command.led[1] = LED_POSITION_RIGHT;
-                command.led[2] = LED_POSITION_NONE;
+                command.led[2] = LED_POSITION_FRONT;
+                command.led[3] = LED_POSITION_NONE;
                 command.color = LED_COLOR_GREEN;
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 0.3;
@@ -164,12 +166,13 @@ void CarStatusService::Run()
             else
             {
                 ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inCurve.");
-                
+
                 speed->setToCurve();
-                
+
                 command.led[0] = LED_POSITION_LEFT;
                 command.led[1] = LED_POSITION_RIGHT;
-                command.led[2] = LED_POSITION_NONE;
+                command.led[2] = LED_POSITION_FRONT;
+                command.led[3] = LED_POSITION_NONE;
                 command.color = LED_COLOR_ORANGE;
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 0.3;
