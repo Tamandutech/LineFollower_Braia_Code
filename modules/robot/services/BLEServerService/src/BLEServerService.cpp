@@ -4,6 +4,8 @@
 
 #include "BLEServerService.hpp"
 
+QueueHandle_t BLEServerService::queuePacketsReceived;
+
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */
 class ServerCallbacks : public NimBLEServerCallbacks
@@ -80,11 +82,24 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
                  pCharacteristic->getValue().c_str());
     };
 
-    void onWrite(NimBLECharacteristic *pCharacteristic)
+    void onWrite(NimBLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc)
     {
+        ble_gatt_uart_packet_t tempPacket;
+
+        tempPacket.len = pCharacteristic->getValue().length();
+        tempPacket.payload = (uint8_t *)malloc(tempPacket.len + 1);
+        tempPacket.clientMAC = desc->peer_id_addr;
+
+        strcpy((char *)tempPacket.payload, pCharacteristic->getValue().c_str());
+
         ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s : onWrite(), value: %s",
                  pCharacteristic->getUUID().toString().c_str(),
                  pCharacteristic->getValue().c_str());
+
+        if (pCharacteristic->getUUID() == NimBLEUUID(CHARACTERISTIC_UUID_RX))
+        {
+            xQueueSend(BLEServerService::queuePacketsReceived, &tempPacket, 0);
+        }
     };
     /** Called before notification or indication is sent,
      *  the value can be changed here before sending if desired.
@@ -128,6 +143,10 @@ static CharacteristicCallbacks chrCallbacks;
 
 BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
+    ESP_LOGD(this->GetName().c_str(), "Iniciando fila");
+
+    queuePacketsReceived = xQueueCreate(10, sizeof(ble_gatt_uart_packet_t));
+
     ESP_LOGD(this->GetName().c_str(), "Iniciando servidor GATT...");
 
     NimBLEDevice::init(Robot::getInstance()->GetName());
@@ -138,34 +157,14 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
 
     BLEService *pService = pServer->createService(SERVICE_UART_UUID);
 
-    // Create a BLE Characteristic
-    pTxCharacteristic = pService->createCharacteristic(
-        CHARACTERISTIC_UUID_TX,
-        /******* Enum Type NIMBLE_PROPERTY now *******
-            BLECharacteristic::PROPERTY_NOTIFY
-            );
-        **********************************************/
-        NIMBLE_PROPERTY::NOTIFY);
+    pTxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX,
+                                                       NIMBLE_PROPERTY::NOTIFY);
 
-    /***************************************************
-     NOTE: DO NOT create a 2902 descriptor
-     it will be created automatically if notifications
-     or indications are enabled on a characteristic.
-
-     pCharacteristic->addDescriptor(new BLE2902());
-    ****************************************************/
-
-    BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(
-        CHARACTERISTIC_UUID_RX,
-        /******* Enum Type NIMBLE_PROPERTY now *******
-                BLECharacteristic::PROPERTY_WRITE
-                );
-        *********************************************/
-        NIMBLE_PROPERTY::WRITE);
+    BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX,
+                                                                          NIMBLE_PROPERTY::WRITE);
 
     pRxCharacteristic->setCallbacks(new CharacteristicCallbacks());
 
-    // Start the service
     pService->start();
 
     pServer->getAdvertising()->start();
@@ -176,38 +175,81 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
 void BLEServerService::Run()
 {
     ESP_LOGD(this->GetName().c_str(), "Iniciando Loop...");
+
     for (;;)
     {
-        if (deviceConnected)
+        vTaskDelay(0);
+        xQueueReceive(queuePacketsReceived, &packetReceived, portMAX_DELAY);
+
+        ESP_LOGD(GetName().c_str(), "Recebido pacote de dados");
+        ESP_LOGD(GetName().c_str(), "MTU do client: %d", pServer->getPeerInfo(packetReceived.clientMAC).getMTU());
+        ESP_LOGD(GetName().c_str(), "Tamanho do pacote: %d", packetReceived.len);
+        ESP_LOGD(GetName().c_str(), "Dados:\n%s\n", packetReceived.payload);
+
+        std::string ret;
+
+        ESP_LOGD(GetName().c_str(), "Comando recebido via BLE GATT: %s", packetReceived.payload);
+
+        esp_err_t err = better_console_run((char *)packetReceived.payload, &ret);
+
+        ESP_LOGD(GetName().c_str(), "Retorno do comando:\n%s\nRetorno da execução: %s\n", ret.c_str(), esp_err_to_name(err));
+
+        if (err == ESP_OK)
         {
-            std::string teste = "Tempo: " + std::to_string(esp_timer_get_time());
-            pTxCharacteristic->setValue(teste);
-            pTxCharacteristic->notify();
+            cJSON *root;
+            root = cJSON_CreateObject();
+            cJSON_AddStringToObject(root, "cmdExecd", (char *)packetReceived.payload);
+            cJSON_AddStringToObject(root, "data", ret.c_str());
+
+            char *my_json_string = cJSON_PrintUnformatted(root);
+
+            ESP_LOGD(GetName().c_str(), "Enviando pacote de dados, tamanho: %d", strlen(my_json_string));
+
+            // Enviar pacote de dados para o cliente via BLE GATT chunks do tamanho do MTU do cliente
+            size_t msgSize = strlen(my_json_string) + 1; // +1 no final para pegar /0
+            const uint16_t clientMTU = pServer->getPeerInfo(packetReceived.clientMAC).getMTU() - 20;
+
+            for (size_t i = 0; msgSize > 0; i += clientMTU, msgSize -= pTxCharacteristic->getValue().size())
+            {
+                pTxCharacteristic->setValue((uint8_t *)&my_json_string[i], msgSize < clientMTU ? msgSize : clientMTU);
+                pTxCharacteristic->notify();
+            }
+
+            // pTxCharacteristic->setValue(std::string(my_json_string));
+            // pTxCharacteristic->notify();
+
+            cJSON_Delete(root);
+            cJSON_free(my_json_string);
         }
 
-        // disconnecting
-        if (!deviceConnected && oldDeviceConnected)
-        {
-            pServer->startAdvertising(); // restart advertising
-            ESP_LOGD(this->GetName().c_str(), "start advertising\n");
-            oldDeviceConnected = deviceConnected;
-        }
-        // connecting
-        if (deviceConnected && !oldDeviceConnected)
-        {
-            // do stuff here on connecting
-            oldDeviceConnected = deviceConnected;
-        }
-
-        vTaskDelay(10 / portTICK_PERIOD_MS); // Delay between loops to reset watchdog timer
+        free((void *)packetReceived.payload);
     }
-}
 
-uint8_t BLEServerService::GetUniqueID()
-{
-    this->uniqueIdCounter = this->uniqueIdCounter > 254 ? 0 : this->uniqueIdCounter + 1;
+    // for (;;)
+    // {
+    //     if (deviceConnected)
+    //     {
+    //         std::string teste = "Tempo: " + std::to_string(esp_timer_get_time());
+    //         pTxCharacteristic->setValue(teste);
+    //         pTxCharacteristic->notify();
+    //     }
 
-    return this->uniqueIdCounter;
+    //     // disconnecting
+    //     if (!deviceConnected && oldDeviceConnected)
+    //     {
+    //         pServer->startAdvertising(); // restart advertising
+    //         ESP_LOGD(this->GetName().c_str(), "start advertising\n");
+    //         oldDeviceConnected = deviceConnected;
+    //     }
+    //     // connecting
+    //     if (deviceConnected && !oldDeviceConnected)
+    //     {
+    //         // do stuff here on connecting
+    //         oldDeviceConnected = deviceConnected;
+    //     }
+
+    //     vTaskDelay(10 / portTICK_PERIOD_MS); // Delay between loops to reset watchdog timer
+    // }
 }
 
 #endif
