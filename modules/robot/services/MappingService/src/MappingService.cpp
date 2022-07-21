@@ -30,8 +30,10 @@ esp_err_t MappingService::startNewMapping(uint8_t leftMarksToStop, int32_t media
     tempPreviousMark.MapEncLeft = 0;
     tempPreviousMark.MapEncRight = 0;
     tempPreviousMark.MapEncMedia = 0;
-    tempPreviousMark.MapStatus = CAR_IN_LINE;
+    tempPreviousMark.MapStatus = CAR_IN_CURVE;
+    tempPreviousMark.MapTrackStatus = SHORT_CURVE;
     tempPreviousMark.MapTime = 0;
+
 
     latMarks->rightMarks->setData(0);
     latMarks->leftMarks->setData(0);
@@ -129,8 +131,39 @@ void MappingService::Run()
         tempMilimiterInPulses = (speedMapping->MPR->getData() * latMarks->thresholdToCurve->getData()) / (M_PI * speedMapping->WheelDiameter->getData());
 
         tempActualMark.MapStatus = (tempDeltaPulses > tempMilimiterInPulses) ? CAR_IN_CURVE : CAR_IN_LINE;
-
+        tempDeltaDist = ((tempActualMark.MapEncMedia - tempPreviousMark.MapEncMedia) * (M_PI * speedMapping->WheelDiameter->getData())) / (speedMapping->MPR->getData()); // distância entre marcacões em mm
+        if(tempActualMark.MapStatus == CAR_IN_LINE)
+        {
+            if(tempDeltaDist < latMarks->thresholdMediumLine->getData()) tempActualMark.MapTrackStatus = SHORT_LINE;
+            else if(tempDeltaDist < latMarks->thresholdLongLine->getData()) tempActualMark.MapTrackStatus = MEDIUM_LINE;
+            else tempActualMark.MapTrackStatus = LONG_LINE;
+        }
+        else if(tempActualMark.MapStatus == CAR_IN_CURVE)
+        {
+            if(tempDeltaDist < latMarks->thresholdMediumCurve->getData()) tempActualMark.MapTrackStatus = SHORT_CURVE;
+            else if(tempDeltaDist < latMarks->thresholdLongCurve->getData()) tempActualMark.MapTrackStatus = MEDIUM_CURVE;
+            else tempActualMark.MapTrackStatus = LONG_CURVE;
+        }
         latMarks->marks->newData(tempActualMark);
+        
+        command.effect = LED_EFFECT_SET;
+        command.brightness = 1;
+        command.led[0] = LED_POSITION_NONE;
+        command.led[1] = LED_POSITION_NONE;
+        if(tempActualMark.MapStatus == CAR_IN_CURVE) 
+        {
+            if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
+            else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
+            command.color = LED_COLOR_RED;
+        }
+        else if(tempActualMark.MapStatus == CAR_IN_LINE)
+        {
+            if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
+            else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
+            command.color = LED_COLOR_GREEN;
+        }
+        LEDsService::getInstance()->queueCommand(command);
+        
 
         ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d, MapStatus: %d", tempActualMark.MapEncLeft, tempActualMark.MapEncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime, tempActualMark.MapStatus);
 

@@ -30,6 +30,16 @@ enum PacketType
     PACKET_TYPE_RETURN
 };
 
+enum TrackState
+{
+    LONG_LINE,
+    MEDIUM_LINE,
+    SHORT_LINE,
+    LONG_CURVE,
+    MEDIUM_CURVE,
+    SHORT_CURVE        
+};
+
 struct PacketData
 {
     uint8_t id;           // ID do pacote

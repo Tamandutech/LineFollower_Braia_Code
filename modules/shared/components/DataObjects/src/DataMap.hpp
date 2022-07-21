@@ -32,6 +32,7 @@ struct MapData
     int32_t MapEncLeft;
     int32_t MapEncRight;
     uint8_t MapStatus;
+    uint8_t MapTrackStatus;
 };
 
 class DataMap : public IDataAbstract

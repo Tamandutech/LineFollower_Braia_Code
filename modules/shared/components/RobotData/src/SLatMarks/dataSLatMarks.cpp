@@ -29,6 +29,19 @@ dataSLatMarks::dataSLatMarks(std::string name)
 
     PulsesAfterCurve = new DataAbstract<uint32_t>("PulsesAfterCurve", name, 200);
     dataManager->registerParamData(PulsesAfterCurve);
+
+    thresholdLongLine = new DataAbstract<uint16_t>("thresholdLongLine", name, 1500);
+    dataManager->registerParamData(thresholdLongLine);
+    
+    thresholdMediumLine = new DataAbstract<uint16_t>("thresholdMediumLine", name, 1000);
+    dataManager->registerParamData(thresholdMediumLine);
+
+    thresholdLongCurve = new DataAbstract<uint16_t>("thresholdLongCurve", name, 900);
+    dataManager->registerParamData(thresholdLongCurve);
+    
+    thresholdMediumCurve = new DataAbstract<uint16_t>("thresholdMediumCurve", name, 500);
+    dataManager->registerParamData(thresholdMediumCurve);
+
 }
 
 void dataSLatMarks::leftPassedInc()
