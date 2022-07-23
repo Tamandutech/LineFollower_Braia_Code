@@ -27,7 +27,7 @@ void SpeedService::Run()
     {
         vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
 
-        CarState estado = (CarState)robot->getStatus()->robotState->getData();
+        estado = (CarState)robot->getStatus()->robotState->getData();
 
         if (estado == CAR_STOPPED && robot->getSLatMarks()->rightMarks == 0)
         {
@@ -65,12 +65,12 @@ void SpeedService::Run()
             / ((float)deltaTimeMS_media / (float)60000)                                                            // Divisao do delta tempo em minutos para calculo de RPM
         );
 
-        if (iloop >= 100)
-        {
-            ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
-            ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
-            iloop = 0;
-        }
-        iloop++;
+        // if (iloop >= 100)
+        // {
+        //     ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
+        //     ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
+        //     iloop = 0;
+        // }
+        // iloop++;
     }
 }

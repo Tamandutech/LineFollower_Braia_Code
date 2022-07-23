@@ -9,7 +9,6 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 class SpeedService : public Thread, public Singleton<SpeedService>
@@ -22,6 +21,8 @@ public:
 private:
     Robot *robot;
     dataSpeed *speed;
+
+    CarState estado;
 
     // Componente de gerenciamento dos encoders
     ESP32Encoder enc_motEsq;

@@ -1,2 +1,0 @@
-# ServerService
-Essa pasta contém o serviço responsável por hospedar uma página web no gateway e por receber comandos do client via websocket, esses comandos são então transmitidos ao robô, permitindo a obtenção de dados do robô, após isso o robô retorna uma resposta ao comando e o serviço ServerService envia essa resposta ao client também por websocket. 

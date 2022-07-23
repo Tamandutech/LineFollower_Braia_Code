@@ -68,7 +68,7 @@ void CarStatusService::Run()
     // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a conGetName().c_str()em de pulsos da CPU
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    int iloop = 0;
+    // int iloop = 0;
 
     ESP_LOGD(GetName().c_str(), "Aguardando pressionamento do botão.");
 
@@ -154,19 +154,18 @@ void CarStatusService::Run()
 
         mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
 
-#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-        if (iloop >= 20 && !status->robotIsMapping->getData())
-        {
-            ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
-            ESP_LOGD(GetName().c_str(), "initialEncMedia: %d", initialmediaEnc);
-            ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEncActual);
-            ESP_LOGD(GetName().c_str(), "EncMediaoffset: %d", mediaEncActual-initialmediaEnc);
-            ESP_LOGD(GetName().c_str(), "mediaEncFinal: %d", mediaEncFinal);
-            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->setpoint->getData());
-            iloop = 0;
-        }
-        iloop++;
-#endif
+//         if (iloop >= 20 && !status->robotIsMapping->getData())
+//         {
+//             ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
+//             ESP_LOGD(GetName().c_str(), "initialEncMedia: %d", initialmediaEnc);
+//             ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEncActual);
+//             ESP_LOGD(GetName().c_str(), "EncMediaoffset: %d", mediaEncActual-initialmediaEnc);
+//             ESP_LOGD(GetName().c_str(), "mediaEncFinal: %d", mediaEncFinal);
+//             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->setpoint->getData());
+//             iloop = 0;
+//         }
+//         iloop++;
+
         if(!status->robotIsMapping->getData() && !status->encreading->getData()){
             robot->getStatus()->robotState->setData(CAR_STOPPED);
         }

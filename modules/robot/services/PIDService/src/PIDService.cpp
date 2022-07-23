@@ -133,25 +133,25 @@ void PIDService::Run()
             }
         }
 
-#if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
-        if (iloop > 30)
-        {
-            ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
-            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
-            ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
-            ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
-            ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
-            ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
-            iloop = 0;
-        }
-        iloop++;
-#else
-        if (iloop > 5)
-        {
-            ESP_LOGI("", "%d,%d,%d,%d\n", VelTrans, xTaskGetTickCount() * portTICK_PERIOD_MS, PIDTrans->setpoint->getData(), 3500 - robot->getsArray()->getLine()); // VelTrans,time(ms),VelTransSetpoint,LineValue\n
-            iloop = 0;
-        }
-        iloop++;
-#endif
+// #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
+//         if (iloop > 30)
+//         {
+//             ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
+//             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
+//             ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
+//             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
+//             ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
+//             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
+//             iloop = 0;
+//         }
+//         iloop++;
+// #else
+//         if (iloop > 5)
+//         {
+//             ESP_LOGI("", "%d,%d,%d,%d\n", VelTrans, xTaskGetTickCount() * portTICK_PERIOD_MS, PIDTrans->setpoint->getData(), 3500 - robot->getsArray()->getLine()); // VelTrans,time(ms),VelTransSetpoint,LineValue\n
+//             iloop = 0;
+//         }
+//         iloop++;
+// #endif
     }
 }
