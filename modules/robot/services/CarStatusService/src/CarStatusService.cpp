@@ -214,7 +214,7 @@ void CarStatusService::Run()
                     if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt) // análise do valor das médias dos encoders
                     {
                         CarState trackType = (CarState)latMarks->marks->getData(mark+1).MapStatus;
-                        status->robotState->setData((CarState)latMarks->marks->getData(mark+1).MapStatus); 
+                        TrackState trackLen = (TrackState)latMarks->marks->getData(mark+1).MapTrackStatus;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
                         if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
                         {
@@ -230,7 +230,9 @@ void CarStatusService::Run()
 
                             }
                         }
-                        status->robotState->setData(trackType); // Atualiza estado do robô
+                        // Atualiza estado do robô
+                        status->robotState->setData(trackType);
+                        status->TrackStatus->setData(trackLen);
                         break;
                     }
                 }
