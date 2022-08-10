@@ -86,20 +86,18 @@ void CarStatusService::Run()
     command.color = LED_COLOR_RED;
     LEDsService::getInstance()->queueCommand(command);
     vTaskDelay(1500 / portTICK_PERIOD_MS);
-    // Deletar o mapeamento caso o botão de boot seja mantido pressionado
-    if(!gpio_get_level(GPIO_NUM_0))
+    // Deletar o mapeamento caso o botão de boot seja mantido pressionado e exista mapeamento na flash
+    if(!gpio_get_level(GPIO_NUM_0) && latMarks->marks->getSize() > 0)
     {
         DataStorage::getInstance()->delete_data("sLatMarks.marks");
         status->encreading->setData(false);
         status->robotIsMapping->setData(true);
         ESP_LOGD(GetName().c_str(), "Mapeamento Deletado");
+        command.color = LED_COLOR_YELLOW;
+        LEDsService::getInstance()->queueCommand(command);
     }
-    command.color = LED_COLOR_YELLOW;
-    LEDsService::getInstance()->queueCommand(command);
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 1500ms");
     vTaskDelay(1500 / portTICK_PERIOD_MS);
-    command.color = LED_COLOR_RED;
-    LEDsService::getInstance()->queueCommand(command);
 
     if (status->robotIsMapping->getData())
     {
@@ -130,6 +128,8 @@ void CarStatusService::Run()
             lastMappingState = status->robotIsMapping->getData();
 
             ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo mapeamento.");
+            command.color = LED_COLOR_YELLOW;
+            LEDsService::getInstance()->queueCommand(command);
             speed->setToMapping();
         }
 
