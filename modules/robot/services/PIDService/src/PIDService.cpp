@@ -105,18 +105,18 @@ void PIDService::Run()
             // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
             switch (TrackLen)
             {
-            case LONG_LINE:
-                setpointPIDTransTarget = speed->Long_Line->getData(); 
-                break;
-            case MEDIUM_LINE:
-                setpointPIDTransTarget = speed->Medium_Line->getData();
-                break;
-            case SHORT_LINE:
-                setpointPIDTransTarget = speed->Short_Line->getData();
-                break;
-            default:
-                PIDTrans->setpointLine->getData();
-                break;
+                case LONG_LINE:
+                    setpointPIDTransTarget = speed->Long_Line->getData(); 
+                    break;
+                case MEDIUM_LINE:
+                    setpointPIDTransTarget = speed->Medium_Line->getData();
+                    break;
+                case SHORT_LINE:
+                    setpointPIDTransTarget = speed->Short_Line->getData();
+                    break;
+                default:
+                    PIDTrans->setpointLine->getData();
+                    break;
             }
             
         }
@@ -125,18 +125,18 @@ void PIDService::Run()
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
             switch (TrackLen)
             {
-            case LONG_CURVE:
-                setpointPIDTransTarget = speed->Long_Curve->getData(); 
-                break;
-            case MEDIUM_CURVE:
-                setpointPIDTransTarget = speed->Medium_Curve->getData();
-                break;
-            case SHORT_CURVE:
-                setpointPIDTransTarget = speed->Short_Curve->getData();
-                break;
-            default:
-                PIDTrans->setpointCurve->getData();
-                break;
+                case LONG_CURVE:
+                    setpointPIDTransTarget = speed->Long_Curve->getData(); 
+                    break;
+                case MEDIUM_CURVE:
+                    setpointPIDTransTarget = speed->Medium_Curve->getData();
+                    break;
+                case SHORT_CURVE:
+                    setpointPIDTransTarget = speed->Short_Curve->getData();
+                    break;
+                default:
+                    PIDTrans->setpointCurve->getData();
+                    break;
             }
         }
         else if (mapState && estado != CAR_STOPPED)
