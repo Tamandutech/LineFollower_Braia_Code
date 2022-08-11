@@ -29,7 +29,7 @@ void SpeedService::Run()
 
         estado = (CarState)robot->getStatus()->robotState->getData();
 
-        if (estado == CAR_STOPPED && robot->getSLatMarks()->rightMarks == 0)
+        if (estado == CAR_STOPPED && robot->getSLatMarks()->rightMarks->getData() == 0)
         {
             enc_motEsq.clearCount();
             enc_motDir.clearCount();

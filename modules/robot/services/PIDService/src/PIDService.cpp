@@ -21,6 +21,7 @@ void PIDService::Run()
         vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
 
         estado = (CarState)status->robotState->getData();
+        TrackLen = (TrackState)status->TrackStatus->getData();
         mapState = status->robotIsMapping->getData();
 
         speedBase = speed->base->getData();
@@ -102,12 +103,41 @@ void PIDService::Run()
         if (estado == CAR_IN_LINE && !mapState)
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
-            setpointPIDTransTarget = PIDTrans->setpointLine->getData();
+            switch (TrackLen)
+            {
+            case LONG_LINE:
+                setpointPIDTransTarget = speed->Long_Line->getData(); 
+                break;
+            case MEDIUM_LINE:
+                setpointPIDTransTarget = speed->Medium_Line->getData();
+                break;
+            case SHORT_LINE:
+                setpointPIDTransTarget = speed->Short_Line->getData();
+                break;
+            default:
+                PIDTrans->setpointLine->getData();
+                break;
+            }
+            
         }
         else if (estado == CAR_IN_CURVE && !mapState)
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
-            setpointPIDTransTarget = PIDTrans->setpointCurve->getData();
+            switch (TrackLen)
+            {
+            case LONG_CURVE:
+                setpointPIDTransTarget = speed->Long_Curve->getData(); 
+                break;
+            case MEDIUM_CURVE:
+                setpointPIDTransTarget = speed->Medium_Curve->getData();
+                break;
+            case SHORT_CURVE:
+                setpointPIDTransTarget = speed->Short_Curve->getData();
+                break;
+            default:
+                PIDTrans->setpointCurve->getData();
+                break;
+            }
         }
         else if (mapState && estado != CAR_STOPPED)
         {

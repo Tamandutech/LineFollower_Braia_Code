@@ -23,7 +23,6 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
 
     mappingService = MappingService::getInstance();
 
-    //DataStorage::getInstance()->delete_data("sLatMarks.marks");
     latMarks->marks->loadData();
 
     if (latMarks->marks->getSize() <= 0)
@@ -51,7 +50,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
     gpio_config_t io_conf = {};
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
     io_conf.pin_bit_mask = (1ULL << GPIO_NUM_0);
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
@@ -76,21 +75,29 @@ void CarStatusService::Run()
     do
     {
         xQueueReceive(gpio_evt_queue, &num, portMAX_DELAY);
-        ESP_LOGD(GetName().c_str(), " Aguardando inicialização");
+        ESP_LOGD(GetName().c_str(), "Aguardando inicialização");
         if(status->robotState->getData() != CAR_STOPPED) break;
     } while (num != CAR_IN_LINE);
 
     command.led[0] = LED_POSITION_FRONT;
     command.led[1] = LED_POSITION_NONE;
-    command.color = LED_COLOR_YELLOW;
     command.effect = LED_EFFECT_SET;
     command.brightness = 1;
+    command.color = LED_COLOR_RED;
     LEDsService::getInstance()->queueCommand(command);
-    ESP_LOGD(GetName().c_str(), "Iniciando delay de 2500ms");
-    vTaskDelay(2500 / portTICK_PERIOD_MS);
-    command.brightness = 0.5;
-    command.color = LED_COLOR_GREEN;
-    LEDsService::getInstance()->queueCommand(command);
+    vTaskDelay(1500 / portTICK_PERIOD_MS);
+    // Deletar o mapeamento caso o botão de boot seja mantido pressionado e exista mapeamento na flash
+    if(!gpio_get_level(GPIO_NUM_0) && latMarks->marks->getSize() > 0)
+    {
+        DataStorage::getInstance()->delete_data("sLatMarks.marks");
+        status->encreading->setData(false);
+        status->robotIsMapping->setData(true);
+        ESP_LOGD(GetName().c_str(), "Mapeamento Deletado");
+        command.color = LED_COLOR_YELLOW;
+        LEDsService::getInstance()->queueCommand(command);
+    }
+    ESP_LOGD(GetName().c_str(), "Iniciando delay de 1500ms");
+    vTaskDelay(1500 / portTICK_PERIOD_MS);
 
     if (status->robotIsMapping->getData())
     {
@@ -121,6 +128,8 @@ void CarStatusService::Run()
             lastMappingState = status->robotIsMapping->getData();
 
             ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo mapeamento.");
+            command.color = LED_COLOR_YELLOW;
+            LEDsService::getInstance()->queueCommand(command);
             speed->setToMapping();
         }
 
@@ -204,20 +213,25 @@ void CarStatusService::Run()
                     if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt) // análise do valor das médias dos encoders
                     {
                         CarState trackType = (CarState)latMarks->marks->getData(mark+1).MapStatus;
-                        status->robotState->setData((CarState)latMarks->marks->getData(mark+1).MapStatus); 
+                        TrackState trackLen = (TrackState)latMarks->marks->getData(mark+1).MapTrackStatus;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
-                        if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE && (mark + 2 < numMarks))
-                        {
-                            if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) trackType = CAR_IN_CURVE;
-                            else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) trackType = CAR_IN_CURVE;
-
-                        }
-                        else if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
+                        if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
                         {
                             if((Manualmedia + pulsesAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + pulsesAfterCurve)) trackType = CAR_IN_CURVE;
                             else if((Manualmedia + pulsesAfterCurve) >= ManualmediaNxt) trackType = CAR_IN_CURVE;
                         }
-                        status->robotState->setData(trackType); // Atualiza estado do robô
+                        if(mark + 2 < numMarks)
+                        {
+                            if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE)
+                            {
+                                if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) trackType = CAR_IN_CURVE;
+                                else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) trackType = CAR_IN_CURVE;
+
+                            }
+                        }
+                        // Atualiza estado do robô
+                        status->robotState->setData(trackType);
+                        status->TrackStatus->setData(trackLen);
                         break;
                     }
                 }

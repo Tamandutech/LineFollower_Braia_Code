@@ -64,6 +64,7 @@ private:
     bool mapState = false;
 
     CarState estado = CAR_STOPPED;
+    TrackState TrackLen = SHORT_CURVE;
 
     int iloop = 0;
     int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos 

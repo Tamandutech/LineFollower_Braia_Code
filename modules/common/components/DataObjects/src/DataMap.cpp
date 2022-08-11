@@ -61,7 +61,7 @@ void DataMap::newData(std::string mapData)
         mapDataVector.push_back(s);
     }
 
-    if (mapDataVector.size() < 5)
+    if (mapDataVector.size() < 6)
     {
         ESP_LOGE(this->name.c_str(), "Dados inválidos. Quantidade de dados: %d", mapDataVector.size());
         return;
@@ -74,6 +74,7 @@ void DataMap::newData(std::string mapData)
     mapDataTemp.MapEncLeft = std::stoi(mapDataVector[3]);
     mapDataTemp.MapEncRight = std::stoi(mapDataVector[4]);
     mapDataTemp.MapStatus = std::stoi(mapDataVector[5]);
+    mapDataTemp.MapTrackStatus = std::stoi(mapDataVector[6]);
 
     this->newData(mapDataTemp);
 }
@@ -100,7 +101,7 @@ std::string DataMap::getDataString(std::string ctrl)
     std::advance(itList, posicao);
 
     std::string line;
-    line = std::to_string(posicao) + "," + std::to_string(itList->MapTime) + "," + std::to_string(itList->MapEncMedia) + "," + std::to_string(itList->MapEncLeft) + "," + std::to_string(itList->MapEncRight) + "," + std::to_string(itList->MapStatus);
+    line = std::to_string(posicao) + "," + std::to_string(itList->MapTime) + "," + std::to_string(itList->MapEncMedia) + "," + std::to_string(itList->MapEncLeft) + "," + std::to_string(itList->MapEncRight) + "," + std::to_string(itList->MapStatus) + "," + std::to_string(itList->MapTrackStatus);
 
     ESP_LOGD(this->name.c_str(), "Dados: %s", line.c_str());
 
@@ -126,6 +127,7 @@ void DataMap::setData(uint8_t posicao, MapData data)
     itList->MapEncMedia = data.MapEncMedia;
     itList->MapStatus = data.MapStatus;
     itList->MapTime = data.MapTime;
+    itList->MapTrackStatus = data.MapTrackStatus;
 }
 
 void DataMap::setData(std::string data)
@@ -145,7 +147,7 @@ void DataMap::setData(std::string data)
         dataList.push_back(s);
     }
 
-    if (dataList.size() < 6)
+    if (dataList.size() < 7)
     {
         ESP_LOGE(this->name.c_str(), "Erro ao setar dados do tipo DataMap. Entrada inválida.");
         return;
@@ -159,6 +161,7 @@ void DataMap::setData(std::string data)
     tempMapData.MapEncLeft = stoi(dataList[3]);
     tempMapData.MapEncRight = stoi(dataList[4]);
     tempMapData.MapStatus = stoi(dataList[5]);
+    tempMapData.MapTrackStatus = stoi(dataList[6]);
 
     setData(stoi(dataList[0]), tempMapData);
 }
@@ -185,11 +188,17 @@ void DataMap::saveData()
     dataStorage->delete_data(this->name);
 
     // Armazena os dados fazendo append de cada struct
+    uint16_t sizeMap = this->getSize()*sizeof(MapData);
+    char * dataSave = (char*) malloc(sizeMap);
+    uint16_t i = 0;
     for (auto &mapData : this->mapDataList)
     {
-        dataStorage->save_data(this->name, (char *)&mapData, sizeof(mapData), "ab");
-        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus);
+        memcpy(dataSave + i, &mapData, sizeof(MapData));
+        i += sizeof(MapData);
+        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus,  mapData.MapTrackStatus);
     }
+    dataStorage->save_data(this->name, dataSave, sizeMap, "ab");
+    free(dataSave);
 
     mapDataListMutex.unlock();
 
@@ -229,7 +238,7 @@ void DataMap::loadData()
             MapData tempMapData;
             memcpy(&tempMapData, data + i, sizeof(MapData));
 
-            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus);
+            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus, tempMapData.MapTrackStatus);
 
             mapDataListMutex.lock();
             this->mapDataList.push_back(tempMapData);

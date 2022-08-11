@@ -62,6 +62,7 @@ private:
     // variáveis de calculos temporárias
     uint32_t tempDeltaPulses = 0;
     uint32_t tempMilimiterInPulses = 0;
+    uint32_t tempDeltaDist = 0;
 
     led_command_t command;
 

@@ -42,6 +42,8 @@ public:
      */
     DataAbstract<bool> *encreading;
 
+    DataAbstract<uint8_t> *TrackStatus; // status do trecho da pista em que o robô se encontra
+
     static std::mutex stateMutex;
     
 private:
