@@ -49,18 +49,31 @@ void SensorsService::Run()
 
 void SensorsService::calibAllsensors()
 {
-    // Calibração dos dos sensores laterais e array
+    // Calibração dos sensores frontais
     command.led[0] = LED_POSITION_FRONT;
     command.led[1] = LED_POSITION_NONE;
     command.effect = LED_EFFECT_SET;
     command.brightness = 1;
     command.color = LED_COLOR_BLUE;
     LEDsService::getInstance()->queueCommand(command);
-
-    for (uint16_t i = 0; i < 40; i++)
+    for (uint16_t i = 0; i < 30; i++)
     {
-        ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p) | sLat: (%p)", this, &sArray, &sLat);
+        ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p)", this, &sArray);
         sArray.calibrate();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+
+
+    // Calibração dos sensores laterais
+    command.led[0] = LED_POSITION_FRONT;
+    command.led[1] = LED_POSITION_NONE;
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    command.color = LED_COLOR_RED;
+    LEDsService::getInstance()->queueCommand(command); //mudar a cor
+    for (uint16_t i = 0; i < 30; i++)
+    {
+        ESP_LOGD(GetName().c_str(), "(%p) | sLat: (%p)", this, &sLat);
         sLat.calibrate();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }

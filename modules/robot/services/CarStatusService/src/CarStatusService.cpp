@@ -102,7 +102,9 @@ void CarStatusService::Run()
     if (status->robotIsMapping->getData())
     {
         ESP_LOGD(GetName().c_str(), "Mapeamento inexistente, iniciando robô em modo mapemaneto.");
-
+        command.color = LED_COLOR_YELLOW;
+        LEDsService::getInstance()->queueCommand(command);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
         // Começa mapeamento
         mappingService->startNewMapping();
     }
