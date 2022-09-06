@@ -14,3 +14,5 @@ void register_map_SaveRuntime(void);
 void register_map_clear(void);
 void register_map_clearFlash(void);
 void register_map_clearAtIndex(void);
+void register_get_VelTransGraph(void);
+void register_get_VelRotGraph(void);

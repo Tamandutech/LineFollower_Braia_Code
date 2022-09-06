@@ -4,11 +4,13 @@ idf_component_register(
         "src/DataManager.cpp"
         "src/DataAbstract.cpp"
         "src/DataMap.cpp"
+        "src/GraphComponent.cpp"
 
     REQUIRES
         "vfs"
         "fatfs"
         "newlib"
+        "json"
 
     INCLUDE_DIRS 
         "src"

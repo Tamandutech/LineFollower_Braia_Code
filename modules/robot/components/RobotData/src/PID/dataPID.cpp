@@ -7,7 +7,7 @@ dataPID::dataPID(std::string name)
     ESP_LOGD(tag, "Criando objeto: %s (%p)", name.c_str(), this);
 
     dataManager = dataManager->getInstance();
-
+    VelGraph = new GraphComponent("Velocidade x Tempo",500,2); // Componente para gerenciamento de gráficos
     // Inicializando os ponteiros para os tipos de dados.
     ESP_LOGD(tag, "Inicializando ponteiros para os tipos de dados");
 

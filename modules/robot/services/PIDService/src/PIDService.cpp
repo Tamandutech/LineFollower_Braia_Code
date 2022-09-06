@@ -43,6 +43,7 @@ void PIDService::Run()
             Irot = 0;
             PIDTrans->setpoint->setData(0);
             setpointPIDTransTarget = 0;
+            initialTicks = -1;
         }
 
         // Variaveis de calculo para os pids da velocidade rotacional e translacional
@@ -62,9 +63,11 @@ void PIDService::Run()
         //  rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
         PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / rotK); // cálculo do setpoint rotacional
         erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
+        iloop++;
         if (iloop > 100)
         {
             ESP_LOGD(GetName().c_str(), "PIDTrans->setpoint: %d", PIDTrans->setpoint->getData());
+            iloop = 0;
         }
         erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
 
@@ -115,7 +118,7 @@ void PIDService::Run()
                     setpointPIDTransTarget = speed->Short_Line->getData();
                     break;
                 default:
-                    PIDTrans->setpointLine->getData();
+                    setpointPIDTransTarget = PIDTrans->setpointLine->getData();
                     break;
             }
             
@@ -135,7 +138,7 @@ void PIDService::Run()
                     setpointPIDTransTarget = speed->Short_Curve->getData();
                     break;
                 default:
-                    PIDTrans->setpointCurve->getData();
+                    setpointPIDTransTarget = PIDTrans->setpointCurve->getData();
                     break;
             }
         }
@@ -161,6 +164,18 @@ void PIDService::Run()
                 newSetpoint = SetpointTransactual - (desaccel * ((float)TaskDelay / (float)1000));
                 PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, SetpointTransactual));
             }
+        }
+        //Coleta dados para a plotagem de gráficos
+        gloop++;
+        if(gloop>=GraphPlotCycles && status->robotState->getData() != CAR_STOPPED && false)
+        {
+            if(initialTicks == -1) initialTicks = xTaskGetTickCount();
+            int32_t time = (xTaskGetTickCount() - initialTicks) * portTICK_PERIOD_MS;
+            PIDTrans->VelGraph->addPoint(std::make_pair(VelTrans,time));
+            PIDTrans->VelGraph->addValue(PIDTrans->setpoint->getData(),1);
+            PIDRot->VelGraph->addPoint(std::make_pair(VelRot,time));
+            PIDRot->VelGraph->addValue(PIDRot->setpoint->getData(),1);
+            gloop = 0;
         }
 
 // #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA

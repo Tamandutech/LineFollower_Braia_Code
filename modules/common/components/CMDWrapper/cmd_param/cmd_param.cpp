@@ -27,6 +27,8 @@ void register_cmd_param(void)
     register_map_clear();
     register_map_clearFlash();
     register_map_clearAtIndex();
+    register_get_VelTransGraph();
+    register_get_VelRotGraph();
 }
 
 static std::string map_SaveRuntime(int argc, char **argv)
@@ -339,4 +341,44 @@ void register_param_list(void)
         .argtable = NULL};
 
     ESP_ERROR_CHECK(better_console_cmd_register(&param_list_cmd));
+}
+
+static std::string get_VelTransGraph(int argc, char **argv)
+{
+    std::string ret = Robot::getInstance()->getPIDVel()->VelGraph->graphDataStringfyAllPlots();
+    Robot::getInstance()->getPIDVel()->VelGraph->clearAllPlots();
+    ESP_LOGD(name, "Tamanho do json em qtd. de caracteres: %d", ret.length());
+    return ret;
+}
+
+void register_get_VelTransGraph(void)
+{
+    const better_console_cmd_t get_VelTransGraph_cmd = {
+        .command = "get_VelTransGraph",
+        .help = "Retorna os dados armazenados na ram para a plotagem do gráfico da velocidade translacional x tempo, junto com o setpoint translacional.",
+        .hint = NULL,
+        .func = &get_VelTransGraph,
+        .argtable = NULL};
+
+    ESP_ERROR_CHECK(better_console_cmd_register(&get_VelTransGraph_cmd));
+}
+
+static std::string get_VelRotGraph(int argc, char **argv)
+{
+    std::string ret = Robot::getInstance()->getPIDRot()->VelGraph->graphDataStringfyAllPlots();
+    Robot::getInstance()->getPIDRot()->VelGraph->clearAllPlots();
+    ESP_LOGD(name, "Tamanho do json em qtd. de caracteres: %d", ret.length());
+    return ret;
+}
+
+void register_get_VelRotGraph(void)
+{
+    const better_console_cmd_t get_VelRotGraph_cmd = {
+        .command = "get_VelRotGraph",
+        .help = "Retorna os dados armazenados na ram para a plotagem do gráfico da velocidade rotacional x tempo, junto com o setpoint rotacional.",
+        .hint = NULL,
+        .func = &get_VelRotGraph,
+        .argtable = NULL};
+
+    ESP_ERROR_CHECK(better_console_cmd_register(&get_VelRotGraph_cmd));
 }

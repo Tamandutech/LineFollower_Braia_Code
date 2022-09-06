@@ -28,6 +28,8 @@ private:
     dataPID *PIDRot;
 
     short const TaskDelay = 10; // 10ms
+    int32_t initialTicks = -1;
+    int8_t const GraphPlotCycles = 4; // um plot a cada dois ciclos
 
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
     float KpVel = 0, KiVel = 0, KdVel = 0;

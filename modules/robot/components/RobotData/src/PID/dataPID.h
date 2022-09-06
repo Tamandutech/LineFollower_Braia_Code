@@ -26,6 +26,7 @@
 #include "DataAbstract.hpp"
 #include "DataStorage.hpp"
 #include "DataManager.hpp"
+#include "GraphComponent.hpp"
 
 #include "esp_log.h"
 
@@ -46,6 +47,8 @@ public:
     DataAbstract<float> *Kp(CarState state);
     DataAbstract<float> *Ki(CarState state);
     DataAbstract<float> *Kd(CarState state);
+
+    GraphComponent *VelGraph;
 
 private:
     std::string name;
