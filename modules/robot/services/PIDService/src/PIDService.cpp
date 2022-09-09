@@ -115,7 +115,7 @@ void PIDService::Run()
                     setpointPIDTransTarget = speed->Short_Line->getData();
                     break;
                 default:
-                    PIDTrans->setpointLine->getData();
+                    setpointPIDTransTarget = PIDTrans->setpointLine->getData();
                     break;
             }
             
@@ -135,7 +135,7 @@ void PIDService::Run()
                     setpointPIDTransTarget = speed->Short_Curve->getData();
                     break;
                 default:
-                    PIDTrans->setpointCurve->getData();
+                    setpointPIDTransTarget = PIDTrans->setpointCurve->getData();
                     break;
             }
         }
