@@ -195,6 +195,7 @@ void CarStatusService::Run()
                 // vTaskSuspend(xTaskSensors);
 
                 robot->getStatus()->robotState->setData(CAR_STOPPED);
+                DataManager::getInstance()->saveAllParamData();
                 command.led[0] = LED_POSITION_FRONT;
                 command.led[1] = LED_POSITION_NONE;
                 command.color = LED_COLOR_BLACK;

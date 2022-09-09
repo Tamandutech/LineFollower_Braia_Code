@@ -54,6 +54,7 @@ esp_err_t MappingService::stopNewMapping()
     status->stateMutex.lock();
     status->robotState->setData(CAR_STOPPED);
     status->robotIsMapping->setData(false);
+    DataManager::getInstance()->saveAllParamData();
     status->stateMutex.unlock();
     command.led[0] = LED_POSITION_FRONT;
     command.led[1] = LED_POSITION_NONE;

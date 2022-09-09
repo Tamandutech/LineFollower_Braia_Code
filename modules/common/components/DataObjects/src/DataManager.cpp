@@ -72,7 +72,7 @@ void DataManager::setParam(std::string name, std::string value)
         if (data->getName() == name)
         {
             data->setData(value);
-            data->saveData();
+            //data->saveData();
             return;
         }
     }
