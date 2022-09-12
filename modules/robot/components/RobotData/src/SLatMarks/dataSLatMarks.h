@@ -46,7 +46,7 @@ public:
     // Parâmetros
 
     //Número de marcações direita para a parada 
-    DataAbstract<uint8_t> *MarkstoStop;
+    DataAbstract<uint16_t> *MarkstoStop;
     //Pulsos antes de inicar uma curva para iniciar a desaceleração
     DataAbstract<uint32_t> *PulsesBeforeCurve;
 

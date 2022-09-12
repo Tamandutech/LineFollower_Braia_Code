@@ -6,8 +6,9 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
     this->speed = robot->getSpeed();
 
     // GPIOs dos encoders dos encoders dos motores
-    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
-    enc_motDir.attachFullQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
+    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
+    enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
+    MPR_Mot = speed->MPR->getData();
 };
 
 void SpeedService::Run()
@@ -45,7 +46,7 @@ void SpeedService::Run()
         // Calculos de velocidade instantanea (RPM)
         speed->RPMLeft_inst->setData(                   // -> Calculo velocidade instantanea motor esquerdo
             (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
-              / (float)MPR_MotEsq)                      // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
+              / (float)MPR_Mot)                      // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
              / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
              ));
         lastPulseLeft = enc_motEsq.getCount();  // Salva pulsos do encoder para ser usado no proximo calculo
@@ -53,7 +54,7 @@ void SpeedService::Run()
 
         speed->RPMRight_inst->setData(                  // -> Calculo velocidade instantanea motor direito
             (((enc_motDir.getCount() - lastPulseRight)  // Delta de pulsos do encoder esquerdo
-              / (float)MPR_MotDir)                      // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
+              / (float)MPR_Mot)                      // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
              / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
              ));
         lastPulseRight = enc_motDir.getCount();   // Salva pulsos do motor para ser usado no proximo calculo
@@ -65,12 +66,13 @@ void SpeedService::Run()
             / ((float)deltaTimeMS_media / (float)60000)                                                            // Divisao do delta tempo em minutos para calculo de RPM
         );
 
-        // if (iloop >= 100)
-        // {
-        //     ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
-        //     ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
-        //     iloop = 0;
-        // }
-        // iloop++;
+        if (iloop >= 100)
+        {
+            ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
+            ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
+            ESP_LOGD(GetName().c_str(), "MPR: %d",speed->MPR->getData());
+            iloop = 0;
+        }
+        iloop++;
     }
 }

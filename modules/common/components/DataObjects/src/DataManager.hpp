@@ -37,12 +37,14 @@ public:
     };
 
     void registerParamData(IDataAbstract *data);
+    void registerParamDataChanged(std::string name);
     void registerRuntimeData(IDataAbstract *data);
 
     void saveAllParamData();
+    void saveAllParamDataChanged();
     void saveAllRuntimeData();
 
-    void setParam(std::string name, std::string value);
+    void setParam(std::string name, std::string value, bool savedata = true);
     std::string getParam(std::string name, std::string ctrl);
 
     void loadAllParamData();
@@ -58,8 +60,12 @@ private:
     static std::vector<IDataAbstract *> dataParamList;
     static std::mutex dataParamListMutex;
 
+
     static std::vector<IDataAbstract *> dataRuntimeList;
     static std::mutex dataRuntimeListMutex;
+
+    std::vector<IDataAbstract *> dataParamChangedList;
+    std::mutex dataParamChangedListMutex;
 
     static std::string name;
 

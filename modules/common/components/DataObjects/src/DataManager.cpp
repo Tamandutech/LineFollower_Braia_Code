@@ -13,6 +13,7 @@ std::mutex DataManager::dataRuntimeListMutex;
 DataManager::DataManager()
 {
     this->name = "DataManager";
+    //esp_log_level_set("DataManager",ESP_LOG_DEBUG);
 }
 
 void DataManager::registerData(IDataAbstract *data, std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex)
@@ -25,6 +26,21 @@ void DataManager::registerParamData(IDataAbstract *data)
 {
     ESP_LOGD(name.c_str(), "Registrando dado parametrizado: %s (%p)", data->getName().c_str(), data);
     registerData(data, &dataParamList, &dataParamListMutex);
+}
+
+void DataManager::registerParamDataChanged(std::string name)
+{
+    ESP_LOGD(this->name.c_str(), "Obtendo parametro: %s", name.c_str());
+    IDataAbstract *param = nullptr;
+    for (auto data : dataParamList)
+    {
+        if (data->getName() == name)
+        {
+            param = data;
+        }
+    }
+    ESP_LOGD(name.c_str(), "Registrando dado parametrizado alterado não salvo: %s (%p)", param->getName().c_str(), param);
+    registerData(param, &dataParamChangedList, &dataParamChangedListMutex);
 }
 
 void DataManager::registerRuntimeData(IDataAbstract *data)
@@ -48,6 +64,14 @@ void DataManager::saveAllParamData()
     saveAllData(&dataParamList, &dataParamListMutex);
 }
 
+void DataManager::saveAllParamDataChanged()
+{
+    ESP_LOGD(name.c_str(), "Salvando dados parametrizados alterados, %d registrados...", dataParamChangedList.size());
+    saveAllData(&dataParamChangedList, &dataParamChangedListMutex);
+    std::lock_guard<std::mutex> myLock(dataParamChangedListMutex);
+    dataParamChangedList.clear();
+}
+
 void DataManager::saveAllRuntimeData()
 {
     ESP_LOGD(name.c_str(), "Salvando dados runtime, %d registrados...", dataRuntimeList.size());
@@ -64,7 +88,7 @@ void DataManager::loadAllData(std::vector<IDataAbstract *> *dataList, std::mutex
         data->loadData();
     }
 }
-void DataManager::setParam(std::string name, std::string value)
+void DataManager::setParam(std::string name, std::string value, bool savedata)
 {
     ESP_LOGD(this->name.c_str(), "Setando parametro: %s = %s", name.c_str(), value.c_str());
     for (auto data : dataParamList)
@@ -72,7 +96,7 @@ void DataManager::setParam(std::string name, std::string value)
         if (data->getName() == name)
         {
             data->setData(value);
-            //data->saveData();
+            if(savedata) data->saveData();
             return;
         }
     }
