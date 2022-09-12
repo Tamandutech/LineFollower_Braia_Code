@@ -16,7 +16,7 @@ MappingService::MappingService(std::string name, uint32_t stackDepth, UBaseType_
     status = robot->getStatus();
 };
 
-esp_err_t MappingService::startNewMapping(uint8_t leftMarksToStop, int32_t mediaPulsesToStop, uint32_t timeToStop)
+esp_err_t MappingService::startNewMapping(uint16_t leftMarksToStop, int32_t mediaPulsesToStop, uint32_t timeToStop)
 {
     ESP_LOGD(GetName().c_str(), "Iniciando novo mapeamento.");
 
@@ -54,18 +54,19 @@ esp_err_t MappingService::stopNewMapping()
     status->stateMutex.lock();
     status->robotState->setData(CAR_STOPPED);
     status->robotIsMapping->setData(false);
+    DataManager::getInstance()->saveAllParamDataChanged();
     status->stateMutex.unlock();
+
+    this->Cleanup();
+
+    this->saveMapping();
+    ESP_LOGD(GetName().c_str(), "Parada do novo mapeamento finalizada");
     command.led[0] = LED_POSITION_FRONT;
     command.led[1] = LED_POSITION_NONE;
     command.color = LED_COLOR_BLACK;
     command.effect = LED_EFFECT_SET;
     command.brightness = 1;
     LEDsService::getInstance()->queueCommand(command);
-
-    this->Cleanup();
-
-    this->saveMapping();
-    ESP_LOGD(GetName().c_str(), "Parada do novo mapeamento finalizada");
     return ESP_OK;
 }
 

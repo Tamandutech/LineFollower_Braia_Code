@@ -21,7 +21,7 @@ dataSLatMarks::dataSLatMarks(std::string name)
     thresholdToCurve = new DataAbstract<uint8_t>("thresholdToCurve", name, 25);
     dataManager->registerParamData(thresholdToCurve);
 
-    MarkstoStop = new DataAbstract<uint8_t>("MarkstoStop", name, 2);
+    MarkstoStop = new DataAbstract<uint16_t>("MarkstoStop", name, 2);
     dataManager->registerParamData(MarkstoStop);
 
     PulsesBeforeCurve = new DataAbstract<uint32_t>("PulsesBeforeCurve", name, 200);
