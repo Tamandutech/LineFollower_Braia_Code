@@ -15,7 +15,6 @@
 
 using namespace cpp_freertos;
 
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 #define ManualMap
@@ -28,7 +27,7 @@ public:
     
     void Run() override;
 
-    esp_err_t startNewMapping(uint8_t leftMarksToStop = CHAR_MAX, int32_t mediaPulsesToStop = LONG_MAX, uint32_t timeToStop = (portMAX_DELAY / portTICK_PERIOD_MS));
+    esp_err_t startNewMapping(uint16_t leftMarksToStop = INT16_MAX, int32_t mediaPulsesToStop = LONG_MAX, uint32_t timeToStop = (portMAX_DELAY / portTICK_PERIOD_MS));
     esp_err_t stopNewMapping();
 
     esp_err_t loadMapping();
@@ -49,8 +48,8 @@ private:
     struct MapData tempPreviousMark;
 
     // atributos de filtro
-    uint8_t leftMarksToStop;
-    uint8_t rightMarksToStop;
+    uint16_t leftMarksToStop;
+    uint16_t rightMarksToStop;
     int32_t mediaPulsesToStop;
     TickType_t ticksToStop;
 

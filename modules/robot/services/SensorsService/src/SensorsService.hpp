@@ -8,12 +8,9 @@
 #include "LEDsService.hpp"
 
 #include "QTRSensors.h"
-
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 //#define LINE_COLOR_BLACK
-
 using namespace cpp_freertos;
 
 class SensorsService : public Thread, public Singleton<SensorsService>

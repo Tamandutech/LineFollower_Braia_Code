@@ -6,7 +6,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platformio_env: [ESP32-Gateway, ESP32-BraiaV3]
+        platformio_env: [ESP32-BraiaV3]
         os: [ubuntu-latest]
     
     runs-on: ${{ matrix.os }}

@@ -22,14 +22,12 @@ void MotorsService::Run()
 
     state = (CarState)status->robotState->getData();
 
-    #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG
-        if (iloop >= 200 && !status->robotIsMapping->getData())
-        {
-            iloop = 0;
-            ESP_LOGD("MotorsService", "State: %d", state);
-        }
-        iloop++;
-#endif
+    // if (iloop >= 200 && !status->robotIsMapping->getData())
+    // {
+    //     iloop = 0;
+    //     ESP_LOGD("MotorsService", "State: %d", state);
+    // }
+    // iloop++;
 
     if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {

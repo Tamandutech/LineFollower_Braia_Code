@@ -1,2 +1,0 @@
-# ESPNOWHandler
-Essa pasta contém o serviço responsável por tratar os dados enviados ou recebidos via espnow pelo robô ou gateway, sendo esse o serviço responsável pela comunicação do robô com outros ESPs.

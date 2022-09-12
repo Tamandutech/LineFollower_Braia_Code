@@ -10,7 +10,6 @@
 #include <mcp3008_driver.h>
 #include <stdint.h>
 
-#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 
 /// \brief Emitter behavior when taking readings.
