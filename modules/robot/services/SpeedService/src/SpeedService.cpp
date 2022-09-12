@@ -6,8 +6,10 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
     this->speed = robot->getSpeed();
 
     // GPIOs dos encoders dos encoders dos motores
-    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
-    enc_motDir.attachFullQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
+    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
+    enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
+    MPR_MotDir = speed->MPR->getData();
+    MPR_MotEsq = speed->MPR->getData();
 };
 
 void SpeedService::Run()
@@ -21,6 +23,7 @@ void SpeedService::Run()
     // Quando for começar a utilizar, necessario limpeza da contagem.
     enc_motEsq.clearCount();
     enc_motDir.clearCount();
+
 
     // Loop
     for (;;)
@@ -65,12 +68,12 @@ void SpeedService::Run()
             / ((float)deltaTimeMS_media / (float)60000)                                                            // Divisao do delta tempo em minutos para calculo de RPM
         );
 
-        // if (iloop >= 100)
-        // {
-        //     ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
-        //     ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
-        //     iloop = 0;
-        // }
-        // iloop++;
+        if (iloop >= 100)
+         {
+             ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
+             ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
+             iloop = 0;
+         }
+         iloop++;
     }
 }
