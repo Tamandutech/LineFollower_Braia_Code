@@ -31,8 +31,8 @@ using namespace cpp_freertos;
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
-#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+#define SERVICE_STREAM_UUID "3A8328FB-3768-46D2-B371-B34864CE8025" // Stream service
+#define CHARACTERISTIC_STREAM_TX "3A8328FC-3768-46D2-B371-B34864CE8025"
 
 struct ble_gatt_uart_packet_t
 {
@@ -54,9 +54,13 @@ public:
     ble_gatt_uart_packet_t packetReceived;
     static QueueHandle_t queuePacketsReceived;
 
+    BLECharacteristic *pStreamTxCharacteristic;
+    TaskHandle_t xTaskStream;
+
 private:
     BLEServer *pServer = NULL;
     BLECharacteristic *pTxCharacteristic;
+
 
     uint8_t txValue = 0;
 };

@@ -48,7 +48,7 @@ public:
 
     /// @brief Definir dado estruturado de mapeamento
     /// @param mapData Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
-    void setData(std::string data);
+    void setData(std::string data, uint32_t last_change);
 
     /// @brief Obter o primeiro dado da lista em formato string
     /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
@@ -67,6 +67,12 @@ public:
     void clearAllData();
     void clearData(uint8_t pos);
 
+    void setStreamInterval(uint32_t interval);
+    uint32_t getStreamInterval();
+    void setStreamTime(uint32_t streamTime);
+    uint32_t getStreamTime();
+    uint32_t getLastChange();
+
 protected:
 private:
     DataStorage *dataStorage;
@@ -74,6 +80,10 @@ private:
 
     std::list<MapData> mapDataList;
     static std::mutex mapDataListMutex;
+    
+    std::atomic<uint32_t> time_last_change; // Tempo de execução em que o dado foi alterado pela última vez
+    std::atomic<uint32_t> stream_interval; // Intervalo que o stream do atributo será feito
+    std::atomic<uint32_t> stream_time; // momento em que o stream do atributo deve ser feito
 };
 
 #endif

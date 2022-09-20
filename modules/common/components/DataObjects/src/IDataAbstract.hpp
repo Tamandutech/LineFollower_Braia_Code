@@ -29,7 +29,13 @@ public:
     virtual void saveData() = 0;
     virtual void loadData() = 0;
 
-    virtual void setData(std::string data) = 0;
+    virtual void setStreamInterval(uint32_t interval) = 0;
+    virtual uint32_t getStreamInterval() = 0;
+    virtual void setStreamTime(uint32_t streamTime) = 0;
+    virtual uint32_t getStreamTime() = 0;
+    virtual uint32_t getLastChange() = 0;
+
+    virtual void setData(std::string data, uint32_t last_change = 0) = 0;
     virtual std::string getDataString(std::string ctrl = "") = 0;
 
     std::string getName()

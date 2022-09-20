@@ -47,6 +47,8 @@ public:
     DataAbstract<float> *Ki(CarState state);
     DataAbstract<float> *Kd(CarState state);
 
+    DataAbstract<float> *VelTrans;
+
 private:
     std::string name;
     const char *tag = "RobotData";

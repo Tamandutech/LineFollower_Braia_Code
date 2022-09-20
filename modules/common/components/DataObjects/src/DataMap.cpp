@@ -130,7 +130,7 @@ void DataMap::setData(uint8_t posicao, MapData data)
     itList->MapTrackStatus = data.MapTrackStatus;
 }
 
-void DataMap::setData(std::string data)
+void DataMap::setData(std::string data, uint32_t last_change)
 {
     if (data.at(0) == 'n')
         return newData(data);
@@ -274,6 +274,32 @@ void DataMap::clearData(uint8_t pos)
     std::advance(it, pos);
     this->mapDataList.erase(it);
     mapDataListMutex.unlock();
+}
+
+void DataMap::setStreamInterval(uint32_t interval)
+{
+    this->stream_interval.store(interval, std::memory_order_release);
+}
+
+uint32_t DataMap::getStreamInterval()
+{
+    return this->stream_interval.load(std::memory_order_acquire);
+}
+
+
+void DataMap::setStreamTime(uint32_t streamTime)
+{
+    this->stream_time.store(streamTime, std::memory_order_release);
+}
+
+uint32_t DataMap::getStreamTime()
+{
+    return this->stream_time.load(std::memory_order_acquire);
+}
+
+uint32_t DataMap::getLastChange()
+{
+    return this->time_last_change.load(std::memory_order_acquire);
 }
 
 #endif

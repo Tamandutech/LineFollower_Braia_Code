@@ -10,10 +10,13 @@ std::mutex DataManager::dataParamListMutex;
 std::vector<IDataAbstract *> DataManager::dataRuntimeList;
 std::mutex DataManager::dataRuntimeListMutex;
 
+std::vector<IDataAbstract *> DataManager::dataStreamList;
+std::mutex DataManager::dataStreamListMutex;
+
 DataManager::DataManager()
 {
     this->name = "DataManager";
-    //esp_log_level_set("DataManager",ESP_LOG_DEBUG);
+    esp_log_level_set("DataManager",ESP_LOG_DEBUG);
 }
 
 void DataManager::registerData(IDataAbstract *data, std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex)
@@ -88,6 +91,20 @@ void DataManager::loadAllData(std::vector<IDataAbstract *> *dataList, std::mutex
         data->loadData();
     }
 }
+
+std::vector<IDataAbstract *>::iterator DataManager::getDataListIterator(IDataAbstract *data, std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex)
+{
+    std::lock_guard<std::mutex> myLock(*dataListMutex);
+    std::vector<IDataAbstract *>::iterator it;
+    for (it = dataList->begin();it != dataList->end(); it++)
+    {
+        if (data->getName() == (*it)->getName())
+        {
+            return it;
+        }
+    }
+    return it;
+}
 void DataManager::setParam(std::string name, std::string value, bool savedata)
 {
     ESP_LOGD(this->name.c_str(), "Setando parametro: %s = %s", name.c_str(), value.c_str());
@@ -156,4 +173,70 @@ std::string DataManager::listRegistredParamData()
     ESP_LOGD(name.c_str(), "Retornando a lista.");
 
     return list;
+}
+
+void DataManager::setStreamInterval(std::string name, uint32_t time_in_ms)
+{
+    std::lock_guard<std::mutex> myLock(dataRuntimeListMutex);
+    for (auto data : dataRuntimeList)
+    {
+        if (data->getName() == name)
+        {
+            data->setStreamInterval(time_in_ms);
+            data->setStreamTime(0);
+            auto it = this->getDataListIterator(data, &dataStreamList, &dataStreamListMutex);
+            std::lock_guard<std::mutex> myLock(dataStreamListMutex);
+            if(time_in_ms == 0) 
+            {
+                if(it != dataStreamList.end()) dataStreamList.erase(it);
+            }
+            else 
+            {
+                if(it == dataStreamList.end()) dataStreamList.push_back(data);
+            }
+        }
+    }
+
+}
+
+int DataManager::NumItemsReadyStream()
+{
+    uint32_t time = xTaskGetTickCount()*portTICK_PERIOD_MS;
+    std::lock_guard<std::mutex> myLock(dataStreamListMutex);
+    int num = 0;
+    for (auto data : dataStreamList)
+    {
+        ESP_LOGD(name.c_str(),"TempoStream: %d, StreamTime: %d",time,data->getStreamTime());
+        if(time > data->getStreamTime())
+        {
+            num++;
+        }
+    }
+    return num;
+}
+
+cJSON* DataManager::getStreamData()
+{
+    uint32_t time = xTaskGetTickCount()*portTICK_PERIOD_MS;
+    cJSON* StreamObjects = cJSON_CreateArray();
+    std::lock_guard<std::mutex> myLock(dataStreamListMutex);
+    for (auto data : dataStreamList)
+    {
+        ESP_LOGD(name.c_str(),"Tempo: %d, streamTime: %d",time,data->getStreamTime());
+        if(time > data->getStreamTime())
+        {
+            cJSON *Object = cJSON_CreateObject();
+            cJSON_AddItemToArray(StreamObjects,Object);
+            cJSON_AddStringToObject(Object,"name",data->getName().c_str());
+            cJSON_AddStringToObject(Object,"value",data->getDataString().c_str());
+            cJSON *JsonInterval = cJSON_CreateNumber(data->getStreamInterval());
+            cJSON_AddItemToObject(Object,"interval", JsonInterval);
+            cJSON *JsonTime = cJSON_CreateNumber(data->getLastChange());
+            cJSON_AddItemToObject(Object,"Time", JsonTime);
+            data->setStreamTime(time + data->getStreamInterval());
+        }
+    }
+    std::string debugStr = cJSON_Print(StreamObjects);
+    ESP_LOGD(name.c_str(),"Json gerado para o stream: %s",debugStr.c_str());
+    return StreamObjects;
 }
