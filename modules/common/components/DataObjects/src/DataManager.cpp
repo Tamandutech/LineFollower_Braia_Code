@@ -143,16 +143,27 @@ std::string DataManager::listRegistredParamData()
 
     std::string list = "";
 
-    list = "Dados parametrizados registrados: " + std::to_string(qtd) + '\n';
+    cJSON *params = cJSON_CreateArray();
 
+    cJSON *data;
+    data = cJSON_CreateObject();
+    cJSON_AddStringToObject(data, "qtd", std::to_string(qtd).c_str());
+    cJSON_AddItemToObject(data,"params", params);
     ESP_LOGD(name.c_str(), "Listando dados parametrizados registrados: %d", qtd);
 
     for (uint8_t i = 0; i < qtd; i++)
     {
-        list += " " + std::to_string(i) + " - " + dataParamList[i]->getName() + ": " + dataParamList[i]->getDataString() + '\n';
-        ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s: %s", i, dataParamList[i], dataParamList[i]->getName().c_str(), dataParamList[i]->getDataString().c_str());
+        cJSON *Object = cJSON_CreateObject();
+        cJSON_AddItemToArray(params,Object);
+        cJSON_AddStringToObject(Object,"name", dataParamList[i]->getName().c_str());
+        cJSON_AddStringToObject(Object,"parent", dataParamList[i]->getParent().c_str());
+        cJSON_AddStringToObject(Object,"value", dataParamList[i]->getDataString().c_str());
+
+        ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s.%s: %s", i, dataParamList[i], dataParamList[i]->getName().c_str(), dataParamList[i]->getParent().c_str(), dataParamList[i]->getDataString().c_str());
     }
 
+    list = cJSON_Print(data);
+    cJSON_Delete(data);
     ESP_LOGD(name.c_str(), "Retornando a lista.");
 
     return list;

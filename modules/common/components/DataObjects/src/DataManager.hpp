@@ -15,6 +15,7 @@
 
 #include "esp_log.h"
 
+#include "cJSON.h"
 class DataManager
 {
 

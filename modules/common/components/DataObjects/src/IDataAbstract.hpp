@@ -18,7 +18,8 @@ public:
     IDataAbstract(std::string name, std::string parentObjectName)
     {
         // armazena nome da variável para serialização e LOGs.
-        this->name = parentObjectName + "." + name;
+        this->name = name;
+        this->parent = parentObjectName;
     }
 
     virtual ~IDataAbstract(){};
@@ -37,8 +38,13 @@ public:
         return this->name;
     };
 
+    std::string getParent()
+    {
+        return this->parent;
+    };
 protected:
     std::string name;
+    std::string parent;
 
     std::string demangle(const char *mangled)
     {
