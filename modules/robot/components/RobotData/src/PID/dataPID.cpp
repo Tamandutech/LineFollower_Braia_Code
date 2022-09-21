@@ -37,9 +37,6 @@ dataPID::dataPID(std::string name)
     Kd_curve = new DataAbstract<float>("Kd_curve", name);
     dataManager->registerParamData(Kd_curve);
 
-    VelTrans = new DataAbstract<float>("VelTrans", name, 0);
-    dataManager->registerRuntimeData(VelTrans);
-
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 

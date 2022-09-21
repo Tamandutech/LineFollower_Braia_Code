@@ -150,7 +150,7 @@ void RunStream(void *pvParameters)
     const char *Tag = pcTaskGetName(bleservice->xTaskStream);
     esp_log_level_set(Tag,ESP_LOG_DEBUG);
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    const int TaskDelay = 100;
+    const int TaskDelay = 20;
 
     for(;;)
     {
@@ -213,6 +213,7 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
     pStreamService->start();
 
     pServer->getAdvertising()->start();
+
 
     ESP_LOGD(this->GetName().c_str(), "Começou a se anunciar...");
 }

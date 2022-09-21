@@ -57,6 +57,10 @@ public:
     // Velocidade atual da roda esquerda em PMW
     DataAbstract<int8_t> *left;
 
+    // componentes da Velocidade total do robô 
+    DataAbstract<float> *VelTrans;
+    DataAbstract<float> *VelRot;
+
     void setToLine();
     void setToCurve();
     void setToMapping();

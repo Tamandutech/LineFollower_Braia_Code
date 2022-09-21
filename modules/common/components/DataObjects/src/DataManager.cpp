@@ -16,7 +16,7 @@ std::mutex DataManager::dataStreamListMutex;
 DataManager::DataManager()
 {
     this->name = "DataManager";
-    esp_log_level_set("DataManager",ESP_LOG_DEBUG);
+    //esp_log_level_set("DataManager",ESP_LOG_DEBUG);
 }
 
 void DataManager::registerData(IDataAbstract *data, std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex)
@@ -229,8 +229,8 @@ cJSON* DataManager::getStreamData()
             cJSON_AddItemToArray(StreamObjects,Object);
             cJSON_AddStringToObject(Object,"name",data->getName().c_str());
             cJSON_AddStringToObject(Object,"value",data->getDataString().c_str());
-            cJSON *JsonInterval = cJSON_CreateNumber(data->getStreamInterval());
-            cJSON_AddItemToObject(Object,"interval", JsonInterval);
+            //cJSON *JsonInterval = cJSON_CreateNumber(data->getStreamInterval());
+            //cJSON_AddItemToObject(Object,"interval", JsonInterval);
             cJSON *JsonTime = cJSON_CreateNumber(data->getLastChange());
             cJSON_AddItemToObject(Object,"Time", JsonTime);
             data->setStreamTime(time + data->getStreamInterval());
@@ -239,4 +239,57 @@ cJSON* DataManager::getStreamData()
     std::string debugStr = cJSON_Print(StreamObjects);
     ESP_LOGD(name.c_str(),"Json gerado para o stream: %s",debugStr.c_str());
     return StreamObjects;
+}
+
+void DataManager::setRuntime(std::string name, std::string value)
+{
+    ESP_LOGD(this->name.c_str(), "Setando Runtime Data: %s = %s", name.c_str(), value.c_str());
+    std::lock_guard<std::mutex> myLock(dataRuntimeListMutex);
+    for (auto data : dataRuntimeList)
+    {
+        if (data->getName() == name)
+        {
+            data->setData(value);
+            return;
+        }
+    }
+    ESP_LOGE(this->name.c_str(), "Runtime Data %s não encontrado.", name.c_str());
+}
+
+std::string DataManager::getRuntime(std::string name)
+{
+    ESP_LOGD(this->name.c_str(), "Obtendo Runtime Data: %s", name.c_str());
+    std::lock_guard<std::mutex> myLock(dataRuntimeListMutex);
+    for (auto data : dataRuntimeList)
+    {
+        if (data->getName() == name)
+        {
+            return data->getDataString();
+        }
+    }
+    ESP_LOGE(this->name.c_str(), "Runtime Data %s não encontrado.", name.c_str());
+    return "NOK: Runtime Data não encontrado.";
+}
+
+std::string DataManager::listRegistredRuntimeData()
+{
+    std::lock_guard<std::mutex> myLock(dataRuntimeListMutex);
+
+    uint8_t qtd = dataRuntimeList.size();
+
+    std::string list = "";
+
+    list = "Dados em tempo de execução registrados: " + std::to_string(qtd) + '\n';
+
+    ESP_LOGD(name.c_str(), "Listando dados runtime registrados: %d", qtd);
+
+    for (uint8_t i = 0; i < qtd; i++)
+    {
+        list += " " + std::to_string(i) + " - " + dataRuntimeList[i]->getName() + ": " + dataRuntimeList[i]->getDataString() + '\n';
+        ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s: %s", i, dataRuntimeList[i], dataRuntimeList[i]->getName().c_str(), dataRuntimeList[i]->getDataString().c_str());
+    }
+
+    ESP_LOGD(name.c_str(), "Retornando a lista.");
+
+    return list;
 }

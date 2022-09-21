@@ -26,6 +26,9 @@ DataAbstract<T>::DataAbstract(std::string name, std::string parentObjectName, T 
     this->dataManager = dataManager->getInstance();
 
     this->data = new std::atomic<T>(value);
+    this->time_last_change.store(0, std::memory_order_release);
+    this->stream_interval.store(0, std::memory_order_release);
+    this->stream_time.store(0, std::memory_order_release);
 }
 
 template <class T>

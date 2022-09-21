@@ -49,11 +49,16 @@ public:
     void setParam(std::string name, std::string value, bool savedata = true);
     std::string getParam(std::string name, std::string ctrl);
 
+    void setRuntime(std::string name, std::string value);
+    std::string getRuntime(std::string name);
+
     void loadAllParamData();
     void loadAllRuntimeData();
 
     uint8_t getRegistredParamDataCount();
     std::string listRegistredParamData();
+
+    std::string listRegistredRuntimeData();
 
     // name: nome do dado <ObjetoPai>.<Objeto>
     // time_in_ms: tempo em ms do intervalo de envio

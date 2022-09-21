@@ -79,6 +79,13 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(Medium_Curve);
     Short_Curve = new DataAbstract<uint16_t>("Short_curve", name, 1000);
     dataManager->registerParamData(Short_Curve);
+
+    // Componentes da velocidade total
+    VelTrans = new DataAbstract<float>("VelTrans", name, 0);
+    dataManager->registerRuntimeData(VelTrans);
+
+    VelRot = new DataAbstract<float>("VelRot", name, 0);
+    dataManager->registerRuntimeData(VelRot);
     
 }
 

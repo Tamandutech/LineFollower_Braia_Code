@@ -27,6 +27,7 @@
 #include "cmd_system.hpp"
 #include "cmd_param.hpp"
 #include "cmd_datamanager.hpp"
+#include "cmd_runtime.hpp"
 #include "better_console.hpp"
 
 #include "esp_log.h"
@@ -78,6 +79,7 @@ void app_main(void)
   register_system();
   register_cmd_param();
   register_cmd_datamanager();
+  register_cmd_runtime();
 
   ESP_LOGD("Main", "Instanciando Robô...");
   braia = Robot::getInstance("TT_LF_BRAIA_V3");

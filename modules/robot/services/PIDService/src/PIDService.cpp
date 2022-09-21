@@ -11,7 +11,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->PIDRot->input->setData(this->robot->getsArray()->getLine());
     PIDTrans->setpoint->setData(0);
     setpointPIDTransTarget = 0;
-    DataManager::getInstance()->setStreamInterval("PIDVel.VelTrans", 500);
+    DataManager::getInstance()->setStreamInterval("speed.VelTrans", 100);
 };
 
 void PIDService::Run()
@@ -59,7 +59,8 @@ void PIDService::Run()
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
         VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
 
-        PIDTrans->VelTrans->setData(VelTrans, xTaskGetTickCount()*portTICK_PERIOD_MS);
+        speed->VelTrans->setData(VelTrans, xTaskGetTickCount()*portTICK_PERIOD_MS);
+        speed->VelRot->setData(VelRot, xTaskGetTickCount()*portTICK_PERIOD_MS);
 
         // Erros atuais
         //  rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
