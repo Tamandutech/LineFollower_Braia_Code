@@ -148,7 +148,7 @@ void RunStream(void *pvParameters)
     auto bleservice = BLEServerService::getInstance();
     auto datamanager = DataManager::getInstance();
     const char *Tag = pcTaskGetName(bleservice->xTaskStream);
-    esp_log_level_set(Tag,ESP_LOG_DEBUG);
+    //esp_log_level_set(Tag,ESP_LOG_DEBUG);
     TickType_t xLastWakeTime = xTaskGetTickCount();
     const int TaskDelay = 20;
 

@@ -11,7 +11,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->PIDRot->input->setData(this->robot->getsArray()->getLine());
     PIDTrans->setpoint->setData(0);
     setpointPIDTransTarget = 0;
-    DataManager::getInstance()->setStreamInterval("speed.VelTrans", 100);
+    //DataManager::getInstance()->setStreamInterval("speed.VelTrans", 100);
 };
 
 void PIDService::Run()
