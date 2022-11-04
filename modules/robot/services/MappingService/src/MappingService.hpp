@@ -54,15 +54,18 @@ private:
     TickType_t ticksToStop;
 
     // atributos para offsets iniciais
+    float initialRightDist = 0;
+    float initialLeftDist = 0;
+    float initialMediaDist = 0;
     int32_t initialRightPulses = 0;
     int32_t initialLeftPulses = 0;
     int32_t initialMediaPulses = 0;
     TickType_t initialTicks = 0;
 
     // variáveis de calculos temporárias
-    uint32_t tempDeltaPulses = 0;
-    uint32_t tempMilimiterInPulses = 0;
-    uint32_t tempDeltaDist = 0;
+    float tempDeltaMilimeters = 0;
+    float tempMilimitersToCurve = 0;
+    float tempDeltaDist = 0;
 
     led_command_t command;
 

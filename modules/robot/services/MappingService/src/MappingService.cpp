@@ -107,12 +107,16 @@ void MappingService::Run()
 
     initialLeftPulses = speedMapping->EncLeft->getData();
     initialRightPulses = speedMapping->EncRight->getData();
-    initialMediaPulses = (initialLeftPulses + initialRightPulses) / 2;
+    initialMediaPulses = ((initialLeftDist + initialRightDist) / 2.0);
+
+    initialLeftDist = (initialLeftPulses / (float)speedMapping->MPR->getData())  * M_PI * speedMapping->WheelDiameter->getData();
+    initialRightDist = (initialRightPulses / (float)speedMapping->MPR->getData()) * M_PI * speedMapping->WheelDiameter->getData();
+    initialMediaDist = ( initialMediaPulses / (float)speedMapping->MPR->getData()) * M_PI * speedMapping->WheelDiameter->getData();
     initialTicks = xTaskGetTickCount();
 
     latMarks->marks->newData(tempActualMark);
 
-    ESP_LOGD(GetName().c_str(), "Offset iniciais: initialLeftPulses: %d, initialRightPulses: %d, initialMediaPulses: %d, initialTicks: %d", initialLeftPulses, initialRightPulses, initialMediaPulses, initialTicks);
+    ESP_LOGD(GetName().c_str(), "Offset iniciais: initialLeftDist: %.2f mm, initialRightDist: %.2f mm, initialMediaDist: %.2f mm, initialTicks: %d", initialLeftDist, initialRightDist, initialMediaDist, initialTicks);
 
     for (;;)
     {
@@ -121,18 +125,18 @@ void MappingService::Run()
         vTaskDelay(0);
         this->Suspend();
 
-        tempActualMark.MapEncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;
-        tempActualMark.MapEncRight = speedMapping->EncRight->getData() - initialRightPulses;
+        tempActualMark.MapEncLeft = ((speedMapping->EncLeft->getData() - initialLeftPulses) / (float)speedMapping->MPR->getData()) * M_PI * speedMapping->WheelDiameter->getData();
+        tempActualMark.MapEncRight = ((speedMapping->EncRight->getData() - initialRightPulses) / (float)speedMapping->MPR->getData()) * M_PI * speedMapping->WheelDiameter->getData();
         tempActualMark.MapEncMedia = ((tempActualMark.MapEncLeft + tempActualMark.MapEncRight) / 2);
         tempActualMark.MapTime = ((xTaskGetTickCount() - initialTicks) * portTICK_PERIOD_MS);
 
-        // variação de encoder em pulsos
-        tempDeltaPulses = std::abs((tempActualMark.MapEncRight - tempPreviousMark.MapEncRight) - (tempActualMark.MapEncLeft - tempPreviousMark.MapEncLeft));
-        // Quantidade de pulsos que o encoder precisa dar para avançar "x" milimetros
-        tempMilimiterInPulses = (speedMapping->MPR->getData() * latMarks->thresholdToCurve->getData()) / (M_PI * speedMapping->WheelDiameter->getData());
+        // variação de encoder em milímetros
+        tempDeltaMilimeters = std::abs((tempActualMark.MapEncRight - tempPreviousMark.MapEncRight) - (tempActualMark.MapEncLeft - tempPreviousMark.MapEncLeft));
+        // Diferença de milimetros percorridos entre as rodas em um trecho para se ter uma curva  
+        tempMilimitersToCurve = latMarks->thresholdToCurve->getData();
 
-        tempActualMark.MapStatus = (tempDeltaPulses > tempMilimiterInPulses) ? CAR_IN_CURVE : CAR_IN_LINE;
-        tempDeltaDist = ((tempActualMark.MapEncMedia - tempPreviousMark.MapEncMedia) * (M_PI * speedMapping->WheelDiameter->getData())) / (speedMapping->MPR->getData()); // distância entre marcacões em mm
+        tempActualMark.MapStatus = (tempDeltaMilimeters > tempMilimitersToCurve) ? CAR_IN_CURVE : CAR_IN_LINE;
+        tempDeltaDist = tempActualMark.MapEncMedia - tempPreviousMark.MapEncMedia; // distância entre marcacões em mm
         if(tempActualMark.MapStatus == CAR_IN_LINE)
         {
             if(tempDeltaDist < latMarks->thresholdMediumLine->getData()) tempActualMark.MapTrackStatus = SHORT_LINE;
@@ -166,9 +170,9 @@ void MappingService::Run()
         LEDsService::getInstance()->queueCommand(command);
         
 
-        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d, MapStatus: %d", tempActualMark.MapEncLeft, tempActualMark.MapEncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime, tempActualMark.MapStatus);
+        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %.2f mm, MapEncRight: %.2f mm, MapEncMedia: %.2f mm, MapTime: %d ms, MapStatus: %d", tempActualMark.MapEncLeft, tempActualMark.MapEncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime, tempActualMark.MapStatus);
 
-        if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (latMarks->MarkstoStop->getData() <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
+        if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (latMarks->MarkstoStop->getData() <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= ((speedMapping->MPR->getData() * tempActualMark.MapEncMedia) / (M_PI * speedMapping->WheelDiameter->getData()))) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
         {
             ESP_LOGD(GetName().c_str(), "Mapeamento finalizado.");
 

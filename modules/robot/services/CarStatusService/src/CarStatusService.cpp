@@ -117,12 +117,12 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
 
         status->stateMutex.lock();
-        pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
-        pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
+        DistBeforeCurve = latMarks->PulsesBeforeCurve->getData();
+        DistAfterCurve = latMarks->PulsesAfterCurve->getData();
         if(latMarks->rightMarks->getData() >= 1 && !firstmark)
         {
             firstmark = true;
-            initialmediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
+            initialmediaEnc = ((speed->EncRight->getData() + speed->EncLeft->getData()) / (float)(2 * speed->MPR->getData())) * M_PI * speed->WheelDiameter->getData();
         }
 
         if (lastMappingState != status->robotIsMapping->getData() && status->robotIsMapping->getData())
@@ -163,7 +163,7 @@ void CarStatusService::Run()
             }
         }
 
-        mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
+        mediaEncActual = ((speed->EncRight->getData() + speed->EncLeft->getData()) / (float)(2 * speed->MPR->getData())) * M_PI * speed->WheelDiameter->getData(); // calcula media dos encoders em mm
 
 //         if (iloop >= 20 && !status->robotIsMapping->getData())
 //         {
@@ -220,12 +220,12 @@ void CarStatusService::Run()
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
                         if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
                         {
-                            if((Manualmedia + pulsesAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + pulsesAfterCurve)) 
+                            if((Manualmedia + DistAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + DistAfterCurve)) 
                             {
                                 trackType = CAR_IN_CURVE;
                                 trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
                             }
-                            else if((Manualmedia + pulsesAfterCurve) >= ManualmediaNxt) 
+                            else if((Manualmedia + DistAfterCurve) >= ManualmediaNxt) 
                             {
                                 trackType = CAR_IN_CURVE;
                                 trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
@@ -235,12 +235,12 @@ void CarStatusService::Run()
                         {
                             if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE)
                             {
-                                if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) 
+                                if((ManualmediaNxt - DistBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - DistBeforeCurve)) 
                                 {
                                     trackType = CAR_IN_CURVE;
                                     trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
-                                else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) 
+                                else if((ManualmediaNxt - DistBeforeCurve) <= Manualmedia) 
                                 {
                                     trackType = CAR_IN_CURVE;
                                     trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;

@@ -70,9 +70,9 @@ void DataMap::newData(std::string mapData)
     MapData mapDataTemp;
     // setar dados na struct
     mapDataTemp.MapTime = std::stoi(mapDataVector[1]);
-    mapDataTemp.MapEncMedia = std::stoi(mapDataVector[2]);
-    mapDataTemp.MapEncLeft = std::stoi(mapDataVector[3]);
-    mapDataTemp.MapEncRight = std::stoi(mapDataVector[4]);
+    mapDataTemp.MapEncMedia = std::stof(mapDataVector[2]);
+    mapDataTemp.MapEncLeft = std::stof(mapDataVector[3]);
+    mapDataTemp.MapEncRight = std::stof(mapDataVector[4]);
     mapDataTemp.MapStatus = std::stoi(mapDataVector[5]);
     mapDataTemp.MapTrackStatus = std::stoi(mapDataVector[6]);
 
@@ -157,9 +157,9 @@ void DataMap::setData(std::string data)
 
     // seta o valor do dado na lista
     tempMapData.MapTime = stoi(dataList[1]);
-    tempMapData.MapEncMedia = stoi(dataList[2]);
-    tempMapData.MapEncLeft = stoi(dataList[3]);
-    tempMapData.MapEncRight = stoi(dataList[4]);
+    tempMapData.MapEncMedia = stof(dataList[2]);
+    tempMapData.MapEncLeft = stof(dataList[3]);
+    tempMapData.MapEncRight = stof(dataList[4]);
     tempMapData.MapStatus = stoi(dataList[5]);
     tempMapData.MapTrackStatus = stoi(dataList[6]);
 
@@ -195,7 +195,7 @@ void DataMap::saveData()
     {
         memcpy(dataSave + i, &mapData, sizeof(MapData));
         i += sizeof(MapData);
-        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus,  mapData.MapTrackStatus);
+        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %.2f, %.2f, %.2f, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus,  mapData.MapTrackStatus);
     }
     dataStorage->save_data(this->name, dataSave, sizeMap, "ab");
     free(dataSave);
@@ -238,7 +238,7 @@ void DataMap::loadData()
             MapData tempMapData;
             memcpy(&tempMapData, data + i, sizeof(MapData));
 
-            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus, tempMapData.MapTrackStatus);
+            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %.2f, %.2f, %.2f, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus, tempMapData.MapTrackStatus);
 
             mapDataListMutex.lock();
             this->mapDataList.push_back(tempMapData);

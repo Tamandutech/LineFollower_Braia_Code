@@ -56,7 +56,7 @@ void PIDService::Run()
 
         // Velocidade do carrinho
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
-        VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
+        VelTrans = ((speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()) / 120.0) * M_PI * speed->WheelDiameter->getData(); // Velocidade Translacional do robô (mm/s)
 
         // Erros atuais
         //  rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)

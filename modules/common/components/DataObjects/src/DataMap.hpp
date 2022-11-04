@@ -27,9 +27,9 @@
 struct MapData
 {
     uint32_t MapTime;
-    int32_t MapEncMedia;
-    int32_t MapEncLeft;
-    int32_t MapEncRight;
+    float MapEncMedia;
+    float MapEncLeft;
+    float MapEncRight;
     uint8_t MapStatus;
     uint8_t MapTrackStatus;
 };

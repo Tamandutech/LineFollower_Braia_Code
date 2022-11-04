@@ -1,6 +1,7 @@
 #ifndef PID_SERVICE_H
 #define PID_SERVICE_H
 
+#include <math.h>
 #include "thread.hpp"
 #include "singleton.hpp"
 #include "RobotData.h"
@@ -39,8 +40,8 @@ private:
 
     // Variáveis para cálculo do pid rot e trans
     float rotK = 5;
-    float accel = 6000; // aceleração em rpm/s
-    float desaccel = 6000; // aceleração em rpm/s
+    float accel = 6000; // aceleração em mm/s^2
+    float desaccel = 6000; // aceleração em mm/s^2
     int16_t setpointPIDTransTarget = 0;
     int16_t newSetpoint = 0;
     int16_t SetpointTransactual = 0;
