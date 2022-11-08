@@ -12,4 +12,5 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     robotIsMapping = new DataAbstract<bool>("robotIsMapping", name, false);
     encreading = new DataAbstract<bool>("encreading", name, false);
     TrackStatus = new DataAbstract<uint8_t>("TrackStatus", name, 0);
+    FirstMark = new DataAbstract<bool>("FirstMark", name, false);
 }

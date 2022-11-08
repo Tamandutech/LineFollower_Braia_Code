@@ -65,8 +65,9 @@ void app_main(void)
   esp_log_level_set("*", ESP_LOG_ERROR);
   esp_log_level_set("BLEServerService", ESP_LOG_DEBUG);
   esp_log_level_set("Main", ESP_LOG_DEBUG);
-  // esp_log_level_set("SensorsService", ESP_LOG_DEBUG);
+  //esp_log_level_set("SensorsService", ESP_LOG_DEBUG);
   //esp_log_level_set("SpeedService", ESP_LOG_DEBUG);
+  //esp_log_level_set("PIDService", ESP_LOG_DEBUG);
 
   ESP_LOGD("Main", "Configurando Comandos...");
   better_console_config_t console_config;
