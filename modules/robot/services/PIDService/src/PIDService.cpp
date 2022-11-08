@@ -67,7 +67,8 @@ void PIDService::Run()
         // Erros atuais
         //  rotK (porcentagem do erro do PID rotcioanl que representará a variação máxima de RPM dos motores)
         PIDRot->setpoint->setData((3500 - robot->getsArray()->getLine()) / rotK); // cálculo do setpoint rotacional
-        erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
+        if(!status->FirstMark->getData()) erroVelTrans = 1200.0 - VelTrans;
+        else erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
         if (iloop > 100)
         {
             ESP_LOGD(GetName().c_str(), "PIDTrans->setpoint: %d", PIDTrans->setpoint->getData());

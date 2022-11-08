@@ -54,6 +54,5 @@ void dataSLatMarks::leftPassedInc()
 void dataSLatMarks::rightPassedInc()
 {
     this->rightMarks->setData(this->rightMarks->getData() + 1);
-
-    MappingService::getInstance()->createNewMark();
+    if(this->rightMarks->getData() <= 1 || this->rightMarks->getData() == this->MarkstoStop->getData()) MappingService::getInstance()->createNewMark();
 }
