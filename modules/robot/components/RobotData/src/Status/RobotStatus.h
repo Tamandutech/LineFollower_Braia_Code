@@ -43,6 +43,7 @@ public:
     DataAbstract<bool> *encreading;
 
     DataAbstract<uint8_t> *TrackStatus; // status do trecho da pista em que o robô se encontra
+    DataAbstract<bool> *FirstMark; // Verifica se o robô já passou pela primeira marcação lateral
 
     static std::mutex stateMutex;
     
