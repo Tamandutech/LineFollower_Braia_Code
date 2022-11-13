@@ -80,6 +80,17 @@ void ESP32MotorControl::motorSpeed(uint8_t motor, float speed)
   {
   case 0:
 #ifndef ESP32_QEMU
+    if(speed >= 0){
+      if(mMotorState[0] != MotorState::MOTOR_FORWARD)
+        this->motorForward(0);
+    }
+    else{
+      if(mMotorState[0] != MotorState::MOTOR_REVERSE){
+        this->motorReverse(0);
+        speed = -speed;
+      }
+    }
+
     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, speed);
     mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A,
                         MCPWM_DUTY_MODE_0); // call this each time, if operator
@@ -89,6 +100,17 @@ void ESP32MotorControl::motorSpeed(uint8_t motor, float speed)
 
   case 1:
 #ifndef ESP32_QEMU
+    if(speed >= 0){
+      if(mMotorState[1] != MotorState::MOTOR_FORWARD)
+        this->motorForward(1);
+    }
+    else{
+      if(mMotorState[1] != MotorState::MOTOR_REVERSE){
+        this->motorReverse(1);
+        speed = -speed;
+      }
+    }
+
     mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_OPR_A, speed);
     mcpwm_set_duty_type(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_OPR_A,
                         MCPWM_DUTY_MODE_0); // call this each time, if operator

@@ -188,9 +188,9 @@ void DataMap::saveData()
     dataStorage->delete_data(this->name);
 
     // Armazena os dados fazendo append de cada struct
-    uint16_t sizeMap = this->getSize()*sizeof(MapData);
+    int16_t sizeMap = this->getSize()*sizeof(MapData);
     char * dataSave = (char*) malloc(sizeMap);
-    uint16_t i = 0;
+    int16_t i = 0;
     for (auto &mapData : this->mapDataList)
     {
         memcpy(dataSave + i, &mapData, sizeof(MapData));

@@ -45,12 +45,12 @@ public:
     DataAbstract<int8_t> *base;
 
     //Setpoints translacionais para os tipos de trecho em rpm
-    DataAbstract<uint16_t> *Long_Line;
-    DataAbstract<uint16_t> *Medium_Line;
-    DataAbstract<uint16_t> *Short_Line;
-    DataAbstract<uint16_t> *Long_Curve;
-    DataAbstract<uint16_t> *Medium_Curve;
-    DataAbstract<uint16_t> *Short_Curve;
+    DataAbstract<int16_t> *Long_Line;
+    DataAbstract<int16_t> *Medium_Line;
+    DataAbstract<int16_t> *Short_Line;
+    DataAbstract<int16_t> *Long_Curve;
+    DataAbstract<int16_t> *Medium_Curve;
+    DataAbstract<int16_t> *Short_Curve;
 
     // Velocidade atual da roda direita em PMW
     DataAbstract<int8_t> *right;

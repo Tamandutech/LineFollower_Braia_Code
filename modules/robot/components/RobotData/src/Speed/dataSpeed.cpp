@@ -66,18 +66,18 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(base_mapping);
 
     //Setpoints translacionais para os tipos de trechos
-    Long_Line = new DataAbstract<uint16_t>("Long_line", name, 1000);
+    Long_Line = new DataAbstract<int16_t>("Long_line", name, 1000);
     dataManager->registerParamData(Long_Line);
-    Medium_Line = new DataAbstract<uint16_t>("Medium_line", name, 1000);
+    Medium_Line = new DataAbstract<int16_t>("Medium_line", name, 1000);
     dataManager->registerParamData(Medium_Line);
-    Short_Line = new DataAbstract<uint16_t>("Short_line", name, 1000);
+    Short_Line = new DataAbstract<int16_t>("Short_line", name, 1000);
     dataManager->registerParamData(Short_Line);
 
-    Long_Curve = new DataAbstract<uint16_t>("Long_curve", name, 1000);
+    Long_Curve = new DataAbstract<int16_t>("Long_curve", name, 1000);
     dataManager->registerParamData(Long_Curve);
-    Medium_Curve = new DataAbstract<uint16_t>("Medium_curve", name, 1000);
+    Medium_Curve = new DataAbstract<int16_t>("Medium_curve", name, 1000);
     dataManager->registerParamData(Medium_Curve);
-    Short_Curve = new DataAbstract<uint16_t>("Short_curve", name, 1000);
+    Short_Curve = new DataAbstract<int16_t>("Short_curve", name, 1000);
     dataManager->registerParamData(Short_Curve);
     
 }
