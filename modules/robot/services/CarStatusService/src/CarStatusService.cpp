@@ -154,16 +154,16 @@ void CarStatusService::Run()
                 switch (TrackLen)
                 {
                     case SHORT_LINE:
-                        command.brightness = 0.25;
+                        command.brightness = 0.05;
                         break;
                     case MEDIUM_LINE:
-                        command.brightness = 0.5;
+                        command.brightness = 0.3;
                         break;
                     case LONG_LINE:
                         command.brightness = 1;
                         break;
                     default:
-                        command.brightness = 0.5;
+                        command.brightness = 1;
                         break;
                 }
                 LEDsService::getInstance()->queueCommand(command);
@@ -178,16 +178,16 @@ void CarStatusService::Run()
                 switch (TrackLen)
                 {
                     case SHORT_CURVE:
-                        command.brightness = 0.25;
+                        command.brightness = 0.05;
                         break;
                     case MEDIUM_CURVE:
-                        command.brightness = 0.5;
+                        command.brightness = 0.3;
                         break;
                     case LONG_CURVE:
                         command.brightness = 1;
                         break;
                     default:
-                        command.brightness = 0.5;
+                        command.brightness = 1;
                         break;
                 }
                 LEDsService::getInstance()->queueCommand(command);
