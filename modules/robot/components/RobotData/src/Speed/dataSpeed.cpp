@@ -41,9 +41,9 @@ dataSpeed::dataSpeed(std::string name)
     base = new DataAbstract<int8_t>("base", name, 0);
     dataManager->registerParamData(base);
 
-    right = new DataAbstract<int8_t>("right", name, 0);
+    right = new DataAbstract<float>("right", name, 0);
     dataManager->registerRuntimeData(right);
-    left = new DataAbstract<int8_t>("left", name, 0);
+    left = new DataAbstract<float>("left", name, 0);
     dataManager->registerRuntimeData(left);
 
     initialspeed = new DataAbstract<int16_t>("initial_speed", name, 1100);

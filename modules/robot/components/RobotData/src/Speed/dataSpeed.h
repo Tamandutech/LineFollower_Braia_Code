@@ -62,9 +62,9 @@ public:
     // Velocidade para o modo Tunning
     DataAbstract<int16_t> *Tunning_speed;
     // Velocidade atual da roda direita em PMW
-    DataAbstract<int8_t> *right;
+    DataAbstract<float> *right;
     // Velocidade atual da roda esquerda em PMW
-    DataAbstract<int8_t> *left;
+    DataAbstract<float> *left;
 
 private:
     std::string name;

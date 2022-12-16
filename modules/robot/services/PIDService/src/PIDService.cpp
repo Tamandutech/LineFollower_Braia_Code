@@ -106,10 +106,10 @@ void PIDService::Run()
 
         // Calculo de velocidade do motor
         speed->right->setData(
-            constrain((int16_t)(PIDTrans->output->getData()) + (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
+            constrain(PIDTrans->output->getData() + PIDRot->output->getData(), speedMin, speedMax));
 
         speed->left->setData(
-            constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
+            constrain(PIDTrans->output->getData() - PIDRot->output->getData(), speedMin, speedMax));
 
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
