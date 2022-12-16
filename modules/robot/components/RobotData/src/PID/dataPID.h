@@ -37,11 +37,12 @@ public:
     DataAbstract<int16_t> *input;
     DataAbstract<float> *output;
     DataAbstract<int16_t> *setpoint; // salvar
+    DataAbstract<float> *CorrectionFactor;
     // Parâmetros do PID
-    DataAbstract<int16_t> *setpointLine; // salvar
-    DataAbstract<int16_t> *setpointCurve; // salvar
-    DataAbstract<int16_t> *setpointMap; // salvar
     DataAbstract<float> *Krot; // Variável para limitar a velocidade rotacional do robô
+    DataAbstract<float> *KrotLongCurve; // Variável para limitar a velocidade rotacional do robô na curva longa
+    DataAbstract<float> *KrotMediumCurve; // Variável para limitar a velocidade rotacional do robô na curva média
+    DataAbstract<float> *KrotShortCurve; // Variável para limitar a velocidade rotacional do robô na curva curta
 
     DataAbstract<float> *Kp(CarState state);
     DataAbstract<float> *Ki(CarState state);
@@ -50,6 +51,10 @@ public:
 private:
     std::string name;
     const char *tag = "RobotData";
+    
+    DataAbstract<float> *Kp_tunning; // salvar
+    DataAbstract<float> *Ki_tunning; // salvar
+    DataAbstract<float> *Kd_tunning; // salvar
 
     DataAbstract<float> *Kp_line; // salvar
     DataAbstract<float> *Ki_line; // salvar

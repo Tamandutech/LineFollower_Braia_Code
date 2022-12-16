@@ -15,6 +15,7 @@
 
 #include "DataAbstract.hpp"
 #include "DataStorage.hpp"
+#include "DataManager.hpp"
 
 #include "esp_log.h"
 
@@ -41,7 +42,10 @@ public:
      * @retval FALSE Se o robô não está lendo o mapeamento
      */
     DataAbstract<bool> *encreading;
-
+    DataAbstract<bool> *TunningMode;
+    DataAbstract<bool> *HardDeleteMap;
+    DataAbstract<bool> *CorrectionTrue;
+    
     DataAbstract<uint8_t> *TrackStatus; // status do trecho da pista em que o robô se encontra
     DataAbstract<bool> *FirstMark; // Verifica se o robô já passou pela primeira marcação lateral
 
@@ -49,6 +53,7 @@ public:
     
 private:
     std::string name;
+    DataManager *dataManager;
 
 };
 

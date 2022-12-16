@@ -46,6 +46,7 @@ private:
     uint8_t lastState; // armazena último estado do mapeamento
     bool lastMappingState;
 
+    bool started_in_Tuning = false;
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
     int32_t initialmediaEnc = 0;

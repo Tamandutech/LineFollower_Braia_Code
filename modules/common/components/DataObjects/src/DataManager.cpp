@@ -32,15 +32,30 @@ void DataManager::registerParamDataChanged(std::string name)
 {
     ESP_LOGD(this->name.c_str(), "Obtendo parametro: %s", name.c_str());
     IDataAbstract *param = nullptr;
-    for (auto data : dataParamList)
+    bool paramRegistered = false;
+
+    dataParamChangedListMutex.lock();
+    for(auto data : dataParamChangedList)
     {
-        if (data->getName() == name)
+        if (data->getName() == name) paramRegistered = true;
+    }
+    dataParamChangedListMutex.unlock();
+
+    if(!paramRegistered)
+    {
+        for (auto data : dataParamList)
         {
-            param = data;
+            if (data->getName() == name)
+            {
+                param = data;
+            }
+        }
+        if(param != nullptr)
+        {
+            ESP_LOGD(name.c_str(), "Registrando dado parametrizado alterado não salvo: %s (%p)", param->getName().c_str(), param);
+            registerData(param, &dataParamChangedList, &dataParamChangedListMutex);
         }
     }
-    ESP_LOGD(name.c_str(), "Registrando dado parametrizado alterado não salvo: %s (%p)", param->getName().c_str(), param);
-    registerData(param, &dataParamChangedList, &dataParamChangedListMutex);
 }
 
 void DataManager::registerRuntimeData(IDataAbstract *data)
@@ -90,6 +105,7 @@ void DataManager::loadAllData(std::vector<IDataAbstract *> *dataList, std::mutex
 }
 void DataManager::setParam(std::string name, std::string value, bool savedata)
 {
+    if(value.find("!") !=-1) value.erase(value.begin());
     ESP_LOGD(this->name.c_str(), "Setando parametro: %s = %s", name.c_str(), value.c_str());
     for (auto data : dataParamList)
     {

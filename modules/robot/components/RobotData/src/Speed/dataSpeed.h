@@ -38,11 +38,18 @@ public:
     // Diâmetro das rodas
     DataAbstract<uint8_t> *WheelDiameter;
 
+    DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
+    
+    // Restrições nos valores do PWM
     DataAbstract<int8_t> *max;
     DataAbstract<int8_t> *min;
     DataAbstract<int8_t> *base;
+
+    
+    DataAbstract<uint16_t> *initialspeed; // Velocidade inicial em rpm
+    DataAbstract<uint16_t> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
 
     //Setpoints translacionais para os tipos de trecho em rpm
     DataAbstract<uint16_t> *Long_Line;
@@ -52,35 +59,18 @@ public:
     DataAbstract<uint16_t> *Medium_Curve;
     DataAbstract<uint16_t> *Short_Curve;
 
+    // Velocidade para o modo Tunning
+    DataAbstract<uint16_t> *Tunning_speed;
     // Velocidade atual da roda direita em PMW
     DataAbstract<int8_t> *right;
     // Velocidade atual da roda esquerda em PMW
     DataAbstract<int8_t> *left;
-
-    void setToLine();
-    void setToCurve();
-    void setToMapping();
 
 private:
     std::string name;
     const char *tag = "RobotData";
 
     DataManager *dataManager;
-
-    // Linha
-    DataAbstract<int8_t> *max_line;  // salvar
-    DataAbstract<int8_t> *min_line;  // salvar
-    DataAbstract<int8_t> *base_line; // salvar
-
-    // Curva
-    DataAbstract<int8_t> *max_curve;  // salvar
-    DataAbstract<int8_t> *min_curve;  // salvar
-    DataAbstract<int8_t> *base_curve; // salvar
-
-    // Mapeamento
-    DataAbstract<int8_t> *max_mapping;  // salvar
-    DataAbstract<int8_t> *min_mapping;  // salvar
-    DataAbstract<int8_t> *base_mapping; // salvar
 };
 
 #endif

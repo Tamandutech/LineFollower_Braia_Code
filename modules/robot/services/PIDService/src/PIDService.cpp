@@ -11,6 +11,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->PIDRot->input->setData(this->robot->getsArray()->getLine());
     PIDTrans->setpoint->setData(0);
     setpointPIDTransTarget = 0;
+    rotK = PIDRot->Krot->getData();
 };
 
 void PIDService::Run()
@@ -27,16 +28,17 @@ void PIDService::Run()
         speedBase = speed->base->getData();
         speedMin = speed->min->getData();
         speedMax = speed->max->getData();
-        if(!status->FirstMark->getData())
+        if(!status->FirstMark->getData() && !status->TunningMode->getData())
         {
-            accel = 1500;
+            accel = speed->initialaccelration->getData();
+            setpointPIDTransTarget = speed->initialspeed->getData();
         }
         else
         {
             accel = speed->accelration->getData();
         }
         desaccel = speed->desaccelration->getData();
-        rotK = PIDRot->Krot->getData();
+        
 
         // Reseta o PID se o carrinho parar
         if (estado == CAR_STOPPED)
@@ -52,14 +54,16 @@ void PIDService::Run()
         }
 
         // Variaveis de calculo para os pids da velocidade rotacional e translacional
-        KpVel = PIDTrans->Kp(estado)->getData();
-        KiVel = PIDTrans->Ki(estado)->getData();
-        KdVel = PIDTrans->Kd(estado)->getData();
+        if(estado != CAR_STOPPED)
+        {
+            KpVel = (PIDTrans->Kp(estado) != nullptr) ? PIDTrans->Kp(estado)->getData() : 0;
+            KiVel = (PIDTrans->Ki(estado) != nullptr) ? PIDTrans->Ki(estado)->getData() : 0;
+            KdVel = (PIDTrans->Kd(estado) != nullptr) ? PIDTrans->Kd(estado)->getData() : 0;
 
-        KpRot = PIDRot->Kp(estado)->getData();
-        KiRot = PIDRot->Ki(estado)->getData();
-        KdRot = PIDRot->Kd(estado)->getData();
-
+            KpRot = (PIDRot->Kp(estado) != nullptr) ? PIDRot->Kp(estado)->getData() : 0;
+            KiRot = (PIDRot->Ki(estado) != nullptr) ? PIDRot->Ki(estado)->getData() : 0;
+            KdRot = (PIDRot->Kd(estado) != nullptr) ? PIDRot->Kd(estado)->getData() : 0;
+        }
         // Velocidade do carrinho
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
         VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
@@ -108,9 +112,10 @@ void PIDService::Run()
             constrain((int16_t)(PIDTrans->output->getData()) - (int16_t)(PIDRot->output->getData()), speedMin, speedMax));
 
         // Altera a velocidade linear do carrinho
-        if (estado == CAR_IN_LINE && !mapState)
+        if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
+            rotK = PIDRot->Krot->getData();
             switch (TrackLen)
             {
                 case LONG_LINE:
@@ -123,38 +128,52 @@ void PIDService::Run()
                     setpointPIDTransTarget = speed->Short_Line->getData();
                     break;
                 default:
-                    setpointPIDTransTarget = PIDTrans->setpointLine->getData();
+                    setpointPIDTransTarget = speed->initialspeed->getData();
                     break;
             }
             
         }
-        else if (estado == CAR_IN_CURVE && !mapState)
+        else if (estado == CAR_IN_CURVE && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
             switch (TrackLen)
             {
                 case LONG_CURVE:
-                    setpointPIDTransTarget = speed->Long_Curve->getData(); 
+                    setpointPIDTransTarget = speed->Long_Curve->getData();
+                    rotK = PIDRot->KrotLongCurve->getData();
                     break;
                 case MEDIUM_CURVE:
                     setpointPIDTransTarget = speed->Medium_Curve->getData();
+                    rotK = PIDRot->KrotMediumCurve->getData();
                     break;
                 case SHORT_CURVE:
                     setpointPIDTransTarget = speed->Short_Curve->getData();
+                    rotK = PIDRot->KrotShortCurve->getData();
                     break;
                 default:
-                    setpointPIDTransTarget = PIDTrans->setpointCurve->getData();
+                    setpointPIDTransTarget = speed->initialspeed->getData();
+                    rotK = PIDRot->Krot->getData();
                     break;
             }
         }
         else if (mapState && estado != CAR_STOPPED)
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpoint Map");
-            setpointPIDTransTarget = PIDTrans->setpointMap->getData();
+            setpointPIDTransTarget = speed->SetPointMap->getData();
+            rotK = PIDRot->Krot->getData();
+        }
+        else if (estado == CAR_TUNING)
+        {
+            setpointPIDTransTarget = speed->Tunning_speed->getData();
+            rotK = PIDRot->Krot->getData();
         }
 
-        if(mapState || !(status->FirstMark->getData())) setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
-
+        if((mapState || !(status->FirstMark->getData())) && !status->TunningMode->getData()) setpointPIDTransTarget = constrain(((1 - ((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0)) * setpointPIDTransTarget), 0, setpointPIDTransTarget);
+        else if(status->CorrectionTrue->getData()) 
+        {
+            setpointPIDTransTarget = constrain(((1 - (PIDTrans->CorrectionFactor->getData()*((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0))) * setpointPIDTransTarget), 0, setpointPIDTransTarget);
+            //if(abs(3500 - robot->getsArray()->getLine()) > 3000) setpointPIDTransTarget = setpointPIDTransTarget / 2.0 ;
+        }  
         // Rampeia a velocidade translacional
         SetpointTransactual = PIDTrans->setpoint->getData();
         if (estado != CAR_STOPPED)
@@ -171,25 +190,18 @@ void PIDService::Run()
             }
         }
 
-// #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
-//         if (iloop > 30)
-//         {
+
+        if (iloop > 100)
+        {
 //             ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
-//             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
+            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
 //             ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
 //             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
 //             ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
 //             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
-//             iloop = 0;
-//         }
-//         iloop++;
-// #else
-//         if (iloop > 5)
-//         {
-//             ESP_LOGI("", "%d,%d,%d,%d\n", VelTrans, xTaskGetTickCount() * portTICK_PERIOD_MS, PIDTrans->setpoint->getData(), 3500 - robot->getsArray()->getLine()); // VelTrans,time(ms),VelTransSetpoint,LineValue\n
-//             iloop = 0;
-//         }
-//         iloop++;
-// #endif
+            iloop = 0;
+        }
+        iloop++;
+
     }
 }

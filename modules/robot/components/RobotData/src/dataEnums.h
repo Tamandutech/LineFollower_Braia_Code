@@ -5,7 +5,8 @@ enum CarState
 {
     CAR_IN_CURVE,
     CAR_IN_LINE,
-    CAR_STOPPED
+    CAR_STOPPED,
+    CAR_TUNING,
 };
 
 enum CarSensor

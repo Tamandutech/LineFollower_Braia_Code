@@ -23,22 +23,23 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
 
     mappingService = MappingService::getInstance();
 
-    latMarks->marks->loadData();
-
-    if (latMarks->marks->getSize() <= 0)
+    if(!status->TunningMode->getData())
     {
-        status->encreading->setData(false);
-        status->robotIsMapping->setData(true);
-    }
-    else
-    {
-        status->robotIsMapping->setData(false);
-        status->encreading->setData(true);
-        numMarks = latMarks->marks->getSize();
-        mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
-        speed->setToCurve();
-    }
+        latMarks->marks->loadData();
 
+        if (latMarks->marks->getSize() <= 0)
+        {
+            status->encreading->setData(false);
+            status->robotIsMapping->setData(true);
+        }
+        else
+        {
+            status->robotIsMapping->setData(false);
+            status->encreading->setData(true);
+            numMarks = latMarks->marks->getSize();
+            mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
+        }
+    }
     status->robotState->setData(CAR_STOPPED);
 
     stateChanged = true;
@@ -87,7 +88,7 @@ void CarStatusService::Run()
     LEDsService::getInstance()->queueCommand(command);
     vTaskDelay(1500 / portTICK_PERIOD_MS);
     // Deletar o mapeamento caso o botão de boot seja mantido pressionado e exista mapeamento na flash
-    if(!gpio_get_level(GPIO_NUM_0) && latMarks->marks->getSize() > 0)
+    if(!gpio_get_level(GPIO_NUM_0) && latMarks->marks->getSize() > 0 && !status->TunningMode->getData() && status->HardDeleteMap->getData())
     {
         DataStorage::getInstance()->delete_data("sLatMarks.marks");
         status->encreading->setData(false);
@@ -99,7 +100,7 @@ void CarStatusService::Run()
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 1500ms");
     vTaskDelay(1500 / portTICK_PERIOD_MS);
 
-    if (status->robotIsMapping->getData())
+    if (status->robotIsMapping->getData() && !status->TunningMode->getData())
     {
         ESP_LOGD(GetName().c_str(), "Mapeamento inexistente, iniciando robô em modo mapemaneto.");
         command.color = LED_COLOR_YELLOW;
@@ -109,17 +110,47 @@ void CarStatusService::Run()
         mappingService->startNewMapping();
     }
 
-    status->robotState->setData(CAR_IN_CURVE);
+    if(!status->TunningMode->getData())
+    {
+        status->robotState->setData(CAR_IN_CURVE);
+        started_in_Tuning = false;
+    }
+    else
+    {
+        started_in_Tuning = true;
+        status->robotState->setData(CAR_TUNING);
+        status->encreading->setData(false);
+        status->robotIsMapping->setData(false);
+        latMarks->marks->clearAllData();
+        numMarks = 0;
+        mediaEncFinal = 0;
+        command.led[0] = LED_POSITION_FRONT;
+        command.led[1] = LED_POSITION_NONE;
+        command.color = LED_COLOR_WHITE;
+        command.effect = LED_EFFECT_SET;
+        command.brightness = 0.5;
+        LEDsService::getInstance()->queueCommand(command);        
+    }
     status->FirstMark->setData(false);
-
     // Loop
     for (;;)
     {
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
-
+        
         status->stateMutex.lock();
         pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
         pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
+        actualCarState = (CarState) status->robotState->getData();
+        if(started_in_Tuning && status->TunningMode->getData() && status->robotState->getData() != CAR_TUNING &&  !status->encreading->getData() && !status->robotIsMapping->getData()) 
+        {
+            status->robotState->setData(CAR_TUNING);
+            command.led[0] = LED_POSITION_FRONT;
+            command.led[1] = LED_POSITION_NONE;
+            command.color = LED_COLOR_WHITE;
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 0.5;
+            LEDsService::getInstance()->queueCommand(command);  
+        }
         if(latMarks->rightMarks->getData() >= 1 && !firstmark)
         {
             firstmark = true;
@@ -134,17 +165,15 @@ void CarStatusService::Run()
             ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo mapeamento.");
             command.color = LED_COLOR_YELLOW;
             LEDsService::getInstance()->queueCommand(command);
-            speed->setToMapping();
         }
 
-        else if (lastState != status->robotState->getData() && !lastMappingState && status->robotState->getData() != CAR_STOPPED)
+        else if (lastState != status->robotState->getData() && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
         {
             lastState = status->robotState->getData();
 
             if (lastState == CAR_IN_LINE)
             {
                 ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inLine.");
-                speed->setToLine();
                 command.led[0] = LED_POSITION_FRONT;
                 command.led[1] = LED_POSITION_NONE;
                 command.color = LED_COLOR_GREEN;
@@ -161,7 +190,6 @@ void CarStatusService::Run()
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 0.5;
                 LEDsService::getInstance()->queueCommand(command);
-                speed->setToCurve();
             }
         }
 
@@ -179,17 +207,23 @@ void CarStatusService::Run()
 //         }
 //         iloop++;
 
-        if(!status->robotIsMapping->getData() && !status->encreading->getData()){
+        if(!status->robotIsMapping->getData() && !status->encreading->getData() && !status->TunningMode->getData() && actualCarState != CAR_STOPPED){
             robot->getStatus()->robotState->setData(CAR_STOPPED);
+            DataManager::getInstance()->saveAllParamDataChanged();
+            command.led[0] = LED_POSITION_FRONT;
+            command.led[1] = LED_POSITION_NONE;
+            command.color = LED_COLOR_BLACK;
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 1;
+            LEDsService::getInstance()->queueCommand(command);
         }
 
-        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && status->encreading->getData() && firstmark)
+        if (!status->robotIsMapping->getData() && actualCarState != CAR_STOPPED && status->encreading->getData() && firstmark && (!status->TunningMode->getData() || !started_in_Tuning))
         {
             if ((mediaEncActual - initialmediaEnc) >= mediaEncFinal)
             {
                 ESP_LOGD(GetName().c_str(), "Parando o robô");
                 status->encreading->setData(false);
-                status->robotState->setData(CAR_IN_CURVE);
                 //vTaskDelay(100 / portTICK_PERIOD_MS);
 
                 // TODO: Encontrar forma bonita de suspender os outros serviços.
