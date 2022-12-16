@@ -56,7 +56,7 @@ void SensorsService::calibAllsensors()
     command.brightness = 1;
     command.color = LED_COLOR_BLUE;
     LEDsService::getInstance()->queueCommand(command);
-    for (uint16_t i = 0; i < 30; i++)
+    for (uint16_t i = 0; i < 50; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p)", this, &sArray);
         sArray.calibrate();
