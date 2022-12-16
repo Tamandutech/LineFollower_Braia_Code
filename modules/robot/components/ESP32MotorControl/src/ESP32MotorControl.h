@@ -76,6 +76,14 @@ private:
 
   bool mMotorAttached[2] = {false, false};
 
+  enum MotorState {
+    MOTOR_STOPPED,
+    MOTOR_FORWARD,
+    MOTOR_REVERSE,
+  };
+
+  MotorState mMotorState[2] = {MOTOR_STOPPED, MOTOR_STOPPED};
+
   // Methods
 
   bool isMotorValid(uint8_t motor);

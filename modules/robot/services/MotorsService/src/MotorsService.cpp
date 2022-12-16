@@ -31,8 +31,8 @@ void MotorsService::Run()
 
     if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
-      motors.motorForward(0);                        // motor 0 ligado para frente
-      motors.motorForward(1);                        // motor 1 ligado para frente
+      // motors.motorForward(0);                        // motor 0 ligado para frente
+      // motors.motorForward(1);                        // motor 1 ligado para frente
       motors.motorSpeed(0, speed->left->getData());  // velocidade do motor 0
       motors.motorSpeed(1, speed->right->getData()); // velocidade do motor 1
     }

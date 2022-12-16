@@ -48,19 +48,19 @@ public:
     DataAbstract<int8_t> *base;
 
     
-    DataAbstract<uint16_t> *initialspeed; // Velocidade inicial em rpm
-    DataAbstract<uint16_t> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
+    DataAbstract<int16_t> *initialspeed; // Velocidade inicial em rpm
+    DataAbstract<int16_t> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
 
     //Setpoints translacionais para os tipos de trecho em rpm
-    DataAbstract<uint16_t> *Long_Line;
-    DataAbstract<uint16_t> *Medium_Line;
-    DataAbstract<uint16_t> *Short_Line;
-    DataAbstract<uint16_t> *Long_Curve;
-    DataAbstract<uint16_t> *Medium_Curve;
-    DataAbstract<uint16_t> *Short_Curve;
+    DataAbstract<int16_t> *Long_Line;
+    DataAbstract<int16_t> *Medium_Line;
+    DataAbstract<int16_t> *Short_Line;
+    DataAbstract<int16_t> *Long_Curve;
+    DataAbstract<int16_t> *Medium_Curve;
+    DataAbstract<int16_t> *Short_Curve;
 
     // Velocidade para o modo Tunning
-    DataAbstract<uint16_t> *Tunning_speed;
+    DataAbstract<int16_t> *Tunning_speed;
     // Velocidade atual da roda direita em PMW
     DataAbstract<int8_t> *right;
     // Velocidade atual da roda esquerda em PMW

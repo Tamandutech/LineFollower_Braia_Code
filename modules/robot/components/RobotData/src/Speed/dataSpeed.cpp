@@ -46,25 +46,25 @@ dataSpeed::dataSpeed(std::string name)
     left = new DataAbstract<int8_t>("left", name, 0);
     dataManager->registerRuntimeData(left);
 
-    initialspeed = new DataAbstract<uint16_t>("initial_speed", name, 1100);
+    initialspeed = new DataAbstract<int16_t>("initial_speed", name, 1100);
     dataManager->registerParamData(initialspeed);
 
     //Setpoints translacionais para os tipos de trechos
-    SetPointMap = new DataAbstract<uint16_t>("Setpoint_Map", name, 600);
+    SetPointMap = new DataAbstract<int16_t>("Setpoint_Map", name, 600);
     dataManager->registerParamData(SetPointMap);
-    Long_Line = new DataAbstract<uint16_t>("Long_line", name, 1000);
+    Long_Line = new DataAbstract<int16_t>("Long_line", name, 1000);
     dataManager->registerParamData(Long_Line);
-    Medium_Line = new DataAbstract<uint16_t>("Medium_line", name, 1000);
+    Medium_Line = new DataAbstract<int16_t>("Medium_line", name, 1000);
     dataManager->registerParamData(Medium_Line);
-    Short_Line = new DataAbstract<uint16_t>("Short_line", name, 1000);
+    Short_Line = new DataAbstract<int16_t>("Short_line", name, 1000);
     dataManager->registerParamData(Short_Line);
 
-    Long_Curve = new DataAbstract<uint16_t>("Long_curve", name, 1000);
+    Long_Curve = new DataAbstract<int16_t>("Long_curve", name, 1000);
     dataManager->registerParamData(Long_Curve);
-    Medium_Curve = new DataAbstract<uint16_t>("Medium_curve", name, 1000);
+    Medium_Curve = new DataAbstract<int16_t>("Medium_curve", name, 1000);
     dataManager->registerParamData(Medium_Curve);
-    Short_Curve = new DataAbstract<uint16_t>("Short_curve", name, 1000);
+    Short_Curve = new DataAbstract<int16_t>("Short_curve", name, 1000);
     dataManager->registerParamData(Short_Curve);
-    Tunning_speed = new DataAbstract<uint16_t>("Tunning_speed", name, 1000);
+    Tunning_speed = new DataAbstract<int16_t>("Tunning_speed", name, 1000);
     dataManager->registerParamData(Tunning_speed);
 }
