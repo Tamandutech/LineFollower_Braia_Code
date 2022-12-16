@@ -45,6 +45,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     stateChanged = true;
     lastMappingState = false;
     lastState = status->robotState->getData();
+    lastTrack = (TrackState) status->TrackStatus->getData();
 
     firstmark = false;
 
@@ -138,6 +139,7 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
         
         status->stateMutex.lock();
+        TrackLen = (TrackState)status->TrackStatus->getData();
         pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
         pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
         actualCarState = (CarState) status->robotState->getData();
@@ -170,7 +172,7 @@ void CarStatusService::Run()
         else if (lastState != status->robotState->getData() && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
         {
             lastState = status->robotState->getData();
-
+            lastTrack =  (TrackState)status->TrackStatus->getData();
             if (lastState == CAR_IN_LINE)
             {
                 ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inLine.");
@@ -178,7 +180,21 @@ void CarStatusService::Run()
                 command.led[1] = LED_POSITION_NONE;
                 command.color = LED_COLOR_GREEN;
                 command.effect = LED_EFFECT_SET;
-                command.brightness = 0.5;
+                switch (TrackLen)
+                {
+                    case SHORT_LINE:
+                        command.brightness = 0.05;
+                        break;
+                    case MEDIUM_LINE:
+                        command.brightness = 0.3;
+                        break;
+                    case LONG_LINE:
+                        command.brightness = 1;
+                        break;
+                    default:
+                        command.brightness = 1;
+                        break;
+                }
                 LEDsService::getInstance()->queueCommand(command);
             }
             else
@@ -188,7 +204,21 @@ void CarStatusService::Run()
                 command.led[1] = LED_POSITION_NONE;
                 command.color = LED_COLOR_RED;
                 command.effect = LED_EFFECT_SET;
-                command.brightness = 0.5;
+                switch (TrackLen)
+                {
+                    case SHORT_CURVE:
+                        command.brightness = 0.05;
+                        break;
+                    case MEDIUM_CURVE:
+                        command.brightness = 0.3;
+                        break;
+                    case LONG_CURVE:
+                        command.brightness = 1;
+                        break;
+                    default:
+                        command.brightness = 1;
+                        break;
+                }
                 LEDsService::getInstance()->queueCommand(command);
             }
         }

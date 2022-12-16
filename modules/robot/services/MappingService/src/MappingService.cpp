@@ -30,8 +30,8 @@ esp_err_t MappingService::startNewMapping(uint16_t leftMarksToStop, int32_t medi
     tempPreviousMark.MapEncLeft = 0;
     tempPreviousMark.MapEncRight = 0;
     tempPreviousMark.MapEncMedia = 0;
-    tempPreviousMark.MapStatus = CAR_IN_CURVE;
-    tempPreviousMark.MapTrackStatus = SHORT_CURVE;
+    tempPreviousMark.MapStatus = CAR_IN_LINE;
+    tempPreviousMark.MapTrackStatus = LONG_LINE;
     tempPreviousMark.MapTime = 0;
 
 
