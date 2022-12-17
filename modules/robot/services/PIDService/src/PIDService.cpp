@@ -12,6 +12,11 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     PIDTrans->setpoint->setData(0);
     setpointPIDTransTarget = 0;
     rotK = PIDRot->Krot->getData();
+    KpVel = PIDTrans->Kp(CAR_TUNING)->getData();
+    KdVel = PIDTrans->Kd(CAR_TUNING)->getData();
+    KpRot = PIDRot->Kp(CAR_TUNING)->getData();
+    KdRot = PIDRot->Kd(CAR_TUNING)->getData();
+
 };
 
 void PIDService::Run()
@@ -192,24 +197,36 @@ void PIDService::Run()
                 PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, SetpointTransactual));
             }
         }
-
+        
         // Processo de ajuste dos parametros PID
         // Derivada direcional (Taxa de variacao do sinais)
-        float L_trans = (VelTrans - lastVelTrans)/(PidTrans - lastPIDTrans);
-        float L_rot = (VelRot - lastVelRot)/(PidRot - lastPIDRot); 
+        float L_trans = 0.0;
+        float L_rot = 0.0;
+        if ((PidTrans - lastPIDTrans)!= 0)
+        {
+            L_trans = (VelTrans - lastVelTrans)/(PidTrans - lastPIDTrans);
+        }
+        if ((PidRot - lastPIDRot)!= 0)
+        {
+            L_rot = (VelRot - lastVelRot)/(PidRot - lastPIDRot);
+        }
 
-        KpVel = KpVel - alpha*(erroVelTrans*erroVelTrans)*L_trans;
-        KdVel = KdVel - alpha*(lastVelTrans - VelTrans)*L_trans*Dtrans;
-    
-        KpRot = KpRot - alpha*(erroVelRot*erroVelRot)*L_rot;
-        KdRot = KdRot - alpha*(lastVelRot - VelRot)*L_rot*Drot;
+        if (status->TunningMode->getData() && estado!=CAR_STOPPED)
+        {   
 
-        // Alterar os parametros do controle PID rot e trans
-        PIDTrans->Kp(estado)->setData(KpVel);
-        PIDTrans->Kd(estado)->setData(KdVel);
-        PIDRot->Kp(estado)->setData(KpRot);
-        PIDRot->Kd(estado)->setData(KdRot);
+            KpVel = KpVel + alpha*(erroVelTrans*erroVelTrans)*L_trans;
+            KdVel = KdVel + alpha*(lastVelTrans - VelTrans)*L_trans*Dtrans;
+        
+            KpRot = KpRot + alpha*(erroVelRot*erroVelRot)*L_rot;
+            KdRot = KdRot + alpha*(lastVelRot - VelRot)*L_rot*Drot;
 
+            // Alterar os parametros do controle PID rot e trans
+            PIDTrans->Kp(estado)->setData(KpVel);
+            PIDTrans->Kd(estado)->setData(KdVel);
+            PIDRot->Kp(estado)->setData(KpRot);
+            PIDRot->Kd(estado)->setData(KdRot);
+
+        }
         // Armazenamento dos parametros de controle atuais 
         lastVelTrans = VelTrans;
         lastVelRot = VelRot;
@@ -221,7 +238,7 @@ void PIDService::Run()
 //         {
         if (iloop > 100)
         {
-//             ESP_LOGD(GetName().c_str(), "CarstatusOut: %d | bool : %d", estado, mapState);
+            ESP_LOGD(GetName().c_str(), "L_trans: %.2f | L_rot : %.2f", L_trans , L_rot);
             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
 //             ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
 //             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
