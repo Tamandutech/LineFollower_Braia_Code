@@ -84,7 +84,7 @@ void PIDService::Run()
         Dtrans = KdVel * (lastVelTrans - VelTrans);
         PidTrans = Ptrans + Itrans + Dtrans;
         errTrans_ant = erroVelTrans;
-        lastVelTrans = VelTrans;
+        //lastVelTrans = VelTrans;
 
         Prot = KpRot * erroVelRot;
         Irot += KiRot * erroVelRot;
@@ -93,12 +93,15 @@ void PIDService::Run()
         Drot = KdRot * (lastVelRot - VelRot);
         PidRot = Prot + Irot + Drot;
         errRot_ant = erroVelRot;
-        lastVelRot = VelRot;
-        
+        //lastVelRot = VelRot;
+
 
         // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
         PIDTrans->output->setData(constrain((PidTrans) + speedBase, speedMin, speedMax));
         PIDRot->output->setData(PidRot);
+        
+        lastPIDTrans = PidTrans;
+        lastPIDRot = PidRot;
 
         // Calculo de velocidade do motor
         speed->right->setData(
@@ -170,6 +173,29 @@ void PIDService::Run()
                 PIDTrans->setpoint->setData(constrain(newSetpoint, setpointPIDTransTarget, SetpointTransactual));
             }
         }
+
+        // Processo de ajuste dos parametros PID
+        // Derivada direcional (Taxa de variacao do sinais)
+        float L_trans = (VelTrans - lastVelTrans)/(PidTrans - lastPIDTrans);
+        float L_rot = (VelRot - lastVelRot)/(PidRot - lastPIDRot); 
+
+        KpVel = KpVel - alpha*(erroVelTrans*erroVelTrans)*L_trans;
+        KdVel = KdVel - alpha*(lastVelTrans - VelTrans)*L_trans*Dtrans;
+    
+        KpRot = KpRot - alpha*(erroVelRot*erroVelRot)*L_rot;
+        KdRot = KdRot - alpha*(lastVelRot - VelRot)*L_rot*Drot;
+
+        // Alterar os parametros do controle PID rot e trans
+        PIDTrans->Kp(estado)->setData(KpVel);
+        PIDTrans->Kd(estado)->setData(KdVel);
+        PIDRot->Kp(estado)->setData(KpRot);
+        PIDRot->Kd(estado)->setData(KdRot);
+
+        // Armazenamento dos parametros de controle atuais 
+        lastVelTrans = VelTrans;
+        lastVelRot = VelRot;
+        lastPIDTrans = PidTrans;
+        lastPIDRot = PidRot;
 
 // #if LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG and !defined GRAPH_DATA
 //         if (iloop > 30)
