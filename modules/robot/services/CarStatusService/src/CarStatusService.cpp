@@ -169,7 +169,7 @@ void CarStatusService::Run()
             LEDsService::getInstance()->queueCommand(command);
         }
 
-        else if (lastState != status->robotState->getData() && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
+        else if ((lastState != status->robotState->getData() || lastTrack != (TrackState)status->TrackStatus->getData()) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
         {
             lastState = status->robotState->getData();
             lastTrack =  (TrackState)status->TrackStatus->getData();
