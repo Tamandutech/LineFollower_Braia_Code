@@ -55,8 +55,13 @@ private:
 
     float VelRot = 0;
     float VelTrans = 0;
+
+    // Tunning PID
     float lastVelRot = 0;
     float lastVelTrans = 0;
+    float lastPIDTrans = 0.0;
+    float lastPIDRot = 0.0;
+    float alpha = 0.45;   // Taxa de aprendizagem de 0 ate 1
 
     float erroVelTrans = 0;
     float erroVelRot = 0;
