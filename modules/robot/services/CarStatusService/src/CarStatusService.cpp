@@ -108,18 +108,27 @@ void CarStatusService::Run()
         LEDsService::getInstance()->queueCommand(command);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         // Começa mapeamento
+        status->RealTrackStatus->setData(UNDEFINED);
+        status->TrackStatus->setData(UNDEFINED);
         mappingService->startNewMapping();
     }
 
     if(!status->TunningMode->getData())
     {
-        status->robotState->setData(CAR_IN_CURVE);
+        status->robotState->setData(CAR_IN_LINE);
+        if(!status->robotIsMapping->getData())
+        {
+            status->TrackStatus->setData(SHORT_LINE);
+            status->RealTrackStatus->setData(SHORT_LINE);
+        }
         started_in_Tuning = false;
     }
     else
     {
         started_in_Tuning = true;
         status->robotState->setData(CAR_TUNING);
+        status->TrackStatus->setData(TUNING);
+        status->RealTrackStatus->setData(TUNING);
         status->encreading->setData(false);
         status->robotIsMapping->setData(false);
         latMarks->marks->clearAllData();
@@ -146,6 +155,8 @@ void CarStatusService::Run()
         if(started_in_Tuning && status->TunningMode->getData() && status->robotState->getData() != CAR_TUNING &&  !status->encreading->getData() && !status->robotIsMapping->getData()) 
         {
             status->robotState->setData(CAR_TUNING);
+            status->TrackStatus->setData(TUNING);
+            status->RealTrackStatus->setData(TUNING);
             command.led[0] = LED_POSITION_FRONT;
             command.led[1] = LED_POSITION_NONE;
             command.color = LED_COLOR_WHITE;
@@ -169,13 +180,14 @@ void CarStatusService::Run()
             LEDsService::getInstance()->queueCommand(command);
         }
 
-        else if ((lastState != status->robotState->getData() || lastTrack != (TrackState)status->TrackStatus->getData()) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
+        else if ((lastState != status->robotState->getData() || lastTrack != (TrackState)status->TrackStatus->getData() || lastTransition != status->Transition->getData()) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
         {
             lastState = status->robotState->getData();
             lastTrack =  (TrackState)status->TrackStatus->getData();
-            if (lastState == CAR_IN_LINE)
+            lastTransition = status->Transition->getData();
+            if (lastState == CAR_IN_LINE && !lastTransition)
             {
-                ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inLine.");
+                ESP_LOGD(GetName().c_str(), "Alterando os leds para modo inLine.");
                 command.led[0] = LED_POSITION_FRONT;
                 command.led[1] = LED_POSITION_NONE;
                 command.color = LED_COLOR_GREEN;
@@ -191,15 +203,20 @@ void CarStatusService::Run()
                     case LONG_LINE:
                         command.brightness = 1;
                         break;
+                    case SPECIAL_TRACK:
+                        command.color = LED_COLOR_PURPLE;
+                        command.brightness = 0.05;
+                        break;
                     default:
+                        command.color = LED_COLOR_WHITE;
                         command.brightness = 1;
                         break;
                 }
                 LEDsService::getInstance()->queueCommand(command);
             }
-            else
+            else if(lastState == CAR_IN_CURVE && !lastTransition)
             {
-                ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo inCurve.");
+                ESP_LOGD(GetName().c_str(), "Alterando os leds para modo inCurve.");
                 command.led[0] = LED_POSITION_FRONT;
                 command.led[1] = LED_POSITION_NONE;
                 command.color = LED_COLOR_RED;
@@ -215,10 +232,28 @@ void CarStatusService::Run()
                     case LONG_CURVE:
                         command.brightness = 1;
                         break;
+                    case ZIGZAG:
+                        command.color = LED_COLOR_PURPLE;
+                        command.brightness = 1;
+                        break;
+                    case SPECIAL_TRACK:
+                        command.color = LED_COLOR_PURPLE;
+                        command.brightness = 0.05;
+                        break;
                     default:
+                        command.color = LED_COLOR_WHITE;
                         command.brightness = 1;
                         break;
                 }
+                LEDsService::getInstance()->queueCommand(command);
+            }
+            else if(lastTransition)
+            {
+                command.led[0] = LED_POSITION_FRONT;
+                command.led[1] = LED_POSITION_NONE;
+                command.color = LED_COLOR_ORANGE;
+                command.effect = LED_EFFECT_SET;
+                command.brightness = 0.5;
                 LEDsService::getInstance()->queueCommand(command);
             }
         }
@@ -239,6 +274,7 @@ void CarStatusService::Run()
 
         if(!status->robotIsMapping->getData() && !status->encreading->getData() && !status->TunningMode->getData() && actualCarState != CAR_STOPPED){
             robot->getStatus()->robotState->setData(CAR_STOPPED);
+            vTaskDelay(0);
             DataManager::getInstance()->saveAllParamDataChanged();
             command.led[0] = LED_POSITION_FRONT;
             command.led[1] = LED_POSITION_NONE;
@@ -283,16 +319,20 @@ void CarStatusService::Run()
                     {
                         CarState trackType = (CarState)latMarks->marks->getData(mark+1).MapStatus;
                         TrackState trackLen = (TrackState)latMarks->marks->getData(mark+1).MapTrackStatus;
+                        status->RealTrackStatus->setData(trackLen);
+                        bool transition = false;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
                         if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
                         {
                             if((Manualmedia + pulsesAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + pulsesAfterCurve)) 
                             {
+                                transition = true;
                                 trackType = CAR_IN_CURVE;
                                 trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
                             }
                             else if((Manualmedia + pulsesAfterCurve) >= ManualmediaNxt) 
                             {
+                                transition = true;
                                 trackType = CAR_IN_CURVE;
                                 trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
                             }
@@ -303,17 +343,20 @@ void CarStatusService::Run()
                             {
                                 if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) 
                                 {
+                                    transition = true;
                                     trackType = CAR_IN_CURVE;
                                     trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
                                 else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) 
                                 {
+                                    transition = true;
                                     trackType = CAR_IN_CURVE;
                                     trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
                             }
                         }
                         // Atualiza estado do robô
+                        status->Transition->setData(transition);
                         status->robotState->setData(trackType);
                         status->TrackStatus->setData(trackLen);
                         break;

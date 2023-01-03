@@ -58,9 +58,14 @@ public:
     DataAbstract<int16_t> *Long_Curve;
     DataAbstract<int16_t> *Medium_Curve;
     DataAbstract<int16_t> *Short_Curve;
+    DataAbstract<int16_t> *ZIGZAG;
+    DataAbstract<int16_t> *Special_Track;
 
     // Velocidade para o modo Tunning
     DataAbstract<int16_t> *Tunning_speed;
+    // Velocidade padrão do robô
+    DataAbstract<int16_t> *Default_speed;
+
     // Velocidade atual da roda direita em PMW
     DataAbstract<float> *right;
     // Velocidade atual da roda esquerda em PMW

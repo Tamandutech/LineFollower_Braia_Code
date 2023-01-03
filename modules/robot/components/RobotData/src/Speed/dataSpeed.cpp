@@ -65,6 +65,12 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(Medium_Curve);
     Short_Curve = new DataAbstract<int16_t>("Short_curve", name, 1000);
     dataManager->registerParamData(Short_Curve);
+    ZIGZAG = new DataAbstract<int16_t>("ZigZag", name, 1000);
+    dataManager->registerParamData(ZIGZAG);
+    Special_Track = new DataAbstract<int16_t>("SpecialTrack", name, 1000);
+    dataManager->registerParamData(Special_Track);
+    Default_speed = new DataAbstract<int16_t>("DefaultSpeed", name, 1000);
+    dataManager->registerParamData(Default_speed);
     Tunning_speed = new DataAbstract<int16_t>("Tunning_speed", name, 1000);
     dataManager->registerParamData(Tunning_speed);
 }

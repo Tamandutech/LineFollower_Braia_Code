@@ -44,6 +44,7 @@ private:
     int numMarks = 0; // Número total de marcações laterais na pista
 
     bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
+    bool lastTransition = false;
 
     TrackState lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
     uint8_t lastState; // armazena último estado do mapeamento

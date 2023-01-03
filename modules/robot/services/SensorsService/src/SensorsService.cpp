@@ -112,11 +112,8 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     uint16_t sArraychannels[sArray->getSensorCount()];
     uint16_t SLatchannels[SLat->getSensorCount()];
 
-#ifdef LINE_COLOR_BLACK
-    robot->getsArray()->setLine(sArray->readLineBlack(sArraychannels));
-#else
-    robot->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
-#endif
+    if(status->LineColorBlack->getData()) robot->getsArray()->setLine(sArray->readLineBlack(sArraychannels));
+    else robot->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
     // cálculo dos valores do sensor array
     SLat->readCalibrated(SLatchannels);                                                                 // leitura dos sensores laterais
     std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array

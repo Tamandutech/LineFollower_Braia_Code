@@ -38,7 +38,7 @@
 //////// Defines
 
 
-#define PWM_FREQ 25000 // PWM Frequency
+#define PWM_FREQ 2000 // PWM Frequency last 25000Hz
 
 //////// Class
 

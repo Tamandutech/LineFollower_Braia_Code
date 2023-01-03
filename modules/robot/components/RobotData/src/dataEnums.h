@@ -38,7 +38,12 @@ enum TrackState
     SHORT_LINE,
     LONG_CURVE,
     MEDIUM_CURVE,
-    SHORT_CURVE        
+    SHORT_CURVE,
+    ZIGZAG,
+    SPECIAL_TRACK,
+    DEFAULT_TRACK,
+    UNDEFINED,     
+    TUNING,
 };
 
 struct PacketData

@@ -44,6 +44,7 @@ public:
     dataSensor *getsArray();
     dataPID *getPIDVel();
     dataPID *getPIDRot();
+    dataPID *getPIDIR();
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
 
@@ -60,6 +61,7 @@ private:
     dataSpeed *speed;
     dataPID *PIDVel;
     dataPID *PIDRot;
+    dataPID *PIDIR;
     dataSensor *sLat;
     dataSLatMarks *sLatMarks;
     dataSensor *sArray;
