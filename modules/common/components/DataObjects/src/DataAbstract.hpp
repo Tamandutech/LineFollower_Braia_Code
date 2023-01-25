@@ -31,7 +31,7 @@ public:
 
     T getData();
     void setData(T data, uint32_t last_change  = 0);
-    void setData(std::string data, uint32_t last_change);
+    void setData(std::string data, uint32_t last_change = 0);
 
     void saveData();
     void loadData();
