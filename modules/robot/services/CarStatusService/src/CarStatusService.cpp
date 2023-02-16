@@ -110,6 +110,7 @@ void CarStatusService::Run()
     }
 
     status->robotState->setData(CAR_IN_CURVE);
+    status->FirstMark->setData(false);
 
     // Loop
     for (;;)
@@ -122,6 +123,7 @@ void CarStatusService::Run()
         if(latMarks->rightMarks->getData() >= 1 && !firstmark)
         {
             firstmark = true;
+            status->FirstMark->setData(true);
             initialmediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
         }
 

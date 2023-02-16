@@ -27,8 +27,14 @@ void PIDService::Run()
         speedBase = speed->base->getData();
         speedMin = speed->min->getData();
         speedMax = speed->max->getData();
-        
-        accel = speed->accelration->getData();
+        if(!status->FirstMark->getData())
+        {
+            accel = 1500;
+        }
+        else
+        {
+            accel = speed->accelration->getData();
+        }
         desaccel = speed->desaccelration->getData();
         rotK = PIDRot->Krot->getData();
 
@@ -65,7 +71,9 @@ void PIDService::Run()
         if (iloop > 100)
         {
             ESP_LOGD(GetName().c_str(), "PIDTrans->setpoint: %d", PIDTrans->setpoint->getData());
+            iloop = 0;
         }
+        iloop++;
         erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot;
 
         // calculando Pids rotacional e translacional
@@ -145,7 +153,7 @@ void PIDService::Run()
             setpointPIDTransTarget = PIDTrans->setpointMap->getData();
         }
 
-        if(mapState) setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
+        if(mapState || !(status->FirstMark->getData())) setpointPIDTransTarget = constrain(((1 - (abs(PIDRot->setpoint->getData() * rotK) / 3500)) * setpointPIDTransTarget), 100, setpointPIDTransTarget);
 
         // Rampeia a velocidade translacional
         SetpointTransactual = PIDTrans->setpoint->getData();
