@@ -34,7 +34,8 @@ void PIDService::Run()
         RealTracklen = (TrackState)status->RealTrackStatus->getData();
         mapState = status->robotIsMapping->getData();
 
-        alpha = status->alpha->getData()/1.0E9;
+        alphaVel = status->alphaVel->getData()/1.0E9;
+        alphaRot = status->alphaRot->getData()/1.0E9;
         alphaIR = status->alphaIR->getData()/1.0E9;
 
         speedBase = speed->base->getData();
@@ -244,11 +245,16 @@ void PIDService::Run()
         if (estado!=CAR_STOPPED && status->GD_Optimization->getData())
         {   
 
-            KpVel = KpVel + alpha*(erroVelTrans*erroVelTrans)*L_trans;
-            KdVel = KdVel + alpha*(lastVelTrans - VelTrans)*L_trans*erroVelTrans;
+            KpVel = KpVel + alphaVel*(erroVelTrans*erroVelTrans)*L_trans;
+            KdVel = KdVel + alphaVel*(lastVelTrans - VelTrans)*L_trans*erroVelTrans;
+            if(PIDTrans->UseKiVel->getData()) 
+            {
+                KiVel = KiVel + alphaVel*(Itrans / KiVel)*L_trans*erroVelTrans;
+                PIDTrans->Ki(RealTracklen)->setData(KiVel);
+            }
         
-            KpRot = KpRot + alpha*(erroVelRot*erroVelRot)*L_rot;
-            KdRot = KdRot + alpha*(lastVelRot - VelRot)*L_rot*erroVelRot;
+            KpRot = KpRot + alphaRot*(erroVelRot*erroVelRot)*L_rot;
+            KdRot = KdRot + alphaRot*(lastVelRot - VelRot)*L_rot*erroVelRot;
 
             // Alterar os parametros do controle PID rot e trans
             PIDTrans->Kp(RealTracklen)->setData(KpVel);

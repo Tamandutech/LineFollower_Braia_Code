@@ -54,8 +54,11 @@ public:
     DataAbstract<bool> *FirstMark; // Verifica se o robô já passou pela primeira marcação lateral
     DataAbstract<bool> *Transition; // Verifica se o robô está numa transição de curva para reta e vice-versa
 
-    DataAbstract<float> *alpha; // taxa de aprendizagem do gradiente-descendente para o PID Vel e Rot
+    DataAbstract<float> *alphaVel; // taxa de aprendizagem do gradiente-descendente para o PID Vel
+    DataAbstract<float> *alphaRot; // taxa de aprendizagem do gradiente-descendente para o PID Rot
     DataAbstract<float> *alphaIR; // taxa de aprendizagem do gradiente-descendente para o PIDIR
+
+    DataAbstract<bool> *TuningMapped; // Ativar tuningMode com o mapeamento da pista
 
     static std::mutex stateMutex;
     

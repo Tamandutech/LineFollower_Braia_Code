@@ -288,22 +288,35 @@ void CarStatusService::Run()
         {
             if ((mediaEncActual - initialmediaEnc) >= mediaEncFinal)
             {
-                ESP_LOGD(GetName().c_str(), "Parando o robô");
-                status->encreading->setData(false);
-                //vTaskDelay(100 / portTICK_PERIOD_MS);
+                if(status->TuningMapped->getData())
+                {
+                    status->FirstMark->setData(false);
+                    firstmark = false;
+                    initialmediaEnc = 0;
+                    status->robotState->setData(CAR_IN_LINE);
+                    status->TrackStatus->setData(SHORT_LINE);
+                    status->RealTrackStatus->setData(SHORT_LINE);
+                    latMarks->rightMarks->setData(0);
+                }
+                else
+                {
+                    ESP_LOGD(GetName().c_str(), "Parando o robô");
+                    status->encreading->setData(false);
+                    //vTaskDelay(100 / portTICK_PERIOD_MS);
 
-                // TODO: Encontrar forma bonita de suspender os outros serviços.
-                // vTaskSuspend(xTaskPID);
-                // vTaskSuspend(xTaskSensors);
+                    // TODO: Encontrar forma bonita de suspender os outros serviços.
+                    // vTaskSuspend(xTaskPID);
+                    // vTaskSuspend(xTaskSensors);
 
-                robot->getStatus()->robotState->setData(CAR_STOPPED);
-                DataManager::getInstance()->saveAllParamDataChanged();
-                command.led[0] = LED_POSITION_FRONT;
-                command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_BLACK;
-                command.effect = LED_EFFECT_SET;
-                command.brightness = 1;
-                LEDsService::getInstance()->queueCommand(command);
+                    robot->getStatus()->robotState->setData(CAR_STOPPED);
+                    DataManager::getInstance()->saveAllParamDataChanged();
+                    command.led[0] = LED_POSITION_FRONT;
+                    command.led[1] = LED_POSITION_NONE;
+                    command.color = LED_COLOR_BLACK;
+                    command.effect = LED_EFFECT_SET;
+                    command.brightness = 1;
+                    LEDsService::getInstance()->queueCommand(command);
+                }
             }
             if ((mediaEncActual - initialmediaEnc) < mediaEncFinal)
             {

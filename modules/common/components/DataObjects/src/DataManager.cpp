@@ -70,6 +70,7 @@ void DataManager::saveAllData(std::vector<IDataAbstract *> *dataList, std::mutex
     for (auto data : *dataList)
     {
         data->saveData();
+        vTaskDelay(0);
     }
 }
 

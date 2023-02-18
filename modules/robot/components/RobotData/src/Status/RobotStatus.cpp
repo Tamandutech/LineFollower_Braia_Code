@@ -28,9 +28,17 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     dataManager->registerParamData(GD_Optimization);
     GD_OptimizationIR = new DataAbstract<bool>("GD_OptimizationIR", name, false);
     dataManager->registerParamData(GD_OptimizationIR);
-    alpha = new DataAbstract<float>("alpha", name, 0.02);
-    dataManager->registerParamData(alpha);
+    alphaRot = new DataAbstract<float>("alphaRot", name, 0.02);
+    dataManager->registerParamData(alphaRot);
+    alphaVel = new DataAbstract<float>("alphaVel", name, 0.02);
+    dataManager->registerParamData(alphaVel);
     alphaIR = new DataAbstract<float>("alphaIR", name, 0.2);
     dataManager->registerParamData(alphaIR);
+    TuningMapped = new DataAbstract<bool>("TuningMapped", name, false);
+    dataManager->registerParamData(TuningMapped);
+
+
+
+
 
 }

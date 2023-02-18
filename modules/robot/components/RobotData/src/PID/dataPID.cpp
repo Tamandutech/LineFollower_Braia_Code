@@ -41,7 +41,7 @@ dataPID::dataPID(std::string name)
         dataManager->registerParamData(Kd_IRline);
         Kp_IRcurve = new DataAbstract<float>("Kp_IRcurve", name);
         dataManager->registerParamData(Kp_IRcurve);
-        Kd_IRcurve = new DataAbstract<float>("Kd_curve", name);
+        Kd_IRcurve = new DataAbstract<float>("Kd_IRcurve", name);
         dataManager->registerParamData(Kd_IRcurve);
         Kp_IRShortCurve = new DataAbstract<float>("Kp_IRShortCurve", name, 4.5);
         dataManager->registerParamData(Kp_IRShortCurve);
@@ -65,6 +65,8 @@ dataPID::dataPID(std::string name)
         dataManager->registerParamData(CorrectionFactorLongCurve);
         CorrectionFactorZigZag = new DataAbstract<float>("FatorCorrecaoZigZag", name);
         dataManager->registerParamData(CorrectionFactorZigZag);
+        UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
+        dataManager->registerParamData(UseKiVel);
     }
     
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");

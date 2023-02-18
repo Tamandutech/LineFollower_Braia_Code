@@ -44,6 +44,7 @@ public:
     DataAbstract<float> *CorrectionFactorLongCurve;
     DataAbstract<float> *CorrectionFactorZigZag;
 
+    DataAbstract<bool> *UseKiVel;
     DataAbstract<bool> *UseKdIR;
     // Constantes do PID definidas pelo trecho da pista
     DataAbstract<float> *Kp(TrackState state);

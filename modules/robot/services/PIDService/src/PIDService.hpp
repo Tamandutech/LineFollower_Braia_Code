@@ -68,7 +68,8 @@ private:
     float lastPIDTrans = 0.0;
     float lastPIDRot = 0.0;
     float lastPIDIR = 0.0;
-    double alpha = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
+    double alphaVel = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
+    double alphaRot = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
     double alphaIR = 0.0000000002;
 
     float erroVelTrans = 0;
