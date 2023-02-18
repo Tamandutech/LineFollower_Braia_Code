@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         platformio_env: [ESP32-BraiaV3]
-        os: [ubuntu-latest]
+        os: [windows-latest]
     
     runs-on: ${{ matrix.os }}
 
