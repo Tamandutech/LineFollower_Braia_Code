@@ -88,6 +88,9 @@ void PIDService::Run()
         VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
 
         IR = robot->getsArray()->getLine(); // posição do robô
+        speed->VelTrans->setData(VelTrans, xTaskGetTickCount()*portTICK_PERIOD_MS);
+        speed->VelRot->setData(VelRot, xTaskGetTickCount()*portTICK_PERIOD_MS);
+
         // Erros atuais
         erroIR = 3500 - IR;
         erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;

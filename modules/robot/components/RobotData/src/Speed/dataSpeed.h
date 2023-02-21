@@ -71,6 +71,10 @@ public:
     // Velocidade atual da roda esquerda em PMW
     DataAbstract<float> *left;
 
+    // componentes da Velocidade total do robô 
+    DataAbstract<float> *VelTrans;
+    DataAbstract<float> *VelRot;
+
 private:
     std::string name;
     const char *tag = "RobotData";

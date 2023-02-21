@@ -73,4 +73,11 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(Default_speed);
     Tunning_speed = new DataAbstract<int16_t>("Tunning_speed", name, 1000);
     dataManager->registerParamData(Tunning_speed);
+
+    // Componentes da velocidade total
+    VelTrans = new DataAbstract<float>("VelTrans", name, 0);
+    dataManager->registerRuntimeData(VelTrans);
+
+    VelRot = new DataAbstract<float>("VelRot", name, 0);
+    dataManager->registerRuntimeData(VelRot);
 }

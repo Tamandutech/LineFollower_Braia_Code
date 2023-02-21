@@ -6,6 +6,7 @@
 
 QueueHandle_t BLEServerService::queuePacketsReceived;
 
+
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */
 class ServerCallbacks : public NimBLEServerCallbacks
@@ -141,8 +142,46 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks
 static DescriptorCallbacks dscCallbacks;
 static CharacteristicCallbacks chrCallbacks;
 
+// Função executada pela task de stream
+void RunStream(void *pvParameters)
+{
+    auto bleservice = BLEServerService::getInstance();
+    auto datamanager = DataManager::getInstance();
+    const char *Tag = pcTaskGetName(bleservice->xTaskStream);
+    //esp_log_level_set(Tag,ESP_LOG_DEBUG);
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    const int TaskDelay = 20;
+
+    for(;;)
+    {
+        vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
+        //ESP_LOGD(Tag,"Bluetooth Conectado: %d, Itens para stream: %d", bleservice->deviceConnected, datamanager->NumItemsReadyStream());
+        if(datamanager->NumItemsReadyStream() > 0 && bleservice->deviceConnected)
+        {
+            cJSON* StreamData = datamanager->getStreamData();
+            char *json_Data = cJSON_PrintUnformatted(StreamData);
+
+            ESP_LOGD(Tag, "Enviando pacote de dados, tamanho: %d", strlen(json_Data));
+            // Enviar pacote de dados para o cliente via BLE GATT chunks do tamanho de 200 bytes
+            size_t msgSize = strlen(json_Data) + 1; // +1 no final para pegar /0
+            for (size_t i = 0; msgSize > 0; i += 200, msgSize -= bleservice->pStreamTxCharacteristic->getValue().size())
+            {
+                bleservice->pStreamTxCharacteristic->setValue((uint8_t *)&json_Data[i], msgSize < 200 ? msgSize : 200);
+                bleservice->pStreamTxCharacteristic->notify();
+                ESP_LOGD(Tag, "Pacote enviado, tamanho: %d", bleservice->pStreamTxCharacteristic->getValue().size());
+                ESP_LOGD(Tag, "Pacote enviado: %s", bleservice->pStreamTxCharacteristic->getValue().c_str());
+            }
+
+            cJSON_Delete(StreamData);
+            cJSON_free(json_Data);
+        }
+    }
+
+}
+
 BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
+
     ESP_LOGD(this->GetName().c_str(), "Iniciando fila");
 
     queuePacketsReceived = xQueueCreate(10, sizeof(ble_gatt_uart_packet_t));
@@ -167,13 +206,24 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
 
     pService->start();
 
+    BLEService *pStreamService = pServer->createService(SERVICE_STREAM_UUID);
+    pStreamTxCharacteristic = pStreamService->createCharacteristic(CHARACTERISTIC_STREAM_TX,
+                                                                    NIMBLE_PROPERTY::NOTIFY);
+
+    pStreamService->start();
+
     pServer->getAdvertising()->start();
+
 
     ESP_LOGD(this->GetName().c_str(), "Começou a se anunciar...");
 }
 
 void BLEServerService::Run()
 {
+    
+    ESP_LOGD(this->GetName().c_str(), "Criando Task para Stream de dados...");
+    xTaskCreate(RunStream, "TaskStream", 8192, NULL, 18, &xTaskStream);
+
     ESP_LOGD(this->GetName().c_str(), "Iniciando Loop...");
 
     for (;;)
