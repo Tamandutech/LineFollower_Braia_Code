@@ -253,8 +253,9 @@ cJSON* DataManager::getStreamData()
             data->setStreamTime(time + data->getStreamInterval());
         }
     }
-    std::string debugStr = cJSON_Print(StreamObjects);
-    ESP_LOGD(name.c_str(),"Json gerado para o stream: %s",debugStr.c_str());
+    char *debugStr = cJSON_Print(StreamObjects);
+    ESP_LOGD(name.c_str(),"Json gerado para o stream: %s",debugStr);
+    cJSON_free(debugStr);
     return StreamObjects;
 }
 

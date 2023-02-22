@@ -48,7 +48,7 @@ public:
 
     /// @brief Definir dado estruturado de mapeamento
     /// @param mapData Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
-    void setData(std::string data, uint32_t last_change);
+    void setData(std::string data);
 
     /// @brief Obter o primeiro dado da lista em formato string
     /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"

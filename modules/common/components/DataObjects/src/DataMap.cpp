@@ -130,7 +130,7 @@ void DataMap::setData(uint8_t posicao, MapData data)
     itList->MapTrackStatus = data.MapTrackStatus;
 }
 
-void DataMap::setData(std::string data, uint32_t last_change)
+void DataMap::setData(std::string data)
 {
     if (data.at(0) == 'n')
         return newData(data);

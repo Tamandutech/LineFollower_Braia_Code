@@ -30,8 +30,8 @@ public:
     virtual ~DataAbstract();
 
     T getData();
-    void setData(T data, uint32_t last_change  = 0);
-    void setData(std::string data, uint32_t last_change = 0);
+    void setData(T data);
+    void setData(std::string data);
 
     void saveData();
     void loadData();

@@ -87,13 +87,20 @@ void PIDService::Run()
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
         VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
 
+        PIDTrans->input->setData(VelTrans);
+        PIDRot->input->setData(VelRot);
+
         IR = robot->getsArray()->getLine(); // posição do robô
-        speed->VelTrans->setData(VelTrans, xTaskGetTickCount()*portTICK_PERIOD_MS);
-        speed->VelRot->setData(VelRot, xTaskGetTickCount()*portTICK_PERIOD_MS);
+        PIDIR->input->setData(IR);
+        speed->VelTrans->setData(VelTrans);
+        speed->VelRot->setData(VelRot);
 
         // Erros atuais
         erroIR = 3500 - IR;
+        PIDIR->setpoint->setData(3500);
+        PIDIR->erro->setData(erroIR);
         erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
+        PIDTrans->erro->setData(erroVelTrans);
 
         // Cálculo do PID para posicionar o robô  na linha
         P_IR = KpIR * erroIR;
@@ -104,6 +111,7 @@ void PIDService::Run()
 
         PIDRot->setpoint->setData(PIDIR->output->getData()); // cálculo do setpoint rotacional
         erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot; //erro rotacional
+        PIDRot->erro->setData(erroVelRot);
 
         // calculando Pids rotacional e translacional
         Ptrans = KpVel * erroVelTrans;
@@ -128,6 +136,7 @@ void PIDService::Run()
         // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
         PIDTrans->output->setData(constrain((PidTrans) + speedBase, speedMin, speedMax));
         PIDRot->output->setData(PidRot);
+
 
         // Calculo de velocidade do motor
         speed->right->setData(
@@ -288,15 +297,15 @@ void PIDService::Run()
 
         if (iloop > 100)
         {
-            ESP_LOGD(GetName().c_str(), "L_trans: %.4f | L_rot : %.4f | L_IR: %.4f", L_trans , L_rot,L_IR);
-            ESP_LOGD(GetName().c_str(), "SetPointTrans: %d | Target %d, SetPointRot: %d", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
+            //ESP_LOGD(GetName().c_str(), "L_trans: %.4f | L_rot : %.4f | L_IR: %.4f", L_trans , L_rot,L_IR);
+            ESP_LOGD(GetName().c_str(), "SetPointTrans: %.2f | Target %d, SetPointRot: %.2f", PIDTrans->setpoint->getData(), setpointPIDTransTarget, PIDRot->setpoint->getData());
 //             ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
-//             ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
-//             ESP_LOGD(GetName().c_str(), "speedLeft: %d | speedRight: %d", speed->left->getData(), speed->right->getData());
+            ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
+            ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
-            ESP_LOGD(GetName().c_str(), "KpVel: %.4f | KpRot: %.4f\n", KpVel, KpRot);
-            ESP_LOGD(GetName().c_str(), "KdVel: %.4f | KdRot: %.4f\n", KdVel, KdRot);
-            ESP_LOGD(GetName().c_str(), "KdIR: %.4f | KpIR: %.4f\n", KdIR, KpIR);
+            //ESP_LOGD(GetName().c_str(), "KpVel: %.4f | KpRot: %.4f\n", KpVel, KpRot);
+            //ESP_LOGD(GetName().c_str(), "KdVel: %.4f | KdRot: %.4f\n", KdVel, KdRot);
+            //ESP_LOGD(GetName().c_str(), "KdIR: %.4f | KpIR: %.4f\n", KdIR, KpIR);
             iloop = 0;
         }
         iloop++;

@@ -59,18 +59,20 @@ std::string DataAbstract<T>::getDataString(std::string ctrl)
 }
 
 template <class T>
-void DataAbstract<T>::setData(T data, uint32_t last_change)
+void DataAbstract<T>::setData(T data)
 {
     // seta o valor do dado
     this->data->store(data, std::memory_order_release);
+    uint32_t last_change = xTaskGetTickCount()*portTICK_PERIOD_MS;
     if(this->stream_interval.load(std::memory_order_acquire) != 0) this->time_last_change.store(last_change, std::memory_order_release);
 }
 
 template <class T>
-void DataAbstract<T>::setData(std::string data, uint32_t last_change)
+void DataAbstract<T>::setData(std::string data)
 {
     float num = std::stof(data);
     this->data->store(num, std::memory_order_release);
+    uint32_t last_change = xTaskGetTickCount()*portTICK_PERIOD_MS;
     if(this->stream_interval.load(std::memory_order_acquire) != 0) this->time_last_change.store(last_change, std::memory_order_release);
     ESP_LOGD(this->name.c_str(), "Confirmando dado salvo: %s", std::to_string(this->data->load(std::memory_order_acquire)).c_str());
 }
