@@ -31,6 +31,7 @@ public:
     // Contagem atual dos encoders
     DataAbstract<int32_t> *EncRight;
     DataAbstract<int32_t> *EncLeft;
+    DataAbstract<int32_t> *EncMedia;
 
     // Variavel que contempla relacao de Revloucoes e reducao dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
     DataAbstract<uint16_t> *MPR;
@@ -70,6 +71,10 @@ public:
     DataAbstract<float> *right;
     // Velocidade atual da roda esquerda em PMW
     DataAbstract<float> *left;
+
+    // componentes da Velocidade total do robô 
+    DataAbstract<float> *VelTrans;
+    DataAbstract<float> *VelRot;
 
 private:
     std::string name;

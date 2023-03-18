@@ -30,6 +30,7 @@ struct MapData
     int32_t MapEncMedia;
     int32_t MapEncLeft;
     int32_t MapEncRight;
+    int16_t MapOffset;
     uint8_t MapStatus;
     uint8_t MapTrackStatus;
 };
@@ -67,6 +68,12 @@ public:
     void clearAllData();
     void clearData(uint8_t pos);
 
+    void setStreamInterval(uint32_t interval);
+    uint32_t getStreamInterval();
+    void setStreamTime(uint32_t streamTime);
+    uint32_t getStreamTime();
+    uint32_t getLastChange();
+
 protected:
 private:
     DataStorage *dataStorage;
@@ -74,6 +81,10 @@ private:
 
     std::list<MapData> mapDataList;
     static std::mutex mapDataListMutex;
+    
+    std::atomic<uint32_t> time_last_change; // Tempo de execução em que o dado foi alterado pela última vez
+    std::atomic<uint32_t> stream_interval; // Intervalo que o stream do atributo será feito
+    std::atomic<uint32_t> stream_time; // momento em que o stream do atributo deve ser feito
 };
 
 #endif

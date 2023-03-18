@@ -11,10 +11,15 @@ dataPID::dataPID(std::string name)
     // Inicializando os ponteiros para os tipos de dados.
     ESP_LOGD(tag, "Inicializando ponteiros para os tipos de dados");
 
-    input = new DataAbstract<int16_t>("input", name);
-    output = new DataAbstract<float>("output", name);
-    setpoint = new DataAbstract<int16_t>("Setpoint", name);
-    
+    input = new DataAbstract<float>("input", name, 0);
+    dataManager->registerRuntimeData(input);
+    output = new DataAbstract<float>("output", name, 0);
+    dataManager->registerRuntimeData(output);
+    setpoint = new DataAbstract<float>("Setpoint", name, 0);
+    dataManager->registerRuntimeData(setpoint);
+    erro = new DataAbstract<float>("erro", name, 0);
+    dataManager->registerRuntimeData(setpoint);
+
     Kp_std = new DataAbstract<float>("Kp_std", name, 0);
     dataManager->registerParamData(Kp_std);
     Kd_std = new DataAbstract<float>("Kd_std", name, 0);
@@ -68,7 +73,7 @@ dataPID::dataPID(std::string name)
         UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
         dataManager->registerParamData(UseKiVel);
     }
-    
+
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 

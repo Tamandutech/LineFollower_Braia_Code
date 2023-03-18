@@ -36,12 +36,22 @@ public:
     void saveData();
     void loadData();
 
+    void setStreamInterval(uint32_t interval);
+    uint32_t getStreamInterval();
+    void setStreamTime(uint32_t streamTime);
+    uint32_t getStreamTime();
+    uint32_t getLastChange();
+
     std::string getName();
     std::string getDataString(std::string ctrl);
 
 protected:
 private:
     std::atomic<T> *data;
+    std::atomic<uint32_t> time_last_change; // Tempo de execução em que o dado foi alterado pela última vez
+    std::atomic<uint32_t> stream_interval; // Intervalo que o stream do atributo será feito
+    std::atomic<uint32_t> stream_time; // momento em que o stream do atributo deve ser feito
+
 
     DataStorage *dataStorage;
     DataManager *dataManager;

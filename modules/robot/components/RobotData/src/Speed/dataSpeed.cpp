@@ -15,7 +15,11 @@ dataSpeed::dataSpeed(std::string name)
 
     // Contagem atual dos encoders
     EncRight = new DataAbstract<int32_t>("EncRight", name, 0);
+    dataManager->registerRuntimeData(EncRight);
     EncLeft = new DataAbstract<int32_t>("EncLeft", name, 0);
+    dataManager->registerRuntimeData(EncLeft);
+    EncMedia = new DataAbstract<int32_t>("EncMedia", name, 0);
+    dataManager->registerRuntimeData(EncMedia);
 
     /*
      * Variavel que contempla relacao de Revloucoes e reducao
@@ -73,4 +77,12 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(Default_speed);
     Tunning_speed = new DataAbstract<int16_t>("Tunning_speed", name, 1000);
     dataManager->registerParamData(Tunning_speed);
+
+    // Componentes da velocidade total
+    VelTrans = new DataAbstract<float>("VelTrans", name, 0);
+    dataManager->registerRuntimeData(VelTrans);
+
+    VelRot = new DataAbstract<float>("VelRot", name, 0);
+    dataManager->registerRuntimeData(VelRot);
+
 }

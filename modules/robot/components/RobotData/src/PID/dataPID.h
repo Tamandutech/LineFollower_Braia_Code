@@ -34,9 +34,11 @@ class dataPID
 public:
     dataPID(std::string name = "dataPID");
 
-    DataAbstract<int16_t> *input;
+    DataAbstract<float> *input;
     DataAbstract<float> *output;
-    DataAbstract<int16_t> *setpoint; // salvar
+    DataAbstract<float> *setpoint;
+    DataAbstract<float> *erro;
+
     DataAbstract<float> *CorrectionFactor;
     DataAbstract<float> *CorrectionFactorLine;
     DataAbstract<float> *CorrectionFactorMediumCurve;
@@ -50,6 +52,7 @@ public:
     DataAbstract<float> *Kp(TrackState state);
     DataAbstract<float> *Ki(TrackState state);
     DataAbstract<float> *Kd(TrackState state);
+
 
 private:
     std::string name;

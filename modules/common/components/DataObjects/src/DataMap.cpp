@@ -61,7 +61,7 @@ void DataMap::newData(std::string mapData)
         mapDataVector.push_back(s);
     }
 
-    if (mapDataVector.size() < 6)
+    if (mapDataVector.size() < 7)
     {
         ESP_LOGE(this->name.c_str(), "Dados inválidos. Quantidade de dados: %d", mapDataVector.size());
         return;
@@ -75,6 +75,7 @@ void DataMap::newData(std::string mapData)
     mapDataTemp.MapEncRight = std::stoi(mapDataVector[4]);
     mapDataTemp.MapStatus = std::stoi(mapDataVector[5]);
     mapDataTemp.MapTrackStatus = std::stoi(mapDataVector[6]);
+    mapDataTemp.MapOffset = std::stoi(mapDataVector[7]);
 
     this->newData(mapDataTemp);
 }
@@ -101,7 +102,10 @@ std::string DataMap::getDataString(std::string ctrl)
     std::advance(itList, posicao);
 
     std::string line;
-    line = std::to_string(posicao) + "," + std::to_string(itList->MapTime) + "," + std::to_string(itList->MapEncMedia) + "," + std::to_string(itList->MapEncLeft) + "," + std::to_string(itList->MapEncRight) + "," + std::to_string(itList->MapStatus) + "," + std::to_string(itList->MapTrackStatus);
+    line = std::to_string(posicao) + "," + std::to_string(itList->MapTime) + "," + 
+    std::to_string(itList->MapEncMedia) + "," + std::to_string(itList->MapEncLeft) + "," + 
+    std::to_string(itList->MapEncRight) + "," + std::to_string(itList->MapStatus) + "," + 
+    std::to_string(itList->MapTrackStatus) + "," + std::to_string(itList->MapOffset);
 
     ESP_LOGD(this->name.c_str(), "Dados: %s", line.c_str());
 
@@ -128,6 +132,7 @@ void DataMap::setData(uint8_t posicao, MapData data)
     itList->MapStatus = data.MapStatus;
     itList->MapTime = data.MapTime;
     itList->MapTrackStatus = data.MapTrackStatus;
+    itList->MapOffset = data.MapOffset;
 }
 
 void DataMap::setData(std::string data)
@@ -147,7 +152,7 @@ void DataMap::setData(std::string data)
         dataList.push_back(s);
     }
 
-    if (dataList.size() < 7)
+    if (dataList.size() < 8)
     {
         ESP_LOGE(this->name.c_str(), "Erro ao setar dados do tipo DataMap. Entrada inválida.");
         return;
@@ -162,6 +167,7 @@ void DataMap::setData(std::string data)
     tempMapData.MapEncRight = stoi(dataList[4]);
     tempMapData.MapStatus = stoi(dataList[5]);
     tempMapData.MapTrackStatus = stoi(dataList[6]);
+    tempMapData.MapOffset = stoi(dataList[7]);
 
     setData(stoi(dataList[0]), tempMapData);
 }
@@ -195,7 +201,7 @@ void DataMap::saveData()
     {
         memcpy(dataSave + i, &mapData, sizeof(MapData));
         i += sizeof(MapData);
-        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus,  mapData.MapTrackStatus);
+        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus,  mapData.MapTrackStatus, mapData.MapOffset);
     }
     dataStorage->save_data(this->name, dataSave, sizeMap, "ab");
     free(dataSave);
@@ -238,7 +244,7 @@ void DataMap::loadData()
             MapData tempMapData;
             memcpy(&tempMapData, data + i, sizeof(MapData));
 
-            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus, tempMapData.MapTrackStatus);
+            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus, tempMapData.MapTrackStatus, tempMapData.MapOffset);
 
             mapDataListMutex.lock();
             this->mapDataList.push_back(tempMapData);
@@ -274,6 +280,32 @@ void DataMap::clearData(uint8_t pos)
     std::advance(it, pos);
     this->mapDataList.erase(it);
     mapDataListMutex.unlock();
+}
+
+void DataMap::setStreamInterval(uint32_t interval)
+{
+    this->stream_interval.store(interval, std::memory_order_release);
+}
+
+uint32_t DataMap::getStreamInterval()
+{
+    return this->stream_interval.load(std::memory_order_acquire);
+}
+
+
+void DataMap::setStreamTime(uint32_t streamTime)
+{
+    this->stream_time.store(streamTime, std::memory_order_release);
+}
+
+uint32_t DataMap::getStreamTime()
+{
+    return this->stream_time.load(std::memory_order_acquire);
+}
+
+uint32_t DataMap::getLastChange()
+{
+    return this->time_last_change.load(std::memory_order_acquire);
 }
 
 #endif
