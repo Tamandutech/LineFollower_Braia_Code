@@ -6,11 +6,11 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
     this->speed = robot->getSpeed();
 
     // GPIOs dos encoders dos encoders dos motores
-    //enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
-    //enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
+    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
+    enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
 
-    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
-    enc_motDir.attachFullQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
+    //enc_motEsq.attachFullQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
+    //enc_motDir.attachFullQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
 
     MPR_Mot = speed->MPR->getData();
 };

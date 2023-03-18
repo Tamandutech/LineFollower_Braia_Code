@@ -30,6 +30,7 @@ struct MapData
     int32_t MapEncMedia;
     int32_t MapEncLeft;
     int32_t MapEncRight;
+    int16_t MapOffset;
     uint8_t MapStatus;
     uint8_t MapTrackStatus;
 };

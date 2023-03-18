@@ -334,36 +334,47 @@ void CarStatusService::Run()
                         TrackState trackLen = (TrackState)latMarks->marks->getData(mark+1).MapTrackStatus;
                         status->RealTrackStatus->setData(trackLen);
                         bool transition = false;
+
+                        int16_t offset = latMarks->marks->getData(mark).MapOffset;
+                        int16_t offsetnxt = latMarks->marks->getData(mark).MapOffset;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
-                        if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE)
+                        if((CarState)latMarks->marks->getData(mark).MapStatus == CAR_IN_CURVE && (CarState)latMarks->marks->getData(mark + 1).MapStatus == CAR_IN_LINE && offset == 0)
                         {
-                            if((Manualmedia + pulsesAfterCurve) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + pulsesAfterCurve)) 
+                            offset = pulsesAfterCurve; 
+                        }
+                        if(offset > 0)
+                        {
+                            if((Manualmedia + offset) < ManualmediaNxt && (mediaEncActual - initialmediaEnc) < (Manualmedia + offset)) 
                             {
                                 transition = true;
-                                trackType = CAR_IN_CURVE;
+                                trackType = (CarState)latMarks->marks->getData(mark).MapStatus;
                                 trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
                             }
-                            else if((Manualmedia + pulsesAfterCurve) >= ManualmediaNxt) 
+                            else if((Manualmedia + offset) >= ManualmediaNxt) 
                             {
                                 transition = true;
-                                trackType = CAR_IN_CURVE;
+                                trackType = (CarState)latMarks->marks->getData(mark).MapStatus;
                                 trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
                             }
                         }
                         if(mark + 2 < numMarks)
                         {
-                            if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE)
+                            if((CarState)latMarks->marks->getData(mark+1).MapStatus == CAR_IN_LINE && (CarState)latMarks->marks->getData(mark + 2).MapStatus == CAR_IN_CURVE && offsetnxt == 0)
                             {
-                                if((ManualmediaNxt - pulsesBeforeCurve) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt - pulsesBeforeCurve)) 
+                                offsetnxt = -pulsesBeforeCurve; 
+                            }
+                            if(offsetnxt < 0)
+                            {
+                                if((ManualmediaNxt + offsetnxt) > Manualmedia && (mediaEncActual - initialmediaEnc) > (ManualmediaNxt + offsetnxt)) 
                                 {
                                     transition = true;
-                                    trackType = CAR_IN_CURVE;
+                                    trackType = (CarState)latMarks->marks->getData(mark+2).MapStatus;
                                     trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
-                                else if((ManualmediaNxt - pulsesBeforeCurve) <= Manualmedia) 
+                                else if((ManualmediaNxt + offsetnxt) <= Manualmedia) 
                                 {
                                     transition = true;
-                                    trackType = CAR_IN_CURVE;
+                                    trackType = (CarState)latMarks->marks->getData(mark+2).MapStatus;
                                     trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
                             }
