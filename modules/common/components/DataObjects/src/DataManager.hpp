@@ -7,6 +7,8 @@
 #include <mutex>
 #include <vector>
 
+#include "cJSON.h"
+
 #include "esp_vfs.h"
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
@@ -47,11 +49,26 @@ public:
     void setParam(std::string name, std::string value, bool savedata = true);
     std::string getParam(std::string name, std::string ctrl);
 
+    void setRuntime(std::string name, std::string value);
+    std::string getRuntime(std::string name);
+
     void loadAllParamData();
     void loadAllRuntimeData();
 
     uint8_t getRegistredParamDataCount();
     std::string listRegistredParamData();
+
+    std::string listRegistredRuntimeData();
+
+    // name: nome do dado <ObjetoPai>.<Objeto>
+    // time_in_ms: tempo em ms do intervalo de envio
+    void setStreamInterval(std::string name, uint32_t time_in_ms);
+
+    // Quantidade de dados prontos para o stream
+    int NumItemsReadyStream();
+
+    // Retorna todos os dados que devem fazer stream naquele momento.
+    cJSON* getStreamData();
 
 private:
     static std::atomic<DataManager *> instance;
@@ -64,6 +81,9 @@ private:
     static std::vector<IDataAbstract *> dataRuntimeList;
     static std::mutex dataRuntimeListMutex;
 
+    static std::vector<IDataAbstract *> dataStreamList; // dados que devem ser transmitidos para a dashboard
+    static std::mutex dataStreamListMutex;
+
     std::vector<IDataAbstract *> dataParamChangedList;
     std::mutex dataParamChangedListMutex;
 
@@ -73,6 +93,8 @@ private:
     void saveAllData(std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex);
     void loadAllData(std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex);
 
+    //Obtém o ponteiro (iterator) para o dado em uma determinada lista
+    std::vector<IDataAbstract *>::iterator getDataListIterator(IDataAbstract *data, std::vector<IDataAbstract *> *dataList, std::mutex *dataListMutex);
     DataManager();
     bool is_mounted();
 };

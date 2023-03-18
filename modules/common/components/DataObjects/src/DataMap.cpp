@@ -188,9 +188,9 @@ void DataMap::saveData()
     dataStorage->delete_data(this->name);
 
     // Armazena os dados fazendo append de cada struct
-    uint16_t sizeMap = this->getSize()*sizeof(MapData);
+    int16_t sizeMap = this->getSize()*sizeof(MapData);
     char * dataSave = (char*) malloc(sizeMap);
-    uint16_t i = 0;
+    int16_t i = 0;
     for (auto &mapData : this->mapDataList)
     {
         memcpy(dataSave + i, &mapData, sizeof(MapData));
@@ -274,6 +274,32 @@ void DataMap::clearData(uint8_t pos)
     std::advance(it, pos);
     this->mapDataList.erase(it);
     mapDataListMutex.unlock();
+}
+
+void DataMap::setStreamInterval(uint32_t interval)
+{
+    this->stream_interval.store(interval, std::memory_order_release);
+}
+
+uint32_t DataMap::getStreamInterval()
+{
+    return this->stream_interval.load(std::memory_order_acquire);
+}
+
+
+void DataMap::setStreamTime(uint32_t streamTime)
+{
+    this->stream_time.store(streamTime, std::memory_order_release);
+}
+
+uint32_t DataMap::getStreamTime()
+{
+    return this->stream_time.load(std::memory_order_acquire);
+}
+
+uint32_t DataMap::getLastChange()
+{
+    return this->time_last_change.load(std::memory_order_acquire);
 }
 
 #endif

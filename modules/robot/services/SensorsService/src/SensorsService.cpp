@@ -56,7 +56,7 @@ void SensorsService::calibAllsensors()
     command.brightness = 1;
     command.color = LED_COLOR_BLUE;
     LEDsService::getInstance()->queueCommand(command);
-    for (uint16_t i = 0; i < 30; i++)
+    for (uint16_t i = 0; i < 50; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sArray: (%p)", this, &sArray);
         sArray.calibrate();
@@ -112,11 +112,8 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     uint16_t sArraychannels[sArray->getSensorCount()];
     uint16_t SLatchannels[SLat->getSensorCount()];
 
-#ifdef LINE_COLOR_BLACK
-    robot->getsArray()->setLine(sArray->readLineBlack(sArraychannels));
-#else
-    robot->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
-#endif
+    if(status->LineColorBlack->getData()) robot->getsArray()->setLine(sArray->readLineBlack(sArraychannels));
+    else robot->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
     // cálculo dos valores do sensor array
     SLat->readCalibrated(SLatchannels);                                                                 // leitura dos sensores laterais
     std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array

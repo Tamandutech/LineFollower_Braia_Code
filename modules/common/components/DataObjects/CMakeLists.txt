@@ -9,6 +9,7 @@ idf_component_register(
         "vfs"
         "fatfs"
         "newlib"
+        "json"
 
     INCLUDE_DIRS 
         "src"

@@ -265,11 +265,12 @@ static std::string param_set(int argc, char **argv)
 
     ESP_LOGD(name, "Definido parâmetro local %s com valor %s", param_set_args.name->sval[0], param_set_args.value->sval[0]);
     CarState state = (CarState)Robot::getInstance()->getStatus()->robotState->getData();
+    
     if(state == CAR_STOPPED) DataManager::getInstance()->setParam(param_set_args.name->sval[0], param_set_args.value->sval[0]);
     else 
     {
-        DataManager::getInstance()->setParam(param_set_args.name->sval[0], param_set_args.value->sval[0],false);
         DataManager::getInstance()->registerParamDataChanged(param_set_args.name->sval[0]);
+        DataManager::getInstance()->setParam(param_set_args.name->sval[0], param_set_args.value->sval[0],false);
     }
     return "OK";
 }

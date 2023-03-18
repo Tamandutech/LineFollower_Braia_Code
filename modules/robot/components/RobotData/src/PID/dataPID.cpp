@@ -11,88 +11,168 @@ dataPID::dataPID(std::string name)
     // Inicializando os ponteiros para os tipos de dados.
     ESP_LOGD(tag, "Inicializando ponteiros para os tipos de dados");
 
-    input = new DataAbstract<int16_t>("input", name);
-    output = new DataAbstract<float>("output", name);
-    setpoint = new DataAbstract<int16_t>("Setpoint", name);
-    setpointLine = new DataAbstract<int16_t>("SetpointLine", name, 400);
-    setpointCurve = new DataAbstract<int16_t>("SetpointCurve", name, 400);
-    setpointMap = new DataAbstract<int16_t>("SetpointMap", name, 400);
-    Krot = new DataAbstract<float>("Krot", name, 5);
-    dataManager->registerParamData(setpointLine);
-    dataManager->registerParamData(setpointCurve);
-    dataManager->registerParamData(setpointMap);
-    dataManager->registerParamData(Krot);
+    input = new DataAbstract<float>("input", name, 0);
+    dataManager->registerRuntimeData(input);
+    output = new DataAbstract<float>("output", name, 0);
+    dataManager->registerRuntimeData(output);
+    setpoint = new DataAbstract<float>("Setpoint", name, 0);
+    dataManager->registerRuntimeData(setpoint);
+    erro = new DataAbstract<float>("erro", name, 0);
+    dataManager->registerRuntimeData(setpoint);
 
-    Kp_line = new DataAbstract<float>("Kp_line", name);
-    dataManager->registerParamData(Kp_line);
-    Ki_line = new DataAbstract<float>("Ki_line", name);
-    dataManager->registerParamData(Ki_line);
-    Kd_line = new DataAbstract<float>("Kd_line", name);
-    dataManager->registerParamData(Kd_line);
+    Kp_std = new DataAbstract<float>("Kp_std", name, 0);
+    dataManager->registerParamData(Kp_std);
+    Kd_std = new DataAbstract<float>("Kd_std", name, 0);
+    dataManager->registerParamData(Kd_std);
+    if(name == "PIDVel" || name == "PIDRot")
+    {
+        Ki_std = new DataAbstract<float>("Ki_std", name, 0);
+        dataManager->registerParamData(Ki_std);
+        Ki_tunning = new DataAbstract<float>("Ki_tunning", name);
+        dataManager->registerParamData(Ki_tunning);
+    }
 
-    Kp_curve = new DataAbstract<float>("Kp_curve", name);
-    dataManager->registerParamData(Kp_curve);
-    Ki_curve = new DataAbstract<float>("Ki_curve", name);
-    dataManager->registerParamData(Ki_curve);
-    Kd_curve = new DataAbstract<float>("Kd_curve", name);
-    dataManager->registerParamData(Kd_curve);
+    Kp_tunning = new DataAbstract<float>("Kp_tunning", name);
+    dataManager->registerParamData(Kp_tunning);
+    Kd_tunning = new DataAbstract<float>("Kd_tunning", name);
+    dataManager->registerParamData(Kd_tunning);
+
+
+    if(name == "PIDIR")
+    {
+        Kp_IRline = new DataAbstract<float>("Kp_IRline", name);
+        dataManager->registerParamData(Kp_IRline);
+        Kd_IRline = new DataAbstract<float>("Kd_IRline", name);
+        dataManager->registerParamData(Kd_IRline);
+        Kp_IRcurve = new DataAbstract<float>("Kp_IRcurve", name);
+        dataManager->registerParamData(Kp_IRcurve);
+        Kd_IRcurve = new DataAbstract<float>("Kd_IRcurve", name);
+        dataManager->registerParamData(Kd_IRcurve);
+        Kp_IRShortCurve = new DataAbstract<float>("Kp_IRShortCurve", name, 4.5);
+        dataManager->registerParamData(Kp_IRShortCurve);
+        Kd_IRShortCurve = new DataAbstract<float>("Kd_IRShortCurve", name, 4.5);
+        dataManager->registerParamData(Kd_IRShortCurve);
+        UseKdIR = new DataAbstract<bool>("UseKdIR", name, true);
+        dataManager->registerParamData(UseKdIR);
+    }
+
+    if(name == "PIDVel")
+    {
+        CorrectionFactor = new DataAbstract<float>("FatorCorrecao", name);
+        dataManager->registerParamData(CorrectionFactor);
+        CorrectionFactorLine = new DataAbstract<float>("FatorCorrecaoLine", name);
+        dataManager->registerParamData(CorrectionFactorLine);
+        CorrectionFactorShortCurve = new DataAbstract<float>("FatorCorrecaoShortCurve", name);
+        dataManager->registerParamData(CorrectionFactorShortCurve);
+        CorrectionFactorMediumCurve = new DataAbstract<float>("FatorCorrecaoMediumCurve", name);
+        dataManager->registerParamData(CorrectionFactorMediumCurve);
+        CorrectionFactorLongCurve = new DataAbstract<float>("FatorCorrecaoLongCurve", name);
+        dataManager->registerParamData(CorrectionFactorLongCurve);
+        CorrectionFactorZigZag = new DataAbstract<float>("FatorCorrecaoZigZag", name);
+        dataManager->registerParamData(CorrectionFactorZigZag);
+        UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
+        dataManager->registerParamData(UseKiVel);
+    }
 
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 
-DataAbstract<float> *dataPID::Kp(CarState state)
+DataAbstract<float> *dataPID::Kp(TrackState state)
 {
-    switch (state)
+    if(name == "PIDVel" || name == "PIDRot")
     {
-    case CAR_IN_CURVE:
-        return Kp_curve;
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Kp do PID, retornando valor para linha.", state);
-        [[fallthrough]];
-    case CAR_STOPPED:
-        [[fallthrough]];
-    case CAR_IN_LINE:
-        return Kp_line;
-        break;
+        if(state == TUNING)
+        {
+            return Kp_tunning;
+        }
+        else
+        {
+            return Kp_std;
+        }
     }
+    else if(name == "PIDIR")
+    {
+        if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
+        {
+            return Kp_IRline;
+        }
+        else if(state == SHORT_CURVE || state == ZIGZAG)
+        {
+            return Kp_IRShortCurve;
+        }
+        else if(state == MEDIUM_CURVE || state == LONG_CURVE)
+        {
+            return Kp_IRcurve;
+        }
+        else if(state == TUNING)
+        {
+            return Kp_tunning;
+        }
+        else
+        {
+            return Kp_std;
+        }
+        
+    }
+    ESP_LOGE(tag, "Estado do Robô ou Objeto PID inválido para esse método: %s:%d para obter o Kp do PID, retornando valor null.", name.c_str(),state);
+    return nullptr;
 }
 
-DataAbstract<float> *dataPID::Ki(CarState state)
+DataAbstract<float> *dataPID::Ki(TrackState state)
 {
-    switch (state)
+    if(name == "PIDVel" || name == "PIDRot")
     {
-    case CAR_IN_CURVE:
-        return Ki_curve;
-        break;
-
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Ki do PID, retornando valor para linha.", state);
-        [[fallthrough]];
-    case CAR_STOPPED:
-        [[fallthrough]];
-    case CAR_IN_LINE:
-        return Ki_line;
-        break;
+        if(state == TUNING)
+        {
+            return Ki_tunning;
+        }
+        else
+        {
+            return Ki_std;
+        }
     }
+    ESP_LOGE(tag, "Estado do Robô ou Objeto PID inválido para esse método: %s:%d para obter o Ki do PID, retornando valor null.", name.c_str(),state);
+    return nullptr;
 }
 
-DataAbstract<float> *dataPID::Kd(CarState state)
+DataAbstract<float> *dataPID::Kd(TrackState state)
 {
-    switch (state)
-    {
-    case CAR_IN_CURVE:
-        return Kd_curve;
-        break;
 
-    default:
-        ESP_LOGE(tag, "Estado do Robô desconhecido: %d para obter o Kd do PID, retornando valor para linha.", state);
-        [[fallthrough]];
-    case CAR_STOPPED:
-        [[fallthrough]];
-    case CAR_IN_LINE:
-        return Kd_line;
-        break;
+    if(name == "PIDVel" || name == "PIDRot")
+    {
+        if(state == TUNING)
+        {
+            return Kd_tunning;
+        }
+        else
+        {
+            return Kd_std;
+        }
     }
+    else if(name == "PIDIR")
+    {
+        if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
+        {
+            return Kd_IRline;
+        }
+        else if(state == SHORT_CURVE || state == ZIGZAG)
+        {
+            return Kd_IRShortCurve;
+        }
+        else if(state == MEDIUM_CURVE || state == LONG_CURVE)
+        {
+            return Kd_IRcurve;
+        }
+        else if(state == TUNING)
+        {
+            return Kd_tunning;
+        }
+        else
+        {
+            return Kd_std;
+        }
+        
+    }
+    ESP_LOGE(tag, "Estado do Robô ou Objeto PID inválido para esse método: %s:%d para obter o Kd do PID, retornando valor null.", name.c_str(),state);
+    return nullptr;
 }

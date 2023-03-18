@@ -6,8 +6,12 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
     this->speed = robot->getSpeed();
 
     // GPIOs dos encoders dos encoders dos motores
-    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
-    enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
+    //enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
+    //enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
+
+    enc_motEsq.attachFullQuad(ENC_MOT_ESQ_A, ENC_MOT_ESQ_B);
+    enc_motDir.attachFullQuad(ENC_MOT_DIR_A, ENC_MOT_DIR_B);
+
     MPR_Mot = speed->MPR->getData();
 };
 
@@ -60,6 +64,7 @@ void SpeedService::Run()
         lastPulseRight = enc_motDir.getCount();   // Salva pulsos do motor para ser usado no proximo calculo
         speed->EncRight->setData(lastPulseRight); // Salva pulsos do encoder direito na classe speed
 
+        speed->EncMedia->setData((lastPulseLeft + lastPulseRight)/2);
         // Calculo de velocidade media do carro (RPM)
         speed->RPMCar_media->setData(                                                                              // -> Calculo velocidade media do carro
             (((lastPulseRight / (float)speed->MPR->getData() + lastPulseLeft / (float)speed->MPR->getData())) / 2) // Revolucoes media desde inicializacao
@@ -68,7 +73,7 @@ void SpeedService::Run()
 
         if (iloop >= 100)
         {
-            ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d", enc_motDir.getCount(), enc_motEsq.getCount());
+            ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d | encmedia: %d", enc_motDir.getCount(), enc_motEsq.getCount(), speed->EncMedia->getData());
             ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
             ESP_LOGD(GetName().c_str(), "MPR: %d",speed->MPR->getData());
             iloop = 0;

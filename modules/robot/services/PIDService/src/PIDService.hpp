@@ -26,19 +26,20 @@ private:
     RobotStatus *status;
     dataPID *PIDTrans;
     dataPID *PIDRot;
+    dataPID *PIDIR;
 
     short const TaskDelay = 10; // 10ms
 
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
-    float KpVel = 0, KiVel = 0, KdVel = 0;
-    float KpRot = 0, KiRot = 0, KdRot = 0;
+    double KpVel = 0, KiVel = 0, KdVel = 0;
+    double KpRot = 0, KiRot = 0, KdRot = 0;
+    double KpIR = 0, KdIR = 0;
 
     // erros anteriores
     float errRot_ant = 0;   // errRot_ant2 = 0;
     float errTrans_ant = 0; // errTrans_ant2 = 0;
 
-    // Variáveis para cálculo do pid rot e trans
-    float rotK = 5;
+    // Variáveis para cálculo dos pids
     float accel = 6000; // aceleração em rpm/s
     float desaccel = 6000; // aceleração em rpm/s
     int16_t setpointPIDTransTarget = 0;
@@ -46,25 +47,39 @@ private:
     int16_t SetpointTransactual = 0;
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
-    float PidRot = 0;
+    float P_IR = 0, D_IR = 0;
+    float IR = 0; // posição do robô na linha;
+    float PidRot = 0, PidIR = 0;
     float Prot = 0, Irot = 0, Drot = 0;
 
     int8_t speedBase = 0;
     int8_t speedMin = 0;
     int8_t speedMax = 0;
 
+    float fatorCorrecao = 0; // taxa de redução de velocidade proporcional ao erro
+
     float VelRot = 0;
     float VelTrans = 0;
+
+    // Tunning PID
+    float lastIR = 0;
     float lastVelRot = 0;
     float lastVelTrans = 0;
+    float lastPIDTrans = 0.0;
+    float lastPIDRot = 0.0;
+    float lastPIDIR = 0.0;
+    double alphaVel = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
+    double alphaRot = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
+    double alphaIR = 0.0000000002;
 
     float erroVelTrans = 0;
     float erroVelRot = 0;
+    float erroIR = 0;
 
     bool mapState = false;
 
     CarState estado = CAR_STOPPED;
-    TrackState TrackLen = SHORT_CURVE;
+    TrackState TrackLen = SHORT_LINE, RealTracklen = SHORT_LINE;
 
     int iloop = 0;
     int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos 

@@ -7,7 +7,8 @@ MotorsService::MotorsService(std::string name, uint32_t stackDepth, UBaseType_t 
   this->status = robot->getStatus();
 
   // GPIOs dos motores
-  motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN1, DRIVER_BIN2, DRIVER_PWMB);
+  //motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN1, DRIVER_BIN2, DRIVER_PWMB);
+  motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
   motors.setSTBY(DRIVER_STBY);
 };
 
@@ -31,8 +32,8 @@ void MotorsService::Run()
 
     if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
     {
-      motors.motorForward(0);                        // motor 0 ligado para frente
-      motors.motorForward(1);                        // motor 1 ligado para frente
+      // motors.motorForward(0);                        // motor 0 ligado para frente
+      // motors.motorForward(1);                        // motor 1 ligado para frente
       motors.motorSpeed(0, speed->left->getData());  // velocidade do motor 0
       motors.motorSpeed(1, speed->right->getData()); // velocidade do motor 1
     }

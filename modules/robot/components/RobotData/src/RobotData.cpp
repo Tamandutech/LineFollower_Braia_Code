@@ -27,6 +27,9 @@ Robot::Robot(std::string name)
     this->PIDRot = new dataPID("PIDRot");
     ESP_LOGD(name.c_str(), "PIDRot (%p)", this->PIDRot);
 
+    this->PIDIR = new dataPID("PIDIR");
+    ESP_LOGD(name.c_str(), "PIDIR (%p)", this->PIDIR);
+
     this->speed = new dataSpeed("speed");
     ESP_LOGD(name.c_str(), "speed (%p)", this->speed);
 
@@ -76,6 +79,11 @@ dataPID *Robot::getPIDVel()
 dataPID *Robot::getPIDRot()
 {
     return this->PIDRot;
+}
+
+dataPID *Robot::getPIDIR()
+{
+    return this->PIDIR;
 }
 
 RobotStatus *Robot::getStatus()

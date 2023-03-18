@@ -27,7 +27,7 @@ private:
     // Componente de gerenciamento dos encoders
     ESP32Encoder enc_motEsq;
     ESP32Encoder enc_motDir;
-
+    
     short const TaskDelay = 10; // 10 ms
     uint16_t MPR_Mot = 180;
     TickType_t lastTicksRevsCalc = 0;

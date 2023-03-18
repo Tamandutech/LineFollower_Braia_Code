@@ -31,6 +31,7 @@ public:
     // Contagem atual dos encoders
     DataAbstract<int32_t> *EncRight;
     DataAbstract<int32_t> *EncLeft;
+    DataAbstract<int32_t> *EncMedia;
 
     // Variavel que contempla relacao de Revloucoes e reducao dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
     DataAbstract<uint16_t> *MPR;
@@ -38,49 +39,48 @@ public:
     // Diâmetro das rodas
     DataAbstract<uint8_t> *WheelDiameter;
 
+    DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
+    
+    // Restrições nos valores do PWM
     DataAbstract<int8_t> *max;
     DataAbstract<int8_t> *min;
     DataAbstract<int8_t> *base;
 
+    
+    DataAbstract<int16_t> *initialspeed; // Velocidade inicial em rpm
+    DataAbstract<int16_t> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
+
     //Setpoints translacionais para os tipos de trecho em rpm
-    DataAbstract<uint16_t> *Long_Line;
-    DataAbstract<uint16_t> *Medium_Line;
-    DataAbstract<uint16_t> *Short_Line;
-    DataAbstract<uint16_t> *Long_Curve;
-    DataAbstract<uint16_t> *Medium_Curve;
-    DataAbstract<uint16_t> *Short_Curve;
+    DataAbstract<int16_t> *Long_Line;
+    DataAbstract<int16_t> *Medium_Line;
+    DataAbstract<int16_t> *Short_Line;
+    DataAbstract<int16_t> *Long_Curve;
+    DataAbstract<int16_t> *Medium_Curve;
+    DataAbstract<int16_t> *Short_Curve;
+    DataAbstract<int16_t> *ZIGZAG;
+    DataAbstract<int16_t> *Special_Track;
+
+    // Velocidade para o modo Tunning
+    DataAbstract<int16_t> *Tunning_speed;
+    // Velocidade padrão do robô
+    DataAbstract<int16_t> *Default_speed;
 
     // Velocidade atual da roda direita em PMW
-    DataAbstract<int8_t> *right;
+    DataAbstract<float> *right;
     // Velocidade atual da roda esquerda em PMW
-    DataAbstract<int8_t> *left;
+    DataAbstract<float> *left;
 
-    void setToLine();
-    void setToCurve();
-    void setToMapping();
+    // componentes da Velocidade total do robô 
+    DataAbstract<float> *VelTrans;
+    DataAbstract<float> *VelRot;
 
 private:
     std::string name;
     const char *tag = "RobotData";
 
     DataManager *dataManager;
-
-    // Linha
-    DataAbstract<int8_t> *max_line;  // salvar
-    DataAbstract<int8_t> *min_line;  // salvar
-    DataAbstract<int8_t> *base_line; // salvar
-
-    // Curva
-    DataAbstract<int8_t> *max_curve;  // salvar
-    DataAbstract<int8_t> *min_curve;  // salvar
-    DataAbstract<int8_t> *base_curve; // salvar
-
-    // Mapeamento
-    DataAbstract<int8_t> *max_mapping;  // salvar
-    DataAbstract<int8_t> *min_mapping;  // salvar
-    DataAbstract<int8_t> *base_mapping; // salvar
 };
 
 #endif

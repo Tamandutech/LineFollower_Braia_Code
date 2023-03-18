@@ -37,15 +37,20 @@ private:
 
     CarState actualCarState;
 
+    TrackState TrackLen = SHORT_CURVE;
+
     MappingService *mappingService;
 
     int numMarks = 0; // Número total de marcações laterais na pista
 
     bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
+    bool lastTransition = false;
 
+    TrackState lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
     uint8_t lastState; // armazena último estado do mapeamento
     bool lastMappingState;
 
+    bool started_in_Tuning = false;
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
     int32_t initialmediaEnc = 0;

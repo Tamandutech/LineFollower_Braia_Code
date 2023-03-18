@@ -26,6 +26,8 @@
 
 #include "cmd_system.hpp"
 #include "cmd_param.hpp"
+#include "cmd_datamanager.hpp"
+#include "cmd_runtime.hpp"
 #include "better_console.hpp"
 
 #include "esp_log.h"
@@ -65,10 +67,14 @@ void app_main(void)
   esp_log_level_set("*", ESP_LOG_ERROR);
   esp_log_level_set("BLEServerService", ESP_LOG_DEBUG);
   esp_log_level_set("Main", ESP_LOG_DEBUG);
+  //esp_log_level_set("TaskStream", ESP_LOG_DEBUG);
   //esp_log_level_set("SensorsService", ESP_LOG_DEBUG);
   //esp_log_level_set("SpeedService", ESP_LOG_DEBUG);
+  //esp_log_level_set("SpeedService", ESP_LOG_DEBUG);
   //esp_log_level_set("PIDService", ESP_LOG_DEBUG);
-
+  //esp_log_level_set("CMD_PARAM", ESP_LOG_DEBUG);
+  //esp_log_level_set("DataManager", ESP_LOG_DEBUG);
+  
   ESP_LOGD("Main", "Configurando Comandos...");
   better_console_config_t console_config;
   console_config.max_cmdline_args = 8;
@@ -77,23 +83,22 @@ void app_main(void)
   ESP_LOGD("Main", "Registrando Comandos...");
   register_system();
   register_cmd_param();
+  register_cmd_datamanager();
+  register_cmd_runtime();
 
   ESP_LOGD("Main", "Instanciando Robô...");
   braia = Robot::getInstance("TT_LF_BRAIA_V3");
 
   ESP_LOGD("Main", "Configurando Serviços...");
+  bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 20);
+  bleServerService->Start();
   mappingService = MappingService::getInstance("MappingService", 8192, 18);
   carStatusService = CarStatusService::getInstance("CarStatusService", 10000, 19);
   sensorsService = SensorsService::getInstance("SensorsService", 8192, 20);
   motorsService = MotorsService::getInstance("MotorsService", 4096, 20);
   speedService = SpeedService::getInstance("SpeedService", 4096, 20);
   pidService = PIDService::getInstance("PIDService", 4096, 20);
-  bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 20);
-  bleServerService->Start();
 
-  ESP_LOGD("Main", "Alterando cor do LED para laranja...");
-  command.color = LED_COLOR_ORANGE;
-  ledsService->queueCommand(command);
 
   sensorsService->Start();
   motorsService->Start();
@@ -105,7 +110,7 @@ void app_main(void)
   command.color = LED_COLOR_PURPLE;
   ledsService->queueCommand(command);
 
-  vTaskDelay(2000 / portTICK_PERIOD_MS);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
 
   ESP_LOGD("Main", "Apagando LEDs");
   command.color = LED_COLOR_BLACK;
