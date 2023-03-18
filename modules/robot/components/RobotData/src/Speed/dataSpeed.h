@@ -21,7 +21,7 @@
 class dataSpeed
 {
 public:
-    dataSpeed(std::string name = "dataSpeed");
+    dataSpeed(std::string name = "dataSpeed",bool PID_Select = false);
 
     // Valocidades atuais
     DataAbstract<int16_t> *RPMRight_inst;

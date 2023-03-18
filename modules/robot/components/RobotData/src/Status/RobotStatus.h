@@ -49,6 +49,7 @@ public:
     DataAbstract<bool> *GD_Optimization;
     DataAbstract<bool> *GD_OptimizationIR;
     
+    DataAbstract<bool> *PID_Select; 
     DataAbstract<uint8_t> *TrackStatus; // status (velocidade) do trecho da pista em que o robô se encontra
     DataAbstract<uint8_t> *RealTrackStatus; // status real do trecho da pista em que o robô se encontra
     DataAbstract<bool> *FirstMark; // Verifica se o robô já passou pela primeira marcação lateral

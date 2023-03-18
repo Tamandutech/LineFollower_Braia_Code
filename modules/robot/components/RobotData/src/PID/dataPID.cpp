@@ -38,7 +38,7 @@ dataPID::dataPID(std::string name)
     dataManager->registerParamData(Kd_tunning);
 
 
-    if(name == "PIDIR")
+    if(name == "PIDIR" || name == "PIDClassic")
     {
         Kp_IRline = new DataAbstract<float>("Kp_IRline", name);
         dataManager->registerParamData(Kp_IRline);
@@ -90,7 +90,7 @@ DataAbstract<float> *dataPID::Kp(TrackState state)
             return Kp_std;
         }
     }
-    else if(name == "PIDIR")
+    else if(name == "PIDIR" || name=="PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {
@@ -149,7 +149,7 @@ DataAbstract<float> *dataPID::Kd(TrackState state)
             return Kd_std;
         }
     }
-    else if(name == "PIDIR")
+    else if(name == "PIDIR" || name== "PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {

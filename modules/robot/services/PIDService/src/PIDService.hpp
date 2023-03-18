@@ -27,6 +27,7 @@ private:
     dataPID *PIDTrans;
     dataPID *PIDRot;
     dataPID *PIDIR;
+    dataPID *PIDClassic;
 
     short const TaskDelay = 10; // 10ms
 

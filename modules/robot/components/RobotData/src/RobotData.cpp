@@ -18,19 +18,35 @@ Robot::Robot(std::string name)
     // Instânciando objetos componentes do Robô.
     ESP_LOGD(name.c_str(), "Criando sub-objetos para o %s", "Robô");
 
+    this->Status = new RobotStatus(CAR_IN_LINE, "RobotStatus");
+    ESP_LOGD(name.c_str(), "Status (%p)", this->Status);
+    this->Status->PID_Select->loadData();
+    
     this->sLatMarks = new dataSLatMarks("sLatMarks");
     ESP_LOGD(name.c_str(), "sLatMarks (%p)", this->sLatMarks);
+    
+    // Seleciona o PID a ser utilizado
+    if(this->Status->PID_Select->getData())
+    { 
+        this->PIDClassic = new dataPID("PIDClassic"); 
+        ESP_LOGD(name.c_str(), "PIDClassic (%p)", this->PIDClassic);
+    }
+    else
+    {
 
-    this->PIDVel = new dataPID("PIDVel");
-    ESP_LOGD(name.c_str(), "PIDVel (%p)", this->PIDVel);
+        this->PIDVel = new dataPID("PIDVel");
+        ESP_LOGD(name.c_str(), "PIDVel (%p)", this->PIDVel);
 
-    this->PIDRot = new dataPID("PIDRot");
-    ESP_LOGD(name.c_str(), "PIDRot (%p)", this->PIDRot);
+        this->PIDRot = new dataPID("PIDRot");
+        ESP_LOGD(name.c_str(), "PIDRot (%p)", this->PIDRot);
 
-    this->PIDIR = new dataPID("PIDIR");
-    ESP_LOGD(name.c_str(), "PIDIR (%p)", this->PIDIR);
+        this->PIDIR = new dataPID("PIDIR");
+        ESP_LOGD(name.c_str(), "PIDIR (%p)", this->PIDIR);
 
-    this->speed = new dataSpeed("speed");
+    }
+
+    
+    this->speed = new dataSpeed("speed", this->Status->PID_Select->getData());
     ESP_LOGD(name.c_str(), "speed (%p)", this->speed);
 
     this->sLat = new dataSensor(2, "sLat");
@@ -39,8 +55,7 @@ Robot::Robot(std::string name)
     this->sArray = new dataSensor(8, "sArray");
     ESP_LOGD(name.c_str(), "sArray (%p)", this->sArray);
 
-    this->Status = new RobotStatus(CAR_IN_LINE, "RobotStatus");
-    ESP_LOGD(name.c_str(), "Status (%p)", this->Status);
+
 
     // Inicializando os parâmetros do robô
     // struct CarParameters initialParams;
@@ -76,9 +91,9 @@ dataPID *Robot::getPIDVel()
     return this->PIDVel;
 }
 
-dataPID *Robot::getPIDRot()
+dataPID *Robot::getPIDClassic()
 {
-    return this->PIDRot;
+    return this->PIDClassic;
 }
 
 dataPID *Robot::getPIDIR()
@@ -86,10 +101,16 @@ dataPID *Robot::getPIDIR()
     return this->PIDIR;
 }
 
+dataPID *Robot::getPIDRot()
+{
+    return this->PIDRot;
+}
+
 RobotStatus *Robot::getStatus()
 {
     return this->Status;
 }
+
 
 std::string Robot::GetName()
 {

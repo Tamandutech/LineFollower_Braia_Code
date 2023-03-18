@@ -5,6 +5,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->robot = Robot::getInstance();;
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
+
     this->PIDTrans = robot->getPIDVel();
     this->PIDRot = robot->getPIDRot();
     this->PIDIR = robot->getPIDIR();
@@ -19,6 +20,8 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     KpIR = PIDIR->Kp(TUNING)->getData();
     KdIR = PIDIR->Kd(TUNING)->getData();
     fatorCorrecao = PIDTrans->CorrectionFactor->getData();
+
+    this->PIDClassic = robot->getPIDClassic();
 
 };
 
@@ -71,79 +74,113 @@ void PIDService::Run()
         // Variaveis de calculo para os pids do robô
         if(estado != CAR_STOPPED)
         {
-            KpVel = (PIDTrans->Kp(RealTracklen) != nullptr) ? PIDTrans->Kp(RealTracklen)->getData() : 0;
-            KiVel = (PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->Ki(RealTracklen)->getData() : 0;
-            KdVel = (PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->Kd(RealTracklen)->getData() : 0;
+            if (!status->PID_Select->getData())
+            {
+                KpVel = (PIDTrans->Kp(RealTracklen) != nullptr) ? PIDTrans->Kp(RealTracklen)->getData() : 0;
+                KiVel = (PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->Ki(RealTracklen)->getData() : 0;
+                KdVel = (PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->Kd(RealTracklen)->getData() : 0;
 
-            KpRot = (PIDRot->Kp(RealTracklen) != nullptr) ? PIDRot->Kp(RealTracklen)->getData() : 0;
-            KiRot = (PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->Ki(RealTracklen)->getData() : 0;
-            KdRot = (PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->Kd(RealTracklen)->getData() : 0;
+                KpRot = (PIDRot->Kp(RealTracklen) != nullptr) ? PIDRot->Kp(RealTracklen)->getData() : 0;
+                KiRot = (PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->Ki(RealTracklen)->getData() : 0;
+                KdRot = (PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->Kd(RealTracklen)->getData() : 0;
 
-            KpIR = (PIDIR->Kp(RealTracklen) != nullptr) ? PIDIR->Kp(RealTracklen)->getData() : 0;
-            KdIR = (PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->Kd(RealTracklen)->getData() : 0;
+                KpIR = (PIDIR->Kp(RealTracklen) != nullptr) ? PIDIR->Kp(RealTracklen)->getData() : 0;
+                KdIR = (PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->Kd(RealTracklen)->getData() : 0;   
+            }
+            else
+            {
+                KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
+                KdIR = (PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0;   
+            }
+            
+            
         }
 
         // Velocidade do carrinho
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
         VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
 
-        PIDTrans->input->setData(VelTrans);
-        PIDRot->input->setData(VelRot);
-
         IR = robot->getsArray()->getLine(); // posição do robô
-        PIDIR->input->setData(IR);
-        speed->VelTrans->setData(VelTrans);
-        speed->VelRot->setData(VelRot);
+        if(!status->PID_Select->getData())
+        {
+            PIDTrans->input->setData(VelTrans);
+            PIDRot->input->setData(VelRot);
 
-        // Erros atuais
-        erroIR = 3500 - IR;
-        PIDIR->setpoint->setData(3500);
-        PIDIR->erro->setData(erroIR);
-        erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
-        PIDTrans->erro->setData(erroVelTrans);
+            PIDIR->input->setData(IR);
+            speed->VelTrans->setData(VelTrans);
+            speed->VelRot->setData(VelRot);
 
-        // Cálculo do PID para posicionar o robô  na linha
-        P_IR = KpIR * erroIR;
-        if(PIDIR->UseKdIR->getData())  D_IR = KdIR * (lastIR - IR);
-        else D_IR = 0;
-        PidIR = P_IR + D_IR;
-        PIDIR->output->setData(PidIR);
+            // Erros atuais
+            erroIR = 3500 - IR;
+            PIDIR->setpoint->setData(3500);
+            PIDIR->erro->setData(erroIR);
+            erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
+            PIDTrans->erro->setData(erroVelTrans);
 
-        PIDRot->setpoint->setData(PIDIR->output->getData()); // cálculo do setpoint rotacional
-        erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot; //erro rotacional
-        PIDRot->erro->setData(erroVelRot);
+            // Cálculo do PID para posicionar o robô  na linha
+            P_IR = KpIR * erroIR;
+            if(PIDIR->UseKdIR->getData())  D_IR = KdIR * (lastIR - IR);
+            else D_IR = 0;
+            PidIR = P_IR + D_IR;
+            PIDIR->output->setData(PidIR);
 
-        // calculando Pids rotacional e translacional
-        Ptrans = KpVel * erroVelTrans;
-        Itrans += KiVel * erroVelTrans;
-        constrain(Itrans, (float)speedMin, (float)speedMax);
-        //Dtrans = KdVel * (erroVelTrans - errTrans_ant);
-        Dtrans = KdVel * (lastVelTrans - VelTrans);
-        PidTrans = Ptrans + Itrans + Dtrans;
-        //errTrans_ant = erroVelTrans;
-        //lastVelTrans = VelTrans;
+            PIDRot->setpoint->setData(PIDIR->output->getData()); // cálculo do setpoint rotacional
+            erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot; //erro rotacional
+            PIDRot->erro->setData(erroVelRot);
 
-        Prot = KpRot * erroVelRot;
-        Irot += KiRot * erroVelRot;
-        constrain(Irot, (float)speedMin, (float)speedMax);
-        //Drot = KdRot * (erroVelRot - errRot_ant);
-        Drot = KdRot * (lastVelRot - VelRot);
-        PidRot = Prot + Irot + Drot;
-        //errRot_ant = erroVelRot;
-        //lastVelRot = VelRot;
+            // calculando Pids rotacional e translacional
+            Ptrans = KpVel * erroVelTrans;
+            Itrans += KiVel * erroVelTrans;
+            constrain(Itrans, (float)speedMin, (float)speedMax);
+            //Dtrans = KdVel * (erroVelTrans - errTrans_ant);
+            Dtrans = KdVel * (lastVelTrans - VelTrans);
+            PidTrans = Ptrans + Itrans + Dtrans;
+            //errTrans_ant = erroVelTrans;
+            //lastVelTrans = VelTrans;
+
+            Prot = KpRot * erroVelRot;
+            Irot += KiRot * erroVelRot;
+            constrain(Irot, (float)speedMin, (float)speedMax);
+            //Drot = KdRot * (erroVelRot - errRot_ant);
+            Drot = KdRot * (lastVelRot - VelRot);
+            PidRot = Prot + Irot + Drot;
+            //errRot_ant = erroVelRot;
+            //lastVelRot = VelRot;
 
 
-        // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
-        PIDTrans->output->setData(constrain((PidTrans) + speedBase, speedMin, speedMax));
-        PIDRot->output->setData(PidRot);
+            // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
+            PIDTrans->output->setData(constrain((PidTrans) + speedBase, speedMin, speedMax));
+            PIDRot->output->setData(PidRot);
 
 
-        // Calculo de velocidade do motor
-        speed->right->setData(
-            constrain(PIDTrans->output->getData() + PIDRot->output->getData(), speedMin, speedMax));
+            // Calculo de velocidade do motor
+            speed->right->setData(
+                constrain(PIDTrans->output->getData() + PIDRot->output->getData(), speedMin, speedMax));
 
-        speed->left->setData(
-            constrain(PIDTrans->output->getData() - PIDRot->output->getData(), speedMin, speedMax));
+            speed->left->setData(
+                constrain(PIDTrans->output->getData() - PIDRot->output->getData(), speedMin, speedMax));
+        }
+        else
+        {
+
+            erroIR = 3500 - IR;
+            PIDClassic->setpoint->setData(3500);
+            PIDClassic->erro->setData(erroIR);
+            // Cálculo do PID para posicionar o robô  na linha
+            P_IR = KpIR * erroIR;
+            if(PIDClassic->UseKdIR->getData())  D_IR = KdIR * (lastIR - IR);
+            else D_IR = 0;
+            PidIR = P_IR + D_IR;
+            PIDClassic->output->setData(PidIR);
+
+            // Calculo de velocidade do motor
+            speed->right->setData(
+                constrain(setpointPIDTransTarget + PIDClassic->output->getData(), speedMin, speedMax));
+
+            speed->left->setData(
+                constrain(setpointPIDTransTarget - PIDClassic->output->getData(), speedMin, speedMax));
+
+        }
 
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
