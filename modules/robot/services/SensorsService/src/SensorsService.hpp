@@ -36,12 +36,12 @@ private:
   RobotStatus *status;
 
   led_command_t command;
+  
   int sumSensEsq = 0;
   int sumSensDir = 0;
-  int meanSensEsq = 0;
-  int meanSensDir = 0;
 
   int iloop = 0;
+  int nLatReads = 0;
 
   void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot);
 

@@ -124,17 +124,14 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     robot->getsArray()->setChannels(sArraychannelsVec);
     robot->getsLat()->setChannels(SLatchannelsVec);
 
-    // if (iloop >= 100)
-    // {
-    //     ESP_LOGD("getSensors", "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
-    //     ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
-    //     iloop = 0;
-    // }
-    // iloop++;
-    // ESP_LOGD("getSensors", "Linha: %d", robot->getsArray()->getLine());
-    // ESP_LOGD("getSensors", "Laterais: %d | %d ", SLatchannels[0], SLatchannels[1]);
-
-    // robot->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
+    if (iloop >= 100)
+    {
+        ESP_LOGD(GetName().c_str(), "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
+        ESP_LOGD(GetName().c_str(), "Linha: %d", robot->getsArray()->getLine());
+        ESP_LOGD(GetName().c_str(), "Laterais -  Esqurdo: %d | Direito : %d ", robot->getsLat()->getChannel(0), robot->getsLat()->getChannel(1));
+        iloop = 0;
+    }
+    iloop++;
 }
 
 void SensorsService::processSLat(Robot *robot)
@@ -142,34 +139,27 @@ void SensorsService::processSLat(Robot *robot)
     uint16_t slesq = SLat->getChannel(0);
     uint16_t sldir = SLat->getChannel(1);
     
-    iloop ++; 
+    nLatReads++; 
     sumSensEsq += slesq;
     sumSensDir += sldir;    
 
-    // if (iloop >= 100)
-    // {
-    //     ESP_LOGD("processSLat", "Laterais (Direita): %d", sldir);
-    //     ESP_LOGD("processSLat", "Laterais (esquerda): %d", slesq);
-
-    //     iloop = 0;
-    // }
-    // iloop++;
-
-    if (iloop >= latMarks->MarkstoMean->getData())  //valor definido na dashboard
+    if (nLatReads >= latMarks->MarkstoMean->getData())  //valor definido na dashboard
     {
-        meanSensDir = (sumSensDir/iloop);
-        meanSensEsq = (sumSensEsq/iloop);
+        int meanSensDir = (sumSensDir/nLatReads);
+        int meanSensEsq = (sumSensEsq/nLatReads);
 
         if (meanSensEsq < 300 || meanSensDir < 300) // leitura de faixas brancas sensores laterais
         {
             if ((meanSensEsq < 300) && (meanSensDir > 600)) // lendo sLat esq. branco e dir. preto
             {
-                if (!(latMarks->latEsqPass->getData()) && status->robotState->getData() != CAR_STOPPED)
+                if (!(latMarks->latEsqPass->getData()))
                 {
-                    latMarks->leftPassedInc();
-
-                    latMarks->latEsqPass->setData(true);
-                    latMarks->latDirPass->setData(false);
+                    if(status->robotState->getData() != CAR_STOPPED)
+                    {
+                        latMarks->leftPassedInc();
+                        latMarks->latEsqPass->setData(true);
+                        latMarks->latDirPass->setData(false);
+                    }
                     command.effect = LED_EFFECT_SET;
                     command.brightness = 1;
                     command.led[1] = LED_POSITION_NONE;
@@ -179,17 +169,19 @@ void SensorsService::processSLat(Robot *robot)
                     command.led[0] = LED_POSITION_RIGHT;
                     command.color = LED_COLOR_BLACK;
                     LEDsService::getInstance()->queueCommand(command);
-                    // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
                 }
             }
             else if ((meanSensEsq < 300) && (meanSensDir > 600)) // lendo sldir. branco e sLat esq. preto
             {
-                if (!(latMarks->latDirPass->getData()) && status->robotState->getData() != CAR_STOPPED)
+                if (!(latMarks->latDirPass->getData()))
                 {
-                    latMarks->rightPassedInc();
+                    if(status->robotState->getData() != CAR_STOPPED)
+                    {
+                        latMarks->rightPassedInc();
 
-                    latMarks->latDirPass->setData(true);
-                    latMarks->latEsqPass->setData(false);
+                        latMarks->latDirPass->setData(true);
+                        latMarks->latEsqPass->setData(false);
+                    }
 
                     command.effect = LED_EFFECT_SET;
                     command.brightness = 1;
@@ -204,6 +196,23 @@ void SensorsService::processSLat(Robot *robot)
                     command.color = LED_COLOR_BLACK;
                     LEDsService::getInstance()->queueCommand(command);
                 }
+            }
+
+            else if ((meanSensEsq > 600) && (meanSensDir > 600)) // quando ler ambos brancos, contar nova marcação apenas se ambos os sensores lerem preto antes de lerem a nova marcação 
+            {
+                if ((latMarks->latDirPass->getData() && !latMarks->latEsqPass->getData()) 
+                    || (latMarks->latEsqPass->getData() && !latMarks->latDirPass->getData()))
+                { 
+                    command.effect = LED_EFFECT_SET;
+                    command.brightness = 1;
+                    command.led[1] = LED_POSITION_RIGHT;
+                    command.led[0] = LED_POSITION_LEFT;
+                    command.led[2] = LED_POSITION_NONE;
+                    command.color = LED_COLOR_BLACK;
+                    LEDsService::getInstance()->queueCommand(command);
+                }
+                latMarks->latDirPass->setData(true);
+                latMarks->latEsqPass->setData(true);
             }
         }
         else
@@ -222,85 +231,8 @@ void SensorsService::processSLat(Robot *robot)
             latMarks->latDirPass->setData(false);
             latMarks->latEsqPass->setData(false);
         }
-        iloop = 0;
-        meanSensDir = 0;
-        meanSensEsq = 0;
+        nLatReads = 0;
+        sumSensDir = 0;
+        sumSensEsq = 0;
     }
 }
-
-#if defined(BRAIA_V2)
-void SensorsService::processSLat(Robot *robot)
-{
-    bool sldir1 = gpio_get_level(GPIO_NUM_17);
-    bool sldir2 = gpio_get_level(GPIO_NUM_5);
-
-    uint16_t slesq1 = SLat->getChannel(0);
-    uint16_t slesq2 = SLat->getChannel(1);
-
-    // ESP_LOGD("processSLat", "Laterais (Direita): %d | %d", sldir1, sldir2);
-    // ESP_LOGD("processSLat", "Laterais (esquerda): %d | %d", slesq1, slesq2);
-
-    if (slesq1 < 300 || !sldir2) // leitura de faixas brancas sensores laterais
-    {
-        if ((slesq1 < 300) && (sldir2)) // lendo sLat esq. branco e dir. preto
-        {
-            if (!(latMarks->latEsqPass->getData()) && status->robotState->getData() != CAR_STOPPED)
-            {
-                latMarks->leftPassedInc();
-
-                latMarks->latEsqPass->setData(true);
-                latMarks->latDirPass->setData(false);
-                command.effect = LED_EFFECT_SET;
-                command.brightness = 1;
-                command.led[1] = LED_POSITION_NONE;
-                command.led[0] = LED_POSITION_LEFT;
-                command.color = LED_COLOR_RED;
-                LEDsService::getInstance()->queueCommand(command);
-                command.led[0] = LED_POSITION_RIGHT;
-                command.color = LED_COLOR_BLACK;
-                LEDsService::getInstance()->queueCommand(command);
-                // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
-            }
-        }
-        else if ((!sldir2) && (slesq1 > 600)) // lendo sldir. branco e sLat esq. preto
-        {
-            if (!(latMarks->latDirPass->getData()) && status->robotState->getData() != CAR_STOPPED)
-            {
-                latMarks->rightPassedInc();
-
-                latMarks->latDirPass->setData(true);
-                latMarks->latEsqPass->setData(false);
-
-                command.effect = LED_EFFECT_SET;
-                command.brightness = 1;
-
-                command.led[1] = LED_POSITION_NONE;
-
-                command.led[0] = LED_POSITION_RIGHT;
-                command.color = LED_COLOR_RED;
-                LEDsService::getInstance()->queueCommand(command);
-
-                command.led[0] = LED_POSITION_LEFT;
-                command.color = LED_COLOR_BLACK;
-                LEDsService::getInstance()->queueCommand(command);
-            }
-        }
-    }
-    else
-    {
-        if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
-        {
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            command.led[1] = LED_POSITION_RIGHT;
-            command.led[0] = LED_POSITION_LEFT;
-            command.led[2] = LED_POSITION_NONE;
-            command.color = LED_COLOR_BLACK;
-            LEDsService::getInstance()->queueCommand(command);
-        }
-
-        latMarks->latDirPass->setData(false);
-        latMarks->latEsqPass->setData(false);
-    }
-}
-#endif
