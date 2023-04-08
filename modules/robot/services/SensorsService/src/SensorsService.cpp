@@ -7,6 +7,7 @@ SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_
     latMarks = robot->getSLatMarks();
     SLat = robot->getsLat();
     status = robot->getStatus();
+    
 
     // Definindo configs do ADC1 no GPIO36
     adc1_config_width(ADC_WIDTH_12Bit);
@@ -141,17 +142,9 @@ void SensorsService::processSLat(Robot *robot)
     uint16_t slesq = SLat->getChannel(0);
     uint16_t sldir = SLat->getChannel(1);
     
-    /* 
     iloop ++; 
     sumSensEsq += slesq;
     sumSensDir += sldir;    
-
-    if (iloop >= 6)
-    {
-        meanSensDir = (sumSensDir/iloop);
-        meanSensEsq = (sumSensEsq/iloop);
-    }
-    */ 
 
     // if (iloop >= 100)
     // {
@@ -162,83 +155,76 @@ void SensorsService::processSLat(Robot *robot)
     // }
     // iloop++;
 
-    if (slesq < 300 || sldir < 300) // leitura de faixas brancas sensores laterais
+    if (iloop >= latMarks->MarkstoMean->getData())  //valor definido na dashboard
     {
-        if ((slesq < 300) && (sldir > 600)) // lendo sLat esq. branco e dir. preto
-        {
-            if (!(latMarks->latEsqPass->getData()) && status->robotState->getData() != CAR_STOPPED)
-            {
-                latMarks->leftPassedInc();
+        meanSensDir = (sumSensDir/iloop);
+        meanSensEsq = (sumSensEsq/iloop);
 
-                latMarks->latEsqPass->setData(true);
-                latMarks->latDirPass->setData(false);
-                command.effect = LED_EFFECT_SET;
-                command.brightness = 1;
-                command.led[1] = LED_POSITION_NONE;
-                command.led[0] = LED_POSITION_LEFT;
-                command.color = LED_COLOR_RED;
-                LEDsService::getInstance()->queueCommand(command);
-                command.led[0] = LED_POSITION_RIGHT;
-                command.color = LED_COLOR_BLACK;
-                LEDsService::getInstance()->queueCommand(command);
-                // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+        if (meanSensEsq < 300 || meanSensDir < 300) // leitura de faixas brancas sensores laterais
+        {
+            if ((meanSensEsq < 300) && (meanSensDir > 600)) // lendo sLat esq. branco e dir. preto
+            {
+                if (!(latMarks->latEsqPass->getData()) && status->robotState->getData() != CAR_STOPPED)
+                {
+                    latMarks->leftPassedInc();
+
+                    latMarks->latEsqPass->setData(true);
+                    latMarks->latDirPass->setData(false);
+                    command.effect = LED_EFFECT_SET;
+                    command.brightness = 1;
+                    command.led[1] = LED_POSITION_NONE;
+                    command.led[0] = LED_POSITION_LEFT;
+                    command.color = LED_COLOR_RED;
+                    LEDsService::getInstance()->queueCommand(command);
+                    command.led[0] = LED_POSITION_RIGHT;
+                    command.color = LED_COLOR_BLACK;
+                    LEDsService::getInstance()->queueCommand(command);
+                    // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
+                }
+            }
+            else if ((meanSensEsq < 300) && (meanSensDir > 600)) // lendo sldir. branco e sLat esq. preto
+            {
+                if (!(latMarks->latDirPass->getData()) && status->robotState->getData() != CAR_STOPPED)
+                {
+                    latMarks->rightPassedInc();
+
+                    latMarks->latDirPass->setData(true);
+                    latMarks->latEsqPass->setData(false);
+
+                    command.effect = LED_EFFECT_SET;
+                    command.brightness = 1;
+
+                    command.led[1] = LED_POSITION_NONE;
+
+                    command.led[0] = LED_POSITION_RIGHT;
+                    command.color = LED_COLOR_RED;
+                    LEDsService::getInstance()->queueCommand(command);
+
+                    command.led[0] = LED_POSITION_LEFT;
+                    command.color = LED_COLOR_BLACK;
+                    LEDsService::getInstance()->queueCommand(command);
+                }
             }
         }
-        else if ((slesq < 300) && (sldir > 600)) // lendo sldir. branco e sLat esq. preto
+        else
         {
-            if (!(latMarks->latDirPass->getData()) && status->robotState->getData() != CAR_STOPPED)
+            if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
             {
-                latMarks->rightPassedInc();
-
-                latMarks->latDirPass->setData(true);
-                latMarks->latEsqPass->setData(false);
-
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 1;
-
-                command.led[1] = LED_POSITION_NONE;
-
-                command.led[0] = LED_POSITION_RIGHT;
-                command.color = LED_COLOR_RED;
-                LEDsService::getInstance()->queueCommand(command);
-
+                command.led[1] = LED_POSITION_RIGHT;
                 command.led[0] = LED_POSITION_LEFT;
+                command.led[2] = LED_POSITION_NONE;
                 command.color = LED_COLOR_BLACK;
                 LEDsService::getInstance()->queueCommand(command);
             }
-        }
-    }
-    else if ((slesq > 600) && (sldir > 600)) // quando ler ambos brancos, desconsiderar como cruzamento e tratar como leitura de ambos pretos
-    {
-        if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
-        { 
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            command.led[1] = LED_POSITION_RIGHT;
-            command.led[0] = LED_POSITION_LEFT;
-            command.led[2] = LED_POSITION_NONE;
-            command.color = LED_COLOR_BLACK;
-            LEDsService::getInstance()->queueCommand(command);
-        }
 
-        latMarks->latDirPass->setData(false);
-        latMarks->latEsqPass->setData(false);
-
-    else
-    {
-        if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
-        {
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            command.led[1] = LED_POSITION_RIGHT;
-            command.led[0] = LED_POSITION_LEFT;
-            command.led[2] = LED_POSITION_NONE;
-            command.color = LED_COLOR_BLACK;
-            LEDsService::getInstance()->queueCommand(command);
+            latMarks->latDirPass->setData(false);
+            latMarks->latEsqPass->setData(false);
         }
-
-        latMarks->latDirPass->setData(false);
-        latMarks->latEsqPass->setData(false);
+        iloop = 0;
+        meanSensDir = 0;
+        meanSensEsq = 0;
     }
 }
 
