@@ -136,11 +136,22 @@ void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *rob
     // robot->getsLat()->setLine((SLatchannels[0]+SLatchannels[1])/2-(SLatchannels[2]+SLatchannels[3])/2); // cálculo dos valores dos sensores laterais
 }
 
-#if defined(BRAIA_V3)
 void SensorsService::processSLat(Robot *robot)
 {
     uint16_t slesq = SLat->getChannel(0);
     uint16_t sldir = SLat->getChannel(1);
+    
+    /* 
+    iloop ++; 
+    sumSensEsq += slesq;
+    sumSensDir += sldir;    
+
+    if (iloop >= 6)
+    {
+        meanSensDir = (sumSensDir/iloop);
+        meanSensEsq = (sumSensEsq/iloop);
+    }
+    */ 
 
     // if (iloop >= 100)
     // {
@@ -173,7 +184,7 @@ void SensorsService::processSLat(Robot *robot)
                 // ESP_LOGI("processSLat", "Laterais (Direita): %d",latMarks->getSLatDir());
             }
         }
-        else if ((sldir < 300) && (slesq > 600)) // lendo sldir. branco e sLat esq. preto
+        else if ((slesq < 300) && (sldir > 600)) // lendo sldir. branco e sLat esq. preto
         {
             if (!(latMarks->latDirPass->getData()) && status->robotState->getData() != CAR_STOPPED)
             {
@@ -197,6 +208,22 @@ void SensorsService::processSLat(Robot *robot)
             }
         }
     }
+    else if ((slesq > 600) && (sldir > 600)) // quando ler ambos brancos, desconsiderar como cruzamento e tratar como leitura de ambos pretos
+    {
+        if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
+        { 
+            command.effect = LED_EFFECT_SET;
+            command.brightness = 1;
+            command.led[1] = LED_POSITION_RIGHT;
+            command.led[0] = LED_POSITION_LEFT;
+            command.led[2] = LED_POSITION_NONE;
+            command.color = LED_COLOR_BLACK;
+            LEDsService::getInstance()->queueCommand(command);
+        }
+
+        latMarks->latDirPass->setData(false);
+        latMarks->latEsqPass->setData(false);
+
     else
     {
         if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
@@ -214,7 +241,6 @@ void SensorsService::processSLat(Robot *robot)
         latMarks->latEsqPass->setData(false);
     }
 }
-#endif
 
 #if defined(BRAIA_V2)
 void SensorsService::processSLat(Robot *robot)
