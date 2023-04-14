@@ -31,6 +31,8 @@ private:
 
     short const TaskDelay = 10; // 10ms
 
+    bool pid_select = false;
+
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
     double KpVel = 0, KiVel = 0, KdVel = 0;
     double KpRot = 0, KiRot = 0, KdRot = 0;
@@ -41,11 +43,11 @@ private:
     float errTrans_ant = 0; // errTrans_ant2 = 0;
 
     // Variáveis para cálculo dos pids
-    float accel = 6000; // aceleração em rpm/s
-    float desaccel = 6000; // aceleração em rpm/s
-    int16_t setpointPIDTransTarget = 0;
-    int16_t newSetpoint = 0;
-    int16_t SetpointTransactual = 0;
+    float accel = 6000; // aceleração em rpm/s ou em porcentagem
+    float desaccel = 6000; // aceleração em rpm/s ou em porcentagem
+    float speedTarget = 0;
+    float newSpeed = 0;
+    float calculatedSpeed = 0; // Velocidade calculada com base na aceleração
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
     float P_IR = 0, D_IR = 0;

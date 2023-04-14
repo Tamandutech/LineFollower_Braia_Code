@@ -58,18 +58,7 @@ dataPID::dataPID(std::string name)
 
     if(name == "PIDVel")
     {
-        CorrectionFactor = new DataAbstract<float>("FatorCorrecao", name);
-        dataManager->registerParamData(CorrectionFactor);
-        CorrectionFactorLine = new DataAbstract<float>("FatorCorrecaoLine", name);
-        dataManager->registerParamData(CorrectionFactorLine);
-        CorrectionFactorShortCurve = new DataAbstract<float>("FatorCorrecaoShortCurve", name);
-        dataManager->registerParamData(CorrectionFactorShortCurve);
-        CorrectionFactorMediumCurve = new DataAbstract<float>("FatorCorrecaoMediumCurve", name);
-        dataManager->registerParamData(CorrectionFactorMediumCurve);
-        CorrectionFactorLongCurve = new DataAbstract<float>("FatorCorrecaoLongCurve", name);
-        dataManager->registerParamData(CorrectionFactorLongCurve);
-        CorrectionFactorZigZag = new DataAbstract<float>("FatorCorrecaoZigZag", name);
-        dataManager->registerParamData(CorrectionFactorZigZag);
+
         UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
         dataManager->registerParamData(UseKiVel);
     }

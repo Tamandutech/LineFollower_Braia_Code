@@ -43,6 +43,19 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
     dataManager->registerRuntimeData(right);
     left = new DataAbstract<float>("left", name, 0);
     dataManager->registerRuntimeData(left);
+
+    CorrectionFactor = new DataAbstract<float>("FatorCorrecao", name);
+    dataManager->registerParamData(CorrectionFactor);
+    CorrectionFactorLine = new DataAbstract<float>("FatorCorrecaoLine", name);
+    dataManager->registerParamData(CorrectionFactorLine);
+    CorrectionFactorShortCurve = new DataAbstract<float>("FatorCorrecaoShortCurve", name);
+    dataManager->registerParamData(CorrectionFactorShortCurve);
+    CorrectionFactorMediumCurve = new DataAbstract<float>("FatorCorrecaoMediumCurve", name);
+    dataManager->registerParamData(CorrectionFactorMediumCurve);
+    CorrectionFactorLongCurve = new DataAbstract<float>("FatorCorrecaoLongCurve", name);
+    dataManager->registerParamData(CorrectionFactorLongCurve);
+    CorrectionFactorZigZag = new DataAbstract<float>("FatorCorrecaoZigZag", name);
+    dataManager->registerParamData(CorrectionFactorZigZag);
     
     if(PID_Select) 
     {
@@ -125,5 +138,10 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
 
     VelRot = new DataAbstract<float>("VelRot", name, 0);
     dataManager->registerRuntimeData(VelRot);
+
+    // Velocidade linear desejada no momento
+    CalculatedSpeed = new DataAbstract<float>("CalculatedSpeed", name, 0);
+    dataManager->registerRuntimeData(CalculatedSpeed);
+
 
 }

@@ -62,6 +62,17 @@ public:
     DataAbstract<int16_t> *ZIGZAG;
     DataAbstract<int16_t> *Special_Track;
 
+    DataAbstract<float> *CalculatedSpeed; // Velocidade final desejada
+
+    // Variáveis para a diminuição da velocidade do robô com base no erro dele em relação à pista
+    DataAbstract<float> *CorrectionFactor;
+    DataAbstract<float> *CorrectionFactorLine;
+    DataAbstract<float> *CorrectionFactorMediumCurve;
+    DataAbstract<float> *CorrectionFactorShortCurve;
+    DataAbstract<float> *CorrectionFactorLongCurve;
+    DataAbstract<float> *CorrectionFactorZigZag;
+
+
     // Velocidade para o modo Tunning
     DataAbstract<int16_t> *Tunning_speed;
     // Velocidade padrão do robô
