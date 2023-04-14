@@ -157,9 +157,11 @@ void SensorsService::processSLat(Robot *robot)
                     if(status->robotState->getData() != CAR_STOPPED)
                     {
                         latMarks->leftPassedInc();
-                        latMarks->latEsqPass->setData(true);
-                        latMarks->latDirPass->setData(false);
                     }
+
+                    latMarks->latEsqPass->setData(true);
+                    latMarks->latDirPass->setData(false);
+                    
                     command.effect = LED_EFFECT_SET;
                     command.brightness = 1;
                     command.led[1] = LED_POSITION_NONE;
@@ -171,7 +173,7 @@ void SensorsService::processSLat(Robot *robot)
                     LEDsService::getInstance()->queueCommand(command);
                 }
             }
-            else if ((meanSensEsq < 300) && (meanSensDir > 600)) // lendo sldir. branco e sLat esq. preto
+            else if ((meanSensDir < 300) && (meanSensEsq > 600)) // lendo sldir. branco e sLat esq. preto
             {
                 if (!(latMarks->latDirPass->getData()))
                 {
@@ -179,10 +181,10 @@ void SensorsService::processSLat(Robot *robot)
                     {
                         latMarks->rightPassedInc();
 
-                        latMarks->latDirPass->setData(true);
-                        latMarks->latEsqPass->setData(false);
                     }
 
+                    latMarks->latDirPass->setData(true);
+                    latMarks->latEsqPass->setData(false);
                     command.effect = LED_EFFECT_SET;
                     command.brightness = 1;
 
@@ -198,7 +200,7 @@ void SensorsService::processSLat(Robot *robot)
                 }
             }
 
-            else if ((meanSensEsq > 600) && (meanSensDir > 600)) // quando ler ambos brancos, contar nova marcação apenas se ambos os sensores lerem preto antes de lerem a nova marcação 
+            else if ((meanSensEsq < 300) && (meanSensDir < 300)) // quando ler ambos brancos, contar nova marcação apenas se ambos os sensores lerem preto antes de lerem a nova marcação 
             {
                 if ((latMarks->latDirPass->getData() && !latMarks->latEsqPass->getData()) 
                     || (latMarks->latEsqPass->getData() && !latMarks->latDirPass->getData()))
