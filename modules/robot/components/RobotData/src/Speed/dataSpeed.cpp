@@ -66,32 +66,32 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
         desaccelration = new DataAbstract<float>("PWM_desaccel", name, 6000);
         dataManager->registerParamData(desaccelration);
 
-        initialspeed = new DataAbstract<int16_t>("PWM_initial_speed", name, 1100);
+        initialspeed = new DataAbstract<float>("PWM_initial_speed", name, 1100);
         dataManager->registerParamData(initialspeed);
 
         //Setpoints translacionais para os tipos de trechos
-        SetPointMap = new DataAbstract<int16_t>("PWM_Setpoint_Map", name, 600);
+        SetPointMap = new DataAbstract<float>("PWM_Setpoint_Map", name, 600);
         dataManager->registerParamData(SetPointMap);
-        Long_Line = new DataAbstract<int16_t>("PWM_Long_line", name, 1000);
+        Long_Line = new DataAbstract<float>("PWM_Long_line", name, 1000);
         dataManager->registerParamData(Long_Line);
-        Medium_Line = new DataAbstract<int16_t>("PWM_Medium_line", name, 1000);
+        Medium_Line = new DataAbstract<float>("PWM_Medium_line", name, 1000);
         dataManager->registerParamData(Medium_Line);
-        Short_Line = new DataAbstract<int16_t>("PWM_Short_line", name, 1000);
+        Short_Line = new DataAbstract<float>("PWM_Short_line", name, 1000);
         dataManager->registerParamData(Short_Line);
 
-        Long_Curve = new DataAbstract<int16_t>("PWM_Long_curve", name, 1000);
+        Long_Curve = new DataAbstract<float>("PWM_Long_curve", name, 1000);
         dataManager->registerParamData(Long_Curve);
-        Medium_Curve = new DataAbstract<int16_t>("PWM_Medium_curve", name, 1000);
+        Medium_Curve = new DataAbstract<float>("PWM_Medium_curve", name, 1000);
         dataManager->registerParamData(Medium_Curve);
-        Short_Curve = new DataAbstract<int16_t>("PWM_Short_curve", name, 1000);
+        Short_Curve = new DataAbstract<float>("PWM_Short_curve", name, 1000);
         dataManager->registerParamData(Short_Curve);
-        ZIGZAG = new DataAbstract<int16_t>("PWM_ZigZag", name, 1000);
+        ZIGZAG = new DataAbstract<float>("PWM_ZigZag", name, 1000);
         dataManager->registerParamData(ZIGZAG);
-        Special_Track = new DataAbstract<int16_t>("PWM_SpecialTrack", name, 1000);
+        Special_Track = new DataAbstract<float>("PWM_SpecialTrack", name, 1000);
         dataManager->registerParamData(Special_Track);
-        Default_speed = new DataAbstract<int16_t>("PWM_DefaultSpeed", name, 1000);
+        Default_speed = new DataAbstract<float>("PWM_DefaultSpeed", name, 1000);
         dataManager->registerParamData(Default_speed);
-        Tunning_speed = new DataAbstract<int16_t>("PWM_Tunning_speed", name, 1000);
+        Tunning_speed = new DataAbstract<float>("PWM_Tunning_speed", name, 1000);
         dataManager->registerParamData(Tunning_speed);
     }
     else
@@ -103,32 +103,32 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
         desaccelration = new DataAbstract<float>("desaccel", name, 6000);
         dataManager->registerParamData(desaccelration);
 
-        initialspeed = new DataAbstract<int16_t>("initial_speed", name, 1100);
+        initialspeed = new DataAbstract<float>("initial_speed", name, 1100);
         dataManager->registerParamData(initialspeed);
 
         //Setpoints translacionais para os tipos de trechos
-        SetPointMap = new DataAbstract<int16_t>("Setpoint_Map", name, 600);
+        SetPointMap = new DataAbstract<float>("Setpoint_Map", name, 600);
         dataManager->registerParamData(SetPointMap);
-        Long_Line = new DataAbstract<int16_t>("Long_line", name, 1000);
+        Long_Line = new DataAbstract<float>("Long_line", name, 1000);
         dataManager->registerParamData(Long_Line);
-        Medium_Line = new DataAbstract<int16_t>("Medium_line", name, 1000);
+        Medium_Line = new DataAbstract<float>("Medium_line", name, 1000);
         dataManager->registerParamData(Medium_Line);
-        Short_Line = new DataAbstract<int16_t>("Short_line", name, 1000);
+        Short_Line = new DataAbstract<float>("Short_line", name, 1000);
         dataManager->registerParamData(Short_Line);
 
-        Long_Curve = new DataAbstract<int16_t>("Long_curve", name, 1000);
+        Long_Curve = new DataAbstract<float>("Long_curve", name, 1000);
         dataManager->registerParamData(Long_Curve);
-        Medium_Curve = new DataAbstract<int16_t>("Medium_curve", name, 1000);
+        Medium_Curve = new DataAbstract<float>("Medium_curve", name, 1000);
         dataManager->registerParamData(Medium_Curve);
-        Short_Curve = new DataAbstract<int16_t>("Short_curve", name, 1000);
+        Short_Curve = new DataAbstract<float>("Short_curve", name, 1000);
         dataManager->registerParamData(Short_Curve);
-        ZIGZAG = new DataAbstract<int16_t>("ZigZag", name, 1000);
+        ZIGZAG = new DataAbstract<float>("ZigZag", name, 1000);
         dataManager->registerParamData(ZIGZAG);
-        Special_Track = new DataAbstract<int16_t>("SpecialTrack", name, 1000);
+        Special_Track = new DataAbstract<float>("SpecialTrack", name, 1000);
         dataManager->registerParamData(Special_Track);
-        Default_speed = new DataAbstract<int16_t>("DefaultSpeed", name, 1000);
+        Default_speed = new DataAbstract<float>("DefaultSpeed", name, 1000);
         dataManager->registerParamData(Default_speed);
-        Tunning_speed = new DataAbstract<int16_t>("Tunning_speed", name, 1000);
+        Tunning_speed = new DataAbstract<float>("Tunning_speed", name, 1000);
         dataManager->registerParamData(Tunning_speed);
     }
 

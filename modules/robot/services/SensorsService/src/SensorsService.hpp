@@ -39,6 +39,7 @@ private:
   
   int sumSensEsq = 0;
   int sumSensDir = 0;
+  int MarksToMean = 0;
 
   int iloop = 0;
   int nLatReads = 0;

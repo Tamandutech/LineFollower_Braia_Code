@@ -22,8 +22,6 @@ Robot::Robot(std::string name)
     ESP_LOGD(name.c_str(), "Status (%p)", this->Status);
     this->Status->PID_Select->loadData();
     
-    this->sLatMarks = new dataSLatMarks("sLatMarks");
-    ESP_LOGD(name.c_str(), "sLatMarks (%p)", this->sLatMarks);
     
     // Seleciona o PID a ser utilizado
     if(this->Status->PID_Select->getData())
@@ -49,6 +47,9 @@ Robot::Robot(std::string name)
     this->speed = new dataSpeed("speed", this->Status->PID_Select->getData());
     ESP_LOGD(name.c_str(), "speed (%p)", this->speed);
 
+    this->sLatMarks = new dataSLatMarks("sLatMarks");
+    ESP_LOGD(name.c_str(), "sLatMarks (%p)", this->sLatMarks);
+    
     this->sLat = new dataSensor(2, "sLat");
     ESP_LOGD(name.c_str(), "sLat (%p)", this->sLat);
 

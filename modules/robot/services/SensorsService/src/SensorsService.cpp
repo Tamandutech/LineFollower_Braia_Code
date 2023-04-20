@@ -141,9 +141,18 @@ void SensorsService::processSLat(Robot *robot)
     
     nLatReads++; 
     sumSensEsq += slesq;
-    sumSensDir += sldir;    
+    sumSensDir += sldir;
 
-    if (nLatReads >= latMarks->MarkstoMean->getData())  //valor definido na dashboard
+    if(status->robotIsMapping->getData())
+    {
+        MarksToMean = latMarks->MarkstoMean->getData();
+    }
+    else
+    {
+        MarksToMean = 1;
+    }
+
+    if (nLatReads >= MarksToMean)  //valor definido na dashboard
     {
         int meanSensDir = (sumSensDir/nLatReads);
         int meanSensEsq = (sumSensEsq/nLatReads);

@@ -49,18 +49,18 @@ public:
     DataAbstract<int8_t> *base;
 
     
-    DataAbstract<int16_t> *initialspeed; // Velocidade inicial em rpm
-    DataAbstract<int16_t> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
+    DataAbstract<float> *initialspeed; // Velocidade inicial em rpm
+    DataAbstract<float> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
 
     //Setpoints translacionais para os tipos de trecho em rpm
-    DataAbstract<int16_t> *Long_Line;
-    DataAbstract<int16_t> *Medium_Line;
-    DataAbstract<int16_t> *Short_Line;
-    DataAbstract<int16_t> *Long_Curve;
-    DataAbstract<int16_t> *Medium_Curve;
-    DataAbstract<int16_t> *Short_Curve;
-    DataAbstract<int16_t> *ZIGZAG;
-    DataAbstract<int16_t> *Special_Track;
+    DataAbstract<float> *Long_Line;
+    DataAbstract<float> *Medium_Line;
+    DataAbstract<float> *Short_Line;
+    DataAbstract<float> *Long_Curve;
+    DataAbstract<float> *Medium_Curve;
+    DataAbstract<float> *Short_Curve;
+    DataAbstract<float> *ZIGZAG;
+    DataAbstract<float> *Special_Track;
 
     DataAbstract<float> *CalculatedSpeed; // Velocidade final desejada
 
@@ -74,9 +74,9 @@ public:
 
 
     // Velocidade para o modo Tunning
-    DataAbstract<int16_t> *Tunning_speed;
+    DataAbstract<float> *Tunning_speed;
     // Velocidade padrão do robô
-    DataAbstract<int16_t> *Default_speed;
+    DataAbstract<float> *Default_speed;
 
     // Velocidade atual da roda direita em PMW
     DataAbstract<float> *right;
