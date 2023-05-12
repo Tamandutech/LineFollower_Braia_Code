@@ -103,7 +103,7 @@ void CarStatusService::Run()
 
     if (status->robotIsMapping->getData() && !status->TunningMode->getData())
     {
-        ESP_LOGD(GetName().c_str(), "Mapeamento inexistente, iniciando robô em modo mapemaneto.");
+        ESP_LOGD(GetName().c_str(), "Mapeamento inexistente, iniciando robô em modo mapeamento.");
         command.color = LED_COLOR_YELLOW;
         LEDsService::getInstance()->queueCommand(command);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -251,7 +251,7 @@ void CarStatusService::Run()
             {
                 command.led[0] = LED_POSITION_FRONT;
                 command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_ORANGE;
+                command.color = LED_COLOR_BLUE;
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 0.5;
                 LEDsService::getInstance()->queueCommand(command);

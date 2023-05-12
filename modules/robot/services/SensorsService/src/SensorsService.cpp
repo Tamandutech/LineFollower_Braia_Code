@@ -71,7 +71,7 @@ void SensorsService::calibAllsensors()
     command.brightness = 1;
     command.color = LED_COLOR_RED;
     LEDsService::getInstance()->queueCommand(command); //mudar a cor
-    for (uint16_t i = 0; i < 30; i++)
+    for (uint16_t i = 0; i < 50; i++)
     {
         ESP_LOGD(GetName().c_str(), "(%p) | sLat: (%p)", this, &sLat);
         sLat.calibrate();

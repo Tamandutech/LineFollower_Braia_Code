@@ -4,6 +4,8 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
 {
     this->robot = Robot::getInstance();
     this->speed = robot->getSpeed();
+    this->diameterWheel = speed->WheelDiameter->getData(); 
+    this->diameterRobot = speed->RobotDiameter->getData();
 
     // GPIOs dos encoders dos encoders dos motores
     enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
@@ -47,6 +49,20 @@ void SpeedService::Run()
 
         deltaTimeMS_media = (xTaskGetTickCount() - initialTicksCar) * portTICK_PERIOD_MS;
 
+        deltaEncDir=(enc_motDir.getCount() - lastPulseRight);
+        deltaEncEsq=(enc_motEsq.getCount() - lastPulseLeft);
+
+        deltaS = ((deltaEncDir+deltaEncEsq) * M_Pi * diameterWheel )/((float)2*MPR_Mot);
+        deltaA = ((deltaEncDir-deltaEncEsq) * M_Pi * diameterWheel )/((float)MPR_Mot*diameterRobot); 
+        
+        DeltaPositionX = abs(deltaS) * cos(deltaA);
+        DeltaPositionY = abs(deltaS) * sin(deltaA);
+
+        positionX += DeltaPositionX;
+        positionY += DeltaPositionY; 
+        speed->positionX->setData(positionX);
+        speed->positionY->setData(positionY); 
+
         // Calculos de velocidade instantanea (RPM)
         speed->RPMLeft_inst->setData(                   // -> Calculo velocidade instantanea motor esquerdo
             (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
@@ -55,6 +71,7 @@ void SpeedService::Run()
              ));
         lastPulseLeft = enc_motEsq.getCount();  // Salva pulsos do encoder para ser usado no proximo calculo
         speed->EncLeft->setData(lastPulseLeft); // Salva pulsos do encoder esquerdo na classe speed
+
 
         speed->RPMRight_inst->setData(                  // -> Calculo velocidade instantanea motor direito
             (((enc_motDir.getCount() - lastPulseRight)  // Delta de pulsos do encoder esquerdo
