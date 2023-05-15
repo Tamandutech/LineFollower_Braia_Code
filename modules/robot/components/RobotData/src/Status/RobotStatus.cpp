@@ -8,7 +8,8 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     this->name = name;
     ESP_LOGD(name.c_str(), "Criando objeto: %s (%p)", name.c_str(), this);
     dataManager = dataManager->getInstance();
-
+    PID_Select = new DataAbstract<bool>("PID_Select", name, false);
+    dataManager ->registerParamData(PID_Select);
     robotState = new DataAbstract<uint8_t>("robotState", name, initialState);
     robotIsMapping = new DataAbstract<bool>("robotIsMapping", name, false);
     encreading = new DataAbstract<bool>("encreading", name, false);

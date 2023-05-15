@@ -39,13 +39,6 @@ public:
     DataAbstract<float> *setpoint;
     DataAbstract<float> *erro;
 
-    DataAbstract<float> *CorrectionFactor;
-    DataAbstract<float> *CorrectionFactorLine;
-    DataAbstract<float> *CorrectionFactorMediumCurve;
-    DataAbstract<float> *CorrectionFactorShortCurve;
-    DataAbstract<float> *CorrectionFactorLongCurve;
-    DataAbstract<float> *CorrectionFactorZigZag;
-
     DataAbstract<bool> *UseKiVel;
     DataAbstract<bool> *UseKdIR;
     // Constantes do PID definidas pelo trecho da pista

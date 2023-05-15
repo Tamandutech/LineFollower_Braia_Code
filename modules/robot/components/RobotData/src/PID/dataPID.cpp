@@ -38,7 +38,7 @@ dataPID::dataPID(std::string name)
     dataManager->registerParamData(Kd_tunning);
 
 
-    if(name == "PIDIR")
+    if(name == "PIDIR" || name == "PIDClassic")
     {
         Kp_IRline = new DataAbstract<float>("Kp_IRline", name);
         dataManager->registerParamData(Kp_IRline);
@@ -58,18 +58,7 @@ dataPID::dataPID(std::string name)
 
     if(name == "PIDVel")
     {
-        CorrectionFactor = new DataAbstract<float>("FatorCorrecao", name);
-        dataManager->registerParamData(CorrectionFactor);
-        CorrectionFactorLine = new DataAbstract<float>("FatorCorrecaoLine", name);
-        dataManager->registerParamData(CorrectionFactorLine);
-        CorrectionFactorShortCurve = new DataAbstract<float>("FatorCorrecaoShortCurve", name);
-        dataManager->registerParamData(CorrectionFactorShortCurve);
-        CorrectionFactorMediumCurve = new DataAbstract<float>("FatorCorrecaoMediumCurve", name);
-        dataManager->registerParamData(CorrectionFactorMediumCurve);
-        CorrectionFactorLongCurve = new DataAbstract<float>("FatorCorrecaoLongCurve", name);
-        dataManager->registerParamData(CorrectionFactorLongCurve);
-        CorrectionFactorZigZag = new DataAbstract<float>("FatorCorrecaoZigZag", name);
-        dataManager->registerParamData(CorrectionFactorZigZag);
+
         UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
         dataManager->registerParamData(UseKiVel);
     }
@@ -90,7 +79,7 @@ DataAbstract<float> *dataPID::Kp(TrackState state)
             return Kp_std;
         }
     }
-    else if(name == "PIDIR")
+    else if(name == "PIDIR" || name=="PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {
@@ -149,7 +138,7 @@ DataAbstract<float> *dataPID::Kd(TrackState state)
             return Kd_std;
         }
     }
-    else if(name == "PIDIR")
+    else if(name == "PIDIR" || name== "PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {
