@@ -39,6 +39,12 @@ public:
     // Diâmetro das rodas
     DataAbstract<uint8_t> *WheelDiameter;
 
+    DataAbstract<uint16_t> *RobotDiameter;
+
+    // Posicoes no plano cartesiano
+    DataAbstract<float> *positionX;
+    DataAbstract<float> *positionY; 
+
     DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s

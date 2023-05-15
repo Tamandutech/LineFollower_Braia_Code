@@ -5,6 +5,12 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->robot = Robot::getInstance();;
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
+
+    // GPIOs dos motores
+    motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    //motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    motors.setSTBY(DRIVER_STBY);
+
     pid_select = status->PID_Select->getData();
     if(!pid_select)
     {
@@ -47,6 +53,8 @@ void PIDService::Run()
         RealTracklen = (TrackState)status->RealTrackStatus->getData();
         mapState = status->robotIsMapping->getData();
 
+        SensorsService::getInstance()->getArraySensors();
+
         alphaVel = status->alphaVel->getData()/1.0E9;
         alphaRot = status->alphaRot->getData()/1.0E9;
         alphaIR = status->alphaIR->getData()/1.0E9;
@@ -77,6 +85,9 @@ void PIDService::Run()
             Prot = 0;
             Drot = 0;
             Irot = 0;
+            soma_erroIR = 0;
+            soma_erroVelRot = 0;
+            soma_erroVelTrans = 0;
             if(!pid_select) PIDTrans->setpoint->setData(0);
             speedTarget = 0;
         }
@@ -124,19 +135,26 @@ void PIDService::Run()
             erroIR = 3500 - IR;
             PIDIR->setpoint->setData(3500);
             PIDIR->erro->setData(erroIR);
+            soma_erroIR += erroIR*erroIR;
+            PIDIR->erroquad->setData(soma_erroIR);
             erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
             PIDTrans->erro->setData(erroVelTrans);
+            soma_erroVelTrans += erroVelTrans*erroVelTrans;
+            PIDTrans->erroquad->setData(erroVelTrans);
 
             // Cálculo do PID para posicionar o robô  na linha
             P_IR = KpIR * erroIR;
             if(PIDIR->UseKdIR->getData())  D_IR = KdIR * (lastIR - IR);
             else D_IR = 0;
-            PidIR = P_IR + D_IR;
+            I_IR += KiIR * erroIR;
+            PidIR = P_IR + I_IR + D_IR;
             PIDIR->output->setData(PidIR);
 
             PIDRot->setpoint->setData(PIDIR->output->getData()); // cálculo do setpoint rotacional
             erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot; //erro rotacional
             PIDRot->erro->setData(erroVelRot);
+            soma_erroVelRot += erroVelRot*erroVelRot;
+            PIDRot->erroquad->setData(soma_erroVelRot);
 
             // calculando Pids rotacional e translacional
             Ptrans = KpVel * erroVelTrans;
@@ -176,12 +194,17 @@ void PIDService::Run()
             erroIR = 3500 - IR;
             PIDClassic->setpoint->setData(3500);
             PIDClassic->erro->setData(erroIR);
+            soma_erroIR += (erroIR/1000.0)*(erroIR/1000.0);
+            PIDClassic->erroquad->setData(soma_erroIR);
             // Cálculo do PID para posicionar o robô  na linha
             P_IR = KpIR * erroIR;
             if(PIDClassic->UseKdIR->getData())  D_IR = KdIR * (lastIR - IR);
             else D_IR = 0;
-            PidIR = P_IR + D_IR;
+            I_IR += KiIR * erroIR;
+            PidIR = P_IR + I_IR + D_IR;
             PIDClassic->output->setData(PidIR);
+            PIDClassic->P_output->setData(P_IR);
+            PIDClassic->D_output->setData(D_IR);
 
             // Calculo de velocidade do motor
             speed->right->setData(
@@ -192,6 +215,7 @@ void PIDService::Run()
 
         }
 
+        ControlMotors(); // Altera a velocidade dos motores
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
         {
@@ -382,5 +406,29 @@ void PIDService::Run()
         }
         iloop++;
 
+    }
+}
+
+void PIDService::ControlMotors()
+{
+    CarState state = (CarState)status->robotState->getData();
+
+    // if (iloop >= 200 && !status->robotIsMapping->getData())
+    // {
+    //     iloop = 0;
+    //     ESP_LOGD("MotorsService", "State: %d", state);
+    // }
+    // iloop++;
+
+    if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
+    {
+      // motors.motorForward(0);                        // motor 0 ligado para frente
+      // motors.motorForward(1);                        // motor 1 ligado para frente
+      motors.motorSpeed(0, speed->left->getData());  // velocidade do motor 0
+      motors.motorSpeed(1, speed->right->getData()); // velocidade do motor 1
+    }
+    else
+    {
+      motors.motorsStop();
     }
 }

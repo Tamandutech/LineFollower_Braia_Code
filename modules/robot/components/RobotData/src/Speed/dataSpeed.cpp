@@ -21,6 +21,11 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
     EncMedia = new DataAbstract<int32_t>("EncMedia", name, 0);
     dataManager->registerRuntimeData(EncMedia);
 
+    positionX = new DataAbstract<float>("positionX", name, 0);
+    dataManager->registerRuntimeData(positionX);
+    positionY = new DataAbstract<float>("positionY", name, 0);
+    dataManager->registerRuntimeData(positionY);
+
     /*
      * Variavel que contempla relacao de Revloucoes e reducao
      * dos motores, entrada eh ((Qtd de pulsos para uma volta) * (Reducao do motor))
@@ -31,6 +36,8 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
 
     WheelDiameter = new DataAbstract<uint8_t>("WheelDiameter", name, 0);
     dataManager->registerParamData(WheelDiameter);
+    RobotDiameter = new DataAbstract<uint16_t>("RobotDiameter", name, 112); //mm
+    dataManager->registerParamData(RobotDiameter);
 
     max = new DataAbstract<int8_t>("max", name, 100);
     dataManager->registerParamData(max);

@@ -15,42 +15,50 @@ dataPID::dataPID(std::string name)
     dataManager->registerRuntimeData(input);
     output = new DataAbstract<float>("output", name, 0);
     dataManager->registerRuntimeData(output);
+    P_output = new DataAbstract<float>("P_output", name, 0);
+    dataManager->registerRuntimeData(P_output);
+    I_output = new DataAbstract<float>("I_output", name, 0);
+    dataManager->registerRuntimeData(I_output);
+    D_output = new DataAbstract<float>("D_output", name, 0);
+    dataManager->registerRuntimeData(D_output);
     setpoint = new DataAbstract<float>("Setpoint", name, 0);
     dataManager->registerRuntimeData(setpoint);
     erro = new DataAbstract<float>("erro", name, 0);
-    dataManager->registerRuntimeData(setpoint);
+    dataManager->registerRuntimeData(erro);
+    erroquad = new DataAbstract<float>("erroquad", name, 0);
+    dataManager->registerRuntimeData(erroquad);
 
-    Kp_std = new DataAbstract<float>("Kp_std", name, 0);
+    Kp_std = new DataAbstract<double>("Kp_std", name, 0);
     dataManager->registerParamData(Kp_std);
-    Kd_std = new DataAbstract<float>("Kd_std", name, 0);
+    Kd_std = new DataAbstract<double>("Kd_std", name, 0);
     dataManager->registerParamData(Kd_std);
     if(name == "PIDVel" || name == "PIDRot")
     {
-        Ki_std = new DataAbstract<float>("Ki_std", name, 0);
+        Ki_std = new DataAbstract<double>("Ki_std", name, 0);
         dataManager->registerParamData(Ki_std);
-        Ki_tunning = new DataAbstract<float>("Ki_tunning", name);
+        Ki_tunning = new DataAbstract<double>("Ki_tunning", name);
         dataManager->registerParamData(Ki_tunning);
     }
 
-    Kp_tunning = new DataAbstract<float>("Kp_tunning", name);
+    Kp_tunning = new DataAbstract<double>("Kp_tunning", name);
     dataManager->registerParamData(Kp_tunning);
-    Kd_tunning = new DataAbstract<float>("Kd_tunning", name);
+    Kd_tunning = new DataAbstract<double>("Kd_tunning", name);
     dataManager->registerParamData(Kd_tunning);
 
 
     if(name == "PIDIR" || name == "PIDClassic")
     {
-        Kp_IRline = new DataAbstract<float>("Kp_IRline", name);
+        Kp_IRline = new DataAbstract<double>("Kp_IRline", name);
         dataManager->registerParamData(Kp_IRline);
-        Kd_IRline = new DataAbstract<float>("Kd_IRline", name);
+        Kd_IRline = new DataAbstract<double>("Kd_IRline", name);
         dataManager->registerParamData(Kd_IRline);
-        Kp_IRcurve = new DataAbstract<float>("Kp_IRcurve", name);
+        Kp_IRcurve = new DataAbstract<double>("Kp_IRcurve", name);
         dataManager->registerParamData(Kp_IRcurve);
-        Kd_IRcurve = new DataAbstract<float>("Kd_IRcurve", name);
+        Kd_IRcurve = new DataAbstract<double>("Kd_IRcurve", name);
         dataManager->registerParamData(Kd_IRcurve);
-        Kp_IRShortCurve = new DataAbstract<float>("Kp_IRShortCurve", name, 4.5);
+        Kp_IRShortCurve = new DataAbstract<double>("Kp_IRShortCurve", name, 4.5);
         dataManager->registerParamData(Kp_IRShortCurve);
-        Kd_IRShortCurve = new DataAbstract<float>("Kd_IRShortCurve", name, 4.5);
+        Kd_IRShortCurve = new DataAbstract<double>("Kd_IRShortCurve", name, 4.5);
         dataManager->registerParamData(Kd_IRShortCurve);
         UseKdIR = new DataAbstract<bool>("UseKdIR", name, true);
         dataManager->registerParamData(UseKdIR);
@@ -66,7 +74,7 @@ dataPID::dataPID(std::string name)
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 
-DataAbstract<float> *dataPID::Kp(TrackState state)
+DataAbstract<double> *dataPID::Kp(TrackState state)
 {
     if(name == "PIDVel" || name == "PIDRot")
     {
@@ -107,7 +115,7 @@ DataAbstract<float> *dataPID::Kp(TrackState state)
     return nullptr;
 }
 
-DataAbstract<float> *dataPID::Ki(TrackState state)
+DataAbstract<double> *dataPID::Ki(TrackState state)
 {
     if(name == "PIDVel" || name == "PIDRot")
     {
@@ -124,7 +132,7 @@ DataAbstract<float> *dataPID::Ki(TrackState state)
     return nullptr;
 }
 
-DataAbstract<float> *dataPID::Kd(TrackState state)
+DataAbstract<double> *dataPID::Kd(TrackState state)
 {
 
     if(name == "PIDVel" || name == "PIDRot")

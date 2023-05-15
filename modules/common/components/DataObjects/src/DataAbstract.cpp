@@ -55,7 +55,19 @@ template <class T>
 std::string DataAbstract<T>::getDataString(std::string ctrl)
 {
     // retorna o valor do dado
-    return std::to_string(this->data->load(std::memory_order_acquire));
+    // Create an output string stream
+    //std::ostringstream streamObj;
+    //Add data to stream
+    //streamObj << this->data->load(std::memory_order_acquire);
+    // Get string from output string stream
+    //std::string strObj = streamObj.str();
+    //streamObj.str("");
+    double num = this->data->load(std::memory_order_acquire);
+    char buffer[64];
+    memset(buffer, 0, sizeof(buffer));
+    snprintf(buffer, sizeof(buffer), "%g", num);
+    std::string strObj(buffer);
+    return strObj;
 }
 
 template <class T>
@@ -70,11 +82,17 @@ void DataAbstract<T>::setData(T data)
 template <class T>
 void DataAbstract<T>::setData(std::string data)
 {
-    float num = std::stof(data);
+    double num = std::stod(data);
     this->data->store(num, std::memory_order_release);
     uint32_t last_change = xTaskGetTickCount()*portTICK_PERIOD_MS;
     if(this->stream_interval.load(std::memory_order_acquire) != 0) this->time_last_change.store(last_change, std::memory_order_release);
-    ESP_LOGD(this->name.c_str(), "Confirmando dado salvo: %s", std::to_string(this->data->load(std::memory_order_acquire)).c_str());
+
+    double Testnum = this->data->load(std::memory_order_acquire);
+    char buffer[64];
+    memset(buffer, 0, sizeof(buffer));
+    snprintf(buffer, sizeof(buffer), "%g", Testnum);
+    std::string strObj(buffer);
+    ESP_LOGD(this->name.c_str(), "Confirmando dado salvo: %s", strObj.c_str());
 }
 
 template <class T>

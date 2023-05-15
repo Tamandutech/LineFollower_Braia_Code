@@ -5,7 +5,7 @@ SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_
     this->robot = Robot::getInstance();
 
     latMarks = robot->getSLatMarks();
-    SLat = robot->getsLat();
+    sLatData = robot->getsLat();
     status = robot->getStatus();
     
 
@@ -43,8 +43,8 @@ void SensorsService::Run()
     {
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
 
-        getSensors(&sArray, &sLat, robot); // leitura dos sensores
-        processSLat(robot);
+        getLatSensors(); // leitura dos sensores laterais
+        processSLat();
     }
 }
 
@@ -107,37 +107,51 @@ void SensorsService::calibAllsensors()
     LEDsService::getInstance()->queueCommand(command);
 }
 
-void SensorsService::getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot) // função leitura dos sensores
+void SensorsService::getLatSensors() // função leitura dos sensores
 {
-    // Arrays para armazenar leitura bruta dos sensores array e laterais
-    uint16_t sArraychannels[sArray->getSensorCount()];
-    uint16_t SLatchannels[SLat->getSensorCount()];
+    // Arrays para armazenar leitura bruta dos sensores laterais
+    uint16_t SLatchannels[sLat.getSensorCount()];
 
-    if(status->LineColorBlack->getData()) robot->getsArray()->setLine(sArray->readLineBlack(sArraychannels));
-    else robot->getsArray()->setLine(sArray->readLineWhite(sArraychannels));
-    // cálculo dos valores do sensor array
-    SLat->readCalibrated(SLatchannels);                                                                 // leitura dos sensores laterais
-    std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray->getSensorCount()); // vector(array) com os valores do sensor array
-    std::vector<uint16_t> SLatchannelsVec(SLatchannels, SLatchannels + SLat->getSensorCount());         // vector(array) com os valores dos sensores laterais
+    sLat.readCalibrated(SLatchannels);                                                                 // leitura dos sensores laterais
+    std::vector<uint16_t> SLatchannelsVec(SLatchannels, SLatchannels + sLat.getSensorCount());         // vector(array) com os valores dos sensores laterais
 
-    // armazenando da leitura bruta do sensor array e lateral no objeto Braia
-    robot->getsArray()->setChannels(sArraychannelsVec);
+    // armazenando da leitura bruta do sensor lateral no objeto Braia
     robot->getsLat()->setChannels(SLatchannelsVec);
 
-    if (iloop >= 100)
+    if (latloop >= 100)
+    {
+        ESP_LOGD(GetName().c_str(), "Laterais -  Esqurdo: %d | Direito : %d ", robot->getsLat()->getChannel(0), robot->getsLat()->getChannel(1));
+        latloop = 0;
+    }
+    latloop++;
+}
+
+void SensorsService::getArraySensors() // função leitura dos sensores frontais
+{
+    // Arrays para armazenar leitura bruta dos sensores array
+    uint16_t sArraychannels[sArray.getSensorCount()];
+
+    if(status->LineColorBlack->getData()) robot->getsArray()->setLine(sArray.readLineBlack(sArraychannels));
+    else robot->getsArray()->setLine(sArray.readLineWhite(sArraychannels));
+    // cálculo dos valores do sensor array
+    std::vector<uint16_t> sArraychannelsVec(sArraychannels, sArraychannels + sArray.getSensorCount()); // vector(array) com os valores do sensor array       // vector(array) com os valores dos sensores laterais
+
+    // armazenando da leitura bruta do sensor array no objeto Braia
+    robot->getsArray()->setChannels(sArraychannelsVec);
+
+    if (sloop >= 100)
     {
         ESP_LOGD(GetName().c_str(), "Array: %d | %d | %d | %d | %d | %d | %d | %d ", sArraychannels[0], sArraychannels[1], sArraychannels[2], sArraychannels[3], sArraychannels[4], sArraychannels[5], sArraychannels[6], sArraychannels[7]);
         ESP_LOGD(GetName().c_str(), "Linha: %d", robot->getsArray()->getLine());
-        ESP_LOGD(GetName().c_str(), "Laterais -  Esqurdo: %d | Direito : %d ", robot->getsLat()->getChannel(0), robot->getsLat()->getChannel(1));
-        iloop = 0;
+        sloop = 0;
     }
-    iloop++;
+    sloop++;
 }
 
-void SensorsService::processSLat(Robot *robot)
+void SensorsService::processSLat()
 {
-    uint16_t slesq = SLat->getChannel(0);
-    uint16_t sldir = SLat->getChannel(1);
+    uint16_t slesq = sLatData->getChannel(0);
+    uint16_t sldir = sLatData->getChannel(1);
     
     nLatReads++; 
     sumSensEsq += slesq;

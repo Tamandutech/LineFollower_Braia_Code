@@ -1,7 +1,6 @@
 // Serviços do Robô
 #include "CarStatusService.hpp"
 #include "MappingService.hpp"
-#include "MotorsService.hpp"
 #include "PIDService.hpp"
 #include "SensorsService.hpp"
 #include "SpeedService.hpp"
@@ -37,7 +36,6 @@ Robot *braia;
 
 CarStatusService *carStatusService;
 MappingService *mappingService;
-MotorsService *motorsService;
 PIDService *pidService;
 SensorsService *sensorsService;
 SpeedService *speedService;
@@ -65,6 +63,8 @@ void app_main(void)
 
   ESP_LOGD("Main", "Configurando LOGs...");
   esp_log_level_set("*", ESP_LOG_ERROR);
+  esp_log_level_set("LEDsService", ESP_LOG_ERROR);
+  esp_log_level_set("CarStatusService", ESP_LOG_ERROR);
   esp_log_level_set("BLEServerService", ESP_LOG_DEBUG);
   esp_log_level_set("Main", ESP_LOG_DEBUG);
   //esp_log_level_set("TaskStream", ESP_LOG_DEBUG);
@@ -89,18 +89,16 @@ void app_main(void)
   braia = Robot::getInstance("TT_LF_BRAIA_V3");
 
   ESP_LOGD("Main", "Configurando Serviços...");
-  bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 20);
+  bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 7);
   bleServerService->Start();
-  mappingService = MappingService::getInstance("MappingService", 8192, 18);
-  carStatusService = CarStatusService::getInstance("CarStatusService", 10000, 19);
-  sensorsService = SensorsService::getInstance("SensorsService", 8192, 20);
-  motorsService = MotorsService::getInstance("MotorsService", 4096, 20);
-  speedService = SpeedService::getInstance("SpeedService", 4096, 20);
-  pidService = PIDService::getInstance("PIDService", 4096, 20);
+  mappingService = MappingService::getInstance("MappingService", 8192, 8);
+  carStatusService = CarStatusService::getInstance("CarStatusService", 10000, 8);
+  sensorsService = SensorsService::getInstance("SensorsService", 8192, 9);
+  speedService = SpeedService::getInstance("SpeedService", 4096, 9);
+  pidService = PIDService::getInstance("PIDService", 4096, 10);
 
 
   sensorsService->Start();
-  motorsService->Start();
   pidService->Start();
   speedService->Start();
   carStatusService->Start();
@@ -117,7 +115,6 @@ void app_main(void)
 
   ESP_LOGD(MappingService::getInstance()->GetName().c_str(), "Mapeamento");
   ESP_LOGD(CarStatusService::getInstance()->GetName().c_str(), "CarStatusService");
-  ESP_LOGD(MotorsService::getInstance()->GetName().c_str(), "MotorsService");
   ESP_LOGD(SpeedService::getInstance()->GetName().c_str(), "SpeedService");
   ESP_LOGD(PIDService::getInstance()->GetName().c_str(), "PIDService");
   ESP_LOGD(LEDsService::getInstance()->GetName().c_str(), "LEDsService");
