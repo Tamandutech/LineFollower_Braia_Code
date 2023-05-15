@@ -33,6 +33,7 @@ esp_err_t MappingService::startNewMapping(uint16_t leftMarksToStop, int32_t medi
     tempPreviousMark.MapStatus = CAR_IN_LINE;
     tempPreviousMark.MapTrackStatus = LONG_LINE;
     tempPreviousMark.MapTime = 0;
+    tempPreviousMark.MapOffset = 0;
 
 
     latMarks->rightMarks->setData(0);
@@ -120,7 +121,8 @@ void MappingService::Run()
 
         vTaskDelay(0);
         this->Suspend();
-
+        
+        tempActualMark.MapOffset = 0;
         tempActualMark.MapEncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;
         tempActualMark.MapEncRight = speedMapping->EncRight->getData() - initialRightPulses;
         tempActualMark.MapEncMedia = ((tempActualMark.MapEncLeft + tempActualMark.MapEncRight) / 2);
