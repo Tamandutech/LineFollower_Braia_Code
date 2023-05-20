@@ -5,6 +5,9 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
     this->robot = Robot::getInstance();
     this->speed = robot->getSpeed();
 
+    this->diameterWheel = speed->WheelDiameter->getData(); 
+    this->diameterRobot = speed->RobotDiameter->getData();
+
     // GPIOs dos encoders dos encoders dos motores
     enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
     enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
@@ -53,15 +56,16 @@ void SpeedService::Run()
         deltaS = ((deltaEncDir+deltaEncEsq) * M_PI * diameterWheel )/((float)2.0*MPR_Mot);
         deltaA = ((deltaEncEsq-deltaEncDir) * M_PI * diameterWheel )/((float)MPR_Mot*diameterRobot); 
 
-        DeltaPositionX = abs(deltaS) * cos(deltaA);
-        DeltaPositionY = abs(deltaS) * sin(deltaA);
 
         if (estado != CAR_STOPPED)
         {
+            Ang += deltaA;
+            DeltaPositionX = abs(deltaS) * cos(Ang);
+            DeltaPositionY = abs(deltaS) * sin(Ang);
             positionX += DeltaPositionX;
             positionY += DeltaPositionY; 
-            speed->positionX->setData(positionX);
-            speed->positionY->setData(positionY);
+            speed->positionX->setData(positionX / 10.0); // cm
+            speed->positionY->setData(positionY / 10.0); // cm
         }
 
         // Calculos de velocidade instantanea (RPM)
