@@ -67,6 +67,10 @@ void PIDService::Run()
             accel = speed->initialaccelration->getData();
             speedTarget = speed->initialspeed->getData();
         }
+        else if(status->TunningMode->getData())
+        {
+            accel = speed->initialaccelration->getData();
+        }
         else
         {
             accel = speed->accelration->getData();
@@ -90,6 +94,7 @@ void PIDService::Run()
             soma_erroVelTrans = 0;
             if(!pid_select) PIDTrans->setpoint->setData(0);
             speedTarget = 0;
+            speed->CalculatedSpeed->setData(0);
         }
 
         // Variaveis de calculo para os pids do robô
@@ -215,7 +220,7 @@ void PIDService::Run()
 
         }
 
-        ControlMotors(); // Altera a velocidade dos motores
+        ControlMotors(speed->left->getData(),speed->right->getData()); // Altera a velocidade dos motores
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
         {
@@ -409,7 +414,7 @@ void PIDService::Run()
     }
 }
 
-void PIDService::ControlMotors()
+void PIDService::ControlMotors(float left, float right)
 {
     CarState state = (CarState)status->robotState->getData();
 
@@ -424,8 +429,8 @@ void PIDService::ControlMotors()
     {
       // motors.motorForward(0);                        // motor 0 ligado para frente
       // motors.motorForward(1);                        // motor 1 ligado para frente
-      motors.motorSpeed(0, speed->left->getData());  // velocidade do motor 0
-      motors.motorSpeed(1, speed->right->getData()); // velocidade do motor 1
+      motors.motorSpeed(0, left);  // velocidade do motor 0
+      motors.motorSpeed(1, right); // velocidade do motor 1
     }
     else
     {

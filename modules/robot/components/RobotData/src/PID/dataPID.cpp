@@ -60,6 +60,10 @@ dataPID::dataPID(std::string name)
         dataManager->registerParamData(Kp_IRShortCurve);
         Kd_IRShortCurve = new DataAbstract<double>("Kd_IRShortCurve", name, 4.5);
         dataManager->registerParamData(Kd_IRShortCurve);
+        Kp_IRZigZag = new DataAbstract<double>("Kp_IRZigZag", name, 0.03);
+        dataManager->registerParamData(Kp_IRZigZag);
+        Kd_IRZigZag = new DataAbstract<double>("Kd_IRZigZag", name, 0.94);
+        dataManager->registerParamData(Kd_IRZigZag);
         UseKdIR = new DataAbstract<bool>("UseKdIR", name, true);
         dataManager->registerParamData(UseKdIR);
     }
@@ -93,9 +97,13 @@ DataAbstract<double> *dataPID::Kp(TrackState state)
         {
             return Kp_IRline;
         }
-        else if(state == SHORT_CURVE || state == ZIGZAG)
+        else if(state == SHORT_CURVE)
         {
             return Kp_IRShortCurve;
+        }
+        else if(state == ZIGZAG)
+        {
+            return Kp_IRZigZag;
         }
         else if(state == MEDIUM_CURVE || state == LONG_CURVE)
         {
@@ -152,9 +160,13 @@ DataAbstract<double> *dataPID::Kd(TrackState state)
         {
             return Kd_IRline;
         }
-        else if(state == SHORT_CURVE || state == ZIGZAG)
+        else if(state == SHORT_CURVE)
         {
             return Kd_IRShortCurve;
+        }
+        else if(state == ZIGZAG)
+        {
+            return Kd_IRZigZag;
         }
         else if(state == MEDIUM_CURVE || state == LONG_CURVE)
         {

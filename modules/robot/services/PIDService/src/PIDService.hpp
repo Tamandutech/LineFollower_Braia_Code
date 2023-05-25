@@ -21,7 +21,7 @@ class PIDService : public Thread, public Singleton<PIDService>
 public:
     PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority);
     
-    void ControlMotors();
+    void ControlMotors(float left, float right);
 
     void Run() override;
 

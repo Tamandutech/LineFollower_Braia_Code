@@ -251,7 +251,7 @@ void CarStatusService::Run()
             {
                 command.led[0] = LED_POSITION_FRONT;
                 command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_ORANGE;
+                command.color = LED_COLOR_BLUE;
                 command.effect = LED_EFFECT_SET;
                 command.brightness = 0.5;
                 LEDsService::getInstance()->queueCommand(command);

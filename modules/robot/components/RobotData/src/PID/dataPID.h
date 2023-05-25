@@ -60,6 +60,7 @@ private:
     DataAbstract<double> *Ki_std;
     DataAbstract<double> *Kd_std; 
 
+    // Parâmetros do PID para diferentes trechos da pista
     DataAbstract<double> *Kp_tunning; // salvar
     DataAbstract<double> *Ki_tunning; // salvar
     DataAbstract<double> *Kd_tunning; // salvar
@@ -70,8 +71,11 @@ private:
     DataAbstract<double> *Kp_IRcurve; // salvar
     DataAbstract<double> *Kd_IRcurve; // salvar
     
-    DataAbstract<double> *Kp_IRShortCurve; // Variável para limitar a velocidade rotacional do robô na curva curta
-    DataAbstract<double> *Kd_IRShortCurve; // Variável para limitar a velocidade rotacional do robô na curva curta
+    DataAbstract<double> *Kp_IRShortCurve; 
+    DataAbstract<double> *Kd_IRShortCurve; 
+
+    DataAbstract<double> *Kp_IRZigZag;
+    DataAbstract<double> *Kd_IRZigZag; 
 
     DataManager *dataManager;
 };
