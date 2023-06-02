@@ -203,6 +203,9 @@ void CarStatusService::Run()
                     case LONG_LINE:
                         command.brightness = 1;
                         break;
+                    case XLONG_LINE:
+                        command.brightness = 1;
+                        break;
                     case SPECIAL_TRACK:
                         command.color = LED_COLOR_PURPLE;
                         command.brightness = 0.05;
@@ -223,6 +226,9 @@ void CarStatusService::Run()
                 command.effect = LED_EFFECT_SET;
                 switch (TrackLen)
                 {
+                    case XLONG_CURVE:
+                        command.brightness = 1;
+                        break;
                     case SHORT_CURVE:
                         command.brightness = 0.05;
                         break;

@@ -62,6 +62,8 @@ public:
     DataAbstract<float> *Long_Line;
     DataAbstract<float> *Medium_Line;
     DataAbstract<float> *Short_Line;
+    DataAbstract<float> *XLong_Line;
+    DataAbstract<float> *XLong_Curve; 
     DataAbstract<float> *Long_Curve;
     DataAbstract<float> *Medium_Curve;
     DataAbstract<float> *Short_Curve;

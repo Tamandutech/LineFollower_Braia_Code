@@ -228,6 +228,9 @@ void PIDService::Run()
             fatorCorrecao = speed->CorrectionFactorLine->getData();
             switch (TrackLen)
             {
+                case XLONG_LINE:
+                    speedTarget = speed->XLong_Line->getData(); 
+                    break;
                 case LONG_LINE:
                     speedTarget = speed->Long_Line->getData(); 
                     break;
@@ -252,6 +255,10 @@ void PIDService::Run()
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
             switch (TrackLen)
             {
+                case XLONG_CURVE:
+                    speedTarget = speed->XLong_Curve->getData();
+                    fatorCorrecao = speed->CorrectionFactorLongCurve->getData();
+                    break; 
                 case LONG_CURVE:
                     speedTarget = speed->Long_Curve->getData();
                     fatorCorrecao = speed->CorrectionFactorLongCurve->getData();

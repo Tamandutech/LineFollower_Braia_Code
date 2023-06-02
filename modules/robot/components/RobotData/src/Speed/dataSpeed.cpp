@@ -79,13 +79,16 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
         //Setpoints translacionais para os tipos de trechos
         SetPointMap = new DataAbstract<float>("PWM_Setpoint_Map", name, 600);
         dataManager->registerParamData(SetPointMap);
+        XLong_Line = new DataAbstract<float>("PWM_XLong_line", name, 1000);
+        dataManager->registerParamData(XLong_Line);
         Long_Line = new DataAbstract<float>("PWM_Long_line", name, 1000);
         dataManager->registerParamData(Long_Line);
         Medium_Line = new DataAbstract<float>("PWM_Medium_line", name, 1000);
         dataManager->registerParamData(Medium_Line);
         Short_Line = new DataAbstract<float>("PWM_Short_line", name, 1000);
         dataManager->registerParamData(Short_Line);
-
+        XLong_Curve = new DataAbstract<float>("PWM_XLong_curve", name, 1000);
+        dataManager->registerParamData(XLong_Curve);
         Long_Curve = new DataAbstract<float>("PWM_Long_curve", name, 1000);
         dataManager->registerParamData(Long_Curve);
         Medium_Curve = new DataAbstract<float>("PWM_Medium_curve", name, 1000);

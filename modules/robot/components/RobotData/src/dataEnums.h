@@ -44,6 +44,8 @@ enum TrackState
     DEFAULT_TRACK,
     UNDEFINED,     
     TUNING,
+    XLONG_LINE,
+    XLONG_CURVE,
 };
 
 struct PacketData

@@ -64,6 +64,20 @@ dataPID::dataPID(std::string name)
         dataManager->registerParamData(Kp_IRZigZag);
         Kd_IRZigZag = new DataAbstract<double>("Kd_IRZigZag", name, 0.94);
         dataManager->registerParamData(Kd_IRZigZag);
+        Kp_IRXLongLine = new DataAbstract<double>("Kp_IRXLongLine", name, 0.03);
+        dataManager->registerParamData(Kp_IRXLongLine);
+        Kd_IRXLongLine = new DataAbstract<double>("Kd_IRXLongLine", name, 0.94);
+        dataManager->registerParamData(Kd_IRXLongLine);
+        Kp_IRLongCurve = new DataAbstract<double>("Kp_IRLongCurve", name, 0.03);
+        dataManager->registerParamData(Kp_IRLongCurve);
+        Kd_IRLongCurve = new DataAbstract<double>("Kd_IRLongCurve", name, 0.94);
+        dataManager->registerParamData(Kd_IRLongCurve);
+
+        Kp_IRXLongCurve = new DataAbstract<double>("Kp_IRXLongCurve", name, 0.03);
+        dataManager->registerParamData(Kp_IRXLongCurve);
+        Kd_IRXLongCurve = new DataAbstract<double>("Kd_IRXLongCurve", name, 0.94);
+        dataManager->registerParamData(Kd_IRXLongCurve);
+
         UseKdIR = new DataAbstract<bool>("UseKdIR", name, true);
         dataManager->registerParamData(UseKdIR);
     }
@@ -101,13 +115,25 @@ DataAbstract<double> *dataPID::Kp(TrackState state)
         {
             return Kp_IRShortCurve;
         }
+        else if(state == XLONG_LINE)
+        {
+            return Kp_IRXLongLine;
+        }
         else if(state == ZIGZAG)
         {
             return Kp_IRZigZag;
         }
-        else if(state == MEDIUM_CURVE || state == LONG_CURVE)
+        else if(state == MEDIUM_CURVE)
         {
             return Kp_IRcurve;
+        }
+        else if(state == XLONG_CURVE)
+        {
+            return Kp_IRXLongCurve;
+        }
+        else if(state == LONG_CURVE)
+        {
+            return Kp_IRLongCurve;
         }
         else if(state == TUNING)
         {
@@ -168,9 +194,21 @@ DataAbstract<double> *dataPID::Kd(TrackState state)
         {
             return Kd_IRZigZag;
         }
-        else if(state == MEDIUM_CURVE || state == LONG_CURVE)
+        else if(state == XLONG_LINE)
+        {
+            return Kd_IRXLongLine;
+        }
+        else if(state == XLONG_CURVE)
+        {
+            return Kd_IRXLongCurve;
+        }
+        else if(state == MEDIUM_CURVE)
         {
             return Kd_IRcurve;
+        }
+        else if(state == LONG_CURVE)
+        {
+            return Kd_IRLongCurve;
         }
         else if(state == TUNING)
         {

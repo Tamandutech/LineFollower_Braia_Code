@@ -77,6 +77,15 @@ private:
     DataAbstract<double> *Kp_IRZigZag;
     DataAbstract<double> *Kd_IRZigZag; 
 
+    DataAbstract<double> *Kp_IRXLongLine; // Pista Maua
+    DataAbstract<double> *Kd_IRXLongLine; 
+
+    DataAbstract<double> *Kp_IRLongCurve;
+    DataAbstract<double> *Kd_IRLongCurve; 
+
+    DataAbstract<double> *Kp_IRXLongCurve; // Pista Maua
+    DataAbstract<double> *Kd_IRXLongCurve;
+
     DataManager *dataManager;
 };
 
