@@ -37,7 +37,8 @@ private:
 
     ESP32MotorControl motors;
 
-    short const TaskDelay = 1; // 1ms
+    const short TaskDelay = 1; // 1ms
+    const float TaskDelaySeconds = TaskDelay / 1000.0;
 
     bool pid_select = false;
 
