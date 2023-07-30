@@ -9,6 +9,14 @@
 
 #include "ESP32MotorControl.h"
 
+// Timer control
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+#include "freertos/semphr.h"
+#include "driver/timer.h"
+#include "esp_log.h"
+
 using namespace cpp_freertos;
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))

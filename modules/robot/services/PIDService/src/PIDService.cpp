@@ -1,5 +1,9 @@
 #include "PIDService.hpp"
 
+int SharedData = 0;
+SemaphoreHandle_t SharedSemaphore; // semáforo para os dados compartilhados das tasks
+SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
+
 PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     this->robot = Robot::getInstance();;
