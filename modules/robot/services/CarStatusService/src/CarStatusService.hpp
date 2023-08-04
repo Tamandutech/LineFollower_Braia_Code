@@ -48,6 +48,7 @@ private:
 
     TrackState lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
     uint8_t lastState; // armazena último estado do mapeamento
+    bool lastPaused = false;
     bool lastMappingState;
 
     bool started_in_Tuning = false;

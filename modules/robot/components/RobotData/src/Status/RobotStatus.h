@@ -42,6 +42,7 @@ public:
      * @retval FALSE Se o robô não está lendo o mapeamento
      */
     DataAbstract<bool> *encreading;
+    DataAbstract<bool> *robotPaused;
     DataAbstract<bool> *TunningMode;
     DataAbstract<bool> *HardDeleteMap;
     DataAbstract<bool> *CorrectionTrue;

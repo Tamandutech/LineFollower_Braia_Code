@@ -46,6 +46,7 @@ dataPID::dataPID(std::string name)
     dataManager->registerParamData(Kd_tunning);
 
 
+
     if(name == "PIDIR" || name == "PIDClassic")
     {
         Kp_IRline = new DataAbstract<double>("Kp_IRline", name);
