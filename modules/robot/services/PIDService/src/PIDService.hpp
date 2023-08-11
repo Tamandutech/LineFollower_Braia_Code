@@ -9,24 +9,37 @@
 
 #include "ESP32MotorControl.h"
 
+// Timer control
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+#include "freertos/semphr.h"
+#include "driver/timer.h"
+#include "esp_log.h"
+
 using namespace cpp_freertos;
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
-//#define GRAPH_DATA
+// #define GRAPH_DATA
 #include "esp_log.h"
 
 class PIDService : public Thread, public Singleton<PIDService>
 {
 public:
     PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority);
-    
+
     void ControlMotors(float left, float right);
+
+    // Timer control
+    static bool IRAM_ATTR timer_group_isr_callback(void * args);
+    void vTaskFunction(void *pvParameters);
+    void vTaskTimerFunction(void *pvParameters);
+
 
     void Run() override;
 
 private:
-
     Robot *robot;
     dataSpeed *speed;
     RobotStatus *status;
@@ -37,7 +50,8 @@ private:
 
     ESP32MotorControl motors;
 
-    short const TaskDelay = 1; // 1ms
+    const short TaskDelay = 5; // 5ms
+    const float TaskDelaySeconds = TaskDelay / 1000.0;
 
     bool pid_select = false;
 
@@ -51,7 +65,7 @@ private:
     float errTrans_ant = 0; // errTrans_ant2 = 0;
 
     // Variáveis para cálculo dos pids
-    float accel = 6000; // aceleração em rpm/s ou em porcentagem
+    float accel = 6000;    // aceleração em rpm/s ou em porcentagem
     float desaccel = 6000; // aceleração em rpm/s ou em porcentagem
     float speedTarget = 0;
     float newSpeed = 0;
@@ -79,8 +93,8 @@ private:
     float lastPIDTrans = 0.0;
     float lastPIDRot = 0.0;
     float lastPIDIR = 0.0;
-    double alphaVel = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
-    double alphaRot = 0.00000000002;   // Taxa de aprendizagem de 0 ate 1
+    double alphaVel = 0.00000000002; // Taxa de aprendizagem de 0 ate 1
+    double alphaRot = 0.00000000002; // Taxa de aprendizagem de 0 ate 1
     double alphaIR = 0.0000000002;
 
     float erroVelTrans = 0;
@@ -96,7 +110,12 @@ private:
     TrackState TrackLen = SHORT_LINE, RealTracklen = SHORT_LINE;
 
     int iloop = 0;
-    int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos 
+    int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos
+
+    // Timer control
+    int SharedData = 0;
+    SemaphoreHandle_t SharedSemaphore; // semáforo para os dados compartilhados das tasks
+    SemaphoreHandle_t SemaphoreTimer;  // semáforo para sincronização do timer com a task timer
 };
 
 #endif
