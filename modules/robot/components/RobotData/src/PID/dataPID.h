@@ -36,22 +36,19 @@ public:
 
     DataAbstract<float> *input;
     DataAbstract<float> *output;
+    DataAbstract<float> *P_output;
+    DataAbstract<float> *I_output;
+    DataAbstract<float> *D_output;
     DataAbstract<float> *setpoint;
     DataAbstract<float> *erro;
-
-    DataAbstract<float> *CorrectionFactor;
-    DataAbstract<float> *CorrectionFactorLine;
-    DataAbstract<float> *CorrectionFactorMediumCurve;
-    DataAbstract<float> *CorrectionFactorShortCurve;
-    DataAbstract<float> *CorrectionFactorLongCurve;
-    DataAbstract<float> *CorrectionFactorZigZag;
+    DataAbstract<float> *erroquad;
 
     DataAbstract<bool> *UseKiVel;
     DataAbstract<bool> *UseKdIR;
     // Constantes do PID definidas pelo trecho da pista
-    DataAbstract<float> *Kp(TrackState state);
-    DataAbstract<float> *Ki(TrackState state);
-    DataAbstract<float> *Kd(TrackState state);
+    DataAbstract<double> *Kp(TrackState state);
+    DataAbstract<double> *Ki(TrackState state);
+    DataAbstract<double> *Kd(TrackState state);
 
 
 private:
@@ -59,22 +56,35 @@ private:
     const char *tag = "RobotData";
 
     // Parâmetros do PID  
-    DataAbstract<float> *Kp_std;
-    DataAbstract<float> *Ki_std;
-    DataAbstract<float> *Kd_std; 
+    DataAbstract<double> *Kp_std;
+    DataAbstract<double> *Ki_std;
+    DataAbstract<double> *Kd_std; 
 
-    DataAbstract<float> *Kp_tunning; // salvar
-    DataAbstract<float> *Ki_tunning; // salvar
-    DataAbstract<float> *Kd_tunning; // salvar
+    // Parâmetros do PID para diferentes trechos da pista
+    DataAbstract<double> *Kp_tunning; // salvar
+    DataAbstract<double> *Ki_tunning; // salvar
+    DataAbstract<double> *Kd_tunning; // salvar
 
-    DataAbstract<float> *Kp_IRline; // salvar
-    DataAbstract<float> *Kd_IRline; // salvar
+    DataAbstract<double> *Kp_IRline; // salvar
+    DataAbstract<double> *Kd_IRline; // salvar
 
-    DataAbstract<float> *Kp_IRcurve; // salvar
-    DataAbstract<float> *Kd_IRcurve; // salvar
+    DataAbstract<double> *Kp_IRcurve; // salvar
+    DataAbstract<double> *Kd_IRcurve; // salvar
     
-    DataAbstract<float> *Kp_IRShortCurve; // Variável para limitar a velocidade rotacional do robô na curva curta
-    DataAbstract<float> *Kd_IRShortCurve; // Variável para limitar a velocidade rotacional do robô na curva curta
+    DataAbstract<double> *Kp_IRShortCurve; 
+    DataAbstract<double> *Kd_IRShortCurve; 
+
+    DataAbstract<double> *Kp_IRZigZag;
+    DataAbstract<double> *Kd_IRZigZag; 
+
+    DataAbstract<double> *Kp_IRXLongLine; // Pista Maua
+    DataAbstract<double> *Kd_IRXLongLine; 
+
+    DataAbstract<double> *Kp_IRLongCurve;
+    DataAbstract<double> *Kd_IRLongCurve; 
+
+    DataAbstract<double> *Kp_IRXLongCurve; // Pista Maua
+    DataAbstract<double> *Kd_IRXLongCurve;
 
     DataManager *dataManager;
 };

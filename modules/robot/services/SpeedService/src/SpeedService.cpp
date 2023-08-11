@@ -5,6 +5,9 @@ SpeedService::SpeedService(std::string name, uint32_t stackDepth, UBaseType_t pr
     this->robot = Robot::getInstance();
     this->speed = robot->getSpeed();
 
+    this->diameterWheel = speed->WheelDiameter->getData(); 
+    this->diameterRobot = speed->RobotDiameter->getData();
+
     // GPIOs dos encoders dos encoders dos motores
     enc_motEsq.attachFullQuad(ENC_MOT_ESQ_B, ENC_MOT_ESQ_A);
     enc_motDir.attachFullQuad(ENC_MOT_DIR_B, ENC_MOT_DIR_A);
@@ -47,6 +50,24 @@ void SpeedService::Run()
 
         deltaTimeMS_media = (xTaskGetTickCount() - initialTicksCar) * portTICK_PERIOD_MS;
 
+        deltaEncDir=(enc_motDir.getCount() - lastPulseRight);
+        deltaEncEsq=(enc_motEsq.getCount() - lastPulseLeft);
+
+        deltaS = ((deltaEncDir+deltaEncEsq) * M_PI * diameterWheel )/((float)2.0*MPR_Mot);
+        deltaA = ((deltaEncEsq-deltaEncDir) * M_PI * diameterWheel )/((float)MPR_Mot*diameterRobot); 
+
+
+        if (estado != CAR_STOPPED)
+        {
+            Ang += deltaA;
+            DeltaPositionX = abs(deltaS) * cos(Ang);
+            DeltaPositionY = abs(deltaS) * sin(Ang);
+            positionX += DeltaPositionX;
+            positionY += DeltaPositionY; 
+            speed->positionX->setData(positionX / 10.0); // cm
+            speed->positionY->setData(positionY / 10.0); // cm
+        }
+
         // Calculos de velocidade instantanea (RPM)
         speed->RPMLeft_inst->setData(                   // -> Calculo velocidade instantanea motor esquerdo
             (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
@@ -74,6 +95,7 @@ void SpeedService::Run()
         if (iloop >= 100)
         {
             ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d | encmedia: %d", enc_motDir.getCount(), enc_motEsq.getCount(), speed->EncMedia->getData());
+            ESP_LOGD(GetName().c_str(), "deltaX: %.4f | deltaY: %.4f |  PositionX: %.4f | PositionY: %.4f", DeltaPositionX, DeltaPositionY, positionX,positionY);
             ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
             ESP_LOGD(GetName().c_str(), "MPR: %d",speed->MPR->getData());
             iloop = 0;

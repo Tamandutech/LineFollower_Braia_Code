@@ -5,6 +5,9 @@
 #include "singleton.hpp"
 #include "RobotData.h"
 #include "dataEnums.h"
+#include "SensorsService.hpp"
+
+#include "ESP32MotorControl.h"
 
 using namespace cpp_freertos;
 
@@ -17,37 +20,45 @@ class PIDService : public Thread, public Singleton<PIDService>
 {
 public:
     PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority);
+    
+    void ControlMotors(float left, float right);
 
     void Run() override;
 
 private:
+
     Robot *robot;
     dataSpeed *speed;
     RobotStatus *status;
     dataPID *PIDTrans;
     dataPID *PIDRot;
     dataPID *PIDIR;
+    dataPID *PIDClassic;
 
-    short const TaskDelay = 10; // 10ms
+    ESP32MotorControl motors;
+
+    short const TaskDelay = 1; // 1ms
+
+    bool pid_select = false;
 
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
     double KpVel = 0, KiVel = 0, KdVel = 0;
     double KpRot = 0, KiRot = 0, KdRot = 0;
-    double KpIR = 0, KdIR = 0;
+    double KpIR = 0, KdIR = 0, KiIR = 0;
 
     // erros anteriores
     float errRot_ant = 0;   // errRot_ant2 = 0;
     float errTrans_ant = 0; // errTrans_ant2 = 0;
 
     // Variáveis para cálculo dos pids
-    float accel = 6000; // aceleração em rpm/s
-    float desaccel = 6000; // aceleração em rpm/s
-    int16_t setpointPIDTransTarget = 0;
-    int16_t newSetpoint = 0;
-    int16_t SetpointTransactual = 0;
+    float accel = 6000; // aceleração em rpm/s ou em porcentagem
+    float desaccel = 6000; // aceleração em rpm/s ou em porcentagem
+    float speedTarget = 0;
+    float newSpeed = 0;
+    float calculatedSpeed = 0; // Velocidade calculada com base na aceleração
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
-    float P_IR = 0, D_IR = 0;
+    float P_IR = 0, I_IR = 0, D_IR = 0;
     float IR = 0; // posição do robô na linha;
     float PidRot = 0, PidIR = 0;
     float Prot = 0, Irot = 0, Drot = 0;
@@ -75,6 +86,9 @@ private:
     float erroVelTrans = 0;
     float erroVelRot = 0;
     float erroIR = 0;
+    float soma_erroVelTrans = 0;
+    float soma_erroVelRot = 0;
+    float soma_erroIR = 0;
 
     bool mapState = false;
 

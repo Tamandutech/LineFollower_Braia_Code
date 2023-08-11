@@ -21,6 +21,7 @@ public:
 
   void Run() override;
   void calibAllsensors();
+  void getArraySensors();
 
 
 private:
@@ -32,16 +33,23 @@ private:
   Robot *robot;
 
   dataSLatMarks *latMarks;
-  dataSensor *SLat;
+  dataSensor *sLatData;
   RobotStatus *status;
 
   led_command_t command;
   
-  int iloop = 0;
+  int sumSensEsq = 0;
+  int sumSensDir = 0;
+  int MarksToMean = 0;
 
-  void getSensors(QTRSensors *sArray, QTRSensors *SLat, Robot *robot);
+  int latloop = 0;
+  int sloop = 0;
 
-  void processSLat(Robot *robot);
+  int nLatReads = 0;
+
+  void getLatSensors();
+
+  void processSLat();
 
 };
 

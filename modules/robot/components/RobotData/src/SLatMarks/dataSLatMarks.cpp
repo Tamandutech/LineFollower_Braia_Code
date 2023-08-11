@@ -27,6 +27,9 @@ dataSLatMarks::dataSLatMarks(std::string name)
     PulsesBeforeCurve = new DataAbstract<uint32_t>("PulsesBeforeCurve", name, 200);
     dataManager->registerParamData(PulsesBeforeCurve);
 
+    MarkstoMean = new DataAbstract<uint16_t>("MarkstoMean", name, 6);
+    dataManager->registerParamData(MarkstoMean);
+
     PulsesAfterCurve = new DataAbstract<uint32_t>("PulsesAfterCurve", name, 200);
     dataManager->registerParamData(PulsesAfterCurve);
 

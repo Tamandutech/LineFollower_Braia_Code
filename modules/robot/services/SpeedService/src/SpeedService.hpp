@@ -6,6 +6,7 @@
 #include "RobotData.h"
 
 #include "ESP32Encoder.h"
+#include "math.h" 
 
 using namespace cpp_freertos;
 
@@ -34,6 +35,17 @@ private:
     int32_t lastPulseRight = 0;
     int32_t lastPulseLeft = 0;
     uint16_t deltaTimeMS_inst = 0; // delta entre ultimo calculo e o atual em millisegundos
+
+    float deltaS = 0;
+    float deltaA = 0; // rad/s
+    float Ang = 0; // rad/s
+    float deltaEncEsq = 0;
+    float deltaEncDir = 0;
+    float diameterWheel = 0; // mm
+    float diameterRobot = 0; // mm
+    float positionX = 0, positionY = 0; // mm
+    float DeltaPositionX = 0, DeltaPositionY = 0; // mm
+
 
     TickType_t initialTicksCar = 0;
     uint16_t deltaTimeMS_media = 0;

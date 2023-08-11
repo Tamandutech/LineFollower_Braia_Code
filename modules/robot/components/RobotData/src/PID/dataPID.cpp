@@ -15,61 +15,76 @@ dataPID::dataPID(std::string name)
     dataManager->registerRuntimeData(input);
     output = new DataAbstract<float>("output", name, 0);
     dataManager->registerRuntimeData(output);
+    P_output = new DataAbstract<float>("P_output", name, 0);
+    dataManager->registerRuntimeData(P_output);
+    I_output = new DataAbstract<float>("I_output", name, 0);
+    dataManager->registerRuntimeData(I_output);
+    D_output = new DataAbstract<float>("D_output", name, 0);
+    dataManager->registerRuntimeData(D_output);
     setpoint = new DataAbstract<float>("Setpoint", name, 0);
     dataManager->registerRuntimeData(setpoint);
     erro = new DataAbstract<float>("erro", name, 0);
-    dataManager->registerRuntimeData(setpoint);
+    dataManager->registerRuntimeData(erro);
+    erroquad = new DataAbstract<float>("erroquad", name, 0);
+    dataManager->registerRuntimeData(erroquad);
 
-    Kp_std = new DataAbstract<float>("Kp_std", name, 0);
+    Kp_std = new DataAbstract<double>("Kp_std", name, 0);
     dataManager->registerParamData(Kp_std);
-    Kd_std = new DataAbstract<float>("Kd_std", name, 0);
+    Kd_std = new DataAbstract<double>("Kd_std", name, 0);
     dataManager->registerParamData(Kd_std);
     if(name == "PIDVel" || name == "PIDRot")
     {
-        Ki_std = new DataAbstract<float>("Ki_std", name, 0);
+        Ki_std = new DataAbstract<double>("Ki_std", name, 0);
         dataManager->registerParamData(Ki_std);
-        Ki_tunning = new DataAbstract<float>("Ki_tunning", name);
+        Ki_tunning = new DataAbstract<double>("Ki_tunning", name);
         dataManager->registerParamData(Ki_tunning);
     }
 
-    Kp_tunning = new DataAbstract<float>("Kp_tunning", name);
+    Kp_tunning = new DataAbstract<double>("Kp_tunning", name);
     dataManager->registerParamData(Kp_tunning);
-    Kd_tunning = new DataAbstract<float>("Kd_tunning", name);
+    Kd_tunning = new DataAbstract<double>("Kd_tunning", name);
     dataManager->registerParamData(Kd_tunning);
 
 
-    if(name == "PIDIR")
+    if(name == "PIDIR" || name == "PIDClassic")
     {
-        Kp_IRline = new DataAbstract<float>("Kp_IRline", name);
+        Kp_IRline = new DataAbstract<double>("Kp_IRline", name);
         dataManager->registerParamData(Kp_IRline);
-        Kd_IRline = new DataAbstract<float>("Kd_IRline", name);
+        Kd_IRline = new DataAbstract<double>("Kd_IRline", name);
         dataManager->registerParamData(Kd_IRline);
-        Kp_IRcurve = new DataAbstract<float>("Kp_IRcurve", name);
+        Kp_IRcurve = new DataAbstract<double>("Kp_IRcurve", name);
         dataManager->registerParamData(Kp_IRcurve);
-        Kd_IRcurve = new DataAbstract<float>("Kd_IRcurve", name);
+        Kd_IRcurve = new DataAbstract<double>("Kd_IRcurve", name);
         dataManager->registerParamData(Kd_IRcurve);
-        Kp_IRShortCurve = new DataAbstract<float>("Kp_IRShortCurve", name, 4.5);
+        Kp_IRShortCurve = new DataAbstract<double>("Kp_IRShortCurve", name, 4.5);
         dataManager->registerParamData(Kp_IRShortCurve);
-        Kd_IRShortCurve = new DataAbstract<float>("Kd_IRShortCurve", name, 4.5);
+        Kd_IRShortCurve = new DataAbstract<double>("Kd_IRShortCurve", name, 4.5);
         dataManager->registerParamData(Kd_IRShortCurve);
+        Kp_IRZigZag = new DataAbstract<double>("Kp_IRZigZag", name, 0.03);
+        dataManager->registerParamData(Kp_IRZigZag);
+        Kd_IRZigZag = new DataAbstract<double>("Kd_IRZigZag", name, 0.94);
+        dataManager->registerParamData(Kd_IRZigZag);
+        Kp_IRXLongLine = new DataAbstract<double>("Kp_IRXLongLine", name, 0.03);
+        dataManager->registerParamData(Kp_IRXLongLine);
+        Kd_IRXLongLine = new DataAbstract<double>("Kd_IRXLongLine", name, 0.94);
+        dataManager->registerParamData(Kd_IRXLongLine);
+        Kp_IRLongCurve = new DataAbstract<double>("Kp_IRLongCurve", name, 0.03);
+        dataManager->registerParamData(Kp_IRLongCurve);
+        Kd_IRLongCurve = new DataAbstract<double>("Kd_IRLongCurve", name, 0.94);
+        dataManager->registerParamData(Kd_IRLongCurve);
+
+        Kp_IRXLongCurve = new DataAbstract<double>("Kp_IRXLongCurve", name, 0.03);
+        dataManager->registerParamData(Kp_IRXLongCurve);
+        Kd_IRXLongCurve = new DataAbstract<double>("Kd_IRXLongCurve", name, 0.94);
+        dataManager->registerParamData(Kd_IRXLongCurve);
+
         UseKdIR = new DataAbstract<bool>("UseKdIR", name, true);
         dataManager->registerParamData(UseKdIR);
     }
 
     if(name == "PIDVel")
     {
-        CorrectionFactor = new DataAbstract<float>("FatorCorrecao", name);
-        dataManager->registerParamData(CorrectionFactor);
-        CorrectionFactorLine = new DataAbstract<float>("FatorCorrecaoLine", name);
-        dataManager->registerParamData(CorrectionFactorLine);
-        CorrectionFactorShortCurve = new DataAbstract<float>("FatorCorrecaoShortCurve", name);
-        dataManager->registerParamData(CorrectionFactorShortCurve);
-        CorrectionFactorMediumCurve = new DataAbstract<float>("FatorCorrecaoMediumCurve", name);
-        dataManager->registerParamData(CorrectionFactorMediumCurve);
-        CorrectionFactorLongCurve = new DataAbstract<float>("FatorCorrecaoLongCurve", name);
-        dataManager->registerParamData(CorrectionFactorLongCurve);
-        CorrectionFactorZigZag = new DataAbstract<float>("FatorCorrecaoZigZag", name);
-        dataManager->registerParamData(CorrectionFactorZigZag);
+
         UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
         dataManager->registerParamData(UseKiVel);
     }
@@ -77,7 +92,7 @@ dataPID::dataPID(std::string name)
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 
-DataAbstract<float> *dataPID::Kp(TrackState state)
+DataAbstract<double> *dataPID::Kp(TrackState state)
 {
     if(name == "PIDVel" || name == "PIDRot")
     {
@@ -90,19 +105,35 @@ DataAbstract<float> *dataPID::Kp(TrackState state)
             return Kp_std;
         }
     }
-    else if(name == "PIDIR")
+    else if(name == "PIDIR" || name=="PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {
             return Kp_IRline;
         }
-        else if(state == SHORT_CURVE || state == ZIGZAG)
+        else if(state == SHORT_CURVE)
         {
             return Kp_IRShortCurve;
         }
-        else if(state == MEDIUM_CURVE || state == LONG_CURVE)
+        else if(state == XLONG_LINE)
+        {
+            return Kp_IRXLongLine;
+        }
+        else if(state == ZIGZAG)
+        {
+            return Kp_IRZigZag;
+        }
+        else if(state == MEDIUM_CURVE)
         {
             return Kp_IRcurve;
+        }
+        else if(state == XLONG_CURVE)
+        {
+            return Kp_IRXLongCurve;
+        }
+        else if(state == LONG_CURVE)
+        {
+            return Kp_IRLongCurve;
         }
         else if(state == TUNING)
         {
@@ -118,7 +149,7 @@ DataAbstract<float> *dataPID::Kp(TrackState state)
     return nullptr;
 }
 
-DataAbstract<float> *dataPID::Ki(TrackState state)
+DataAbstract<double> *dataPID::Ki(TrackState state)
 {
     if(name == "PIDVel" || name == "PIDRot")
     {
@@ -135,7 +166,7 @@ DataAbstract<float> *dataPID::Ki(TrackState state)
     return nullptr;
 }
 
-DataAbstract<float> *dataPID::Kd(TrackState state)
+DataAbstract<double> *dataPID::Kd(TrackState state)
 {
 
     if(name == "PIDVel" || name == "PIDRot")
@@ -149,19 +180,35 @@ DataAbstract<float> *dataPID::Kd(TrackState state)
             return Kd_std;
         }
     }
-    else if(name == "PIDIR")
+    else if(name == "PIDIR" || name== "PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {
             return Kd_IRline;
         }
-        else if(state == SHORT_CURVE || state == ZIGZAG)
+        else if(state == SHORT_CURVE)
         {
             return Kd_IRShortCurve;
         }
-        else if(state == MEDIUM_CURVE || state == LONG_CURVE)
+        else if(state == ZIGZAG)
+        {
+            return Kd_IRZigZag;
+        }
+        else if(state == XLONG_LINE)
+        {
+            return Kd_IRXLongLine;
+        }
+        else if(state == XLONG_CURVE)
+        {
+            return Kd_IRXLongCurve;
+        }
+        else if(state == MEDIUM_CURVE)
         {
             return Kd_IRcurve;
+        }
+        else if(state == LONG_CURVE)
+        {
+            return Kd_IRLongCurve;
         }
         else if(state == TUNING)
         {

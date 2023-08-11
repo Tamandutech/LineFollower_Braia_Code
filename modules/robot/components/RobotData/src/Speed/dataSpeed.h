@@ -21,7 +21,7 @@
 class dataSpeed
 {
 public:
-    dataSpeed(std::string name = "dataSpeed");
+    dataSpeed(std::string name = "dataSpeed",bool PID_Select = false);
 
     // Valocidades atuais
     DataAbstract<int16_t> *RPMRight_inst;
@@ -39,6 +39,12 @@ public:
     // Diâmetro das rodas
     DataAbstract<uint8_t> *WheelDiameter;
 
+    DataAbstract<uint16_t> *RobotDiameter;
+
+    // Posicoes no plano cartesiano
+    DataAbstract<float> *positionX;
+    DataAbstract<float> *positionY; 
+
     DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
@@ -49,23 +55,36 @@ public:
     DataAbstract<int8_t> *base;
 
     
-    DataAbstract<int16_t> *initialspeed; // Velocidade inicial em rpm
-    DataAbstract<int16_t> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
+    DataAbstract<float> *initialspeed; // Velocidade inicial em rpm
+    DataAbstract<float> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
 
     //Setpoints translacionais para os tipos de trecho em rpm
-    DataAbstract<int16_t> *Long_Line;
-    DataAbstract<int16_t> *Medium_Line;
-    DataAbstract<int16_t> *Short_Line;
-    DataAbstract<int16_t> *Long_Curve;
-    DataAbstract<int16_t> *Medium_Curve;
-    DataAbstract<int16_t> *Short_Curve;
-    DataAbstract<int16_t> *ZIGZAG;
-    DataAbstract<int16_t> *Special_Track;
+    DataAbstract<float> *Long_Line;
+    DataAbstract<float> *Medium_Line;
+    DataAbstract<float> *Short_Line;
+    DataAbstract<float> *XLong_Line;
+    DataAbstract<float> *XLong_Curve; 
+    DataAbstract<float> *Long_Curve;
+    DataAbstract<float> *Medium_Curve;
+    DataAbstract<float> *Short_Curve;
+    DataAbstract<float> *ZIGZAG;
+    DataAbstract<float> *Special_Track;
+
+    DataAbstract<float> *CalculatedSpeed; // Velocidade final desejada
+
+    // Variáveis para a diminuição da velocidade do robô com base no erro dele em relação à pista
+    DataAbstract<float> *CorrectionFactor;
+    DataAbstract<float> *CorrectionFactorLine;
+    DataAbstract<float> *CorrectionFactorMediumCurve;
+    DataAbstract<float> *CorrectionFactorShortCurve;
+    DataAbstract<float> *CorrectionFactorLongCurve;
+    DataAbstract<float> *CorrectionFactorZigZag;
+
 
     // Velocidade para o modo Tunning
-    DataAbstract<int16_t> *Tunning_speed;
+    DataAbstract<float> *Tunning_speed;
     // Velocidade padrão do robô
-    DataAbstract<int16_t> *Default_speed;
+    DataAbstract<float> *Default_speed;
 
     // Velocidade atual da roda direita em PMW
     DataAbstract<float> *right;
