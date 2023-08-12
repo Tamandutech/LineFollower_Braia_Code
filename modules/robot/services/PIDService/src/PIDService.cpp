@@ -22,17 +22,17 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
         this->PIDRot->input->setData(this->robot->getsArray()->getLine());
         PIDTrans->setpoint->setData(0);
         KpVel = PIDTrans->Kp(TUNING)->getData();
-        KdVel = PIDTrans->Kd(TUNING)->getData();
+        KdVel = PIDTrans->Kd(TUNING)->getData() / TaskDelaySeconds;
         KpRot = PIDRot->Kp(TUNING)->getData();
-        KdRot = PIDRot->Kd(TUNING)->getData();
+        KdRot = PIDRot->Kd(TUNING)->getData() / TaskDelaySeconds;
         KpIR = PIDIR->Kp(TUNING)->getData();
-        KdIR = PIDIR->Kd(TUNING)->getData();
+        KdIR = PIDIR->Kd(TUNING)->getData() / TaskDelaySeconds;
     }
     else
     {
         this->PIDClassic = robot->getPIDClassic();
         KpIR = PIDClassic->Kp(TUNING)->getData();
-        KdIR = PIDClassic->Kd(TUNING)->getData();
+        KdIR = PIDClassic->Kd(TUNING)->getData() / TaskDelaySeconds;
     }
 
 
