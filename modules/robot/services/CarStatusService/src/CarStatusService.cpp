@@ -41,9 +41,12 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
         }
     }
     status->robotState->setData(CAR_STOPPED);
+    status->RealTrackStatus->setData(UNDEFINED);
+    status->TrackStatus->setData(UNDEFINED);
 
     stateChanged = true;
     lastMappingState = false;
+    lastPaused = status->robotPaused->getData();
     lastState = status->robotState->getData();
     lastTrack = (TrackState) status->TrackStatus->getData();
 
@@ -152,7 +155,8 @@ void CarStatusService::Run()
         pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
         pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
         actualCarState = (CarState) status->robotState->getData();
-        if(started_in_Tuning && status->TunningMode->getData() && status->robotState->getData() != CAR_TUNING &&  !status->encreading->getData() && !status->robotIsMapping->getData()) 
+        if(status->robotPaused->getData()) lastPaused = true;
+        if(started_in_Tuning && status->TunningMode->getData() && status->robotState->getData() != CAR_TUNING && !status->robotPaused->getData() && !status->encreading->getData() && !status->robotIsMapping->getData()) 
         {
             status->robotState->setData(CAR_TUNING);
             status->TrackStatus->setData(TUNING);
@@ -180,8 +184,9 @@ void CarStatusService::Run()
             LEDsService::getInstance()->queueCommand(command);
         }
 
-        else if ((lastState != status->robotState->getData() || lastTrack != (TrackState)status->TrackStatus->getData() || lastTransition != status->Transition->getData()) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
+        else if ((lastState != status->robotState->getData() || lastTrack != (TrackState)status->TrackStatus->getData() || lastTransition != status->Transition->getData() || (lastPaused && !status->robotPaused->getData())) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
         {
+            lastPaused = false;
             lastState = status->robotState->getData();
             lastTrack =  (TrackState)status->TrackStatus->getData();
             lastTransition = status->Transition->getData();

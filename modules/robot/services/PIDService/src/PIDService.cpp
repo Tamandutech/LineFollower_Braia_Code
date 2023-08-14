@@ -2,13 +2,14 @@
 
 PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-    this->robot = Robot::getInstance();;
+    this->robot = Robot::getInstance();
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
 
+
     // GPIOs dos motores
-    motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
-    //motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    //motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
     pid_select = status->PID_Select->getData();
@@ -21,17 +22,17 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
         this->PIDRot->input->setData(this->robot->getsArray()->getLine());
         PIDTrans->setpoint->setData(0);
         KpVel = PIDTrans->Kp(TUNING)->getData();
-        KdVel = PIDTrans->Kd(TUNING)->getData();
+        KdVel = PIDTrans->Kd(TUNING)->getData() / TaskDelaySeconds;
         KpRot = PIDRot->Kp(TUNING)->getData();
-        KdRot = PIDRot->Kd(TUNING)->getData();
+        KdRot = PIDRot->Kd(TUNING)->getData() / TaskDelaySeconds;
         KpIR = PIDIR->Kp(TUNING)->getData();
-        KdIR = PIDIR->Kd(TUNING)->getData();
+        KdIR = PIDIR->Kd(TUNING)->getData() / TaskDelaySeconds;
     }
     else
     {
         this->PIDClassic = robot->getPIDClassic();
         KpIR = PIDClassic->Kp(TUNING)->getData();
-        KdIR = PIDClassic->Kd(TUNING)->getData();
+        KdIR = PIDClassic->Kd(TUNING)->getData() / TaskDelaySeconds;
     }
 
 
@@ -103,20 +104,20 @@ void PIDService::Run()
             if (!pid_select)
             {
                 KpVel = (PIDTrans->Kp(RealTracklen) != nullptr) ? PIDTrans->Kp(RealTracklen)->getData() : 0;
-                KiVel = (PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->Ki(RealTracklen)->getData() : 0;
-                KdVel = (PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->Kd(RealTracklen)->getData() : 0;
+                KiVel = ((PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
+                KdVel = ((PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
 
                 KpRot = (PIDRot->Kp(RealTracklen) != nullptr) ? PIDRot->Kp(RealTracklen)->getData() : 0;
-                KiRot = (PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->Ki(RealTracklen)->getData() : 0;
-                KdRot = (PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->Kd(RealTracklen)->getData() : 0;
+                KiRot = ((PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
+                KdRot = ((PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
 
                 KpIR = (PIDIR->Kp(RealTracklen) != nullptr) ? PIDIR->Kp(RealTracklen)->getData() : 0;
-                KdIR = (PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->Kd(RealTracklen)->getData() : 0;   
+                KdIR = ((PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
             }
             else
             {
                 KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
-                KdIR = (PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0;   
+                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;   
             }
             
             
@@ -309,14 +310,14 @@ void PIDService::Run()
         {
             if (calculatedSpeed <= speedTarget)
             {
-                newSpeed = calculatedSpeed + (accel * ((float)TaskDelay / (float)1000));
+                newSpeed = calculatedSpeed + (accel * TaskDelaySeconds);
                 newSpeed = constrain(newSpeed, calculatedSpeed, speedTarget);
                 if(!pid_select) PIDTrans->setpoint->setData(newSpeed);
                 speed->CalculatedSpeed->setData(newSpeed);
             }
             else
             {
-                newSpeed = calculatedSpeed - (desaccel * ((float)TaskDelay / (float)1000));
+                newSpeed = calculatedSpeed - (desaccel * TaskDelaySeconds);
                 newSpeed = constrain(newSpeed, speedTarget, calculatedSpeed);
                 if(!pid_select) PIDTrans->setpoint->setData(newSpeed);
                 speed->CalculatedSpeed->setData(newSpeed);
@@ -396,7 +397,7 @@ void PIDService::Run()
         errTrans_ant = erroVelTrans;
         errRot_ant = erroVelRot;
 
-        if (iloop > 100)
+        if (iloop > 200)
         {
             //ESP_LOGD(GetName().c_str(), "L_trans: %.4f | L_rot : %.4f | L_IR: %.4f", L_trans , L_rot,L_IR);
             if(!pid_select) 
