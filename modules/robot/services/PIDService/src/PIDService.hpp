@@ -32,10 +32,7 @@ public:
     void ControlMotors(float left, float right);
 
     // Timer control
-    static bool IRAM_ATTR timer_group_isr_callback(void * args);
-    void vTaskFunction(void *pvParameters);
-    void vTaskTimerFunction(void *pvParameters)
-
+    static bool IRAM_ATTR timer_group_isr_callback(void *args);
 
     void Run() override;
 
@@ -113,9 +110,7 @@ private:
     int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos
 
     // Timer control
-    int SharedData = 0;
-    SemaphoreHandle_t SharedSemaphore; // semáforo para os dados compartilhados das tasks
-    SemaphoreHandle_t SemaphoreTimer;  // semáforo para sincronização do timer com a task timer
+    SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 };
 
 #endif
