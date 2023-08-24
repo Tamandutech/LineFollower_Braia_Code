@@ -110,7 +110,7 @@ private:
     int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos
 
     // Timer control
-    SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
+    static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 };
 
 #endif

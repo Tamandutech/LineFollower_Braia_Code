@@ -1,9 +1,9 @@
 #include "PIDService.hpp"
 
+SemaphoreHandle_t PIDService::SemaphoreTimer;
 PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
     this->robot = Robot::getInstance();
-    ;
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
 
@@ -55,18 +55,14 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     timer_enable_intr(TIMER_GROUP_0, TIMER_0);                                               // ativa interrupção
     timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, timer_group_isr_callback, NULL, 0);       // define a função executada quando ocorre interrupção
     timer_start(TIMER_GROUP_0, TIMER_0);
-};
+}
 
 void PIDService::Run()
 {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
         // Trava a task até o semáfaro ser liberado com base no timer
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
-
-        vTaskDelayUntil(&xLastWakeTime, TaskDelay / portTICK_PERIOD_MS);
-
         estado = (CarState)status->robotState->getData();
         TrackLen = (TrackState)status->TrackStatus->getData();
         RealTracklen = (TrackState)status->RealTrackStatus->getData();
@@ -122,20 +118,20 @@ void PIDService::Run()
             if (!pid_select)
             {
                 KpVel = (PIDTrans->Kp(RealTracklen) != nullptr) ? PIDTrans->Kp(RealTracklen)->getData() : 0;
-                KiVel = (PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->(Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
-                KdVel = (PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->(Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
+                KiVel = ((PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
+                KdVel = ((PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
 
                 KpRot = (PIDRot->Kp(RealTracklen) != nullptr) ? PIDRot->Kp(RealTracklen)->getData() : 0;
-                KiRot = (PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->(Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
-                KdRot = (PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->(Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
+                KiRot = ((PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
+                KdRot = ((PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
 
                 KpIR = (PIDIR->Kp(RealTracklen) != nullptr) ? PIDIR->Kp(RealTracklen)->getData() : 0;
-                KdIR = (PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->(Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
+                KdIR = ((PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
             }
             else
             {
                 KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
-                KdIR = (PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd((RealTracklen)->getData() : 0) / TaskDelaySeconds;
+                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
             }
         }
 
@@ -462,7 +458,8 @@ void PIDService::ControlMotors(float left, float right)
 }
 
 // Rotina que é executada com base no acionamento do timer
-static bool IRAM_ATTR PIDService::timer_group_isr_callback(void * args) {
+bool IRAM_ATTR PIDService::timer_group_isr_callback(void * args) 
+{
     BaseType_t high_task_awoken = pdFALSE;
     xSemaphoreGiveFromISR(SemaphoreTimer, &high_task_awoken);
     return (high_task_awoken == pdTRUE);
