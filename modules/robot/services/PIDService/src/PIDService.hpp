@@ -8,6 +8,7 @@
 #include "SensorsService.hpp"
 
 #include "ESP32MotorControl.h"
+#include "math.h" 
 
 // Timer control
 #include "freertos/FreeRTOS.h"
@@ -47,7 +48,7 @@ private:
 
     ESP32MotorControl motors;
 
-    const short TaskDelay = 1; // 1ms
+    const short TaskDelay = 5; // 5ms
     const float TaskDelaySeconds = TaskDelay / 1000.0;
 
     bool pid_select = false;
@@ -55,7 +56,7 @@ private:
     // Variaveis de calculo para os pids da velocidade rotacional e translacional
     double KpVel = 0, KiVel = 0, KdVel = 0;
     double KpRot = 0, KiRot = 0, KdRot = 0;
-    double KpIR = 0, KdIR = 0, KiIR = 0;
+    double KpIR = 0, KdIR = 0, KiIR = 0, N = 0;
 
     // erros anteriores
     float errRot_ant = 0;   // errRot_ant2 = 0;
@@ -69,7 +70,7 @@ private:
     float calculatedSpeed = 0; // Velocidade calculada com base na aceleração
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
-    float P_IR = 0, I_IR = 0, D_IR = 0;
+    float P_IR = 0, I_IR = 0, D_IR = 0, filterDstate = 0;
     float IR = 0; // posição do robô na linha;
     float PidRot = 0, PidIR = 0;
     float Prot = 0, Irot = 0, Drot = 0;

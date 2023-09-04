@@ -32,6 +32,8 @@ dataPID::dataPID(std::string name)
     dataManager->registerParamData(Kp_std);
     Kd_std = new DataAbstract<double>("Kd_std", name, 0);
     dataManager->registerParamData(Kd_std);
+    Nfilter = new DataAbstract<double>("N_filter", name, 0);
+    dataManager->registerParamData(Nfilter);
     if(name == "PIDVel" || name == "PIDRot")
     {
         Ki_std = new DataAbstract<double>("Ki_std", name, 0);

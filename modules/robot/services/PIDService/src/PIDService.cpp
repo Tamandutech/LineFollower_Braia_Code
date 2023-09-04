@@ -8,8 +8,8 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->status = robot->getStatus();
 
     // GPIOs dos motores
-    motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
-    // motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    //motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
     pid_select = status->PID_Select->getData();
@@ -131,7 +131,8 @@ void PIDService::Run()
             else
             {
                 KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
-                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
+                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0);
+                N = 2*M_PI*PIDClassic->Nfilter->getData();
             }
         }
 
@@ -217,9 +218,12 @@ void PIDService::Run()
             // Cálculo do PID para posicionar o robô  na linha
             P_IR = KpIR * erroIR;
             if (PIDClassic->UseKdIR->getData())
-                D_IR = KdIR * (lastIR - IR);
-            else
-                D_IR = 0;
+            {
+                //D_IR = KdIR * (lastIR - IR);
+                D_IR = (KdIR * erroIR - filterDstate) * N;
+                filterDstate += TaskDelaySeconds * D_IR;
+            }
+            else D_IR = 0;
             I_IR += KiIR * erroIR;
             PidIR = P_IR + I_IR + D_IR;
             PIDClassic->output->setData(PidIR);
@@ -409,7 +413,7 @@ void PIDService::Run()
         errTrans_ant = erroVelTrans;
         errRot_ant = erroVelRot;
 
-        if (iloop > 100)
+        if (iloop > 1000)
         {
             // ESP_LOGD(GetName().c_str(), "L_trans: %.4f | L_rot : %.4f | L_IR: %.4f", L_trans , L_rot,L_IR);
             if (!pid_select)
