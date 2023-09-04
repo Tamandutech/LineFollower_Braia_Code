@@ -45,6 +45,7 @@ public:
 
     DataAbstract<bool> *UseKiVel;
     DataAbstract<bool> *UseKdIR;
+    DataAbstract<double> *Nfilter; // frequência de corte do filtro do PID em Hertz
     // Constantes do PID definidas pelo trecho da pista
     DataAbstract<double> *Kp(TrackState state);
     DataAbstract<double> *Ki(TrackState state);
@@ -58,7 +59,7 @@ private:
     // Parâmetros do PID  
     DataAbstract<double> *Kp_std;
     DataAbstract<double> *Ki_std;
-    DataAbstract<double> *Kd_std; 
+    DataAbstract<double> *Kd_std;
 
     // Parâmetros do PID para diferentes trechos da pista
     DataAbstract<double> *Kp_tunning; // salvar
