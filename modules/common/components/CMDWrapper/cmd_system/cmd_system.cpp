@@ -37,6 +37,7 @@
 #endif
 
 static const char *TAG = "CMD_SYSTEM";
+CarState lastState = CAR_STOPPED;
 
 static void register_free(void);
 static void register_heap(void);
@@ -173,19 +174,23 @@ static std::string resume(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
     auto latMarks = Robot::getInstance()->getSLatMarks();
-    if (latMarks->marks->getSize() <= 0)
+    if(!status->TunningMode->getData())
     {
-        status->encreading->setData(false);
-        status->robotIsMapping->setData(true);
+        if (latMarks->marks->getSize() <= 0)
+        {
+            status->encreading->setData(false);
+            status->robotIsMapping->setData(true);
+        }
+        else
+        {
+            status->robotIsMapping->setData(false);
+            status->encreading->setData(true);
+        }
+        status->robotState->setData(lastState);
     }
-    else
-    {
-        status->robotIsMapping->setData(false);
-        status->encreading->setData(true);
-    }
-    status->robotState->setData(CAR_IN_LINE);
-    auto carstate = status->robotState->getData();
+    auto carstate = CAR_IN_LINE;
     xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
+    status->robotPaused->setData(false);
 
     return ("O robô voltará a andar");
 }
@@ -204,15 +209,23 @@ static void register_resume(void)
 static std::string pause(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
-    status->robotIsMapping->setData(false);
-    status->encreading->setData(false);
-    led_command_t command;
-    command.led[0] = LED_POSITION_FRONT;
-    command.led[1] = LED_POSITION_NONE;
-    command.color = LED_COLOR_BLACK;
-    command.effect = LED_EFFECT_SET;
-    command.brightness = 1;
-    LEDsService::getInstance()->queueCommand(command);
+    if(status->robotState->getData() != CAR_STOPPED)
+    {
+        lastState = (CarState) status->robotState->getData();
+        status->robotPaused->setData(true);
+        status->robotIsMapping->setData(false);
+        status->encreading->setData(false);
+        status->robotState->setData(CAR_STOPPED);
+        vTaskDelay(0);
+        DataManager::getInstance()->saveAllParamDataChanged();
+        led_command_t command;
+        command.led[0] = LED_POSITION_FRONT;
+        command.led[1] = LED_POSITION_NONE;
+        command.color = LED_COLOR_BLACK;
+        command.effect = LED_EFFECT_SET;
+        command.brightness = 1;
+        LEDsService::getInstance()->queueCommand(command);
+    }
     return ("O robô será pausado");
 }
 
