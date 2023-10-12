@@ -65,8 +65,6 @@ private:
     float accel = 6000;    // aceleração em rpm/s ou em porcentagem
     float desaccel = 6000; // aceleração em rpm/s ou em porcentagem
     float speedTarget = 0;
-    float newSpeed = 0;
-    float calculatedSpeed = 0; // Velocidade calculada com base na aceleração
     float PidTrans = 0;
     float Ptrans = 0, Itrans = 0, Dtrans = 0;
     float P_IR = 0, I_IR = 0, D_IR = 0;
@@ -111,6 +109,10 @@ private:
 
     // Timer control
     static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
+
+    // Protótipos de função
+    float calculateSpeed(float acceleration, float speedValue);
+    void storingSpeedValue(float newSpeed);
 };
 
 #endif

@@ -7,9 +7,8 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
 
-
     // GPIOs dos motores
-    //motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    // motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
@@ -132,7 +131,7 @@ void PIDService::Run()
             else
             {
                 KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
-                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;   
+                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
             }
         }
 
@@ -236,6 +235,9 @@ void PIDService::Run()
         }
 
         ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
+
+        /* PEDRO */
+        
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
         {
@@ -264,6 +266,7 @@ void PIDService::Run()
                 break;
             }
         }
+
         else if (estado == CAR_IN_CURVE && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
@@ -310,6 +313,7 @@ void PIDService::Run()
             speedTarget = speed->Tunning_speed->getData();
             fatorCorrecao = speed->CorrectionFactor->getData();
         }
+        /********************************************/
 
         if ((mapState || !(status->FirstMark->getData())) && !status->TunningMode->getData())
             speedTarget = constrain(((1 - ((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0)) * speedTarget), 0, speedTarget);
@@ -318,25 +322,20 @@ void PIDService::Run()
             speedTarget = constrain(((1 - (fatorCorrecao * ((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0))) * speedTarget), 0, speedTarget);
             // if(abs(3500 - robot->getsArray()->getLine()) > 3000) setpointPIDTransTarget = setpointPIDTransTarget / 2.0 ;
         }
+
         // Rampeia a velocidade translacional
-        calculatedSpeed = speed->CalculatedSpeed->getData();
+
         if (estado != CAR_STOPPED)
         {
-            if (calculatedSpeed <= speedTarget)
+            float speedValue = speed->CalculatedSpeed->getData();
+            
+            float newSpeed = calculateSpeed(accel, speedValue);
+            storingSpeedValue(newSpeed);
+
+            if (speedValue >= speedTarget)
             {
-                newSpeed = calculatedSpeed + (accel * TaskDelaySeconds);
-                newSpeed = constrain(newSpeed, calculatedSpeed, speedTarget);
-                if (!pid_select)
-                    PIDTrans->setpoint->setData(newSpeed);
-                speed->CalculatedSpeed->setData(newSpeed);
-            }
-            else
-            {
-                newSpeed = calculatedSpeed - (desaccel * TaskDelaySeconds);
-                newSpeed = constrain(newSpeed, speedTarget, calculatedSpeed);
-                if (!pid_select)
-                    PIDTrans->setpoint->setData(newSpeed);
-                speed->CalculatedSpeed->setData(newSpeed);
+                newSpeed = calculateSpeed(-desaccel, speedValue);
+                storingSpeedValue(newSpeed);
             }
         }
 
@@ -458,8 +457,21 @@ void PIDService::ControlMotors(float left, float right)
     }
 }
 
+float PIDService::calculateSpeed(float acceleration, float speedValue)
+{
+    float newSpeed = speedValue + (acceleration * TaskDelaySeconds);
+    return constrain(newSpeed, speedValue, speedTarget);
+}
+
+void PIDService::storingSpeedValue(float newSpeed)
+{
+    if (!pid_select)
+        PIDTrans->setpoint->setData(newSpeed);
+    speed->CalculatedSpeed->setData(newSpeed);
+}
+
 // Rotina que é executada com base no acionamento do timer
-bool IRAM_ATTR PIDService::timer_group_isr_callback(void * args) 
+bool IRAM_ATTR PIDService::timer_group_isr_callback(void *args)
 {
     BaseType_t high_task_awoken = pdFALSE;
     xSemaphoreGiveFromISR(SemaphoreTimer, &high_task_awoken);
