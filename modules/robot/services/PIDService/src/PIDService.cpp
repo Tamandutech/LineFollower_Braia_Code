@@ -237,7 +237,7 @@ void PIDService::Run()
         ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
 
         /* PEDRO */
-        
+
         // Altera a velocidade linear do carrinho
         if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
         {
@@ -328,15 +328,12 @@ void PIDService::Run()
         if (estado != CAR_STOPPED)
         {
             float speedValue = speed->CalculatedSpeed->getData();
-            
             float newSpeed = calculateSpeed(accel, speedValue);
-            storingSpeedValue(newSpeed);
 
             if (speedValue >= speedTarget)
-            {
                 newSpeed = calculateSpeed(-desaccel, speedValue);
-                storingSpeedValue(newSpeed);
-            }
+
+            storingSpeedValue(newSpeed);
         }
 
         // Processo de ajuste dos parametros PID
