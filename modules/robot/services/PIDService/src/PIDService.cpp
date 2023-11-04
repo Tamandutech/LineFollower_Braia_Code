@@ -267,67 +267,6 @@ void PIDService::Run()
 
             storingSpeedValue(newSpeed);
         }
-
-        // Processo de ajuste dos parametros PID
-        // Derivada direcional (Taxa de variacao do sinais)
-        double L_trans = 0.0;
-        double L_rot = 0.0;
-        double L_IR = 0.0;
-        if ((PidTrans - lastPIDTrans) != 0 && status->GD_Optimization->getData() && !pid_select)
-        {
-            L_trans = (VelTrans - lastVelTrans) / (PidTrans - lastPIDTrans);
-        }
-        if ((PidRot - lastPIDRot) != 0 && status->GD_Optimization->getData() && !pid_select)
-        {
-            L_rot = (VelRot - lastVelRot) / (PidRot - lastPIDRot);
-        }
-        if ((PidIR - lastPIDIR) != 0 && status->GD_OptimizationIR->getData())
-        {
-            L_IR = (IR - lastIR) / (PidIR - lastPIDIR);
-        }
-
-        if (estado != CAR_STOPPED && status->GD_Optimization->getData() && !pid_select)
-        {
-
-            KpVel = KpVel + alphaVel * (erroVelTrans * erroVelTrans) * L_trans;
-            KdVel = KdVel + alphaVel * (lastVelTrans - VelTrans) * L_trans * erroVelTrans;
-            if (PIDTrans->UseKiVel->getData())
-            {
-                KiVel = KiVel + alphaVel * (Itrans / KiVel) * L_trans * erroVelTrans;
-                PIDTrans->Ki(RealTracklen)->setData(KiVel);
-            }
-
-            KpRot = KpRot + alphaRot * (erroVelRot * erroVelRot) * L_rot;
-            KdRot = KdRot + alphaRot * (lastVelRot - VelRot) * L_rot * erroVelRot;
-
-            // Alterar os parametros do controle PID rot e trans
-            PIDTrans->Kp(RealTracklen)->setData(KpVel);
-            PIDTrans->Kd(RealTracklen)->setData(KdVel);
-            PIDRot->Kp(RealTracklen)->setData(KpRot);
-            PIDRot->Kd(RealTracklen)->setData(KdRot);
-        }
-        if (estado != CAR_STOPPED && status->GD_OptimizationIR->getData())
-        {
-            KpIR = KpIR + alphaIR * (erroIR * erroIR) * L_IR;
-            if (!pid_select)
-            {
-                PIDIR->Kp(RealTracklen)->setData(KpIR);
-                if (PIDIR->UseKdIR->getData())
-                {
-                    KdIR = KdIR + alphaIR * (lastIR - IR) * L_IR * erroIR;
-                    PIDIR->Kd(RealTracklen)->setData(KdIR);
-                }
-            }
-            else
-            {
-                PIDClassic->Kp(RealTracklen)->setData(KpIR);
-                if (PIDClassic->UseKdIR->getData())
-                {
-                    KdIR = KdIR + alphaIR * (lastIR - IR) * L_IR * erroIR;
-                    PIDClassic->Kd(RealTracklen)->setData(KdIR);
-                }
-            }
-        }
         
         // Armazenamento dos parametros de controle atuais
         lastVelTrans = VelTrans;
