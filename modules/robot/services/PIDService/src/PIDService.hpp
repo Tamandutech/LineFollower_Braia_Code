@@ -76,8 +76,6 @@ private:
     int8_t speedMin = 0;
     int8_t speedMax = 0;
 
-    float fatorCorrecao = 0; // taxa de redução de velocidade proporcional ao erro
-
     float VelRot = 0;
     float VelTrans = 0;
 
@@ -102,7 +100,7 @@ private:
     bool mapState = false;
 
     CarState estado = CAR_STOPPED;
-    TrackState TrackLen = SHORT_LINE, RealTracklen = SHORT_LINE;
+    TrackState RealTracklen = SHORT_LINE;
 
     int iloop = 0;
     int gloop = 0; // taxa de atualização dos dados para a plotagem de gráficos
@@ -111,6 +109,7 @@ private:
     static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 
     // Protótipos de função
+    void selectTracktState(TrackState trackState);
     float calculateSpeed(float acceleration, float speedValue);
     void storingSpeedValue(float newSpeed);
 };

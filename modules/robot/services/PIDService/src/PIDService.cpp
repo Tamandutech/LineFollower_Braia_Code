@@ -36,7 +36,6 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     }
 
     speedTarget = 0;
-    fatorCorrecao = speed->CorrectionFactor->getData();
 
     // Inicializa o semáforo
     SemaphoreTimer = xSemaphoreCreateBinary();
@@ -64,7 +63,7 @@ void PIDService::Run()
         // Trava a task até o semáfaro ser liberado com base no timer
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
         estado = (CarState)status->robotState->getData();
-        TrackLen = (TrackState)status->TrackStatus->getData();
+
         RealTracklen = (TrackState)status->RealTrackStatus->getData();
         mapState = status->robotIsMapping->getData();
 
@@ -238,90 +237,23 @@ void PIDService::Run()
 
         /* PEDRO */
 
+
         // Altera a velocidade linear do carrinho
-        if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
+        if (!mapState && status->FirstMark->getData())
         {
-            // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
-            fatorCorrecao = speed->CorrectionFactorLine->getData();
-            switch (TrackLen)
-            {
-            case XLONG_LINE:
-                speedTarget = speed->XLong_Line->getData();
-                break;
-            case LONG_LINE:
-                speedTarget = speed->Long_Line->getData();
-                break;
-            case MEDIUM_LINE:
-                speedTarget = speed->Medium_Line->getData();
-                break;
-            case SHORT_LINE:
-                speedTarget = speed->Short_Line->getData();
-                break;
-            case SPECIAL_TRACK:
-                speedTarget = speed->Special_Track->getData();
-                fatorCorrecao = speed->CorrectionFactor->getData();
-                break;
-            default:
-                speedTarget = speed->Default_speed->getData();
-                break;
-            }
+            TrackState trackState = (TrackState)status->TrackStatus->getData();
+            selectTracktState(trackState);
         }
 
-        else if (estado == CAR_IN_CURVE && !mapState && status->FirstMark->getData())
-        {
-            // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
-            switch (TrackLen)
-            {
-            case XLONG_CURVE:
-                speedTarget = speed->XLong_Curve->getData();
-                fatorCorrecao = speed->CorrectionFactorLongCurve->getData();
-                break;
-            case LONG_CURVE:
-                speedTarget = speed->Long_Curve->getData();
-                fatorCorrecao = speed->CorrectionFactorLongCurve->getData();
-                break;
-            case MEDIUM_CURVE:
-                speedTarget = speed->Medium_Curve->getData();
-                fatorCorrecao = speed->CorrectionFactorMediumCurve->getData();
-                break;
-            case SHORT_CURVE:
-                speedTarget = speed->Short_Curve->getData();
-                fatorCorrecao = speed->CorrectionFactorShortCurve->getData();
-                break;
-            case ZIGZAG:
-                speedTarget = speed->ZIGZAG->getData();
-                fatorCorrecao = speed->CorrectionFactorZigZag->getData();
-                break;
-            case SPECIAL_TRACK:
-                speedTarget = speed->Special_Track->getData();
-                fatorCorrecao = speed->CorrectionFactor->getData();
-                break;
-            default:
-                speedTarget = speed->Default_speed->getData();
-                fatorCorrecao = speed->CorrectionFactor->getData();
-                break;
-            }
-        }
         else if (mapState && estado != CAR_STOPPED)
         {
-            // ESP_LOGD(GetName().c_str(), "Setando setpoint Map");
             speedTarget = speed->SetPointMap->getData();
-            fatorCorrecao = speed->CorrectionFactor->getData();
         }
         else if (estado == CAR_TUNING)
         {
             speedTarget = speed->Tunning_speed->getData();
-            fatorCorrecao = speed->CorrectionFactor->getData();
         }
-        /********************************************/
 
-        if ((mapState || !(status->FirstMark->getData())) && !status->TunningMode->getData())
-            speedTarget = constrain(((1 - ((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0)) * speedTarget), 0, speedTarget);
-        else if (status->CorrectionTrue->getData())
-        {
-            speedTarget = constrain(((1 - (fatorCorrecao * ((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0))) * speedTarget), 0, speedTarget);
-            // if(abs(3500 - robot->getsArray()->getLine()) > 3000) setpointPIDTransTarget = setpointPIDTransTarget / 2.0 ;
-        }
 
         // Rampeia a velocidade translacional
 
@@ -396,6 +328,7 @@ void PIDService::Run()
                 }
             }
         }
+        
         // Armazenamento dos parametros de controle atuais
         lastVelTrans = VelTrans;
         lastVelRot = VelRot;
@@ -451,6 +384,47 @@ void PIDService::ControlMotors(float left, float right)
     else
     {
         motors.motorsStop();
+    }
+}
+
+void PIDService::selectTracktState(TrackState trackState)
+{
+
+    switch (trackState)
+    {
+    case XLONG_LINE:
+        speedTarget = speed->XLong_Line->getData();
+        break;
+    case XLONG_CURVE:
+        speedTarget = speed->XLong_Curve->getData();
+        break;
+    case LONG_LINE:
+        speedTarget = speed->Long_Line->getData();
+        break;
+    case LONG_CURVE:
+        speedTarget = speed->Long_Curve->getData();
+        break;
+    case MEDIUM_LINE:
+        speedTarget = speed->Medium_Line->getData();
+        break;
+    case MEDIUM_CURVE:
+        speedTarget = speed->Medium_Curve->getData();
+        break;
+    case SHORT_LINE:
+        speedTarget = speed->Short_Line->getData();
+        break;
+    case SHORT_CURVE:
+        speedTarget = speed->Short_Curve->getData();
+        break;
+    case SPECIAL_TRACK:
+        speedTarget = speed->Special_Track->getData();
+        break;
+    case ZIGZAG:
+        speedTarget = speed->ZIGZAG->getData();
+        break;
+    default:
+        speedTarget = speed->Default_speed->getData();
+        break;
     }
 }
 
