@@ -280,7 +280,6 @@ void PIDService::Run()
 
         if (iloop > 200)
         {
-            // ESP_LOGD(GetName().c_str(), "L_trans: %.4f | L_rot : %.4f | L_IR: %.4f", L_trans , L_rot,L_IR);
             if (!pid_select)
             {
                 ESP_LOGD(GetName().c_str(), "SetPointTrans: %.2f | Target %.2f, SetPointRot: %.2f", PIDTrans->setpoint->getData(), speedTarget, PIDRot->setpoint->getData());
@@ -306,17 +305,8 @@ void PIDService::ControlMotors(float left, float right)
 {
     CarState state = (CarState)status->robotState->getData();
 
-    // if (iloop >= 200 && !status->robotIsMapping->getData())
-    // {
-    //     iloop = 0;
-    //     ESP_LOGD("MotorsService", "State: %d", state);
-    // }
-    // iloop++;
-
-    if (state != CAR_STOPPED) // verificar se o carrinho deveria se mover
+    if (state != CAR_STOPPED)
     {
-        // motors.motorForward(0);                        // motor 0 ligado para frente
-        // motors.motorForward(1);                        // motor 1 ligado para frente
         motors.motorSpeed(0, left);  // velocidade do motor 0
         motors.motorSpeed(1, right); // velocidade do motor 1
     }
