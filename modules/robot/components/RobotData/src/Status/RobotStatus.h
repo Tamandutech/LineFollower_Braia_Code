@@ -29,19 +29,11 @@ public:
      * @returns Valor do tipo RobotState.
      */
     DataAbstract<uint8_t> *robotState;
-
-    /**
-     * @brief Atributo que indica se o robô está mapeando a pista
-     * @retval TRUE Se o robô está mapeando a pista
-     * @retval FALSE Se o robô não está mapeando a pista
-     */
-    DataAbstract<bool> *robotIsMapping;
      /**
      * @brief Atributo que indica se o robô está lendo o mapeamento para identificar as curvas e retas
      * @retval TRUE Se o robô está lendo o mapeamento
      * @retval FALSE Se o robô não está lendo o mapeamento
      */
-    DataAbstract<bool> *encreading;
     DataAbstract<bool> *robotPaused;
     DataAbstract<bool> *TunningMode;
     DataAbstract<bool> *HardDeleteMap;
@@ -61,6 +53,9 @@ public:
     DataAbstract<float> *alphaIR; // taxa de aprendizagem do gradiente-descendente para o PIDIR
 
     DataAbstract<bool> *TuningMapped; // Ativar tuningMode com o mapeamento da pista
+
+    bool car_in_curve(TrackState track); // Identifica se o robô está em uma curva
+
 
     static std::mutex stateMutex;
     

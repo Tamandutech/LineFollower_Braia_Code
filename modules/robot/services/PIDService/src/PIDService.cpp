@@ -67,7 +67,6 @@ void PIDService::Run()
         estado = (CarState)status->robotState->getData();
         TrackLen = (TrackState)status->TrackStatus->getData();
         RealTracklen = (TrackState)status->RealTrackStatus->getData();
-        mapState = status->robotIsMapping->getData();
 
         SensorsService::getInstance()->getArraySensors();
 
@@ -237,7 +236,7 @@ void PIDService::Run()
 
         ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
         // Altera a velocidade linear do carrinho
-        if (estado == CAR_IN_LINE && !mapState && status->FirstMark->getData())
+        if (!status->car_in_curve(TrackLen) && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
             fatorCorrecao = speed->CorrectionFactorLine->getData();
@@ -264,7 +263,7 @@ void PIDService::Run()
                 break;
             }
         }
-        else if (estado == CAR_IN_CURVE && !mapState && status->FirstMark->getData())
+        else if (status->car_in_curve(TrackLen) && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
             switch (TrackLen)
@@ -299,7 +298,7 @@ void PIDService::Run()
                 break;
             }
         }
-        else if (mapState && estado != CAR_STOPPED)
+        else if (estado == CAR_MAPPING)
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpoint Map");
             speedTarget = speed->SetPointMap->getData();
@@ -311,7 +310,7 @@ void PIDService::Run()
             fatorCorrecao = speed->CorrectionFactor->getData();
         }
 
-        if ((mapState || !(status->FirstMark->getData())) && !status->TunningMode->getData())
+        if ((estado == CAR_MAPPING || !(status->FirstMark->getData())) && !status->TunningMode->getData())
             speedTarget = constrain(((1 - ((float)abs(3500 - robot->getsArray()->getLine()) / 3500.0)) * speedTarget), 0, speedTarget);
         else if (status->CorrectionTrue->getData())
         {

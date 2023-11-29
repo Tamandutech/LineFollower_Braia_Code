@@ -138,22 +138,17 @@ static std::string start(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
     auto latMarks = Robot::getInstance()->getSLatMarks();
-    status->robotIsMapping->setData(false);
-    status->encreading->setData(false);
     SensorsService::getInstance()->Suspend();
     SensorsService::getInstance()->calibAllsensors();
     SensorsService::getInstance()->Resume();
     if (latMarks->marks->getSize() <= 0)
     {
-        status->encreading->setData(false);
-        status->robotIsMapping->setData(true);
+        status->robotState->setData(CAR_MAPPING);
     }
     else
     {
-        status->robotIsMapping->setData(false);
-        status->encreading->setData(true);
+        status->robotState->setData(CAR_ENC_READING);
     }
-    status->robotState->setData(CAR_IN_LINE);
     auto carstate = status->robotState->getData();
     xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
     return ("O robô começará a se mover");
@@ -178,16 +173,14 @@ static std::string resume(int argc, char **argv)
     {
         if (latMarks->marks->getSize() <= 0)
         {
-            status->encreading->setData(false);
-            status->robotIsMapping->setData(true);
+            status->robotState->setData(CAR_MAPPING);
         }
         else
         {
-            status->robotIsMapping->setData(false);
-            status->encreading->setData(true);
+            status->robotState->setData(CAR_ENC_READING);
         }
-        status->robotState->setData(lastState);
     }
+    status->robotState->setData(lastState);
     auto carstate = CAR_IN_LINE;
     xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
     status->robotPaused->setData(false);
@@ -213,8 +206,6 @@ static std::string pause(int argc, char **argv)
     {
         lastState = (CarState) status->robotState->getData();
         status->robotPaused->setData(true);
-        status->robotIsMapping->setData(false);
-        status->encreading->setData(false);
         status->robotState->setData(CAR_STOPPED);
         vTaskDelay(0);
         DataManager::getInstance()->saveAllParamDataChanged();
@@ -243,8 +234,6 @@ static void register_pause(void)
 static std::string calibrate(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
-    status->robotIsMapping->setData(false);
-    status->encreading->setData(false);
     SensorsService::getInstance()->Suspend();
     SensorsService::getInstance()->calibAllsensors();
     SensorsService::getInstance()->Resume();

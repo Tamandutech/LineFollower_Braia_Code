@@ -157,7 +157,7 @@ void SensorsService::processSLat()
     sumSensEsq += slesq;
     sumSensDir += sldir;
 
-    if(status->robotIsMapping->getData())
+    if(status->robotState->getData() == CAR_MAPPING)
     {
         MarksToMean = latMarks->MarkstoMean->getData();
     }

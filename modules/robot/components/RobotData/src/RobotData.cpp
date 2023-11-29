@@ -59,9 +59,6 @@ Robot::Robot(std::string name)
 
 
     // Inicializando os parâmetros do robô
-    // struct CarParameters initialParams;
-    // Setparams(initialParams);
-
     dataManager = dataManager->getInstance();
     dataManager->getRegistredParamDataCount();
     dataManager->loadAllParamData();

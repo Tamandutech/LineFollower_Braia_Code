@@ -57,8 +57,6 @@ private:
     static std::atomic<Robot *> instance;
     static std::mutex instanceMutex;
 
-    int Updateparams(struct CarParameters params);
-
     dataSpeed *speed;
     dataPID *PIDVel;
     dataPID *PIDRot;

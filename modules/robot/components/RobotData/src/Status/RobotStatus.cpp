@@ -11,8 +11,6 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     PID_Select = new DataAbstract<bool>("PID_Select", name, false);
     dataManager ->registerParamData(PID_Select);
     robotState = new DataAbstract<uint8_t>("robotState", name, initialState);
-    robotIsMapping = new DataAbstract<bool>("robotIsMapping", name, false);
-    encreading = new DataAbstract<bool>("encreading", name, false);
     robotPaused = new DataAbstract<bool>("robotPaused", name, false);
     TrackStatus = new DataAbstract<uint8_t>("TrackStatus", name, 0);
     RealTrackStatus = new DataAbstract<uint8_t>("RealTrackStatus", name, 0);
@@ -38,9 +36,28 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     dataManager->registerParamData(alphaIR);
     TuningMapped = new DataAbstract<bool>("TuningMapped", name, false);
     dataManager->registerParamData(TuningMapped);
+}
 
-
-
-
-
+bool RobotStatus::car_in_curve(TrackState track)
+{
+    bool car_in_curve = true;
+    switch (track)
+    {
+         case XLONG_LINE:
+            car_in_curve = false;
+            break;
+        case LONG_LINE:
+            car_in_curve = false;
+            break;
+        case MEDIUM_LINE:
+            car_in_curve = false;
+            break;
+        case SHORT_LINE:
+            car_in_curve = false;
+            break;
+        default:
+            car_in_curve = true;
+            break;
+    }
+    return car_in_curve;
 }

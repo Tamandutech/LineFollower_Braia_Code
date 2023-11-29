@@ -45,7 +45,6 @@ private:
     RobotStatus *status;
 
     struct MapData tempActualMark;
-    struct MapData tempPreviousMark;
 
     // atributos de filtro
     uint16_t leftMarksToStop;
@@ -63,6 +62,8 @@ private:
     uint32_t tempDeltaPulses = 0;
     uint32_t tempMilimiterInPulses = 0;
     uint32_t tempDeltaDist = 0;
+    int32_t EncLeft = 0, EncRight = 0;
+    int32_t lastEncLeft = 0, lastEncRight = 0, lastEncMedia = 0;
 
     led_command_t command;
 
