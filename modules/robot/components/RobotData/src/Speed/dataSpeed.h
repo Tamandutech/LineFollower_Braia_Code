@@ -54,6 +54,9 @@ public:
     DataAbstract<int8_t> *min;
     DataAbstract<int8_t> *base;
 
+    // Velocidades em malha aberta
+    DataAbstract<int8_t> *OpenLoopMaxSpeed;
+    DataAbstract<int8_t> *OpenLoopMinSpeed;
     
     DataAbstract<float> *initialspeed; // Velocidade inicial em rpm
     DataAbstract<float> *SetPointMap; // Setpoint translacional para o mapeamento em rpm

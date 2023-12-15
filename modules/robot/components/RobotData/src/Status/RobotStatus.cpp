@@ -18,6 +18,8 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     Transition = new DataAbstract<bool>("Transition", name, false);
     TunningMode = new DataAbstract<bool>("TunningMode", name, false);
     dataManager->registerParamData(TunningMode);
+    OpenLoopControl = new DataAbstract<bool>("OpenLoopControl", name, false);
+    dataManager->registerParamData(OpenLoopControl);
     HardDeleteMap = new DataAbstract<bool>("HardDeleteMap", name, false);
     dataManager->registerParamData(HardDeleteMap);
     CorrectionTrue = new DataAbstract<bool>("CorrecaoErro", name, false);
@@ -34,6 +36,8 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     dataManager->registerParamData(alphaVel);
     alphaIR = new DataAbstract<float>("alphaIR", name, 0.2);
     dataManager->registerParamData(alphaIR);
+    OpenLoopTreshold = new DataAbstract<uint16_t>("OpenLoopTreshold", name, 3000);
+    dataManager->registerParamData(OpenLoopTreshold);
     TuningMapped = new DataAbstract<bool>("TuningMapped", name, false);
     dataManager->registerParamData(TuningMapped);
 }

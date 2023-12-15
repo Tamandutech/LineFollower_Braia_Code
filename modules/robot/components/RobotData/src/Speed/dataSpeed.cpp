@@ -43,6 +43,10 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
     dataManager->registerParamData(max);
     min = new DataAbstract<int8_t>("min", name, 0);
     dataManager->registerParamData(min);
+    OpenLoopMaxSpeed = new DataAbstract<int8_t>("OpenLoopMaxSpeed", name, 20);
+    dataManager->registerParamData(OpenLoopMaxSpeed);
+    OpenLoopMinSpeed = new DataAbstract<int8_t>("OpenLoopMinSpeed", name, 0);
+    dataManager->registerParamData(OpenLoopMinSpeed);
     base = new DataAbstract<int8_t>("base", name, 0);
     dataManager->registerParamData(base);
 

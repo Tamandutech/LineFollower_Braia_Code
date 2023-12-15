@@ -62,7 +62,8 @@ void PIDService::Run()
 {
     for (;;)
     {
-        // Trava a task até o semáfaro ser liberado com base no timer
+        // Trava a task até o semáfaro ser liberado com base no 
+        
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
         estado = (CarState)status->robotState->getData();
         TrackLen = (TrackState)status->TrackStatus->getData();
@@ -227,16 +228,36 @@ void PIDService::Run()
             PIDClassic->D_output->setData(D_IR);
 
             // Calculo de velocidade do motor
-            speed->right->setData(
-                constrain(speed->CalculatedSpeed->getData() + PIDClassic->output->getData(), speedMin, speedMax));
+            bool OpenLoopControl = status->OpenLoopControl->getData();
+            uint16_t OpenLoopThreshold = status->OpenLoopTreshold->getData();
+            if(abs(erroIR) >= OpenLoopThreshold && OpenLoopControl)
+            {
+                int8_t min = speed->OpenLoopMinSpeed->getData();
+                int8_t max = speed->OpenLoopMaxSpeed->getData();
+                if(erroIR >= 0)
+                {
+                    speed->right->setData(constrain(max, speedMin, speedMax));
+                    speed->left->setData(constrain(min, speedMin, speedMax));
+                
+                }
+                else
+                {
+                    speed->right->setData(constrain(min, speedMin, speedMax));
+                    speed->left->setData(constrain(max, speedMin, speedMax));
+                }
+            }
+            else{
+                speed->right->setData(
+                    constrain(speed->CalculatedSpeed->getData() + PIDClassic->output->getData(), speedMin, speedMax));
 
-            speed->left->setData(
-                constrain(speed->CalculatedSpeed->getData() - PIDClassic->output->getData(), speedMin, speedMax));
+                speed->left->setData(
+                    constrain(speed->CalculatedSpeed->getData() - PIDClassic->output->getData(), speedMin, speedMax));
+            }
         }
-
+        
         ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
         // Altera a velocidade linear do carrinho
-        if (!status->car_in_curve(TrackLen) && !mapState && status->FirstMark->getData())
+        if (estado == CAR_ENC_READING && !status->car_in_curve(TrackLen) && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointLine");
             fatorCorrecao = speed->CorrectionFactorLine->getData();
@@ -263,7 +284,7 @@ void PIDService::Run()
                 break;
             }
         }
-        else if (status->car_in_curve(TrackLen) && !mapState && status->FirstMark->getData())
+        else if (estado == CAR_ENC_READING && status->car_in_curve(TrackLen) && !mapState && status->FirstMark->getData())
         {
             // ESP_LOGD(GetName().c_str(), "Setando setpointCurve");
             switch (TrackLen)
