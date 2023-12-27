@@ -200,7 +200,7 @@ void DataMap::saveData()
     {
         memcpy(dataSave + i, &mapData, sizeof(MapData));
         i += sizeof(MapData);
-        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia,  mapData.MapTrackStatus, mapData.MapOffset);
+        ESP_LOGD(this->name.c_str(), "Serializando mapData: %lu, %ld, %u, %d", mapData.MapTime, mapData.MapEncMedia,  mapData.MapTrackStatus, mapData.MapOffset);
     }
     dataStorage->save_data(this->name, dataSave, sizeMap, "ab");
     free(dataSave);
@@ -243,7 +243,7 @@ void DataMap::loadData()
             MapData tempMapData;
             memcpy(&tempMapData, data + i, sizeof(MapData));
 
-            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapTrackStatus, tempMapData.MapOffset);
+            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %lu, %ld, %u, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapTrackStatus, tempMapData.MapOffset);
 
             mapDataListMutex.lock();
             this->mapDataList.push_back(tempMapData);
