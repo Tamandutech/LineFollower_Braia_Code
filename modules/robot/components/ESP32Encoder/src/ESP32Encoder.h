@@ -1,11 +1,10 @@
 #pragma once
 #include <stdbool.h>
 #include <driver/gpio.h>
-#include "driver/pcnt.h"
-#include <soc/pcnt_struct.h>
+#include "driver/pulse_cnt.h"
+#include "esp_attr.h"
 #include "esp_log.h"
 
-#define MAX_ESP32_ENCODERS PCNT_UNIT_MAX
 
 enum encType {
 single,
@@ -17,9 +16,6 @@ class ESP32Encoder {
 private:
 	void attach(int aPintNumber, int bPinNumber, enum encType et);
 	bool attached=false;
-
-
-	static  pcnt_isr_handle_t user_isr_handle; //user's ISR service handle
     bool direction;
     bool working;
 public:
@@ -37,14 +33,15 @@ public:
 
 	bool isAttached(){return attached;}
 	void setCount(int32_t value);
-	static ESP32Encoder *encoders[MAX_ESP32_ENCODERS];
 	static bool attachedInterrupt;
 	gpio_num_t aPinNumber;
 	gpio_num_t bPinNumber;
-	pcnt_unit_t unit;
+	pcnt_unit_config_t unit;
+	pcnt_unit_handle_t pcnt_unit = NULL;
 	bool fullQuad=false;
 	int countsMode = 2;
 	volatile int32_t count=0;
-	pcnt_config_t r_enc_config;
+	pcnt_chan_config_t channA;
+	pcnt_chan_config_t channB;
 	static bool useInternalWeakPullResistors;
 };
