@@ -4,11 +4,8 @@ MappingService::MappingService(std::string name, uint32_t stackDepth, UBaseType_
 {
     this->robot = Robot::getInstance();
 
-#ifndef ESP32_QEMU
-    gpio_pad_select_gpio(0);
     gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
     gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
-#endif
 
     speedMapping = robot->getSpeed();
     sLat = robot->getsLat();
@@ -59,12 +56,7 @@ esp_err_t MappingService::stopNewMapping()
 
     this->saveMapping();
     ESP_LOGD(GetName().c_str(), "Parada do novo mapeamento finalizada");
-    command.led[0] = LED_POSITION_FRONT;
-    command.led[1] = LED_POSITION_NONE;
-    command.color = LED_COLOR_BLACK;
-    command.effect = LED_EFFECT_SET;
-    command.brightness = 1;
-    LEDsService::getInstance()->queueCommand(command);
+    LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
     return ESP_OK;
 }
 
@@ -109,13 +101,7 @@ void MappingService::Run()
     initialTicks = xTaskGetTickCount();
 
     latMarks->marks->newData(tempActualMark);
-
-    command.effect = LED_EFFECT_SET;
-    command.brightness = 1;
-    command.led[0] = LED_POSITION_NONE;
-    command.led[1] = LED_POSITION_NONE;
-
-    ESP_LOGD(GetName().c_str(), "Offset iniciais: initialLeftPulses: %d, initialRightPulses: %d, initialMediaPulses: %d, initialTicks: %d", initialLeftPulses, initialRightPulses, initialMediaPulses, initialTicks);
+    ESP_LOGD(GetName().c_str(), "Offset iniciais: initialLeftPulses: %ld, initialRightPulses: %ld, initialMediaPulses: %ld, initialTicks: %lu", initialLeftPulses, initialRightPulses, initialMediaPulses, initialTicks);
 
     for (;;)
     {
@@ -144,9 +130,9 @@ void MappingService::Run()
             else if(tempDeltaDist < latMarks->thresholdLongLine->getData()) tempActualMark.MapTrackStatus = MEDIUM_LINE;
             else tempActualMark.MapTrackStatus = LONG_LINE;
 
-            if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
-            else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
-            command.color = LED_COLOR_GREEN;
+            if(latMarks->latEsqPass->getData()) led = LED_POSITION_LEFT;
+            else if(latMarks->latDirPass->getData()) led = LED_POSITION_RIGHT;
+            color = LED_COLOR_GREEN;
         }
         else
         {
@@ -154,16 +140,16 @@ void MappingService::Run()
             else if(tempDeltaDist < latMarks->thresholdLongCurve->getData()) tempActualMark.MapTrackStatus = MEDIUM_CURVE;
             else tempActualMark.MapTrackStatus = LONG_CURVE;
 
-            if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
-            else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
-            command.color = LED_COLOR_RED;
+            if(latMarks->latEsqPass->getData()) led = LED_POSITION_LEFT;
+            else if(latMarks->latDirPass->getData()) led = LED_POSITION_RIGHT;
+            color = LED_COLOR_RED;
         }
         latMarks->marks->newData(tempActualMark);
         
-        LEDsService::getInstance()->queueCommand(command);
+        LEDsService::getInstance()->LedComandSend(led, color, 1);
         
 
-        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d", EncLeft, EncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime);
+        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %ld, MapEncRight: %ld, MapEncMedia: %ld, MapTime: %lu", EncLeft, EncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime);
 
         if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (latMarks->MarkstoStop->getData() <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
         {
