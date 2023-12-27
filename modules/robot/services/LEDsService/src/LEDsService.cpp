@@ -3,50 +3,28 @@
 QueueHandle_t LEDsService::queueLedCommands;
 led_command_t LEDsService::ledCommand;
 
-uint32_t LEDsService::ws2812_t0h_ticks;
-uint32_t LEDsService::ws2812_t1h_ticks;
-uint32_t LEDsService::ws2812_t0l_ticks;
-uint32_t LEDsService::ws2812_t1l_ticks;
-
 LEDsService::LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
-    ESP_LOGD("LEDsService", "Constructor Start");
+    ESP_LOGD(GetName().c_str(), "Constructor Start");
 
     queueLedCommands = xQueueCreate(10, sizeof(ledCommand));
 
-    ESP_LOGD("LEDsService", "Constructor END");
+    ESP_LOGD(GetName().c_str(), "GPIO: %d", RMT_LED_STRIP_GPIO_NUM);
+    led_strip_init();
+    memset(led_strip_pixels, 0, sizeof(led_strip_pixels));
+
+    ESP_LOGD(GetName().c_str(), "Constructor END");
 }
 
 void LEDsService::Run()
 {
-    ESP_LOGD("LEDsService", "Run");
-
-    ESP_LOGD("LEDsService", "GPIO: %d, Canal: %d", config.gpio_num, config.channel);
-
-    this->config.clk_div = 2;
-
-#ifndef ESP32_QEMU
-    ESP_ERROR_CHECK(rmt_config(&this->config));
-    ESP_ERROR_CHECK(rmt_driver_install(this->config.channel, 0, 0));
-
-#endif
-
-    this->strip_config.max_leds = NUM_LEDS;
-    this->strip_config.dev = (led_strip_dev_t)config.channel;
-
-    this->strip = led_strip_new_rmt_ws2812(&strip_config);
-
-    if (!strip)
-        ESP_LOGE(GetName().c_str(), "Falha ao iniciar driver do LED.");
-
-    ESP_ERROR_CHECK(this->strip->clear(this->strip, 100));
+    ESP_LOGD(GetName().c_str(), "Run");
 
     for (;;)
     {
         vTaskDelay(0);
         xQueueReceive(queueLedCommands, &ledCommand, portMAX_DELAY);
 
-        // ESP_LOGD(GetName().c_str(), "Run: ledCommand.effect = %d", ledCommand.effect);
 
         switch (ledCommand.effect)
         {
@@ -68,6 +46,17 @@ void LEDsService::Run()
     }
 }
 
+void LEDsService::LedComandSend(led_position_t led,  led_color_t color, float brightness, led_effect_t effect)
+{
+    led_command_t command = {
+        .led = led,
+        .color = color,
+        .effect = effect,
+        .brightness = brightness,
+    };
+    queueCommand(command);
+}
+
 esp_err_t LEDsService::queueCommand(led_command_t command)
 {
     ESP_LOGD(GetName().c_str(), "queueCommand: command.effect = %d", command.effect);
@@ -76,173 +65,65 @@ esp_err_t LEDsService::queueCommand(led_command_t command)
 
 void LEDsService::led_effect_set()
 {
-    ESP_LOGD("LEDsService", "led_effect_set");
-    vTaskDelay(1);
-    for (size_t i = 0; i < NUM_LEDS; i++)
-    {
-        if (ledCommand.led[i] >= 0)
-        {
-            ESP_LOGD(GetName().c_str(), "led_effect_set: ledCommand.led[%d] = %d, R = %d, G = %d, B = %d", i, ledCommand.led[i], (*((uint8_t *)(&ledCommand.color) + 2)), (*((uint8_t *)(&ledCommand.color) + 1)), (*(uint8_t *)(&ledCommand.color)));
-#ifndef ESP32_QEMU
-            ESP_ERROR_CHECK(this->strip->set_pixel(this->strip, ledCommand.led[i], ledCommand.brightness * (*((uint8_t *)(&ledCommand.color) + 2)), ledCommand.brightness * (*((uint8_t *)(&ledCommand.color) + 1)), ledCommand.brightness * (*(uint8_t *)(&ledCommand.color))));
-#endif
-        }
-        else
-        {
-            break;
-        }
-    }
-    ESP_ERROR_CHECK(this->strip->refresh(strip, 100));
+    ESP_LOGD(GetName().c_str(), "led_effect_set");
+    led_color_set(ledCommand.color, ledCommand.brightness, ledCommand.led);
+    led_strip_refresh();
 }
 
-/**
- * @brief Converte RGB para o formato RMT.
- *
- * @note Para WS2812, cada valor R,G,B contem 256 diferentes valores (aka. uint8_t)
- *
- * @param[in] src: origem dos dados, para converter para RMT
- * @param[in] dest: lugar para armazenar os dados convertidos
- * @param[in] src_size: tamanho dos dados a serem convertidos
- * @param[in] wanted_num: número de itens RMT que serão convertidos
- * @param[out] translated_size: número de itens convertidos
- * @param[out] item_num: número de itens RMT que foram convertidos da origem
- */
-void IRAM_ATTR LEDsService::ws2812_rmt_adapter(const void *src, rmt_item32_t *dest, size_t src_size,
-                                               size_t wanted_num, size_t *translated_size, size_t *item_num)
+void LEDsService::led_color_set(led_color_t color, float brightness, led_position_t pos)
 {
-    if (src == NULL || dest == NULL)
-    {
-        *translated_size = 0;
-        *item_num = 0;
-        return;
-    }
+    // Lê os valores RGB da cor desejada
+    uint8_t R, G, B;
+    led_RGB_get(color, &R, &G, &B);
+    R = brightness * R;
+    G = brightness * G;
+    B = brightness * B;
 
-    const rmt_item32_t bit0 = {{{ws2812_t0h_ticks, 1, ws2812_t0l_ticks, 0}}}; // Logical 0
-    const rmt_item32_t bit1 = {{{ws2812_t1h_ticks, 1, ws2812_t1l_ticks, 0}}}; // Logical 1
-    size_t size = 0;
-    size_t num = 0;
-    uint8_t *psrc = (uint8_t *)src;
-    rmt_item32_t *pdest = dest;
+    // Armazena no LED Strip esses valores no padrão GBR
+    led_strip_pixels[pos * 3 + 0] = G;
+    led_strip_pixels[pos * 3 + 1] = B;
+    led_strip_pixels[pos * 3 + 2] = R;
 
-    while (size < src_size && num < wanted_num)
-    {
-        for (int i = 0; i < 8; i++)
-        {
-            // MSB primeiro
-            if (*psrc & (1 << (7 - i)))
-            {
-                pdest->val = bit1.val;
-            }
-            else
-            {
-                pdest->val = bit0.val;
-            }
-            num++;
-            pdest++;
-        }
-        size++;
-        psrc++;
-    }
-
-    *translated_size = size;
-    *item_num = num;
+    ESP_LOGD(GetName().c_str(), "led_effect_set: ledCommand.led = %d, R = %d, G = %d, B = %d", pos, R, G, B);
 }
 
-esp_err_t LEDsService::ws2812_set_pixel(led_strip_t *strip, uint32_t index, uint32_t red, uint32_t green, uint32_t blue)
+void LEDsService::led_RGB_get(led_color_t color, uint8_t * R, uint8_t * G, uint8_t * B)
 {
-    ws2812_t *ws2812 = __containerof(strip, ws2812_t, parent);
-
-    if (index >= ws2812->strip_len)
-    {
-        ESP_LOGE(LEDsService::getInstance()->GetName().c_str(), "Índice %d maior que o número total de LEDs.", index);
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    uint32_t start = index * 3;
-
-    // Na ordem GRB
-    ws2812->buffer[start + 0] = green & 0xFF;
-    ws2812->buffer[start + 1] = red & 0xFF;
-    ws2812->buffer[start + 2] = blue & 0xFF;
-    return ESP_OK;
+    *R = ((uint8_t *)(&ledCommand.color))[0];
+    *G = ((uint8_t *)(&ledCommand.color))[1];
+    *B = ((uint8_t *)(&ledCommand.color))[2];
 }
 
-esp_err_t LEDsService::ws2812_refresh(led_strip_t *strip, uint32_t timeout_ms)
+void LEDsService::led_strip_init()
 {
-    ws2812_t *ws2812 = __containerof(strip, ws2812_t, parent);
+    ESP_LOGI(GetName().c_str(), "Create RMT TX channel");
+    rmt_tx_channel_config_t tx_chan_config = {
+        .gpio_num = RMT_LED_STRIP_GPIO_NUM,
+        .clk_src = RMT_CLK_SRC_DEFAULT, // select source clock
+        .resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ,
+        .mem_block_symbols = 64, // increase the block size can make the LED less flickering
+        .trans_queue_depth = 4, // set the number of transactions that can be pending in the background
+    };
+    ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
 
-#ifndef ESP32_QEMU
-    if (ESP_OK != rmt_write_sample(ws2812->rmt_channel, ws2812->buffer, ws2812->strip_len * 3, true))
-    {
-        ESP_LOGE(LEDsService::getInstance()->GetName().c_str(), "Falha ao transmitir pacotes do RMT.");
-        return ESP_FAIL;
-    }
-    return rmt_wait_tx_done(ws2812->rmt_channel, pdMS_TO_TICKS(timeout_ms));
-#else
-    return ESP_OK;
-#endif
+    ESP_LOGI(GetName().c_str(), "Install led strip encoder");
+
+    led_strip_encoder_config_t encoder_config = {
+        .resolution = RMT_LED_STRIP_RESOLUTION_HZ,
+    };
+    ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
+
+    ESP_LOGI(GetName().c_str(), "Enable RMT TX channel");
+    ESP_ERROR_CHECK(rmt_enable(led_chan));
+
+    ESP_LOGI(GetName().c_str(), "Start LED rainbow chase");
+    tx_config = {
+        .loop_count = 0, // no transfer loop
+    };
 }
 
-esp_err_t LEDsService::ws2812_clear(led_strip_t *strip, uint32_t timeout_ms)
+void LEDsService::led_strip_refresh()
 {
-    ws2812_t *ws2812 = __containerof(strip, ws2812_t, parent);
-
-    // Escreve 0 em todos os LEDs para apagar
-    memset(ws2812->buffer, 0, ws2812->strip_len * 3);
-    return ws2812_refresh(strip, timeout_ms);
-}
-
-esp_err_t LEDsService::ws2812_del(led_strip_t *strip)
-{
-    ws2812_t *ws2812 = __containerof(strip, ws2812_t, parent);
-    free(ws2812);
-    return ESP_OK;
-}
-
-led_strip_t *LEDsService::led_strip_new_rmt_ws2812(const led_strip_config_t *config)
-{
-    if (!config)
-    {
-        ESP_LOGE(GetName().c_str(), "A configuração não pode ser nula");
-        return NULL;
-    }
-
-    // 24 bits por LED
-    uint32_t ws2812_size = sizeof(ws2812_t) + config->max_leds * 3;
-    ws2812_t *ws2812 = (ws2812_t *)calloc(1, ws2812_size);
-
-    if (!ws2812)
-    {
-        ESP_LOGE(GetName().c_str(), "Falha ao alocar memória para o driver.");
-        return NULL;
-    }
-
-    uint32_t counter_clk_hz = 0;
-#ifndef ESP32_QEMU
-    if (ESP_OK != rmt_get_counter_clock((rmt_channel_t)config->dev, &counter_clk_hz))
-    {
-        ESP_LOGE(GetName().c_str(), "Falha ao obter contagem de clock do RMT.");
-        return NULL;
-    }
-#endif
-
-    float ratio = (float)counter_clk_hz / 1e9;
-    ws2812_t0h_ticks = (uint32_t)(ratio * WS2812_T0H_NS);
-    ws2812_t0l_ticks = (uint32_t)(ratio * WS2812_T0L_NS);
-    ws2812_t1h_ticks = (uint32_t)(ratio * WS2812_T1H_NS);
-    ws2812_t1l_ticks = (uint32_t)(ratio * WS2812_T1L_NS);
-
-#ifndef ESP32_QEMU
-    rmt_translator_init((rmt_channel_t)config->dev, (sample_to_rmt_t)ws2812_rmt_adapter);
-#endif
-
-    ws2812->rmt_channel = (rmt_channel_t)config->dev;
-    ws2812->strip_len = config->max_leds;
-
-    ws2812->parent.set_pixel = ws2812_set_pixel;
-    ws2812->parent.refresh = ws2812_refresh;
-    ws2812->parent.clear = ws2812_clear;
-    ws2812->parent.del = ws2812_del;
-
-    return &ws2812->parent;
+    ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+    ESP_ERROR_CHECK(rmt_tx_wait_all_done(led_chan, portMAX_DELAY));
 }
