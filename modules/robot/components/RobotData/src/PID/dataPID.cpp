@@ -28,72 +28,37 @@ dataPID::dataPID(std::string name)
     erroquad = new DataAbstract<float>("erroquad", name, 0);
     dataManager->registerRuntimeData(erroquad);
 
-    Kp_std = new DataAbstract<double>("Kp_std", name, 0);
-    dataManager->registerParamData(Kp_std);
-    Kd_std = new DataAbstract<double>("Kd_std", name, 0);
-    dataManager->registerParamData(Kd_std);
-    if(name == "PIDVel" || name == "PIDRot")
-    {
-        Ki_std = new DataAbstract<double>("Ki_std", name, 0);
-        dataManager->registerParamData(Ki_std);
-        Ki_tunning = new DataAbstract<double>("Ki_tunning", name);
-        dataManager->registerParamData(Ki_tunning);
-    }
+    Kp_default = new DataAbstract<double>("Kp_default", name, 0);
+    dataManager->registerParamData(Kp_default);
+    Kd_default = new DataAbstract<double>("Kd_default", name, 0);
+    dataManager->registerParamData(Kd_default);
+    Ki_default = new DataAbstract<double>("Ki_default", name, 0);
+    dataManager->registerParamData(Ki_default);
 
     Kp_tunning = new DataAbstract<double>("Kp_tunning", name);
     dataManager->registerParamData(Kp_tunning);
     Kd_tunning = new DataAbstract<double>("Kd_tunning", name);
     dataManager->registerParamData(Kd_tunning);
+    Ki_tunning = new DataAbstract<double>("Ki_tunning", name);
+    dataManager->registerParamData(Ki_tunning);
 
-
-
-    if(name == "PIDIR" || name == "PIDClassic")
-    {
-        Kp_IRline = new DataAbstract<double>("Kp_IRline", name);
-        dataManager->registerParamData(Kp_IRline);
-        Kd_IRline = new DataAbstract<double>("Kd_IRline", name);
-        dataManager->registerParamData(Kd_IRline);
-        Kp_IRcurve = new DataAbstract<double>("Kp_IRcurve", name);
-        dataManager->registerParamData(Kp_IRcurve);
-        Kd_IRcurve = new DataAbstract<double>("Kd_IRcurve", name);
-        dataManager->registerParamData(Kd_IRcurve);
-        Kp_IRShortCurve = new DataAbstract<double>("Kp_IRShortCurve", name, 4.5);
-        dataManager->registerParamData(Kp_IRShortCurve);
-        Kd_IRShortCurve = new DataAbstract<double>("Kd_IRShortCurve", name, 4.5);
-        dataManager->registerParamData(Kd_IRShortCurve);
-        Kp_IRZigZag = new DataAbstract<double>("Kp_IRZigZag", name, 0.03);
-        dataManager->registerParamData(Kp_IRZigZag);
-        Kd_IRZigZag = new DataAbstract<double>("Kd_IRZigZag", name, 0.94);
-        dataManager->registerParamData(Kd_IRZigZag);
-        Kp_IRXLongLine = new DataAbstract<double>("Kp_IRXLongLine", name, 0.03);
-        dataManager->registerParamData(Kp_IRXLongLine);
-        Kd_IRXLongLine = new DataAbstract<double>("Kd_IRXLongLine", name, 0.94);
-        dataManager->registerParamData(Kd_IRXLongLine);
-        Kp_IRLongCurve = new DataAbstract<double>("Kp_IRLongCurve", name, 0.03);
-        dataManager->registerParamData(Kp_IRLongCurve);
-        Kd_IRLongCurve = new DataAbstract<double>("Kd_IRLongCurve", name, 0.94);
-        dataManager->registerParamData(Kd_IRLongCurve);
-
-        Kp_IRXLongCurve = new DataAbstract<double>("Kp_IRXLongCurve", name, 0.03);
-        dataManager->registerParamData(Kp_IRXLongCurve);
-        Kd_IRXLongCurve = new DataAbstract<double>("Kd_IRXLongCurve", name, 0.94);
-        dataManager->registerParamData(Kd_IRXLongCurve);
-
-        UseKdIR = new DataAbstract<bool>("UseKdIR", name, true);
-        dataManager->registerParamData(UseKdIR);
-    }
-
-    if(name == "PIDVel")
-    {
-
-        UseKiVel = new DataAbstract<bool>("UseKiVel", name, false);
-        dataManager->registerParamData(UseKiVel);
-    }
+    Kp_line = new DataAbstract<double>("Kp_line", name);
+    dataManager->registerParamData(Kp_line);
+    Kd_line = new DataAbstract<double>("Kd_line", name);
+    dataManager->registerParamData(Kd_line);
+    Kp_curve = new DataAbstract<double>("Kp_curve", name);
+    dataManager->registerParamData(Kp_curve);
+    Kd_curve = new DataAbstract<double>("Kd_curve", name);
+    dataManager->registerParamData(Kd_curve);
+    Kp_ZigZag = new DataAbstract<double>("Kp_ZigZag", name, 0.03);
+    dataManager->registerParamData(Kp_ZigZag);
+    Kd_ZigZag = new DataAbstract<double>("Kd_ZigZag", name, 0.94);
+    dataManager->registerParamData(Kd_ZigZag);
 
     ESP_LOGD(tag, "Ponteiros para os tipos de dados inicializados");
 }
 
-DataAbstract<double> *dataPID::Kp(TrackState state)
+DataAbstract<double> *dataPID::Kp(TrackSegment state)
 {
     if(name == "PIDVel" || name == "PIDRot")
     {
@@ -150,7 +115,7 @@ DataAbstract<double> *dataPID::Kp(TrackState state)
     return nullptr;
 }
 
-DataAbstract<double> *dataPID::Ki(TrackState state)
+DataAbstract<double> *dataPID::Ki(TrackSegment state)
 {
     if(name == "PIDVel" || name == "PIDRot")
     {
@@ -167,7 +132,7 @@ DataAbstract<double> *dataPID::Ki(TrackState state)
     return nullptr;
 }
 
-DataAbstract<double> *dataPID::Kd(TrackState state)
+DataAbstract<double> *dataPID::Kd(TrackSegment state)
 {
 
     if(name == "PIDVel" || name == "PIDRot")
