@@ -21,7 +21,7 @@
 class dataSpeed
 {
 public:
-    dataSpeed(std::string name = "dataSpeed",bool PID_Select = false);
+    dataSpeed(std::string name = "dataSpeed");
 
     // Valocidades atuais
     DataAbstract<int16_t> *RPMRight_inst;
@@ -71,15 +71,6 @@ public:
     DataAbstract<float> *Special_Track;
 
     DataAbstract<float> *CalculatedSpeed; // Velocidade final desejada
-
-    // Variáveis para a diminuição da velocidade do robô com base no erro dele em relação à pista
-    DataAbstract<float> *CorrectionFactor;
-    DataAbstract<float> *CorrectionFactorLine;
-    DataAbstract<float> *CorrectionFactorMediumCurve;
-    DataAbstract<float> *CorrectionFactorShortCurve;
-    DataAbstract<float> *CorrectionFactorLongCurve;
-    DataAbstract<float> *CorrectionFactorZigZag;
-
 
     // Velocidade para o modo Tunning
     DataAbstract<float> *Tunning_speed;
