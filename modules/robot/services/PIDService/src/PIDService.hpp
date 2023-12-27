@@ -14,15 +14,14 @@
 #include "freertos/task.h"
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
-#include "driver/timer.h"
+#include "driver/gptimer.h"
 #include "esp_log.h"
 
 using namespace cpp_freertos;
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
-// #define GRAPH_DATA
-#include "esp_log.h"
+#define TIMER_FREQ 1000000
 
 class PIDService : public Thread, public Singleton<PIDService>
 {
@@ -32,7 +31,7 @@ public:
     void ControlMotors(float left, float right);
 
     // Timer control
-    static bool IRAM_ATTR timer_group_isr_callback(void *args);
+    static bool IRAM_ATTR timer_group_isr_callback(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
 
     void Run() override;
 
