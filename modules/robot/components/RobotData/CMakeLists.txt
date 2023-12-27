@@ -8,7 +8,7 @@ idf_component_register(
         "src/SLatMarks/dataSLatMarks.cpp"
 
     REQUIRES
-        "DataObjects" "MappingService"
+        "DataObjects" "MappingService" "esp_adc"
 
     INCLUDE_DIRS 
         "src"

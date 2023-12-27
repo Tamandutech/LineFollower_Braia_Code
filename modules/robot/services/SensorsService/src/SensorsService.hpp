@@ -35,8 +35,6 @@ private:
   dataSLatMarks *latMarks;
   dataSensor *sLatData;
   RobotStatus *status;
-
-  led_command_t command;
   
   int sumSensEsq = 0;
   int sumSensDir = 0;

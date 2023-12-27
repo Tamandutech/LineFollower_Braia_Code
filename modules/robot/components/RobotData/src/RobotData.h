@@ -8,6 +8,8 @@
 #include <atomic>
 #include <mutex>
 
+#include "esp_adc/adc_oneshot.h"
+
 #include "dataSLatMarks.h"
 #include "dataSpeed.h"
 #include "dataPID.h"
@@ -48,7 +50,7 @@ public:
     dataPID *getPIDClassic();
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
-
+    adc_oneshot_unit_handle_t getADC_handle();
     std::string GetName();
 
 private:
@@ -56,6 +58,8 @@ private:
 
     static std::atomic<Robot *> instance;
     static std::mutex instanceMutex;
+
+    adc_oneshot_unit_handle_t _adcHandle;
 
     dataSpeed *speed;
     dataPID *PIDVel;
@@ -66,7 +70,6 @@ private:
     dataSLatMarks *sLatMarks;
     dataSensor *sArray;
     RobotStatus *Status;
-
     DataStorage *storage;
     DataManager *dataManager;
 
