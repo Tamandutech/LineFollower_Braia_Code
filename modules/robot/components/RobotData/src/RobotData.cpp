@@ -20,31 +20,11 @@ Robot::Robot(std::string name)
 
     this->Status = new RobotStatus(CAR_IN_LINE, "RobotStatus");
     ESP_LOGD(name.c_str(), "Status (%p)", this->Status);
-    this->Status->PID_Select->loadData();
     
+    this->PID = new dataPID("PID"); 
+    ESP_LOGD(name.c_str(), "PID (%p)", this->PID);
     
-    // Seleciona o PID a ser utilizado
-    if(this->Status->PID_Select->getData())
-    { 
-        this->PIDClassic = new dataPID("PIDClassic"); 
-        ESP_LOGD(name.c_str(), "PIDClassic (%p)", this->PIDClassic);
-    }
-    else
-    {
-
-        this->PIDVel = new dataPID("PIDVel");
-        ESP_LOGD(name.c_str(), "PIDVel (%p)", this->PIDVel);
-
-        this->PIDRot = new dataPID("PIDRot");
-        ESP_LOGD(name.c_str(), "PIDRot (%p)", this->PIDRot);
-
-        this->PIDIR = new dataPID("PIDIR");
-        ESP_LOGD(name.c_str(), "PIDIR (%p)", this->PIDIR);
-
-    }
-
-    
-    this->speed = new dataSpeed("speed", this->Status->PID_Select->getData());
+    this->speed = new dataSpeed("speed");
     ESP_LOGD(name.c_str(), "speed (%p)", this->speed);
 
     this->sLatMarks = new dataSLatMarks("sLatMarks");
@@ -56,11 +36,6 @@ Robot::Robot(std::string name)
     this->sArray = new dataSensor(8, "sArray");
     ESP_LOGD(name.c_str(), "sArray (%p)", this->sArray);
 
-
-
-    // Inicializando os parâmetros do robô
-    // struct CarParameters initialParams;
-    // Setparams(initialParams);
 
     dataManager = dataManager->getInstance();
     dataManager->getRegistredParamDataCount();
@@ -87,24 +62,9 @@ dataSensor *Robot::getsArray()
     return this->sArray;
 }
 
-dataPID *Robot::getPIDVel()
+dataPID *Robot::getPID()
 {
-    return this->PIDVel;
-}
-
-dataPID *Robot::getPIDClassic()
-{
-    return this->PIDClassic;
-}
-
-dataPID *Robot::getPIDIR()
-{
-    return this->PIDIR;
-}
-
-dataPID *Robot::getPIDRot()
-{
-    return this->PIDRot;
+    return this->PID;
 }
 
 RobotStatus *Robot::getStatus()
