@@ -153,7 +153,7 @@ void PIDService::Run()
         if (iloop > 200)
         { 
             ESP_LOGD(GetName().c_str(), "PIDClassic: %.2f", PIDClassic->output->getData());
-            ESP_LOGD(GetName().c_str(), "KdIR: %.4f | KpIR: %.4f\n", KdIR, KpIR);
+            ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", Kd, Kp);
             ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
             ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
