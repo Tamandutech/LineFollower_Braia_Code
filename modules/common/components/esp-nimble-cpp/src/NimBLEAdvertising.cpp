@@ -14,7 +14,9 @@
  *
  */
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#if (defined(CONFIG_BT_ENABLED) && \
+    defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER) && \
+    !CONFIG_BT_NIMBLE_EXT_ADV) || defined(_DOXYGEN_)
 
 #if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "services/gap/ble_svc_gap.h"
@@ -148,6 +150,18 @@ void NimBLEAdvertising::setName(const std::string &name) {
  */
 void NimBLEAdvertising::setManufacturerData(const std::string &data) {
     m_mfgData.assign(data.begin(), data.end());
+    m_advData.mfg_data = &m_mfgData[0];
+    m_advData.mfg_data_len = m_mfgData.size();
+    m_advDataSet = false;
+} // setManufacturerData
+
+
+/**
+ * @brief Set the advertised manufacturer data.
+ * @param [in] data The data to advertise.
+ */
+void NimBLEAdvertising::setManufacturerData(const std::vector<uint8_t> &data) {
+    m_mfgData = data;
     m_advData.mfg_data = &m_mfgData[0];
     m_advData.mfg_data_len = m_mfgData.size();
     m_advDataSet = false;
@@ -383,11 +397,12 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
 
 /**
  * @brief Start advertising.
- * @param [in] duration The duration, in seconds, to advertise, 0 == advertise forever.
+ * @param [in] duration The duration, in milliseconds, to advertise, 0 == advertise forever.
  * @param [in] advCompleteCB A pointer to a callback to be invoked when advertising ends.
+ * @param [in] dirAddr The address of a peer to directly advertise to.
  * @return True if advertising started successfully.
  */
-bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdvertising *pAdv)) {
+bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdvertising *pAdv), NimBLEAddress* dirAddr) {
     NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d",
                 m_customAdvData, m_customScanResponseData);
 
@@ -412,7 +427,7 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     // If already advertising just return
     if(ble_gap_adv_active()) {
         NIMBLE_LOGW(LOG_TAG, "Advertising already active");
-        return false;
+        return true;
     }
 
     // Save the duration incase of host reset so we can restart with the same params
@@ -420,9 +435,6 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
 
     if(duration == 0){
         duration = BLE_HS_FOREVER;
-    }
-    else{
-        duration = duration*1000; // convert duration to milliseconds
     }
 
     m_advCompCB = advCompleteCB;
@@ -432,15 +444,16 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     if(m_advParams.conn_mode == BLE_GAP_CONN_MODE_NON) {
         if(!m_scanResp) {
             m_advParams.disc_mode = BLE_GAP_DISC_MODE_NON;
-            m_advData.flags = BLE_HS_ADV_F_BREDR_UNSUP;
+            // non-connectable advertising does not require AD flags.
+            m_advData.flags = 0;
         }
     }
 
     int rc = 0;
 
     if (!m_customAdvData && !m_advDataSet) {
-        //start with 3 bytes for the flags data
-        uint8_t payloadLen = (2 + 1);
+        //start with 3 bytes for the flags data if required
+        uint8_t payloadLen = (m_advData.flags > 0) ? (2 + 1) : 0;
         if(m_advData.mfg_data_len > 0)
             payloadLen += (2 + m_advData.mfg_data_len);
 
@@ -620,18 +633,34 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
         m_advDataSet = true;
     }
 
+    ble_addr_t peerAddr;
+    if (dirAddr != nullptr) {
+        memcpy(&peerAddr.val, dirAddr->getNative(), 6);
+        peerAddr.type = dirAddr->getType();
+    }
+
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type, NULL, duration,
+    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type,
+                           (dirAddr != nullptr) ? &peerAddr : NULL,
+                           duration,
                            &m_advParams,
                            (pServer != nullptr) ? NimBLEServer::handleGapEvent :
                                                   NimBLEAdvertising::handleGapEvent,
-                           (pServer != nullptr) ? (void*)pServer : (void*)this);
+                           (void*)this);
 #else
-    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type, NULL, duration,
-                           &m_advParams, NimBLEAdvertising::handleGapEvent, this);
+    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type,
+                           (dirAddr != nullptr) ? &peerAddr : NULL,
+                           duration,
+                           &m_advParams,
+                           NimBLEAdvertising::handleGapEvent,
+                           (void*)this);
 #endif
     switch(rc) {
         case 0:
+             break;
+
+        case BLE_HS_EALREADY:
+             NIMBLE_LOGI(LOG_TAG, "Advertisement Already active");
              break;
 
         case BLE_HS_EINVAL:
@@ -656,24 +685,26 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
-    return (rc == 0);
+    return (rc == 0 || rc == BLE_HS_EALREADY);
 } // start
 
 
 /**
  * @brief Stop advertising.
+ * @return True if advertising stopped successfully.
  */
-void NimBLEAdvertising::stop() {
+bool NimBLEAdvertising::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop");
 
     int rc = ble_gap_adv_stop();
     if (rc != 0 && rc != BLE_HS_EALREADY) {
         NIMBLE_LOGE(LOG_TAG, "ble_gap_adv_stop rc=%d %s",
                     rc, NimBLEUtils::returnCodeToString(rc));
-        return;
+        return false;
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< stop");
+    return true;
 } // stop
 
 
@@ -749,7 +780,7 @@ int NimBLEAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg) {
  */
 void NimBLEAdvertisementData::addData(const std::string &data) {
     if ((m_payload.length() + data.length()) > BLE_HS_ADV_MAX_SZ) {
-        NIMBLE_LOGE(LOG_TAG, "Advertisement data length exceded");
+        NIMBLE_LOGE(LOG_TAG, "Advertisement data length exceeded");
         return;
     }
     m_payload.append(data);
@@ -806,6 +837,18 @@ void NimBLEAdvertisementData::setManufacturerData(const std::string &data) {
     cdata[0] = data.length() + 1;
     cdata[1] = BLE_HS_ADV_TYPE_MFG_DATA ;  // 0xff
     addData(std::string(cdata, 2) + data);
+} // setManufacturerData
+
+
+/**
+ * @brief Set manufacturer specific data.
+ * @param [in] data The manufacturer data to advertise.
+ */
+void NimBLEAdvertisementData::setManufacturerData(const std::vector<uint8_t> &data) {
+    char cdata[2];
+    cdata[0] = data.size() + 1;
+    cdata[1] = BLE_HS_ADV_TYPE_MFG_DATA ;  // 0xff
+    addData(std::string(cdata, 2) + std::string((char*)&data[0], data.size()));
 } // setManufacturerData
 
 
@@ -1026,4 +1069,4 @@ std::string NimBLEAdvertisementData::getPayload() {
     return m_payload;
 } // getPayload
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER */
+#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER  && !CONFIG_BT_NIMBLE_EXT_ADV */

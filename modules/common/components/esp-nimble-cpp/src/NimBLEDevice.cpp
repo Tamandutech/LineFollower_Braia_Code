@@ -23,7 +23,9 @@
 #  include "esp_bt.h"
 #  include "nvs_flash.h"
 #  if defined(CONFIG_NIMBLE_CPP_IDF)
-#    include "esp_nimble_hci.h"
+#    if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) || CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE)
+#       include "esp_nimble_hci.h"
+#    endif
 #    include "nimble/nimble_port.h"
 #    include "nimble/nimble_port_freertos.h"
 #    include "host/ble_hs.h"
@@ -69,7 +71,11 @@ NimBLEServer*   NimBLEDevice::m_pServer = nullptr;
 uint32_t        NimBLEDevice::m_passkey = 123456;
 bool            NimBLEDevice::m_synced = false;
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#  if CONFIG_BT_NIMBLE_EXT_ADV
+NimBLEExtAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
+#  else
 NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
+#  endif
 #endif
 
 gap_event_handler           NimBLEDevice::m_customGapHandler = nullptr;
@@ -79,11 +85,12 @@ std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
-NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 #ifdef ESP_PLATFORM
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
 uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE;
 uint8_t                     NimBLEDevice::m_scanFilterMode = CONFIG_BTDM_SCAN_DUPL_TYPE;
+#  endif
 #endif
 
 /**
@@ -114,6 +121,45 @@ uint8_t                     NimBLEDevice::m_scanFilterMode = CONFIG_BTDM_SCAN_DU
 
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#  if CONFIG_BT_NIMBLE_EXT_ADV
+/**
+ * @brief Get the instance of the advertising object.
+ * @return A pointer to the advertising object.
+ */
+NimBLEExtAdvertising* NimBLEDevice::getAdvertising() {
+    if(m_bleAdvertising == nullptr) {
+        m_bleAdvertising = new NimBLEExtAdvertising();
+    }
+    return m_bleAdvertising;
+}
+
+
+/**
+ * @brief Convenience function to begin advertising.
+ * @param [in] inst_id The extended advertisement instance ID to start.
+ * @param [in] duration How long to advertise for in milliseconds, 0 = forever (default).
+ * @param [in] max_events Maximum number of advertisement events to send, 0 = no limit (default).
+ * @return True if advertising started successfully.
+ */
+bool NimBLEDevice::startAdvertising(uint8_t inst_id,
+                                    int duration,
+                                    int max_events) {
+    return getAdvertising()->start(inst_id, duration, max_events);
+} // startAdvertising
+
+
+/**
+ * @brief Convenience function to stop advertising a data set.
+ * @param [in] inst_id The extended advertisement instance ID to stop advertising.
+ * @return True if advertising stopped successfully.
+ */
+bool NimBLEDevice::stopAdvertising(uint8_t inst_id) {
+    return getAdvertising()->stop(inst_id);
+} // stopAdvertising
+
+#  endif
+
+#  if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
 /**
  * @brief Get the instance of the advertising object.
  * @return A pointer to the advertising object.
@@ -128,17 +174,20 @@ NimBLEAdvertising* NimBLEDevice::getAdvertising() {
 
 /**
  * @brief Convenience function to begin advertising.
+ * @param [in] duration The duration in milliseconds to advertise for, default = forever.
+ * @return True if advertising started successfully.
  */
-void NimBLEDevice::startAdvertising() {
-    getAdvertising()->start();
+bool NimBLEDevice::startAdvertising(uint32_t duration) {
+    return getAdvertising()->start(duration);
 } // startAdvertising
-
+#  endif
 
 /**
- * @brief Convenience function to stop advertising.
+ * @brief Convenience function to stop all advertising.
+ * @return True if advertising stopped successfully.
  */
-void NimBLEDevice::stopAdvertising() {
-    getAdvertising()->stop();
+bool NimBLEDevice::stopAdvertising() {
+    return getAdvertising()->stop();
 } // stopAdvertising
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 
@@ -208,7 +257,7 @@ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
         }
         // Since we set the flag to false the app will not get a callback
         // in the disconnect event so we call it here for good measure.
-        pClient->m_pClientCallbacks->onDisconnect(pClient);
+        pClient->m_pClientCallbacks->onDisconnect(pClient, BLE_ERR_CONN_TERM_LOCAL);
 
     } else if(pClient->m_pTaskData != nullptr) {
         rc = ble_gap_conn_cancel();
@@ -362,7 +411,7 @@ int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
         case ESP_PWR_LVL_N6:
             return -6;
         case ESP_PWR_LVL_N3:
-            return -6;
+            return -3;
         case ESP_PWR_LVL_N0:
             return 0;
         case ESP_PWR_LVL_P3:
@@ -448,6 +497,7 @@ uint16_t NimBLEDevice::getMTU() {
 
 
 #ifdef ESP_PLATFORM
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
 /**
  * @brief Set the duplicate filter cache size for filtering scanned devices.
  * @param [in] cacheSize The number of advertisements filtered before the cache is reset.\n
@@ -466,6 +516,7 @@ void NimBLEDevice::setScanDuplicateCacheSize(uint16_t cacheSize) {
 
     m_scanDuplicateSize = cacheSize;
 }
+
 
 
 /**
@@ -493,7 +544,8 @@ void NimBLEDevice::setScanFilterMode(uint8_t mode) {
 
     m_scanFilterMode = mode;
 }
-#endif
+#  endif // CONFIG_BTDM_BLE_SCAN_DUPL
+#endif   // ESP_PLATFORM
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 /**
@@ -757,7 +809,7 @@ void NimBLEDevice::onSync(void)
     }
 #endif
 
-    // Yield for houskeeping before returning to operations.
+    // Yield for housekeeping before returning to operations.
     // Occasionally triggers exception without.
     taskYIELD();
 
@@ -806,7 +858,7 @@ void NimBLEDevice::init(const std::string &deviceName) {
         esp_err_t errRc = ESP_OK;
 
 #ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
-        // make sure the linker includes esp32-hal-bt.c so ardruino init doesn't release BLE memory.
+        // make sure the linker includes esp32-hal-bt.c so Arduino init doesn't release BLE memory.
         btStarted();
 #endif
 
@@ -821,19 +873,23 @@ void NimBLEDevice::init(const std::string &deviceName) {
 
         esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-#if  defined (CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#  if  defined (CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
         bt_cfg.bluetooth_mode = ESP_BT_MODE_BLE;
-#else
+#  else
         bt_cfg.mode = ESP_BT_MODE_BLE;
         bt_cfg.ble_max_conn = CONFIG_BT_NIMBLE_MAX_CONNECTIONS;
-#endif
+#  endif
+
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
         bt_cfg.normal_adv_size = m_scanDuplicateSize;
         bt_cfg.scan_duplicate_type = m_scanFilterMode;
-
+#  endif
         ESP_ERROR_CHECK(esp_bt_controller_init(&bt_cfg));
         ESP_ERROR_CHECK(esp_bt_controller_enable(ESP_BT_MODE_BLE));
         ESP_ERROR_CHECK(esp_nimble_hci_init());
+#  endif
 #endif
         nimble_port_init();
 
@@ -880,10 +936,12 @@ void NimBLEDevice::deinit(bool clearAll) {
     if (ret == 0) {
         nimble_port_deinit();
 #ifdef ESP_PLATFORM
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
         ret = esp_nimble_hci_and_controller_deinit();
         if (ret != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
         }
+#endif
 #endif
         initialized = false;
         m_synced = false;
@@ -918,13 +976,18 @@ void NimBLEDevice::deinit(bool clearAll) {
 #endif
 
             m_ignoreList.clear();
-
-            if(m_securityCallbacks != nullptr) {
-                delete m_securityCallbacks;
-            }
         }
     }
 } // deinit
+
+/**
+ * @brief Set the BLEDevice's name
+ * @param [in] deviceName The device name of the device.
+ */
+/* STATIC */
+void NimBLEDevice::setDeviceName(const std::string &deviceName) {
+    ble_svc_gap_device_name_set(deviceName.c_str());
+} // setDeviceName
 
 
 /**
@@ -1032,17 +1095,6 @@ void NimBLEDevice::setSecurityPasskey(uint32_t pin) {
 uint32_t NimBLEDevice::getSecurityPasskey() {
     return m_passkey;
 } // getSecurityPasskey
-
-
-/**
- * @brief Set callbacks that will be used to handle encryption negotiation events and authentication events
- * @param [in] callbacks Pointer to NimBLESecurityCallbacks class
- * @deprecated For backward compatibility, New code should use client/server callback methods.
- */
-/*STATIC*/
-void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
-    NimBLEDevice::m_securityCallbacks = callbacks;
-} // setSecurityCallbacks
 
 
 #ifdef ESP_PLATFORM

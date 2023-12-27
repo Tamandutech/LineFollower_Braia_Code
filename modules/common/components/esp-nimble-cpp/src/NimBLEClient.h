@@ -21,6 +21,7 @@
 #include "NimBLEUUID.h"
 #include "NimBLEUtils.h"
 #include "NimBLEConnInfo.h"
+#include "NimBLEAttValue.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
@@ -37,9 +38,9 @@ class NimBLEAdvertisedDevice;
  */
 class NimBLEClient {
 public:
-    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes = true);
-    bool                                        connect(const NimBLEAddress &address, bool deleteAttibutes = true);
-    bool                                        connect(bool deleteAttibutes = true);
+    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttributes = true);
+    bool                                        connect(const NimBLEAddress &address, bool deleteAttributes = true);
+    bool                                        connect(bool deleteAttributes = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress                               getPeerAddress();
     void                                        setPeerAddress(const NimBLEAddress &address);
@@ -51,9 +52,9 @@ public:
     NimBLERemoteService*                        getService(const NimBLEUUID &uuid);
     void                                        deleteServices();
     size_t                                      deleteService(const NimBLEUUID &uuid);
-    std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
+    NimBLEAttValue                              getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
-                                                         const std::string &value, bool response = false);
+                                                         const NimBLEAttValue &value, bool response = false);
     NimBLERemoteCharacteristic*                 getCharacteristic(const uint16_t handle);
     bool                                        isConnected();
     void                                        setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks,
@@ -62,16 +63,19 @@ public:
     uint16_t                                    getConnId();
     uint16_t                                    getMTU();
     bool                                        secureConnection();
-    void                                        setConnectTimeout(uint8_t timeout);
+    void                                        setConnectTimeout(uint32_t timeout);
     void                                        setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
                                                                     uint16_t latency, uint16_t timeout,
                                                                     uint16_t scanInterval=16, uint16_t scanWindow=16);
     void                                        updateConnParams(uint16_t minInterval, uint16_t maxInterval,
                                                                  uint16_t latency, uint16_t timeout);
     void                                        setDataLen(uint16_t tx_octets);
-    void                                        discoverAttributes();
+    bool                                        discoverAttributes();
     NimBLEConnInfo                              getConnInfo();
     int                                         getLastError();
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    void                                        setConnectPhy(uint8_t mask);
+#endif
 
 private:
     NimBLEClient(const NimBLEAddress &peerAddress);
@@ -97,6 +101,9 @@ private:
     NimBLEClientCallbacks*  m_pClientCallbacks;
     ble_task_data_t*        m_pTaskData;
     ble_npl_callout         m_dcTimer;
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    uint8_t                 m_phyMask;
+#endif
 
     std::vector<NimBLERemoteService*> m_servicesVector;
 
@@ -123,14 +130,15 @@ public:
     /**
      * @brief Called when disconnected from the server.
      * @param [in] pClient A pointer to the calling client object.
+     * @param [in] reason Contains the reason code for the disconnection.
      */
-    virtual void onDisconnect(NimBLEClient* pClient);
+    virtual void onDisconnect(NimBLEClient* pClient, int reason);
 
     /**
      * @brief Called when server requests to update the connection parameters.
      * @param [in] pClient A pointer to the calling client object.
      * @param [in] params A pointer to the struct containing the connection parameters requested.
-     * @return True to accept the parmeters.
+     * @return True to accept the parameters.
      */
     virtual bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params);
 
@@ -140,15 +148,12 @@ public:
      */
     virtual uint32_t onPassKeyRequest();
 
-    /*virtual void onPassKeyNotify(uint32_t pass_key);
-    virtual bool onSecurityRequest();*/
-
     /**
      * @brief Called when the pairing procedure is complete.
-     * @param [in] desc A pointer to the struct containing the connection information.\n
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.\n
      * This can be used to check the status of the connection encryption/pairing.
      */
-    virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when using numeric comparision for pairing.

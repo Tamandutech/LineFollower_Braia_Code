@@ -6,22 +6,15 @@
 
 QueueHandle_t BLEServerService::queuePacketsReceived;
 
-
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */
-class ServerCallbacks : public NimBLEServerCallbacks
-{
-    void onConnect(NimBLEServer *pServer)
-    {
+class ServerCallbacks: public NimBLEServerCallbacks {
+    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {
+        
         ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client conectado.");
         BLEServerService::getInstance()->deviceConnected = true;
-    };
-    /** Alternative onConnect() method to extract details of the connection.
-     *  See: src/ble_gap.h for the details of the ble_gap_conn_desc struct.
-     */
-    void onConnect(NimBLEServer *pServer, ble_gap_conn_desc *desc)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Endereço do client: %s", NimBLEAddress(desc->peer_ota_addr).toString().c_str());
+        printf("Client address: %s\n", connInfo.getAddress().toString().c_str());
+
         /** We can use the connection handle here to ask for different connection parameters.
          *  Args: connection handle, min connection interval, max connection interval
          *  latency, supervision timeout.
@@ -29,114 +22,120 @@ class ServerCallbacks : public NimBLEServerCallbacks
          *  Latency: number of intervals allowed to skip.
          *  Timeout: 10 millisecond increments, try for 3x interval time for best results.
          */
-        BLEServerService::getInstance()->deviceConnected = true;
-    };
-    void onDisconnect(NimBLEServer *pServer)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client disconnected - start advertising");
-        BLEServerService::getInstance()->deviceConnected = false;
-    };
-    void onMTUChange(uint16_t MTU, ble_gap_conn_desc *desc)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "MTU updated: %u for connection ID: %u", MTU, desc->conn_handle);
+       // pServer->updateConnParams(connInfo.getConnHandle(), 24, 48, 0, 18);
     };
 
-    /********************* Security handled here **********************
-    ****** Note: these are the same return values as defaults ********/
-    uint32_t onPassKeyRequest()
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Server Passkey Request");
+    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Client disconnected - start advertising");
+        BLEServerService::getInstance()->deviceConnected = false;
+        NimBLEDevice::startAdvertising();
+    };
+
+    void onMTUChange(uint16_t MTU, NimBLEConnInfo& connInfo) {
+        printf("MTU updated: %u for connection ID: %u\n", MTU, connInfo.getConnHandle());
+        //pServer->updateConnParams(connInfo.getConnHandle(), 24, 48, 0, 60);
+    };
+
+/********************* Security handled here **********************
+****** Note: these are the same return values as defaults ********/
+    uint32_t onPassKeyRequest(){
+        printf("Server Passkey Request\n");
         /** This should return a random 6 digit number for security
          *  or make your own static passkey as done here.
          */
         return 123456;
     };
 
-    bool onConfirmPIN(uint32_t pass_key)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "The passkey YES/NO number: %d", pass_key);
+    bool onConfirmPIN(uint32_t pass_key){
+        printf("The passkey YES/NO number: %" PRIu32"\n", pass_key);
         /** Return false if passkeys don't match. */
         return true;
     };
 
-    void onAuthenticationComplete(ble_gap_conn_desc *desc)
-    {
+    void onAuthenticationComplete(NimBLEConnInfo& connInfo){
         /** Check that encryption was successful, if not we disconnect the client */
-        if (!desc->sec_state.encrypted)
-        {
-            /** NOTE: createServer returns the current server reference unless one is not already created */
-            NimBLEDevice::createServer()->disconnect(desc->conn_handle);
-            ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Encrypt connection failed - disconnecting client");
+        if(!connInfo.isEncrypted()) {
+            NimBLEDevice::getServer()->disconnect(connInfo.getConnHandle());
+            printf("Encrypt connection failed - disconnecting client\n");
             return;
         }
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Starting BLE work!");
+        printf("Starting BLE work!");
     };
 };
 
 /** Handler class for characteristic actions */
-class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
-{
-    void onRead(NimBLECharacteristic *pCharacteristic)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s : onRead(), value: %s",
-                 pCharacteristic->getUUID().toString().c_str(),
-                 pCharacteristic->getValue().c_str());
-    };
+class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
+    void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
+        printf("%s : onRead(), value: %s\n",
+               pCharacteristic->getUUID().toString().c_str(),
+               pCharacteristic->getValue().c_str());
+    }
 
-    void onWrite(NimBLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc)
-    {
+    void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
         ble_gatt_uart_packet_t tempPacket;
 
         tempPacket.len = pCharacteristic->getValue().length();
         tempPacket.payload = (uint8_t *)malloc(tempPacket.len + 1);
-        tempPacket.clientMAC = desc->peer_id_addr;
+        tempPacket.clientMAC = connInfo.getIdAddress();
 
         strcpy((char *)tempPacket.payload, pCharacteristic->getValue().c_str());
-
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s : onWrite(), value: %s",
-                 pCharacteristic->getUUID().toString().c_str(),
-                 pCharacteristic->getValue().c_str());
 
         if (pCharacteristic->getUUID() == NimBLEUUID(CHARACTERISTIC_UUID_RX))
         {
             xQueueSend(BLEServerService::queuePacketsReceived, &tempPacket, 0);
         }
-    };
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(),"%s : onWrite(), value: %s\n",
+               pCharacteristic->getUUID().toString().c_str(),
+               pCharacteristic->getValue().c_str());
+    }
+
     /** Called before notification or indication is sent,
      *  the value can be changed here before sending if desired.
      */
-    void onNotify(NimBLECharacteristic *pCharacteristic)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Sending notification to clients");
-    };
+    void onNotify(NimBLECharacteristic* pCharacteristic) {
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(),"Sending notification to clients\n");
+    }
 
-    /** The status returned in status is defined in NimBLECharacteristic.h.
+    /**
      *  The value returned in code is the NimBLE host return code.
      */
-    void onStatus(NimBLECharacteristic *pCharacteristic, Status status, int code)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Notification/Indication status code: %d , return code: %d, %s",
-                 status,
-                 code,
-                 NimBLEUtils::returnCodeToString(code));
-    };
+    void onStatus(NimBLECharacteristic* pCharacteristic, int code) {
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(),"Notification/Indication return code: %d, %s\n",
+               code, NimBLEUtils::returnCodeToString(code));
+    }
+
+    void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue) {
+        std::string str = "Client ID: ";
+        str += connInfo.getConnHandle();
+        str += " Address: ";
+        str += connInfo.getAddress().toString();
+        if(subValue == 0) {
+            str += " Unsubscribed to ";
+        }else if(subValue == 1) {
+            str += " Subscribed to notfications for ";
+        } else if(subValue == 2) {
+            str += " Subscribed to indications for ";
+        } else if(subValue == 3) {
+            str += " Subscribed to notifications and indications for ";
+        }
+        str += std::string(pCharacteristic->getUUID());
+
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(),"%s\n", str.c_str());
+    }
 };
 
 /** Handler class for descriptor actions */
-class DescriptorCallbacks : public NimBLEDescriptorCallbacks
-{
-    void onWrite(NimBLEDescriptor *pDescriptor)
-    {
-        std::string dscVal((char *)pDescriptor->getValue(), pDescriptor->getLength());
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "Descriptor witten value: %s", dscVal.c_str());
+class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
+    void onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
+        std::string dscVal = pDescriptor->getValue();
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(),"Descriptor witten value: %s\n", dscVal.c_str());
     };
 
-    void onRead(NimBLEDescriptor *pDescriptor)
-    {
-        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(), "%s Descriptor read", pDescriptor->getUUID().toString().c_str());
+    void onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
+        ESP_LOGD(BLEServerService::getInstance()->GetName().c_str(),"%s Descriptor read\n", pDescriptor->getUUID().toString().c_str());
     };
-    ;
 };
+
 
 /** Define callback instances globally to use for multiple Charateristics \ Descriptors */
 static DescriptorCallbacks dscCallbacks;
@@ -195,26 +194,32 @@ BLEServerService::BLEServerService(std::string name, uint32_t stackDepth, UBaseT
     pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(new ServerCallbacks());
 
-    BLEService *pService = pServer->createService(SERVICE_UART_UUID);
+    NimBLEService *pService = pServer->createService(SERVICE_UART_UUID);
 
     pTxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX,
                                                        NIMBLE_PROPERTY::NOTIFY);
 
-    BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX,
+    NimBLECharacteristic *pRxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX,
                                                                           NIMBLE_PROPERTY::WRITE);
 
-    pRxCharacteristic->setCallbacks(new CharacteristicCallbacks());
+    pRxCharacteristic->setCallbacks(&chrCallbacks);
 
     pService->start();
 
-    BLEService *pStreamService = pServer->createService(SERVICE_STREAM_UUID);
+    NimBLEService *pStreamService = pServer->createService(SERVICE_STREAM_UUID);
     pStreamTxCharacteristic = pStreamService->createCharacteristic(CHARACTERISTIC_STREAM_TX,
                                                                     NIMBLE_PROPERTY::NOTIFY);
 
     pStreamService->start();
 
-    pServer->getAdvertising()->start();
-
+    NimBLEAdvertising* pAdvertising = pServer->getAdvertising();
+    
+    /** Add the services to the advertisment data **/
+    pAdvertising->addServiceUUID(pService->getUUID());
+    pAdvertising->addServiceUUID(pStreamService->getUUID());
+    
+    pAdvertising->setScanResponse(true);
+    pAdvertising->start();
 
     ESP_LOGD(this->GetName().c_str(), "Começou a se anunciar...");
 }
@@ -233,7 +238,7 @@ void BLEServerService::Run()
         xQueueReceive(queuePacketsReceived, &packetReceived, portMAX_DELAY);
 
         ESP_LOGD(GetName().c_str(), "Recebido pacote de dados");
-        ESP_LOGD(GetName().c_str(), "MTU do client: %d", pServer->getPeerInfo(packetReceived.clientMAC).getMTU());
+        ESP_LOGD(GetName().c_str(), "MTU do client: %u", pServer->getPeerInfo(packetReceived.clientMAC).getMTU());
         ESP_LOGD(GetName().c_str(), "Tamanho do pacote: %d", packetReceived.len);
         ESP_LOGD(GetName().c_str(), "Dados:\n%s\n", packetReceived.payload);
 

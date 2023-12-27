@@ -72,7 +72,6 @@ NimBLEService::~NimBLEService() {
 
 /**
  * @brief Dump details of this BLE GATT service.
- * @return N/A.
  */
 void NimBLEService::dump() {
     NIMBLE_LOGD(LOG_TAG, "Service: uuid:%s, handle: 0x%2x",
@@ -161,7 +160,7 @@ bool NimBLEService::start() {
             // of the characteristics for the service. We create 1 extra and set it to null
             // for this purpose.
             pChr_a = new ble_gatt_chr_def[numChrs + 1];
-            uint8_t i = 0;
+            int i = 0;
             for(auto chr_it = m_chrVec.begin(); chr_it != m_chrVec.end(); ++chr_it) {
                 if((*chr_it)->m_removed > 0) {
                     continue;
@@ -190,7 +189,7 @@ bool NimBLEService::start() {
                 } else {
                     // Must have last descriptor uuid = 0 so we have to create 1 extra
                     pDsc_a = new ble_gatt_dsc_def[numDscs+1];
-                    uint8_t d = 0;
+                    int d = 0;
                     for(auto dsc_it = (*chr_it)->m_dscVec.begin(); dsc_it != (*chr_it)->m_dscVec.end(); ++dsc_it ) {
                         if((*dsc_it)->m_removed > 0) {
                             continue;
@@ -248,6 +247,9 @@ bool NimBLEService::start() {
  * @return The handle associated with this service.
  */
 uint16_t NimBLEService::getHandle() {
+    if (m_handle == NULL_HANDLE) {
+        ble_gatts_find_svc(&getUUID().getNative()->u, &m_handle);
+    }
     return m_handle;
 } // getHandle
 
@@ -256,10 +258,11 @@ uint16_t NimBLEService::getHandle() {
  * @brief Create a new BLE Characteristic associated with this service.
  * @param [in] uuid - The UUID of the characteristic.
  * @param [in] properties - The properties of the characteristic.
+ * @param [in] max_len - The maximum length in bytes that the characteristic value can hold.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties) {
-    return createCharacteristic(NimBLEUUID(uuid), properties);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties, uint16_t max_len) {
+    return createCharacteristic(NimBLEUUID(uuid), properties, max_len);
 }
 
 
@@ -267,10 +270,11 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
  * @brief Create a new BLE Characteristic associated with this service.
  * @param [in] uuid - The UUID of the characteristic.
  * @param [in] properties - The properties of the characteristic.
+ * @param [in] max_len - The maximum length in bytes that the characteristic value can hold.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties) {
-    NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
+    NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, max_len, this);
 
     if (getCharacteristic(uuid) != nullptr) {
         NIMBLE_LOGD(LOG_TAG, "<< Adding a duplicate characteristic with UUID: %s",
