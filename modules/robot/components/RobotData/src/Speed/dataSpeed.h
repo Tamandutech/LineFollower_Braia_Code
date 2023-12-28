@@ -67,7 +67,7 @@ public:
     DataAbstract<float> *Long_Curve;
     DataAbstract<float> *Medium_Curve;
     DataAbstract<float> *Short_Curve;
-    DataAbstract<float> *ZIGZAG;
+    DataAbstract<float> *Zig_Zag;
     DataAbstract<float> *Special_Track;
 
     DataAbstract<float> *CalculatedSpeed; // Velocidade final desejada

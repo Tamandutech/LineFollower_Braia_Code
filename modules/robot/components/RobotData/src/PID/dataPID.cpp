@@ -53,6 +53,7 @@ dataPID::dataPID(std::string name)
         dataManager->registerParamData(Kp_IRline);
         Kd_IRline = new DataAbstract<double>("Kd_IRline", name);
         dataManager->registerParamData(Kd_IRline);
+        
         Kp_IRcurve = new DataAbstract<double>("Kp_IRcurve", name);
         dataManager->registerParamData(Kp_IRcurve);
         Kd_IRcurve = new DataAbstract<double>("Kd_IRcurve", name);
@@ -95,18 +96,8 @@ dataPID::dataPID(std::string name)
 
 DataAbstract<double> *dataPID::Kp(TrackState state)
 {
-    if(name == "PIDVel" || name == "PIDRot")
-    {
-        if(state == TUNING)
-        {
-            return Kp_tunning;
-        }
-        else
-        {
-            return Kp_std;
-        }
-    }
-    else if(name == "PIDIR" || name=="PIDClassic")
+    
+    if(name == "PIDIR" || name=="PIDClassic")
     {
         if(state == SHORT_LINE || state == MEDIUM_LINE || state == LONG_LINE)
         {

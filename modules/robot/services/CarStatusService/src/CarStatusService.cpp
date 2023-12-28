@@ -130,10 +130,6 @@ void CarStatusService::Run()
     {
         started_in_Tuning = true;
         status->robotState->setData(CAR_TUNING);
-        status->TrackStatus->setData(TUNING);
-        status->RealTrackStatus->setData(TUNING);
-        status->encreading->setData(false);
-        status->robotIsMapping->setData(false);
         latMarks->marks->clearAllData();
         numMarks = 0;
         mediaEncFinal = 0;

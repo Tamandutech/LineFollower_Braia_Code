@@ -42,10 +42,7 @@ public:
     dataSpeed *getSpeed();
     dataSensor *getsLat();
     dataSensor *getsArray();
-    dataPID *getPIDVel();
-    dataPID *getPIDRot();
-    dataPID *getPIDIR();
-    dataPID *getPIDClassic();
+    dataPID *getPID();
     RobotStatus *getStatus();
     dataSLatMarks *getSLatMarks();
 
@@ -60,10 +57,7 @@ private:
     int Updateparams(struct CarParameters params);
 
     dataSpeed *speed;
-    dataPID *PIDVel;
-    dataPID *PIDRot;
-    dataPID *PIDIR;
-    dataPID *PIDClassic; 
+    dataPID *PID; 
     dataSensor *sLat;
     dataSLatMarks *sLatMarks;
     dataSensor *sArray;

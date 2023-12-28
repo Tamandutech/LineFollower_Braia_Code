@@ -7,6 +7,8 @@
 #include "dataEnums.h"
 #include "SensorsService.hpp"
 
+#include "TrackStatus.cpp"
+
 #include "ESP32MotorControl.h"
 
 // Timer control

@@ -95,8 +95,8 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
         dataManager->registerParamData(Medium_Curve);
         Short_Curve = new DataAbstract<float>("PWM_Short_curve", name, 1000);
         dataManager->registerParamData(Short_Curve);
-        ZIGZAG = new DataAbstract<float>("PWM_ZigZag", name, 1000);
-        dataManager->registerParamData(ZIGZAG);
+        Zig_Zag = new DataAbstract<float>("PWM_ZigZag", name, 1000);
+        dataManager->registerParamData(Zig_Zag);
         Special_Track = new DataAbstract<float>("PWM_SpecialTrack", name, 1000);
         dataManager->registerParamData(Special_Track);
         Default_speed = new DataAbstract<float>("PWM_DefaultSpeed", name, 1000);
@@ -132,7 +132,7 @@ dataSpeed::dataSpeed(std::string name,bool PID_Select)
         dataManager->registerParamData(Medium_Curve);
         Short_Curve = new DataAbstract<float>("Short_curve", name, 1000);
         dataManager->registerParamData(Short_Curve);
-        ZIGZAG = new DataAbstract<float>("ZigZag", name, 1000);
+        Zig_Zag = new DataAbstract<float>("ZigZag", name, 1000);
         dataManager->registerParamData(ZIGZAG);
         Special_Track = new DataAbstract<float>("SpecialTrack", name, 1000);
         dataManager->registerParamData(Special_Track);

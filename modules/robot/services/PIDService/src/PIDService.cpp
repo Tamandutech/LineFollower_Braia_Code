@@ -13,27 +13,10 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     motors.setSTBY(DRIVER_STBY);
 
     pid_select = status->PID_Select->getData();
-    if (!pid_select)
-    {
-        this->PIDIR = robot->getPIDIR();
-        this->PIDTrans = robot->getPIDVel();
-        this->PIDRot = robot->getPIDRot();
 
-        this->PIDRot->input->setData(this->robot->getsArray()->getLine());
-        PIDTrans->setpoint->setData(0);
-        KpVel = PIDTrans->Kp(TUNING)->getData();
-        KdVel = PIDTrans->Kd(TUNING)->getData() / TaskDelaySeconds;
-        KpRot = PIDRot->Kp(TUNING)->getData();
-        KdRot = PIDRot->Kd(TUNING)->getData() / TaskDelaySeconds;
-        KpIR = PIDIR->Kp(TUNING)->getData();
-        KdIR = PIDIR->Kd(TUNING)->getData() / TaskDelaySeconds;
-    }
-    else
-    {
-        this->PIDClassic = robot->getPIDClassic();
-        KpIR = PIDClassic->Kp(TUNING)->getData();
-        KdIR = PIDClassic->Kd(TUNING)->getData() / TaskDelaySeconds;
-    }
+    this->PIDClassic = robot->getPIDClassic();
+    KpIR = PIDClassic->Kp(TUNING)->getData();
+    KdIR = PIDClassic->Kd(TUNING)->getData() / TaskDelaySeconds;
 
     speedTarget = 0;
 
@@ -114,24 +97,11 @@ void PIDService::Run()
         // Variaveis de calculo para os pids do robô
         if (estado != CAR_STOPPED)
         {
-            if (!pid_select)
-            {
-                KpVel = (PIDTrans->Kp(RealTracklen) != nullptr) ? PIDTrans->Kp(RealTracklen)->getData() : 0;
-                KiVel = ((PIDTrans->Ki(RealTracklen) != nullptr) ? PIDTrans->Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
-                KdVel = ((PIDTrans->Kd(RealTracklen) != nullptr) ? PIDTrans->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
-
-                KpRot = (PIDRot->Kp(RealTracklen) != nullptr) ? PIDRot->Kp(RealTracklen)->getData() : 0;
-                KiRot = ((PIDRot->Ki(RealTracklen) != nullptr) ? PIDRot->Ki(RealTracklen)->getData() : 0) * TaskDelaySeconds;
-                KdRot = ((PIDRot->Kd(RealTracklen) != nullptr) ? PIDRot->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
-
-                KpIR = (PIDIR->Kp(RealTracklen) != nullptr) ? PIDIR->Kp(RealTracklen)->getData() : 0;
-                KdIR = ((PIDIR->Kd(RealTracklen) != nullptr) ? PIDIR->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
-            }
-            else
-            {
+            
+        
                 KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
                 KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
-            }
+            
         }
 
         // Velocidade do carrinho
@@ -237,7 +207,6 @@ void PIDService::Run()
 
         /* PEDRO */
 
-
         // Altera a velocidade linear do carrinho
         if (!mapState && status->FirstMark->getData())
         {
@@ -254,7 +223,6 @@ void PIDService::Run()
             speedTarget = speed->Tunning_speed->getData();
         }
 
-
         // Rampeia a velocidade translacional
 
         if (estado != CAR_STOPPED)
@@ -267,7 +235,7 @@ void PIDService::Run()
 
             storingSpeedValue(newSpeed);
         }
-        
+
         // Armazenamento dos parametros de controle atuais
         lastVelTrans = VelTrans;
         lastVelRot = VelRot;
@@ -313,47 +281,6 @@ void PIDService::ControlMotors(float left, float right)
     else
     {
         motors.motorsStop();
-    }
-}
-
-void PIDService::selectTracktState(TrackState trackState)
-{
-
-    switch (trackState)
-    {
-    case XLONG_LINE:
-        speedTarget = speed->XLong_Line->getData();
-        break;
-    case XLONG_CURVE:
-        speedTarget = speed->XLong_Curve->getData();
-        break;
-    case LONG_LINE:
-        speedTarget = speed->Long_Line->getData();
-        break;
-    case LONG_CURVE:
-        speedTarget = speed->Long_Curve->getData();
-        break;
-    case MEDIUM_LINE:
-        speedTarget = speed->Medium_Line->getData();
-        break;
-    case MEDIUM_CURVE:
-        speedTarget = speed->Medium_Curve->getData();
-        break;
-    case SHORT_LINE:
-        speedTarget = speed->Short_Line->getData();
-        break;
-    case SHORT_CURVE:
-        speedTarget = speed->Short_Curve->getData();
-        break;
-    case SPECIAL_TRACK:
-        speedTarget = speed->Special_Track->getData();
-        break;
-    case ZIGZAG:
-        speedTarget = speed->ZIGZAG->getData();
-        break;
-    default:
-        speedTarget = speed->Default_speed->getData();
-        break;
     }
 }
 
