@@ -29,6 +29,8 @@
 
 #include "esp_log.h"
 
+#include "TypePID.cpp"
+
 class dataPID
 {
 public:

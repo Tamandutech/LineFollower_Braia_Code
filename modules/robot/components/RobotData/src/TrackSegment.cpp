@@ -35,7 +35,7 @@ std::map<TrackSegment, float> TrackSegmentSpeed{
     {TrackSegment::LONG_CURVE, speed->Long_Curve->getData()},
     {TrackSegment::XLONG_CURVE, speed->XLong_Curve->getData()},
 
-    {TrackSegment::ZIGZAG, speed->Zig_Zag->getData()},
+    {TrackSegment::ZIGZAG, speed->ZIGZAG->getData()},
     {TrackSegment::SPECIAL_TRACK, speed->Special_Track->getData()}
 };
 

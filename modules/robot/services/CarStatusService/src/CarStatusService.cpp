@@ -48,7 +48,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     lastMappingState = false;
     lastPaused = status->robotPaused->getData();
     lastState = status->robotState->getData();
-    lastTrack = (TrackState) status->TrackStatus->getData();
+    lastTrack = (TrackSegment) status->TrackStatus->getData();
 
     firstmark = false;
 
@@ -147,7 +147,7 @@ void CarStatusService::Run()
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
         
         status->stateMutex.lock();
-        TrackLen = (TrackState)status->TrackStatus->getData();
+        TrackLen = (TrackSegment)status->TrackStatus->getData();
         pulsesBeforeCurve = latMarks->PulsesBeforeCurve->getData();
         pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
         actualCarState = (CarState) status->robotState->getData();
@@ -180,11 +180,11 @@ void CarStatusService::Run()
             LEDsService::getInstance()->queueCommand(command);
         }
 
-        else if ((lastState != status->robotState->getData() || lastTrack != (TrackState)status->TrackStatus->getData() || lastTransition != status->Transition->getData() || (lastPaused && !status->robotPaused->getData())) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
+        else if ((lastState != status->robotState->getData() || lastTrack != (TrackSegment)status->TrackStatus->getData() || lastTransition != status->Transition->getData() || (lastPaused && !status->robotPaused->getData())) && !lastMappingState && status->robotState->getData() != CAR_STOPPED && status->robotState->getData() != CAR_TUNING)
         {
             lastPaused = false;
             lastState = status->robotState->getData();
-            lastTrack =  (TrackState)status->TrackStatus->getData();
+            lastTrack =  (TrackSegment)status->TrackStatus->getData();
             lastTransition = status->Transition->getData();
             if (lastState == CAR_IN_LINE && !lastTransition)
             {
@@ -267,17 +267,6 @@ void CarStatusService::Run()
 
         mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders
 
-//         if (iloop >= 20 && !status->robotIsMapping->getData())
-//         {
-//             ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
-//             ESP_LOGD(GetName().c_str(), "initialEncMedia: %d", initialmediaEnc);
-//             ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEncActual);
-//             ESP_LOGD(GetName().c_str(), "EncMediaoffset: %d", mediaEncActual-initialmediaEnc);
-//             ESP_LOGD(GetName().c_str(), "mediaEncFinal: %d", mediaEncFinal);
-//             ESP_LOGD(GetName().c_str(), "SetPointTrans: %d", PidTrans->setpoint->getData());
-//             iloop = 0;
-//         }
-//         iloop++;
 
         if(!status->robotIsMapping->getData() && !status->encreading->getData() && !status->TunningMode->getData() && actualCarState != CAR_STOPPED){
             robot->getStatus()->robotState->setData(CAR_STOPPED);
@@ -338,7 +327,7 @@ void CarStatusService::Run()
                     if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt) // análise do valor das médias dos encoders
                     {
                         CarState trackType = (CarState)latMarks->marks->getData(mark+1).MapStatus;
-                        TrackState trackLen = (TrackState)latMarks->marks->getData(mark+1).MapTrackStatus;
+                        TrackSegment trackLen = (TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus;
                         status->RealTrackStatus->setData(trackLen);
                         bool transition = false;
 
@@ -355,13 +344,13 @@ void CarStatusService::Run()
                             {
                                 transition = true;
                                 trackType = (CarState)latMarks->marks->getData(mark).MapStatus;
-                                trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
+                                trackLen = (TrackSegment)latMarks->marks->getData(mark).MapTrackStatus;
                             }
                             else if((Manualmedia + offset) >= ManualmediaNxt) 
                             {
                                 transition = true;
                                 trackType = (CarState)latMarks->marks->getData(mark).MapStatus;
-                                trackLen = (TrackState)latMarks->marks->getData(mark).MapTrackStatus;
+                                trackLen = (TrackSegment)latMarks->marks->getData(mark).MapTrackStatus;
                             }
                         }
                         if(mark + 2 < numMarks)
@@ -376,13 +365,13 @@ void CarStatusService::Run()
                                 {
                                     transition = true;
                                     trackType = (CarState)latMarks->marks->getData(mark+2).MapStatus;
-                                    trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
+                                    trackLen = (TrackSegment)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
                                 else if((ManualmediaNxt + offsetnxt) <= Manualmedia) 
                                 {
                                     transition = true;
                                     trackType = (CarState)latMarks->marks->getData(mark+2).MapStatus;
-                                    trackLen = (TrackState)latMarks->marks->getData(mark+2).MapTrackStatus;
+                                    trackLen = (TrackSegment)latMarks->marks->getData(mark+2).MapTrackStatus;
                                 }
                             }
                         }

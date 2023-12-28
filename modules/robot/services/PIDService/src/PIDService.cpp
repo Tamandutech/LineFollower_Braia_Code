@@ -12,11 +12,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
-    pid_select = status->PID_Select->getData();
-
-    this->PIDClassic = robot->getPIDClassic();
-    KpIR = PIDClassic->Kp(TUNING)->getData();
-    KdIR = PIDClassic->Kd(TUNING)->getData() / TaskDelaySeconds;
+    updatePID(DEFAULT, CAR_STOPPED);
 
     speedTarget = 0;
 
@@ -52,10 +48,6 @@ void PIDService::Run()
 
         SensorsService::getInstance()->getArraySensors();
 
-        alphaVel = status->alphaVel->getData() / 1.0E9;
-        alphaRot = status->alphaRot->getData() / 1.0E9;
-        alphaIR = status->alphaIR->getData() / 1.0E9;
-
         speedBase = speed->base->getData();
         speedMin = speed->min->getData();
         speedMax = speed->max->getData();
@@ -77,32 +69,16 @@ void PIDService::Run()
         // Reseta o PID se o carrinho parar
         if (estado == CAR_STOPPED)
         {
-            P_IR = 0;
-            D_IR = 0;
-            Ptrans = 0;
-            Dtrans = 0;
-            Itrans = 0;
-            Prot = 0;
-            Drot = 0;
-            Irot = 0;
-            soma_erroIR = 0;
-            soma_erroVelRot = 0;
-            soma_erroVelTrans = 0;
-            if (!pid_select)
-                PIDTrans->setpoint->setData(0);
+            P = 0;
+            D = 0;
+            soma_erro = 0;
             speedTarget = 0;
             speed->CalculatedSpeed->setData(0);
         }
 
         // Variaveis de calculo para os pids do robô
         if (estado != CAR_STOPPED)
-        {
-            
-        
-                KpIR = (PIDClassic->Kp(RealTracklen) != nullptr) ? PIDClassic->Kp(RealTracklen)->getData() : 0;
-                KdIR = ((PIDClassic->Kd(RealTracklen) != nullptr) ? PIDClassic->Kd(RealTracklen)->getData() : 0) / TaskDelaySeconds;
-            
-        }
+            updatePID(RealTracklen, estado);
 
         // Velocidade do carrinho
         VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
@@ -110,102 +86,31 @@ void PIDService::Run()
         speed->VelTrans->setData(VelTrans);
         speed->VelRot->setData(VelRot);
 
-        IR = robot->getsArray()->getLine(); // posição do robô
-        if (!pid_select)
-        {
-            PIDTrans->input->setData(VelTrans);
-            PIDRot->input->setData(VelRot);
+        SensorArrayPosition = robot->getsArray()->getLine(); // posição do robô
+        erro = 3500 - SensorArrayPosition;
+        dataPID->setpoint->setData(3500);
+        dataPID->erro->setData(erro);
+        soma_erro += (erro / 1000.0) * (erro / 1000.0);
+        dataPID->erroquad->setData(soma_erro);
 
-            PIDIR->input->setData(IR);
+        // Cálculo do PID para posicionar o robô  na linha
+        float pid = calculatePID();
+        
+        dataPID->output->setData(pid)
+        dataPID->P_output->setData(P);
+        dataPID->D_output->setData(D);
 
-            // Erros atuais
-            erroIR = 3500 - IR;
-            PIDIR->setpoint->setData(3500);
-            PIDIR->erro->setData(erroIR);
-            soma_erroIR += erroIR * erroIR;
-            PIDIR->erroquad->setData(soma_erroIR);
-            erroVelTrans = (float)(PIDTrans->setpoint->getData()) - VelTrans;
-            PIDTrans->erro->setData(erroVelTrans);
-            soma_erroVelTrans += erroVelTrans * erroVelTrans;
-            PIDTrans->erroquad->setData(erroVelTrans);
+        // Armazenamento dos parametros de controle atuais
+        lastSensorArrayPosition = SensorArrayPosition;
 
-            // Cálculo do PID para posicionar o robô  na linha
-            P_IR = KpIR * erroIR;
-            if (PIDIR->UseKdIR->getData())
-                D_IR = KdIR * (lastIR - IR);
-            else
-                D_IR = 0;
-            I_IR += KiIR * erroIR;
-            PidIR = P_IR + I_IR + D_IR;
-            PIDIR->output->setData(PidIR);
+        // Calculo de velocidade do motor
+        speed->right->setData(
+            constrain(speed->CalculatedSpeed->getData() + dataPID->output->getData(), speedMin, speedMax));
 
-            PIDRot->setpoint->setData(PIDIR->output->getData());        // cálculo do setpoint rotacional
-            erroVelRot = (float)(PIDRot->setpoint->getData()) - VelRot; // erro rotacional
-            PIDRot->erro->setData(erroVelRot);
-            soma_erroVelRot += erroVelRot * erroVelRot;
-            PIDRot->erroquad->setData(soma_erroVelRot);
-
-            // calculando Pids rotacional e translacional
-            Ptrans = KpVel * erroVelTrans;
-            Itrans += KiVel * erroVelTrans;
-            constrain(Itrans, (float)speedMin, (float)speedMax);
-            // Dtrans = KdVel * (erroVelTrans - errTrans_ant);
-            Dtrans = KdVel * (lastVelTrans - VelTrans);
-            PidTrans = Ptrans + Itrans + Dtrans;
-            // errTrans_ant = erroVelTrans;
-            // lastVelTrans = VelTrans;
-
-            Prot = KpRot * erroVelRot;
-            Irot += KiRot * erroVelRot;
-            constrain(Irot, (float)speedMin, (float)speedMax);
-            // Drot = KdRot * (erroVelRot - errRot_ant);
-            Drot = KdRot * (lastVelRot - VelRot);
-            PidRot = Prot + Irot + Drot;
-            // errRot_ant = erroVelRot;
-            // lastVelRot = VelRot;
-
-            // PID output, resta adequar o valor do Pid para ficar dentro do limite do pwm
-            PIDTrans->output->setData(constrain((PidTrans) + speedBase, speedMin, speedMax));
-            PIDRot->output->setData(PidRot);
-
-            // Calculo de velocidade do motor
-            speed->right->setData(
-                constrain(PIDTrans->output->getData() + PIDRot->output->getData(), speedMin, speedMax));
-
-            speed->left->setData(
-                constrain(PIDTrans->output->getData() - PIDRot->output->getData(), speedMin, speedMax));
-        }
-        else
-        {
-
-            erroIR = 3500 - IR;
-            PIDClassic->setpoint->setData(3500);
-            PIDClassic->erro->setData(erroIR);
-            soma_erroIR += (erroIR / 1000.0) * (erroIR / 1000.0);
-            PIDClassic->erroquad->setData(soma_erroIR);
-            // Cálculo do PID para posicionar o robô  na linha
-            P_IR = KpIR * erroIR;
-            if (PIDClassic->UseKdIR->getData())
-                D_IR = KdIR * (lastIR - IR);
-            else
-                D_IR = 0;
-            I_IR += KiIR * erroIR;
-            PidIR = P_IR + I_IR + D_IR;
-            PIDClassic->output->setData(PidIR);
-            PIDClassic->P_output->setData(P_IR);
-            PIDClassic->D_output->setData(D_IR);
-
-            // Calculo de velocidade do motor
-            speed->right->setData(
-                constrain(speed->CalculatedSpeed->getData() + PIDClassic->output->getData(), speedMin, speedMax));
-
-            speed->left->setData(
-                constrain(speed->CalculatedSpeed->getData() - PIDClassic->output->getData(), speedMin, speedMax));
-        }
+        speed->left->setData(
+            constrain(speed->CalculatedSpeed->getData() - dataPID->output->getData(), speedMin, speedMax));
 
         ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
-
-        /* PEDRO */
 
         // Altera a velocidade linear do carrinho
         if (!mapState && status->FirstMark->getData())
@@ -236,30 +141,10 @@ void PIDService::Run()
             storingSpeedValue(newSpeed);
         }
 
-        // Armazenamento dos parametros de controle atuais
-        lastVelTrans = VelTrans;
-        lastVelRot = VelRot;
-        lastIR = IR;
-        lastPIDTrans = PidTrans;
-        lastPIDRot = PidRot;
-        lastPIDIR = PidIR;
-        errTrans_ant = erroVelTrans;
-        errRot_ant = erroVelRot;
-
         if (iloop > 200)
         {
-            if (!pid_select)
-            {
-                ESP_LOGD(GetName().c_str(), "SetPointTrans: %.2f | Target %.2f, SetPointRot: %.2f", PIDTrans->setpoint->getData(), speedTarget, PIDRot->setpoint->getData());
-                ESP_LOGD(GetName().c_str(), "PIDRot: %.2f | PIDTrans: %.2f", PIDRot->output->getData(), PIDTrans->output->getData());
-                ESP_LOGD(GetName().c_str(), "KpVel: %.4f | KpRot: %.4f\n", KpVel, KpRot);
-                ESP_LOGD(GetName().c_str(), "KdVel: %.4f | KdRot: %.4f\n", KdVel, KdRot);
-            }
-            else
-            {
-                ESP_LOGD(GetName().c_str(), "PIDClassic: %.2f", PIDClassic->output->getData());
-            }
-            ESP_LOGD(GetName().c_str(), "KdIR: %.4f | KpIR: %.4f\n", KdIR, KpIR);
+            ESP_LOGD(GetName().c_str(), "dataPID: %.2f", dataPID->output->getData());
+            ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", Kd, Kp);
             ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
             ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
@@ -267,6 +152,32 @@ void PIDService::Run()
         }
         iloop++;
     }
+}
+
+// Rotina que é executada com base no acionamento do timer
+bool IRAM_ATTR PIDService::timer_group_isr_callback(void *args)
+{
+    BaseType_t high_task_awoken = pdFALSE;
+    xSemaphoreGiveFromISR(SemaphoreTimer, &high_task_awoken);
+    return (high_task_awoken == pdTRUE);
+}
+
+void updatePID(TrackSegment segment, CarState carState)
+{
+    PID pid = getTrackSegmentPID(segment, carState);
+
+    Kp = pid.KP;
+    Kd = pid.KD / TaskDelaySeconds;
+    Ki = pid.KI;
+}
+
+float calculatePID()
+{
+    P = Kp * erro;
+    D = Kd * (lastSensorArrayPosition - SensorArrayPosition);
+    I += Ki * erro;
+    
+    return P + D + I;
 }
 
 void PIDService::ControlMotors(float left, float right)
@@ -292,15 +203,5 @@ float PIDService::calculateSpeed(float acceleration, float speedValue)
 
 void PIDService::storingSpeedValue(float newSpeed)
 {
-    if (!pid_select)
-        PIDTrans->setpoint->setData(newSpeed);
     speed->CalculatedSpeed->setData(newSpeed);
-}
-
-// Rotina que é executada com base no acionamento do timer
-bool IRAM_ATTR PIDService::timer_group_isr_callback(void *args)
-{
-    BaseType_t high_task_awoken = pdFALSE;
-    xSemaphoreGiveFromISR(SemaphoreTimer, &high_task_awoken);
-    return (high_task_awoken == pdTRUE);
 }
