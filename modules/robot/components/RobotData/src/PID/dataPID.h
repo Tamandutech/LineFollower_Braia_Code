@@ -29,8 +29,6 @@
 
 #include "esp_log.h"
 
-#include "TypePID.cpp"
-
 class dataPID
 {
 public:
@@ -45,12 +43,7 @@ public:
     DataAbstract<float> *erro;
     DataAbstract<float> *erroquad;
 
-    // Constantes do PID definidas pelo trecho da pista
-    DataAbstract<double> *Kp(TrackSegment state);
-    DataAbstract<double> *Ki(TrackSegment state);
-    DataAbstract<double> *Kd(TrackSegment state);
-
-     // Parâmetros do PID
+    // Parâmetros do PID
     DataAbstract<double> *Kp_default;
     DataAbstract<double> *Ki_default;
     DataAbstract<double> *Kd_default;
