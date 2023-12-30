@@ -1,6 +1,6 @@
 #include "TrackSegment.hpp"
 
-std::map<TrackSegment, float> CreateTrackSegmentDict(dataSpeed *speed)
+std::map<TrackSegment, float> getSpeedValuesFromDashboard(dataSpeed *speed)
 {
     std::map<TrackSegment, float> TrackSegmentSpeed{
         {TrackSegment::SHORT_LINE, speed->Short_Line->getData()},
@@ -18,11 +18,10 @@ std::map<TrackSegment, float> CreateTrackSegmentDict(dataSpeed *speed)
     };
     return TrackSegmentSpeed;
 }
+
 float getTrackSegmentSpeed(TrackSegment trackSegment, dataSpeed *speed)
 {
-
-    std::map<TrackSegment, float> TrackSegmentSpeed = CreateTrackSegmentDict(speed);
-
+    std::map<TrackSegment, float> TrackSegmentSpeed = getSpeedValuesFromDashboard(speed);
     bool trackStatusFound = TrackSegmentSpeed.find(trackSegment) != TrackSegmentSpeed.end();
 
     if (trackStatusFound)

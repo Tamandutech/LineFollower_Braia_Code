@@ -25,7 +25,7 @@ enum TrackSegment
 };
 
 float getTrackSegmentSpeed(TrackSegment trackSegment, dataSpeed *speed);
-std::map<TrackSegment, float> CreateTrackSegmentDict(dataSpeed *speed);
+std::map<TrackSegment, float> getSpeedValuesFromDashboard(dataSpeed *speed);
 #endif
 
 
