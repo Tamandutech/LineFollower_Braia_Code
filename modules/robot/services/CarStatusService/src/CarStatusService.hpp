@@ -5,6 +5,7 @@
 #include "singleton.hpp"
 #include "RobotData.h"
 #include "dataEnums.h"
+#include "TrackSegment.hpp"
 #include "driver/gpio.h"
 
 #include "MappingService.hpp"
@@ -37,7 +38,7 @@ private:
 
     CarState actualCarState;
 
-    TrackState TrackLen = SHORT_CURVE;
+    TrackSegment TrackLen = SHORT_CURVE;
 
     MappingService *mappingService;
 
@@ -46,7 +47,7 @@ private:
     bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
     bool lastTransition = false;
 
-    TrackState lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
+    TrackSegment lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
     uint8_t lastState; // armazena último estado do mapeamento
     bool lastPaused = false;
     bool lastMappingState;

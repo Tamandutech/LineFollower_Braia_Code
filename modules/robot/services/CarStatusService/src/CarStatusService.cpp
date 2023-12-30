@@ -19,7 +19,6 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     this->status = robot->getStatus();
     this->speed = robot->getSpeed();
     this->latMarks = robot->getSLatMarks();
-    this->PidTrans = robot->getPIDVel();
 
     mappingService = MappingService::getInstance();
 
@@ -41,8 +40,8 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
         }
     }
     status->robotState->setData(CAR_STOPPED);
-    status->RealTrackStatus->setData(UNDEFINED);
-    status->TrackStatus->setData(UNDEFINED);
+    status->RealTrackStatus->setData(DEFAULT_TRACK);
+    status->TrackStatus->setData(DEFAULT_TRACK);
 
     stateChanged = true;
     lastMappingState = false;
@@ -111,8 +110,8 @@ void CarStatusService::Run()
         LEDsService::getInstance()->queueCommand(command);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         // Começa mapeamento
-        status->RealTrackStatus->setData(UNDEFINED);
-        status->TrackStatus->setData(UNDEFINED);
+        status->RealTrackStatus->setData(DEFAULT_TRACK);
+        status->TrackStatus->setData(DEFAULT_TRACK);
         mappingService->startNewMapping();
     }
 
@@ -155,8 +154,8 @@ void CarStatusService::Run()
         if(started_in_Tuning && status->TunningMode->getData() && status->robotState->getData() != CAR_TUNING && !status->robotPaused->getData() && !status->encreading->getData() && !status->robotIsMapping->getData()) 
         {
             status->robotState->setData(CAR_TUNING);
-            status->TrackStatus->setData(TUNING);
-            status->RealTrackStatus->setData(TUNING);
+            status->TrackStatus->setData(DEFAULT_TRACK);
+            status->RealTrackStatus->setData(DEFAULT_TRACK);
             command.led[0] = LED_POSITION_FRONT;
             command.led[1] = LED_POSITION_NONE;
             command.color = LED_COLOR_WHITE;
@@ -239,7 +238,7 @@ void CarStatusService::Run()
                     case LONG_CURVE:
                         command.brightness = 1;
                         break;
-                    case ZIGZAG:
+                    case ZIGZAG_TRACK:
                         command.color = LED_COLOR_PURPLE;
                         command.brightness = 1;
                         break;
@@ -298,12 +297,6 @@ void CarStatusService::Run()
                 {
                     ESP_LOGD(GetName().c_str(), "Parando o robô");
                     status->encreading->setData(false);
-                    //vTaskDelay(100 / portTICK_PERIOD_MS);
-
-                    // TODO: Encontrar forma bonita de suspender os outros serviços.
-                    // vTaskSuspend(xTaskPID);
-                    // vTaskSuspend(xTaskSensors);
-
                     robot->getStatus()->robotState->setData(CAR_STOPPED);
                     DataManager::getInstance()->saveAllParamDataChanged();
                     command.led[0] = LED_POSITION_FRONT;
