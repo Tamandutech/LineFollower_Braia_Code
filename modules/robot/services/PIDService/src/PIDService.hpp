@@ -7,7 +7,8 @@
 #include "dataEnums.h"
 #include "SensorsService.hpp"
 
-#include "TrackSegment.cpp"
+#include "TrackSegment.hpp"
+#include "TypePID.hpp"
 
 #include "ESP32MotorControl.h"
 
@@ -42,7 +43,7 @@ private:
     Robot *robot;
     dataSpeed *speed;
     RobotStatus *status;
-    dataPID *dataPID;
+    dataPID *DataPID;
 
     ESP32MotorControl motors;
 
@@ -73,7 +74,7 @@ private:
     bool mapState = false;
 
     CarState estado = CAR_STOPPED;
-    TrackState RealTracklen = SHORT_LINE;
+    TrackSegment RealTracklen = TrackSegment::SHORT_LINE;
 
     int iloop = 0;
 
@@ -81,7 +82,8 @@ private:
     static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 
     // Protótipos de função
-    void selectTracktState(TrackState trackState);
+    float calculatePID();
+    void updatePID(TrackSegment segment, CarState carState);
     float calculateSpeed(float acceleration, float speedValue);
     void storingSpeedValue(float newSpeed);
 };

@@ -12,7 +12,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
-    updatePID(DEFAULT, CAR_STOPPED);
+    updatePID(DEFAULT_TRACK, CAR_STOPPED);
 
     speedTarget = 0;
 
@@ -43,7 +43,7 @@ void PIDService::Run()
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
         estado = (CarState)status->robotState->getData();
 
-        RealTracklen = (TrackState)status->RealTrackStatus->getData();
+        RealTracklen = (TrackSegment)status->RealTrackStatus->getData();
         mapState = status->robotIsMapping->getData();
 
         SensorsService::getInstance()->getArraySensors();
@@ -88,35 +88,35 @@ void PIDService::Run()
 
         SensorArrayPosition = robot->getsArray()->getLine(); // posição do robô
         erro = 3500 - SensorArrayPosition;
-        dataPID->setpoint->setData(3500);
-        dataPID->erro->setData(erro);
+        DataPID->setpoint->setData(3500);
+        DataPID->erro->setData(erro);
         soma_erro += (erro / 1000.0) * (erro / 1000.0);
-        dataPID->erroquad->setData(soma_erro);
+        DataPID->erroquad->setData(soma_erro);
 
         // Cálculo do PID para posicionar o robô  na linha
         float pid = calculatePID();
         
-        dataPID->output->setData(pid)
-        dataPID->P_output->setData(P);
-        dataPID->D_output->setData(D);
+        DataPID->output->setData(pid);
+        DataPID->P_output->setData(P);
+        DataPID->D_output->setData(D);
 
         // Armazenamento dos parametros de controle atuais
         lastSensorArrayPosition = SensorArrayPosition;
 
         // Calculo de velocidade do motor
         speed->right->setData(
-            constrain(speed->CalculatedSpeed->getData() + dataPID->output->getData(), speedMin, speedMax));
+            constrain(speed->CalculatedSpeed->getData() + DataPID->output->getData(), speedMin, speedMax));
 
         speed->left->setData(
-            constrain(speed->CalculatedSpeed->getData() - dataPID->output->getData(), speedMin, speedMax));
+            constrain(speed->CalculatedSpeed->getData() - DataPID->output->getData(), speedMin, speedMax));
 
         ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
 
         // Altera a velocidade linear do carrinho
         if (!mapState && status->FirstMark->getData())
         {
-            TrackState trackState = (TrackState)status->TrackStatus->getData();
-            selectTracktState(trackState);
+            TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
+            speedTarget = getTrackSegmentSpeed(tracksegment, speed);
         }
 
         else if (mapState && estado != CAR_STOPPED)
@@ -143,7 +143,7 @@ void PIDService::Run()
 
         if (iloop > 200)
         {
-            ESP_LOGD(GetName().c_str(), "dataPID: %.2f", dataPID->output->getData());
+            ESP_LOGD(GetName().c_str(), "dataPID: %.2f", DataPID->output->getData());
             ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", Kd, Kp);
             ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
             ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
@@ -162,16 +162,16 @@ bool IRAM_ATTR PIDService::timer_group_isr_callback(void *args)
     return (high_task_awoken == pdTRUE);
 }
 
-void updatePID(TrackSegment segment, CarState carState)
+void PIDService::updatePID(TrackSegment segment, CarState carState)
 {
-    PID pid = getTrackSegmentPID(segment, carState);
+    PID_Consts pid = getTrackSegmentPID(segment, carState, DataPID);
 
     Kp = pid.KP;
     Kd = pid.KD / TaskDelaySeconds;
     Ki = pid.KI;
 }
 
-float calculatePID()
+float PIDService::calculatePID()
 {
     P = Kp * erro;
     D = Kd * (lastSensorArrayPosition - SensorArrayPosition);
