@@ -48,13 +48,7 @@ public:
     DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
-    
-    // Restrições nos valores do PWM
-    DataAbstract<int8_t> *max;
-    DataAbstract<int8_t> *min;
-    DataAbstract<int8_t> *base;
 
-    
     DataAbstract<float> *initialspeed; // Velocidade inicial em rpm
     DataAbstract<float> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
 
@@ -70,7 +64,7 @@ public:
     DataAbstract<float> *ZIGZAG;
     DataAbstract<float> *Special_Track;
 
-    DataAbstract<float> *CalculatedSpeed; // Velocidade final desejada
+    DataAbstract<float> *linearSpeed; // Velocidade linear do robô
 
     // Velocidade para o modo Tunning
     DataAbstract<float> *Tunning_speed;

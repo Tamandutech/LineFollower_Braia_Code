@@ -39,13 +39,6 @@ dataSpeed::dataSpeed(std::string name)
     RobotDiameter = new DataAbstract<uint16_t>("RobotDiameter", name, 112); //mm
     dataManager->registerParamData(RobotDiameter);
 
-    max = new DataAbstract<int8_t>("max", name, 100);
-    dataManager->registerParamData(max);
-    min = new DataAbstract<int8_t>("min", name, 0);
-    dataManager->registerParamData(min);
-    base = new DataAbstract<int8_t>("base", name, 0);
-    dataManager->registerParamData(base);
-
     right = new DataAbstract<float>("right", name, 0);
     dataManager->registerRuntimeData(right);
     left = new DataAbstract<float>("left", name, 0);
@@ -97,8 +90,8 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerRuntimeData(VelRot);
 
     // Velocidade linear desejada no momento
-    CalculatedSpeed = new DataAbstract<float>("CalculatedSpeed", name, 0);
-    dataManager->registerRuntimeData(CalculatedSpeed);
+    linearSpeed = new DataAbstract<float>("linearSpeed", name, 0);
+    dataManager->registerRuntimeData(linearSpeed);
 
 
 }
