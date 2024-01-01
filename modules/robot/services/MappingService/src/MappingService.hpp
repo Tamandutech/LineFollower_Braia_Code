@@ -9,6 +9,7 @@
 #include "thread.hpp"
 #include "singleton.hpp"
 #include "RobotData.h"
+#include "TrackSegment.hpp"
 #include "LEDsService.hpp"
 
 #include "driver/gpio.h"

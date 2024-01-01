@@ -126,7 +126,7 @@ void SensorsService::getLatSensors() // função leitura dos sensores
     latloop++;
 }
 
-void SensorsService::getArraySensors() // função leitura dos sensores frontais
+uint16_t SensorsService::getArraySensors() // função leitura dos sensores frontais
 {
     // Arrays para armazenar leitura bruta dos sensores array
     uint16_t sArraychannels[sArray.getSensorCount()];
@@ -146,6 +146,8 @@ void SensorsService::getArraySensors() // função leitura dos sensores frontais
         sloop = 0;
     }
     sloop++;
+
+    return robot->getsArray()->getLine();
 }
 
 void SensorsService::processSLat()

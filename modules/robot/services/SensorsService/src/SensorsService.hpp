@@ -21,7 +21,7 @@ public:
 
   void Run() override;
   void calibAllsensors();
-  void getArraySensors();
+  uint16_t getArraySensors();
 
 
 private:

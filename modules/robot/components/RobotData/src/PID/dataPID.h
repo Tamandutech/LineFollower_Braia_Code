@@ -43,49 +43,30 @@ public:
     DataAbstract<float> *erro;
     DataAbstract<float> *erroquad;
 
-    DataAbstract<bool> *UseKiVel;
-    DataAbstract<bool> *UseKdIR;
-    // Constantes do PID definidas pelo trecho da pista
-    DataAbstract<double> *Kp(TrackState state);
-    DataAbstract<double> *Ki(TrackState state);
-    DataAbstract<double> *Kd(TrackState state);
+    // Parâmetros do PID
+    DataAbstract<double> *Kp_default;
+    DataAbstract<double> *Ki_default;
+    DataAbstract<double> *Kd_default;
 
+    // Parâmetros do PID para diferentes trechos da pista
+    DataAbstract<double> *Kp_tunning; 
+    DataAbstract<double> *Ki_tunning;
+    DataAbstract<double> *Kd_tunning; 
+
+    DataAbstract<double> *Kp_line; 
+    DataAbstract<double> *Kd_line; 
+
+    DataAbstract<double> *Kp_curve; 
+    DataAbstract<double> *Kd_curve; 
+
+    DataAbstract<double> *Kp_ZigZag;
+    DataAbstract<double> *Kd_ZigZag;
 
 private:
     std::string name;
     const char *tag = "RobotData";
 
-    // Parâmetros do PID  
-    DataAbstract<double> *Kp_std;
-    DataAbstract<double> *Ki_std;
-    DataAbstract<double> *Kd_std; 
-
-    // Parâmetros do PID para diferentes trechos da pista
-    DataAbstract<double> *Kp_tunning; // salvar
-    DataAbstract<double> *Ki_tunning; // salvar
-    DataAbstract<double> *Kd_tunning; // salvar
-
-    DataAbstract<double> *Kp_IRline; // salvar
-    DataAbstract<double> *Kd_IRline; // salvar
-
-    DataAbstract<double> *Kp_IRcurve; // salvar
-    DataAbstract<double> *Kd_IRcurve; // salvar
-    
-    DataAbstract<double> *Kp_IRShortCurve; 
-    DataAbstract<double> *Kd_IRShortCurve; 
-
-    DataAbstract<double> *Kp_IRZigZag;
-    DataAbstract<double> *Kd_IRZigZag; 
-
-    DataAbstract<double> *Kp_IRXLongLine; // Pista Maua
-    DataAbstract<double> *Kd_IRXLongLine; 
-
-    DataAbstract<double> *Kp_IRLongCurve;
-    DataAbstract<double> *Kd_IRLongCurve; 
-
-    DataAbstract<double> *Kp_IRXLongCurve; // Pista Maua
-    DataAbstract<double> *Kd_IRXLongCurve;
-
+   
     DataManager *dataManager;
 };
 
