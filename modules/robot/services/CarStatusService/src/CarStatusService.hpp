@@ -24,7 +24,8 @@ public:
     CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
-    static QueueHandle_t gpio_evt_queue;
+    static SemaphoreHandle_t SemaphoreButton;
+
 
 private:
 
@@ -61,6 +62,7 @@ private:
     bool firstmark = false;
 
     static void IRAM_ATTR gpio_isr_handler(void *arg);
+    void configExternInterrupt(gpio_num_t gpio_num);
 };
 
 #endif
