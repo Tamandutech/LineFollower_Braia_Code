@@ -52,14 +52,7 @@ void app_main(void)
   ledsService = LEDsService::getInstance("LEDsService", 4096, 9);
   ledsService->Start();
 
-  led_command_t command;
-  command.led[0] = LED_POSITION_FRONT;
-  command.led[1] = LED_POSITION_NONE;
-  command.led[2] = LED_POSITION_NONE;
-  command.color = LED_COLOR_RED;
-  command.effect = LED_EFFECT_SET;
-  command.brightness = 1;
-  ledsService->queueCommand(command);
+  ledsService->LedComandSend(LED_POSITION_FRONT, LED_COLOR_RED, 1);
 
   ESP_LOGD("Main", "Configurando LOGs...");
   esp_log_level_set("*", ESP_LOG_ERROR);
@@ -67,26 +60,27 @@ void app_main(void)
   esp_log_level_set("CarStatusService", ESP_LOG_ERROR);
   esp_log_level_set("BLEServerService", ESP_LOG_DEBUG);
   esp_log_level_set("Main", ESP_LOG_DEBUG);
-  //esp_log_level_set("TaskStream", ESP_LOG_DEBUG);
-  //esp_log_level_set("SensorsService", ESP_LOG_DEBUG);
-  //esp_log_level_set("SpeedService", ESP_LOG_DEBUG);
+  esp_log_level_set("TaskStream", ESP_LOG_ERROR);
+  esp_log_level_set("SensorsService", ESP_LOG_ERROR);
+  esp_log_level_set("SpeedService", ESP_LOG_ERROR);
   esp_log_level_set("PIDService", ESP_LOG_ERROR);
-  //esp_log_level_set("CMD_PARAM", ESP_LOG_DEBUG);
-  //esp_log_level_set("DataManager", ESP_LOG_DEBUG);
+  esp_log_level_set("CMD_PARAM", ESP_LOG_ERROR);
+  esp_log_level_set("DataManager", ESP_LOG_ERROR);
   
+  braia = Robot::getInstance("TT_LF_BRAIA_V3");
+  ESP_LOGD("Main", "Instanciando Robô...");
+
   ESP_LOGD("Main", "Configurando Comandos...");
   better_console_config_t console_config;
   console_config.max_cmdline_args = 8;
   console_config.max_cmdline_length = 256;
   ESP_ERROR_CHECK(better_console_init(&console_config));
   ESP_LOGD("Main", "Registrando Comandos...");
-  register_system();
+  register_system(braia->getADC_handle());
   register_cmd_param();
   register_cmd_datamanager();
   register_cmd_runtime();
 
-  ESP_LOGD("Main", "Instanciando Robô...");
-  braia = Robot::getInstance("TT_LF_BRAIA_V3");
 
   ESP_LOGD("Main", "Configurando Serviços...");
   bleServerService = BLEServerService::getInstance("BLEServerService", 4096, 7);
@@ -104,14 +98,12 @@ void app_main(void)
   carStatusService->Start();
   mappingService->Start();
 
-  command.color = LED_COLOR_PURPLE;
-  ledsService->queueCommand(command);
+  ledsService->LedComandSend(LED_POSITION_FRONT, LED_COLOR_PURPLE, 1);
 
   vTaskDelay(1000 / portTICK_PERIOD_MS);
 
   ESP_LOGD("Main", "Apagando LEDs");
-  command.color = LED_COLOR_BLACK;
-  ledsService->queueCommand(command);
+  ledsService->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);;
 
   ESP_LOGD(MappingService::getInstance()->GetName().c_str(), "Mapeamento");
   ESP_LOGD(CarStatusService::getInstance()->GetName().c_str(), "CarStatusService");

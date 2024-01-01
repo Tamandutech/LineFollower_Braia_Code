@@ -16,27 +16,37 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     SemaphoreTimer = xSemaphoreCreateBinary();
 
     // Configura o timer
-    timer_config_t config;
-    config.alarm_en = TIMER_ALARM_EN;
-    config.counter_en = TIMER_PAUSE;
-    config.counter_dir = TIMER_COUNT_UP;
-    config.auto_reload = TIMER_AUTORELOAD_EN; // define se o contador do timer deve reiniciar automaticamente
-    config.divider = 16;                      // Define o valor pelo qual o clock deve ser dividido
+    gptimer_handle_t gptimer = NULL;
+    gptimer_config_t timer_config = {
+        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+        .direction = GPTIMER_COUNT_UP,
+        .resolution_hz = TIMER_FREQ, // 1MHz, 1 tick=1us
+    };
+    
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
 
-    timer_init(TIMER_GROUP_0, TIMER_0, &config);                                             // inicializa timer
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);                                      // zera o contador do timer
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TaskDelaySeconds * (TIMER_BASE_CLK / 16)); // define até quando o timer deve contar
-    timer_enable_intr(TIMER_GROUP_0, TIMER_0);                                               // ativa interrupção
-    timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, timer_group_isr_callback, NULL, 0);       // define a função executada quando ocorre interrupção
-    timer_start(TIMER_GROUP_0, TIMER_0);
+    gptimer_alarm_config_t alarm_config = {
+        .alarm_count = (uint64_t) (TaskDelaySeconds * TIMER_FREQ), // define até quando o timer deve contar
+        .reload_count = 0, // counter will reload with 0 on alarm event
+    };
+    alarm_config.flags.auto_reload_on_alarm = true; // habilita auto-reload
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
+    
+    gptimer_event_callbacks_t cbs = {
+        .on_alarm = timer_group_isr_callback, // register user callback
+    };
+
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &cbs, NULL));
+    ESP_ERROR_CHECK(gptimer_set_raw_count(gptimer, 0));
+    ESP_ERROR_CHECK(gptimer_enable(gptimer));
+    ESP_ERROR_CHECK(gptimer_start(gptimer));
 }
 
 void PIDService::Run()
 {
     for (;;)
     {
-        // Trava a task até o semáfaro ser liberado com base no 
-        
+        // Trava a task até o semáfaro ser liberado com base no timer
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
         estado = (CarState)status->robotState->getData();
         if(estado == CAR_STOPPED)
@@ -150,7 +160,7 @@ void PIDService::Run()
 }
 
 // Rotina que é executada com base no acionamento do timer
-bool IRAM_ATTR PIDService::timer_group_isr_callback(void *args)
+bool IRAM_ATTR PIDService::timer_group_isr_callback(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx) 
 {
     BaseType_t high_task_awoken = pdFALSE;
     xSemaphoreGiveFromISR(SemaphoreTimer, &high_task_awoken);

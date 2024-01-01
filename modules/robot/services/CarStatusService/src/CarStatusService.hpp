@@ -13,8 +13,6 @@
 
 
 using namespace cpp_freertos;
-
-#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
 #define ManualMap
@@ -61,8 +59,6 @@ private:
     int32_t pulsesBeforeCurve = 200;
     int32_t pulsesAfterCurve = 200;
     bool firstmark = false;
-
-    led_command_t command;
 
     static void IRAM_ATTR gpio_isr_handler(void *arg);
 };

@@ -37,26 +37,18 @@ namespace mcp3008
         devcfg.spics_io_num = cfg.pin_cs;
         devcfg.queue_size = CHANNELS;
 
-#ifndef ESP32_QEMU
         ret = spi_bus_initialize(cfg.spi_dev, &buscfg, 1);
-#else
-        ret = ESP_OK;
-#endif
         if (ret != ESP_OK)
         {
             return ret;
         }
 
-#ifndef ESP32_QEMU
         ret = spi_bus_add_device(cfg.spi_dev, &devcfg, &m_spi);
-#else
-        ret = ESP_OK;
-#endif
+
         if (ret != ESP_OK)
         {
-#ifndef ESP32_QEMU
             spi_bus_free(cfg.spi_dev);
-#endif
+
             return ret;
         }
 
@@ -71,19 +63,12 @@ namespace mcp3008
         if (!m_installed)
             return ESP_OK;
 
-#ifndef ESP32_QEMU
         esp_err_t res = spi_bus_remove_device(m_spi);
-#else
-        esp_err_t res = ESP_OK;
-#endif
+
         if (res != ESP_OK)
             return res;
 
-#ifndef ESP32_QEMU
         res = spi_bus_free(m_spi_dev);
-#else
-        res = ESP_OK;
-#endif
         if (res != ESP_OK)
             return res;
 
@@ -151,11 +136,8 @@ namespace mcp3008
             t.tx_data[0] = 1;
             t.tx_data[1] = (!differential << 7) | ((i & 0x07) << 4);
 
-#ifndef ESP32_QEMU
             esp_err_t res = spi_device_queue_trans(m_spi, &transactions[i], 100);
-#else
-            esp_err_t res = ESP_OK;
-#endif
+
             if (res != ESP_OK)
                 return res;
             ++requested;
@@ -167,11 +149,7 @@ namespace mcp3008
         spi_transaction_t *trans = NULL;
         for (int i = 0; i < requested; ++i)
         {
-#ifndef ESP32_QEMU
             esp_err_t res = spi_device_get_trans_result(m_spi, &trans, portMAX_DELAY);
-#else
-            esp_err_t res = ESP_OK;
-#endif
             if (res != ESP_OK)
             {
                 return res;
@@ -199,11 +177,8 @@ namespace mcp3008
         trans.tx_data[0] = 1;
         trans.tx_data[1] = (!differential << 7) | ((channel & 0x07) << 4);
 
-#ifndef ESP32_QEMU
         esp_err_t res = spi_device_transmit(m_spi, &trans);
-#else
-        esp_err_t res = ESP_OK;
-#endif
+
         if (res != ESP_OK)
         {
             if (result)

@@ -94,7 +94,7 @@ void SpeedService::Run()
 
         if (iloop >= 100)
         {
-            ESP_LOGD(GetName().c_str(), "encDir: %d | encEsq: %d | encmedia: %d", enc_motDir.getCount(), enc_motEsq.getCount(), speed->EncMedia->getData());
+            ESP_LOGD(GetName().c_str(), "encDir: %ld | encEsq: %ld | encmedia: %ld", enc_motDir.getCount(), enc_motEsq.getCount(), speed->EncMedia->getData());
             ESP_LOGD(GetName().c_str(), "deltaX: %.4f | deltaY: %.4f |  PositionX: %.4f | PositionY: %.4f", DeltaPositionX, DeltaPositionY, positionX,positionY);
             ESP_LOGD(GetName().c_str(), "Soma: %d - VelEncDir: %d | VelEncEsq: %d", (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()), speed->RPMRight_inst->getData(), speed->RPMLeft_inst->getData());
             ESP_LOGD(GetName().c_str(), "MPR: %d",speed->MPR->getData());

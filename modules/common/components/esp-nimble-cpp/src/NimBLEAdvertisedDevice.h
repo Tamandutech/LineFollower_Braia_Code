@@ -45,12 +45,15 @@ public:
 
     NimBLEAddress   getAddress();
     uint8_t         getAdvType();
+    uint8_t         getAdvFlags();
     uint16_t        getAppearance();
     uint16_t        getAdvInterval();
     uint16_t        getMinInterval();
     uint16_t        getMaxInterval();
-    std::string     getManufacturerData();
+    uint8_t         getManufacturerDataCount();
+    std::string     getManufacturerData(uint8_t index = 0);
     std::string     getURI();
+    std::string     getPayloadByType(uint16_t type);
 
     /**
      * @brief A template to convert the service data to <type\>.
@@ -71,7 +74,7 @@ public:
     std::string     getName();
     int             getRSSI();
     NimBLEScan*     getScan();
-    size_t          getServiceDataCount();
+    uint8_t         getServiceDataCount();
     std::string     getServiceData(uint8_t index = 0);
     std::string     getServiceData(const NimBLEUUID &uuid);
 
@@ -111,9 +114,9 @@ public:
 
     NimBLEUUID      getServiceDataUUID(uint8_t index = 0);
     NimBLEUUID      getServiceUUID(uint8_t index = 0);
-    size_t          getServiceUUIDCount();
+    uint8_t         getServiceUUIDCount();
     NimBLEAddress   getTargetAddress(uint8_t index = 0);
-    size_t          getTargetAddressCount();
+    uint8_t         getTargetAddressCount();
     int8_t          getTXPower();
     uint8_t*        getPayload();
     uint8_t         getAdvLength();
@@ -132,45 +135,48 @@ public:
     bool            haveAdvInterval();
     bool            haveTargetAddress();
     bool            haveURI();
+    bool            haveType(uint16_t type);
     std::string     toString();
+    bool            isConnectable();
+    bool            isLegacyAdvertisement();
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    uint8_t         getSetId();
+    uint8_t         getPrimaryPhy();
+    uint8_t         getSecondaryPhy();
+    uint16_t        getPeriodicInterval();
+#endif
 
 private:
     friend class NimBLEScan;
 
     void    setAddress(NimBLEAddress address);
-    void    setAdvType(uint8_t advType);
+    void    setAdvType(uint8_t advType, bool isLegacyAdv);
     void    setPayload(const uint8_t *payload, uint8_t length, bool append);
     void    setRSSI(int rssi);
-    uint8_t findAdvField(uint8_t type, uint8_t index = 0, uint8_t *data_loc = nullptr);
-    uint8_t findServiceData(uint8_t index, uint8_t* bytes);
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    void    setSetId(uint8_t sid)              { m_sid = sid; }
+    void    setPrimaryPhy(uint8_t phy)         { m_primPhy = phy; }
+    void    setSecondaryPhy(uint8_t phy)       { m_secPhy = phy; }
+    void    setPeriodicInterval(uint16_t itvl) { m_periodicItvl = itvl; }
+#endif
+    uint8_t findAdvField(uint8_t type, uint8_t index = 0, size_t * data_loc = nullptr);
+    size_t  findServiceData(uint8_t index, uint8_t* bytes);
 
     NimBLEAddress   m_address = NimBLEAddress("");
     uint8_t         m_advType;
     int             m_rssi;
     time_t          m_timestamp;
-    bool            m_callbackSent;
+    uint8_t         m_callbackSent;
     uint8_t         m_advLength;
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    bool            m_isLegacyAdv;
+    uint8_t         m_sid;
+    uint8_t         m_primPhy;
+    uint8_t         m_secPhy;
+    uint16_t        m_periodicItvl;
+#endif
 
     std::vector<uint8_t>    m_payload;
-};
-
-/**
- * @brief A callback handler for callbacks associated device scanning.
- *
- * When we are performing a scan as a %BLE client, we may wish to know when a new device that is advertising
- * has been found.  This class can be sub-classed and registered such that when a scan is performed and
- * a new advertised device has been found, we will be called back to be notified.
- */
-class NimBLEAdvertisedDeviceCallbacks {
-public:
-    virtual ~NimBLEAdvertisedDeviceCallbacks() {}
-    /**
-     * @brief Called when a new scan result is detected.
-     *
-     * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
-     * device that was found.  During any individual scan, a device will only be detected one time.
-     */
-    virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) = 0;
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER */

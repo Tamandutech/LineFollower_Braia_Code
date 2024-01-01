@@ -54,12 +54,12 @@ public:
     ble_gatt_uart_packet_t packetReceived;
     static QueueHandle_t queuePacketsReceived;
 
-    BLECharacteristic *pStreamTxCharacteristic;
+    NimBLECharacteristic *pStreamTxCharacteristic;
     TaskHandle_t xTaskStream;
 
 private:
-    BLEServer *pServer = NULL;
-    BLECharacteristic *pTxCharacteristic;
+    NimBLEServer *pServer = NULL;
+    NimBLECharacteristic *pTxCharacteristic;
 
 
     uint8_t txValue = 0;

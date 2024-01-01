@@ -6,20 +6,24 @@
 #include "RobotData.h"
 
 #include "driver/gpio.h"
-#include "driver/rmt.h"
+#include "driver/rmt_tx.h"
+#include "led_strip_encoder.h"
 #include <sys/cdefs.h>
 
 #include "esp_log.h"
 
 using namespace cpp_freertos;
 
-#define NUM_LEDS 3
 
 #define WS2812_T0H_NS (350)
 #define WS2812_T0L_NS (1000)
 #define WS2812_T1H_NS (1000)
 #define WS2812_T1L_NS (350)
 #define WS2812_RESET_US (280)
+
+#define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+#define RMT_LED_STRIP_GPIO_NUM      GPIO_NUM_32
+#define NUM_LEDS 3
 
 enum led_color_t
 {
@@ -43,7 +47,6 @@ enum led_color_t
 
 enum led_position_t
 {
-    LED_POSITION_NONE = -1,
     LED_POSITION_LEFT = 0,
     LED_POSITION_RIGHT = 1,
     LED_POSITION_FRONT = 2,
@@ -51,10 +54,9 @@ enum led_position_t
 
 enum led_effect_t
 {
-    LED_EFFECT_NONE = 0,
-    LED_EFFECT_SET = 1,
-    LED_EFFECT_BLINK = 2,
-    LED_EFFECT_FADE = 3,
+    LED_EFFECT_SET = 0,
+    LED_EFFECT_BLINK = 1,
+    LED_EFFECT_FADE = 2,
 };
 
 struct LEDColor
@@ -66,132 +68,38 @@ struct LEDColor
 
 struct led_command_t
 {
-    led_position_t led[NUM_LEDS] = {LED_POSITION_NONE};
+    led_position_t led;
     led_color_t color;
     led_effect_t effect;
     float brightness;
 };
-
-typedef struct led_strip_s led_strip_t;
-
-typedef rmt_channel_t led_strip_dev_t;
-
-/**
- * @brief Declare of LED Strip Type
- *
- */
-struct led_strip_s
-{
-    /**
-     * @brief Set RGB for a specific pixel
-     *
-     * @param strip: LED strip
-     * @param index: index of pixel to set
-     * @param red: red part of color
-     * @param green: green part of color
-     * @param blue: blue part of color
-     *
-     * @return
-     *      - ESP_OK: Set RGB for a specific pixel successfully
-     *      - ESP_ERR_INVALID_ARG: Set RGB for a specific pixel failed because of invalid parameters
-     *      - ESP_FAIL: Set RGB for a specific pixel failed because other error occurred
-     */
-    esp_err_t (*set_pixel)(led_strip_t *strip, uint32_t index, uint32_t red, uint32_t green, uint32_t blue);
-
-    /**
-     * @brief Refresh memory colors to LEDs
-     *
-     * @param strip: LED strip
-     * @param timeout_ms: timeout value for refreshing task
-     *
-     * @return
-     *      - ESP_OK: Refresh successfully
-     *      - ESP_ERR_TIMEOUT: Refresh failed because of timeout
-     *      - ESP_FAIL: Refresh failed because some other error occurred
-     *
-     * @note:
-     *      After updating the LED colors in the memory, a following invocation of this API is needed to flush colors to strip.
-     */
-    esp_err_t (*refresh)(led_strip_t *strip, uint32_t timeout_ms);
-
-    /**
-     * @brief Clear LED strip (turn off all LEDs)
-     *
-     * @param strip: LED strip
-     * @param timeout_ms: timeout value for clearing task
-     *
-     * @return
-     *      - ESP_OK: Clear LEDs successfully
-     *      - ESP_ERR_TIMEOUT: Clear LEDs failed because of timeout
-     *      - ESP_FAIL: Clear LEDs failed because some other error occurred
-     */
-    esp_err_t (*clear)(led_strip_t *strip, uint32_t timeout_ms);
-
-    /**
-     * @brief Free LED strip resources
-     *
-     * @param strip: LED strip
-     *
-     * @return
-     *      - ESP_OK: Free resources successfully
-     *      - ESP_FAIL: Free resources failed because error occurred
-     */
-    esp_err_t (*del)(led_strip_t *strip);
-};
-
-/**
- * @brief LED Strip Configuration Type
- *
- */
-typedef struct
-{
-    uint32_t max_leds;   /*!< Maximum LEDs in a single strip */
-    led_strip_dev_t dev; /*!< LED strip device (e.g. RMT channel, PWM channel, etc) */
-} led_strip_config_t;
-
-typedef struct
-{
-    led_strip_t parent;
-    rmt_channel_t rmt_channel;
-    uint32_t strip_len;
-    uint8_t buffer[0];
-} ws2812_t;
 
 class LEDsService : public Thread, public Singleton<LEDsService>
 {
 public:
     LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
-    esp_err_t queueCommand(led_command_t command);
+    void LedComandSend(led_position_t led,  led_color_t color, float brightness, led_effect_t effect = LED_EFFECT_SET);
 
     void Run() override;
 
 private:
-    rmt_config_t config = RMT_DEFAULT_CONFIG_TX(GPIO_NUM_32, RMT_CHANNEL_0);
-    led_strip_config_t strip_config;
-    led_strip_t *strip;
+    rmt_channel_handle_t led_chan = NULL;
+    rmt_encoder_handle_t led_encoder = NULL;
+    rmt_transmit_config_t tx_config;
 
     LEDColor LEDs[NUM_LEDS];
 
     static led_command_t ledCommand;
+    uint8_t led_strip_pixels[NUM_LEDS * 3];
     static QueueHandle_t queueLedCommands;
+    esp_err_t queueCommand(led_command_t command);
 
     void led_effect_set();
-
-    // Driver para LED WS2812(B)
-    led_strip_t *led_strip_new_rmt_ws2812(const led_strip_config_t *config);
-
-    static uint32_t ws2812_t0h_ticks;
-    static uint32_t ws2812_t1h_ticks;
-    static uint32_t ws2812_t0l_ticks;
-    static uint32_t ws2812_t1l_ticks;
-
-    static esp_err_t ws2812_del(led_strip_t *strip);
-    static esp_err_t ws2812_clear(led_strip_t *strip, uint32_t timeout_ms);
-    static esp_err_t ws2812_refresh(led_strip_t *strip, uint32_t timeout_ms);
-    static esp_err_t ws2812_set_pixel(led_strip_t *strip, uint32_t index, uint32_t red, uint32_t green, uint32_t blue);
-    static void IRAM_ATTR ws2812_rmt_adapter(const void *src, rmt_item32_t *dest, size_t src_size,
-                                             size_t wanted_num, size_t *translated_size, size_t *item_num);
+    void led_color_set(led_color_t color, float brightness, led_position_t pos);
+    void led_RGB_get(led_color_t color, uint8_t * R, uint8_t * G, uint8_t * B);
+    void led_strip_init();
+    void led_strip_refresh();
 };
 
 #endif

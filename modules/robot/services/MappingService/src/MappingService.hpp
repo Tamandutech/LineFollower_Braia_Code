@@ -18,8 +18,6 @@ using namespace cpp_freertos;
 
 #include "esp_log.h"
 
-#define ManualMap
-
 class MappingService : public Thread, public Singleton<MappingService>
 {
 public:
@@ -66,7 +64,8 @@ private:
     int32_t EncLeft = 0, EncRight = 0;
     int32_t lastEncLeft = 0, lastEncRight = 0, lastEncMedia = 0;
 
-    led_command_t command;
+    led_color_t color;
+    led_position_t led;
 
 };
 

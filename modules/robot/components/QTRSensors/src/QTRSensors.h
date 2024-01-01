@@ -4,7 +4,7 @@
 
 #include <driver/gpio.h>
 #include <esp_heap_caps.h>
-#include <driver/adc.h>
+#include "esp_adc/adc_oneshot.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <mcp3008_driver.h>
@@ -108,7 +108,7 @@ public:
   /// Call this function to set up A-type sensors.
   void setTypeAnalog();
 
-  void setTypeAnalogESP();
+  void setTypeAnalogESP(adc_oneshot_unit_handle_t handle);
 
   /// \brief Specifies that the sensor type is analog.
   ///
@@ -150,7 +150,7 @@ public:
   /// `calibrationOff.initialized` to false).
   void setSensorPins(const uint8_t *pins, uint8_t sensorCount);
 
-  void setSensorPins(const adc1_channel_t *pins, uint8_t sensorCount);
+  void setSensorPins(const adc_channel_t *pins, uint8_t sensorCount);
 
   void setSensorPins(const uint8_t *pins, uint8_t sensorCount, gpio_num_t miso,
                      gpio_num_t mosi, gpio_num_t sck, gpio_num_t cs, int freq,
@@ -584,7 +584,8 @@ private:
 
   mcp3008::MCPDriver ls;
   mcp3008::MCPDriver::Config mcp_cfg;
-
+  adc_oneshot_unit_handle_t adc1_handle;
+  
   uint16_t emittersOnWithPin(uint8_t pin);
 
   // Handles the actual calibration, including (re)allocating and
@@ -599,7 +600,7 @@ private:
   QTRType _type = QTRType::Undefined;
 
   uint8_t *_sensorPins = nullptr;
-  adc1_channel_t *_sensorPinsESP = nullptr;
+  adc_channel_t *_sensorPinsESP = nullptr;
   uint8_t _sensorCount = 0;
 
   uint16_t _timeout = QTRRCDefaultTimeout; // only used for RC sensors

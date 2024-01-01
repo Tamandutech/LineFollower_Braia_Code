@@ -79,12 +79,7 @@ void CarStatusService::Run()
         if(status->robotState->getData() != CAR_STOPPED) break;
     } while (num != CAR_IN_LINE);
 
-    command.led[0] = LED_POSITION_FRONT;
-    command.led[1] = LED_POSITION_NONE;
-    command.effect = LED_EFFECT_SET;
-    command.brightness = 1;
-    command.color = LED_COLOR_RED;
-    LEDsService::getInstance()->queueCommand(command);
+    LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_RED, 1);
     vTaskDelay(1500 / portTICK_PERIOD_MS);
     // Deletar o mapeamento caso o botão de boot seja mantido pressionado e exista mapeamento na flash
     if(!gpio_get_level(GPIO_NUM_0) && latMarks->marks->getSize() > 0 && !status->TunningMode->getData() && status->HardDeleteMap->getData())
@@ -92,8 +87,7 @@ void CarStatusService::Run()
         DataStorage::getInstance()->delete_data("sLatMarks.marks");
         initialRobotState = CAR_MAPPING;
         ESP_LOGD(GetName().c_str(), "Mapeamento Deletado");
-        command.color = LED_COLOR_YELLOW;
-        LEDsService::getInstance()->queueCommand(command);
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_YELLOW, 1);
     }
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 1500ms");
     vTaskDelay(1500 / portTICK_PERIOD_MS);
@@ -101,8 +95,7 @@ void CarStatusService::Run()
     if (initialRobotState == CAR_MAPPING && !status->TunningMode->getData())
     {
         ESP_LOGD(GetName().c_str(), "Mapeamento inexistente, iniciando robô em modo mapemaneto.");
-        command.color = LED_COLOR_YELLOW;
-        LEDsService::getInstance()->queueCommand(command);
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_YELLOW, 1);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         // Começa mapeamento
         status->RealTrackStatus->setData(DEFAULT_TRACK);
@@ -128,12 +121,7 @@ void CarStatusService::Run()
         latMarks->marks->clearAllData();
         numMarks = 0;
         mediaEncFinal = 0;
-        command.led[0] = LED_POSITION_FRONT;
-        command.led[1] = LED_POSITION_NONE;
-        command.color = LED_COLOR_WHITE;
-        command.effect = LED_EFFECT_SET;
-        command.brightness = 0.5;
-        LEDsService::getInstance()->queueCommand(command);        
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_WHITE, 0.5);       
     }
     status->FirstMark->setData(false);
     status->robotState->setData(initialRobotState);
@@ -164,94 +152,79 @@ void CarStatusService::Run()
             if (LineSegment(lastTrack) && !lastTransition && lastState == CAR_ENC_READING)
             {
                 ESP_LOGD(GetName().c_str(), "Alterando os leds para modo inLine.");
-                command.led[0] = LED_POSITION_FRONT;
-                command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_GREEN;
-                command.effect = LED_EFFECT_SET;
+                led_color_t color = LED_COLOR_GREEN;
+                float brightness = 1;
                 switch (TrackLen)
                 {
                     case SHORT_LINE:
-                        command.brightness = 0.05;
+                        brightness = 0.05;
                         break;
                     case MEDIUM_LINE:
-                        command.brightness = 0.3;
+                        brightness = 0.3;
                         break;
                     case LONG_LINE:
-                        command.brightness = 1;
+                        brightness = 1;
                         break;
                     case XLONG_LINE:
-                        command.brightness = 1;
+                        brightness = 1;
                         break;
                     case SPECIAL_TRACK:
-                        command.color = LED_COLOR_PURPLE;
-                        command.brightness = 0.05;
+                        color = LED_COLOR_PURPLE;
+                        brightness = 0.05;
                         break;
                     default:
-                        command.color = LED_COLOR_WHITE;
-                        command.brightness = 1;
+                        color = LED_COLOR_WHITE;
+                        brightness = 1;
                         break;
                 }
-                LEDsService::getInstance()->queueCommand(command);
+                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, brightness);
             }
             else if(!LineSegment(lastTrack) && !lastTransition && lastState == CAR_ENC_READING)
             {
                 ESP_LOGD(GetName().c_str(), "Alterando os leds para modo inCurve.");
-                command.led[0] = LED_POSITION_FRONT;
-                command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_RED;
-                command.effect = LED_EFFECT_SET;
+                led_color_t color = LED_COLOR_RED;
+                float brightness = 1;
                 switch (TrackLen)
                 {
                     case XLONG_CURVE:
-                        command.brightness = 1;
+                        brightness = 1;
                         break;
                     case SHORT_CURVE:
-                        command.brightness = 0.05;
+                        brightness = 0.05;
                         break;
                     case MEDIUM_CURVE:
-                        command.brightness = 0.3;
+                        brightness = 0.3;
                         break;
                     case LONG_CURVE:
-                        command.brightness = 1;
+                        brightness = 1;
                         break;
                     case ZIGZAG_TRACK:
-                        command.color = LED_COLOR_PURPLE;
-                        command.brightness = 1;
+                        color = LED_COLOR_PURPLE;
+                        brightness = 1;
                         break;
                     case SPECIAL_TRACK:
-                        command.color = LED_COLOR_PURPLE;
-                        command.brightness = 0.05;
+                        color = LED_COLOR_PURPLE;
+                        brightness = 0.05;
                         break;
                     default:
-                        command.color = LED_COLOR_WHITE;
-                        command.brightness = 1;
+                        color = LED_COLOR_WHITE;
+                        brightness = 1;
                         break;
                 }
-                LEDsService::getInstance()->queueCommand(command);
+                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, brightness);
             }
             else if(lastTransition && lastState == CAR_ENC_READING)
             {
-                command.led[0] = LED_POSITION_FRONT;
-                command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_BLUE;
-                command.effect = LED_EFFECT_SET;
-                command.brightness = 0.5;
-                LEDsService::getInstance()->queueCommand(command);
+                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLUE, 0.5);
             }
             else if(lastState == CAR_TUNING)
             {
-                command.led[0] = LED_POSITION_FRONT;
-                command.led[1] = LED_POSITION_NONE;
-                command.color = LED_COLOR_WHITE;
-                command.effect = LED_EFFECT_SET;
-                command.brightness = 0.5;
-                LEDsService::getInstance()->queueCommand(command);  
+                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_WHITE, 0.5);  
             }
             else if(lastState == CAR_MAPPING)
             {
                 ESP_LOGD(GetName().c_str(), "Alterando velocidades para modo mapeamento.");
-                command.color = LED_COLOR_YELLOW;
-                LEDsService::getInstance()->queueCommand(command);
+                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_YELLOW, 0.5); 
             }
         }
 
@@ -260,10 +233,10 @@ void CarStatusService::Run()
          if (iloop >= 30)
          {
             ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
-            ESP_LOGD(GetName().c_str(), "initialEncMedia: %d", initialmediaEnc);
-            ESP_LOGD(GetName().c_str(), "EncMedia: %d", mediaEncActual);
-            ESP_LOGD(GetName().c_str(), "EncMediaoffset: %d", mediaEncActual-initialmediaEnc);
-            ESP_LOGD(GetName().c_str(), "mediaEncFinal: %d", mediaEncFinal);
+            ESP_LOGD(GetName().c_str(), "initialEncMedia: %ld", initialmediaEnc);
+            ESP_LOGD(GetName().c_str(), "EncMedia: %ld", mediaEncActual);
+            ESP_LOGD(GetName().c_str(), "EncMediaoffset: %ld", mediaEncActual-initialmediaEnc);
+            ESP_LOGD(GetName().c_str(), "mediaEncFinal: %ld", mediaEncFinal);
             ESP_LOGD(GetName().c_str(), "Speed: %.2f", speed->linearSpeed->getData());
             iloop = 0;
          }
@@ -273,12 +246,7 @@ void CarStatusService::Run()
             robot->getStatus()->robotState->setData(CAR_STOPPED);
             vTaskDelay(0);
             DataManager::getInstance()->saveAllParamDataChanged();
-            command.led[0] = LED_POSITION_FRONT;
-            command.led[1] = LED_POSITION_NONE;
-            command.color = LED_COLOR_BLACK;
-            command.effect = LED_EFFECT_SET;
-            command.brightness = 1;
-            LEDsService::getInstance()->queueCommand(command);
+            LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
         }
 
         if (actualCarState == CAR_ENC_READING && firstmark && (!status->TunningMode->getData() || !started_in_Tuning))
@@ -301,12 +269,7 @@ void CarStatusService::Run()
 
                     robot->getStatus()->robotState->setData(CAR_STOPPED);
                     DataManager::getInstance()->saveAllParamDataChanged();
-                    command.led[0] = LED_POSITION_FRONT;
-                    command.led[1] = LED_POSITION_NONE;
-                    command.color = LED_COLOR_BLACK;
-                    command.effect = LED_EFFECT_SET;
-                    command.brightness = 1;
-                    LEDsService::getInstance()->queueCommand(command);
+                    LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
                 }
             }
             if ((mediaEncActual - initialmediaEnc) < mediaEncFinal)
