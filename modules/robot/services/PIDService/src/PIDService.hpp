@@ -24,6 +24,10 @@ using namespace cpp_freertos;
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
+#define ARRAY_TARGET_POSITION 3500
+#define MAX_SPEED 100
+#define MIN_SPEED -100
+
 // #define GRAPH_DATA
 #include "esp_log.h"
 
@@ -55,20 +59,12 @@ private:
     float speedTarget = 0;
 
     // Variáveis para cálculo do pid
-    double Kp = 0, Kd = 0, Ki = 0;
-    float SensorArrayPosition = 0; // posição do robô na linha;
     float lastSensorArrayPosition = 0;
-    float P = 0, I = 0, D = 0;
-    float Pid = 0;
 
     int8_t speedBase = 0;
     int8_t speedMin = 0;
     int8_t speedMax = 0;
 
-    float VelRot = 0;
-    float VelTrans = 0;
-
-    float erro = 0;
     float soma_erro = 0;
 
     bool mapState = false;
@@ -82,8 +78,8 @@ private:
     static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 
     // Protótipos de função
-    float calculatePID();
-    void updatePID(TrackSegment segment, CarState carState);
+    float calculatePID(PID_Consts pidConsts, float erro, float somaErro, float input, float *lastInput);
+    void resetGlobalVariables();
     float calculateSpeed(float acceleration, float speedValue);
     void storingSpeedValue(float newSpeed);
 };

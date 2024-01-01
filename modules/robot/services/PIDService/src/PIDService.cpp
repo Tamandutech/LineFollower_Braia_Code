@@ -12,10 +12,6 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
-    updatePID(DEFAULT_TRACK, CAR_STOPPED);
-
-    speedTarget = 0;
-
     // Inicializa o semáforo
     SemaphoreTimer = xSemaphoreCreateBinary();
 
@@ -42,115 +38,96 @@ void PIDService::Run()
         // Trava a task até o semáfaro ser liberado com base no timer
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
         estado = (CarState)status->robotState->getData();
-
-        RealTracklen = (TrackSegment)status->RealTrackStatus->getData();
-        mapState = status->robotIsMapping->getData();
-
-        SensorsService::getInstance()->getArraySensors();
-
-        speedBase = speed->base->getData();
-        speedMin = speed->min->getData();
-        speedMax = speed->max->getData();
-        if (!status->FirstMark->getData() && !status->TunningMode->getData())
+        if(estado == CAR_STOPPED)
         {
-            accel = speed->initialaccelration->getData();
-            speedTarget = speed->initialspeed->getData();
-        }
-        else if (status->TunningMode->getData())
-        {
-            accel = speed->initialaccelration->getData();
+            resetGlobalVariables();
+            motors.motorsStop();
         }
         else
         {
-            accel = speed->accelration->getData();
-        }
-        desaccel = speed->desaccelration->getData();
+            RealTracklen = (TrackSegment)status->RealTrackStatus->getData();
+            mapState = status->robotIsMapping->getData();
 
-        // Reseta o PID se o carrinho parar
-        if (estado == CAR_STOPPED)
-        {
-            P = 0;
-            D = 0;
-            soma_erro = 0;
-            speedTarget = 0;
-            speed->CalculatedSpeed->setData(0);
-        }
+            if (!status->FirstMark->getData() && !status->TunningMode->getData())
+            {
+                accel = speed->initialaccelration->getData();
+                speedTarget = speed->initialspeed->getData();
+            }
+            else if (status->TunningMode->getData())
+            {
+                accel = speed->initialaccelration->getData();
+            }
+            else
+            {
+                accel = speed->accelration->getData();
+            }
+            desaccel = speed->desaccelration->getData();
 
-        // Variaveis de calculo para os pids do robô
-        if (estado != CAR_STOPPED)
-            updatePID(RealTracklen, estado);
+            // Velocidade do carrinho
+            float VelRot = (speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData()) / 2.0;   // Rotacional
+            float VelTrans = (speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData()) / 2.0; // Translacional
+            speed->VelTrans->setData(VelTrans);
+            speed->VelRot->setData(VelRot);
 
-        // Velocidade do carrinho
-        VelRot = speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData();   // Rotacional
-        VelTrans = speed->RPMRight_inst->getData() + speed->RPMLeft_inst->getData(); // Translacional
-        speed->VelTrans->setData(VelTrans);
-        speed->VelRot->setData(VelRot);
+            // Cálculo do erro
+            float SensorArrayPosition = SensorsService::getInstance()->getArraySensors(); // posição do robô
+            float erro = ARRAY_TARGET_POSITION - SensorArrayPosition;
+            soma_erro += erro;
+            DataPID->setpoint->setData(ARRAY_TARGET_POSITION);
+            DataPID->erro->setData(erro);
+            DataPID->erroquad->setData(soma_erro*soma_erro);
 
-        SensorArrayPosition = robot->getsArray()->getLine(); // posição do robô
-        erro = 3500 - SensorArrayPosition;
-        DataPID->setpoint->setData(3500);
-        DataPID->erro->setData(erro);
-        soma_erro += (erro / 1000.0) * (erro / 1000.0);
-        DataPID->erroquad->setData(soma_erro);
+            // Cálculo do PID para posicionar o robô  na linha
+            PID_Consts pidConsts = getTrackSegmentPID(RealTracklen, estado, DataPID);
+            float pid = calculatePID(pidConsts, erro, soma_erro, SensorArrayPosition, &lastSensorArrayPosition);
+            
+            DataPID->output->setData(pid);
 
-        // Cálculo do PID para posicionar o robô  na linha
-        float pid = calculatePID();
-        
-        DataPID->output->setData(pid);
-        DataPID->P_output->setData(P);
-        DataPID->D_output->setData(D);
+            // Calculo de velocidade do motor
+            speed->right->setData(
+                constrain(speed->linearSpeed->getData() + pid, MIN_SPEED, MAX_SPEED));
 
-        // Armazenamento dos parametros de controle atuais
-        lastSensorArrayPosition = SensorArrayPosition;
+            speed->left->setData(
+                constrain(speed->linearSpeed->getData() - pid, MIN_SPEED, MAX_SPEED));
 
-        // Calculo de velocidade do motor
-        speed->right->setData(
-            constrain(speed->CalculatedSpeed->getData() + DataPID->output->getData(), speedMin, speedMax));
+            ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
 
-        speed->left->setData(
-            constrain(speed->CalculatedSpeed->getData() - DataPID->output->getData(), speedMin, speedMax));
+            // Altera a velocidade linear do carrinho
+            if (!mapState && status->FirstMark->getData())
+            {
+                TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
+                speedTarget = getTrackSegmentSpeed(tracksegment, speed);
+            }
 
-        ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
+            else if (mapState)
+            {
+                speedTarget = speed->SetPointMap->getData();
+            }
+            else if (estado == CAR_TUNING)
+            {
+                speedTarget = speed->Tunning_speed->getData();
+            }
 
-        // Altera a velocidade linear do carrinho
-        if (!mapState && status->FirstMark->getData())
-        {
-            TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
-            speedTarget = getTrackSegmentSpeed(tracksegment, speed);
-        }
-
-        else if (mapState && estado != CAR_STOPPED)
-        {
-            speedTarget = speed->SetPointMap->getData();
-        }
-        else if (estado == CAR_TUNING)
-        {
-            speedTarget = speed->Tunning_speed->getData();
-        }
-
-        // Rampeia a velocidade translacional
-
-        if (estado != CAR_STOPPED)
-        {
-            float speedValue = speed->CalculatedSpeed->getData();
+            // Rampeia a velocidade linear do robô
+            float speedValue = speed->linearSpeed->getData();
             float newSpeed = calculateSpeed(accel, speedValue);
 
             if (speedValue >= speedTarget)
                 newSpeed = calculateSpeed(-desaccel, speedValue);
 
             storingSpeedValue(newSpeed);
-        }
 
-        if (iloop > 200)
-        {
-            ESP_LOGD(GetName().c_str(), "dataPID: %.2f", DataPID->output->getData());
-            ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", Kd, Kp);
-            ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
-            ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
-            ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
-            iloop = 0;
+            if (iloop > 200)
+            {
+                ESP_LOGD(GetName().c_str(), "dataPID: %.2f", DataPID->output->getData());
+                ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", pidConsts.KD, pidConsts.KP);
+                ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
+                ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
+                ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
+                iloop = 0;
+            }
+            iloop++;
         }
-        iloop++;
     }
 }
 
@@ -162,37 +139,29 @@ bool IRAM_ATTR PIDService::timer_group_isr_callback(void *args)
     return (high_task_awoken == pdTRUE);
 }
 
-void PIDService::updatePID(TrackSegment segment, CarState carState)
+void PIDService::resetGlobalVariables()
 {
-    PID_Consts pid = getTrackSegmentPID(segment, carState, DataPID);
-
-    Kp = pid.KP;
-    Kd = pid.KD / TaskDelaySeconds;
-    Ki = pid.KI;
+    soma_erro = 0;
+    speedTarget = 0;
+    speed->linearSpeed->setData(0);
 }
 
-float PIDService::calculatePID()
+float PIDService::calculatePID(PID_Consts pidConsts, float erro, float somaErro, float input, float *lastInput)
 {
-    P = Kp * erro;
-    D = Kd * (lastSensorArrayPosition - SensorArrayPosition);
-    I += Ki * erro;
+    float P = pidConsts.KP * erro;
+    float I = pidConsts.KI * somaErro * TaskDelaySeconds;
+    I = constrain(I, MIN_SPEED, MAX_SPEED);
+    float D = pidConsts.KD * (*lastInput - input) / TaskDelaySeconds;
+
+    *lastInput = input;
     
-    return P + D + I;
+    return P + I + D;
 }
 
 void PIDService::ControlMotors(float left, float right)
 {
-    CarState state = (CarState)status->robotState->getData();
-
-    if (state != CAR_STOPPED)
-    {
-        motors.motorSpeed(0, left);  // velocidade do motor 0
-        motors.motorSpeed(1, right); // velocidade do motor 1
-    }
-    else
-    {
-        motors.motorsStop();
-    }
+    motors.motorSpeed(0, left);  // velocidade do motor 0
+    motors.motorSpeed(1, right); // velocidade do motor 1
 }
 
 float PIDService::calculateSpeed(float acceleration, float speedValue)
@@ -203,5 +172,5 @@ float PIDService::calculateSpeed(float acceleration, float speedValue)
 
 void PIDService::storingSpeedValue(float newSpeed)
 {
-    speed->CalculatedSpeed->setData(newSpeed);
+    speed->linearSpeed->setData(newSpeed);
 }
