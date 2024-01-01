@@ -30,6 +30,24 @@ float getTrackSegmentSpeed(TrackSegment trackSegment, dataSpeed *speed)
     return speed->Default_speed->getData();
 }
 
+float getTargetSpeed(TrackSegment trackSegment, CarState estado, dataSpeed *speed)
+{
+    float speedTarget = speed->Default_speed->getData();
+    if (estado == CAR_ENC_READING_BEFORE_FIRSTMARK)
+    {
+        speedTarget = speed->initialspeed->getData();
+    }
+    else if (estado == CAR_ENC_READING)
+    {
+        speedTarget = getTrackSegmentSpeed(trackSegment, speed);
+    }
+    else if (estado == CAR_TUNING)
+    {
+        speedTarget = speed->Tunning_speed->getData();
+    }
+    return speedTarget;
+}
+
 bool existTrackSegmentInList(std::list<TrackSegment> list, TrackSegment trackSegment) {
     return (std::find(list.begin(), list.end(), trackSegment) != list.end());
 }

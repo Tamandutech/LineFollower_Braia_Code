@@ -25,6 +25,7 @@ enum TrackSegment
 };
 
 float getTrackSegmentSpeed(TrackSegment trackSegment, dataSpeed *speed);
+float getTargetSpeed(TrackSegment trackSegment, CarState estado, dataSpeed *speed);
 std::map<TrackSegment, float> getSpeedValuesFromDashboard(dataSpeed *speed);
 bool existTrackSegmentInList(std::list<TrackSegment> list, TrackSegment trackSegment);
 bool LineSegment(TrackSegment trackSegment);

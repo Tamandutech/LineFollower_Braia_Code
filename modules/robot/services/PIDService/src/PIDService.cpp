@@ -15,31 +15,9 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     // Inicializa o semáforo
     SemaphoreTimer = xSemaphoreCreateBinary();
 
-    // Configura o timer
-    gptimer_handle_t gptimer = NULL;
-    gptimer_config_t timer_config = {
-        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
-        .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = TIMER_FREQ, // 1MHz, 1 tick=1us
-    };
-    
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+    //Inicializa o timer responsável por controlar a periodicidade da Task
+    TimerInit(TaskDelaySeconds);
 
-    gptimer_alarm_config_t alarm_config = {
-        .alarm_count = (uint64_t) (TaskDelaySeconds * TIMER_FREQ), // define até quando o timer deve contar
-        .reload_count = 0, // counter will reload with 0 on alarm event
-    };
-    alarm_config.flags.auto_reload_on_alarm = true; // habilita auto-reload
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
-    
-    gptimer_event_callbacks_t cbs = {
-        .on_alarm = timer_group_isr_callback, // register user callback
-    };
-
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &cbs, NULL));
-    ESP_ERROR_CHECK(gptimer_set_raw_count(gptimer, 0));
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
-    ESP_ERROR_CHECK(gptimer_start(gptimer));
 }
 
 void PIDService::Run()
@@ -57,21 +35,6 @@ void PIDService::Run()
         else
         {
             RealTracklen = (TrackSegment)status->RealTrackStatus->getData();
-
-            if (!status->FirstMark->getData() && !status->TunningMode->getData())
-            {
-                accel = speed->initialaccelration->getData();
-                speedTarget = speed->initialspeed->getData();
-            }
-            else if (status->TunningMode->getData())
-            {
-                accel = speed->initialaccelration->getData();
-            }
-            else
-            {
-                accel = speed->accelration->getData();
-            }
-            desaccel = speed->desaccelration->getData();
 
             // Velocidade do carrinho
             float VelRot = (speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData()) / 2.0;   // Rotacional
@@ -100,41 +63,27 @@ void PIDService::Run()
             speed->left->setData(
                 constrain(speed->linearSpeed->getData() - pid, MIN_SPEED, MAX_SPEED));
 
-            bool OpenLoopControl = status->OpenLoopControl->getData();
+            bool openloopControl = status->OpenLoopControl->getData();
             uint16_t OpenLoopThreshold = status->OpenLoopTreshold->getData();
-            if(abs(erro) >= OpenLoopThreshold && OpenLoopControl)
+            if(abs(erro) >= OpenLoopThreshold && openloopControl)
             {
                 int8_t min = speed->OpenLoopMinSpeed->getData();
                 int8_t max = speed->OpenLoopMaxSpeed->getData();
-                if(erro >= 0)
-                {
-                    speed->right->setData(constrain(max, MIN_SPEED, MAX_SPEED));
-                    speed->left->setData(constrain(min, MIN_SPEED, MAX_SPEED));
-                
-                }
-                else
-                {
-                    speed->right->setData(constrain(min, MIN_SPEED, MAX_SPEED));
-                    speed->left->setData(constrain(max, MIN_SPEED, MAX_SPEED));
-                }
+                OpenLoopControl(erro, max, min);         
             }
             ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
 
-            // Altera a velocidade linear do carrinho
-            if (estado == CAR_ENC_READING && status->FirstMark->getData())
+            // Define a aceleração do robô
+            accel = speed->accelration->getData();
+            if (estado == CAR_ENC_READING_BEFORE_FIRSTMARK)
             {
-                TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
-                speedTarget = getTrackSegmentSpeed(tracksegment, speed);
+                accel = speed->initialaccelration->getData();
             }
+            desaccel = speed->desaccelration->getData();
 
-            else if (estado == CAR_MAPPING)
-            {
-                speedTarget = speed->SetPointMap->getData();
-            }
-            else if (estado == CAR_TUNING)
-            {
-                speedTarget = speed->Tunning_speed->getData();
-            }
+            // Altera a velocidade linear do carrinho
+            TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
+            speedTarget = getTargetSpeed(tracksegment, estado, speed);
 
             // Rampeia a velocidade linear do robô
             float speedValue = speed->linearSpeed->getData();
@@ -167,11 +116,51 @@ bool IRAM_ATTR PIDService::timer_group_isr_callback(gptimer_handle_t timer, cons
     return (high_task_awoken == pdTRUE);
 }
 
+void PIDService::TimerInit(float periodSeconds)
+{
+    // Configura o timer
+    gptimer_handle_t gptimer = NULL;
+    gptimer_config_t timer_config = {
+        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+        .direction = GPTIMER_COUNT_UP,
+        .resolution_hz = TIMER_FREQ, // 1MHz, 1 tick=1us
+    };
+    
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+
+    gptimer_alarm_config_t alarm_config = {
+        .alarm_count = (uint64_t) (periodSeconds * TIMER_FREQ), // define até quando o timer deve contar
+        .reload_count = 0, // Quando a contagem alcançar o valor definido o contador será zerado
+    };
+    alarm_config.flags.auto_reload_on_alarm = true; // habilita auto-reload
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
+    
+    gptimer_event_callbacks_t cbs = {
+        .on_alarm = timer_group_isr_callback, // registra user callback
+    };
+
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &cbs, NULL));
+    ESP_ERROR_CHECK(gptimer_set_raw_count(gptimer, 0));
+    ESP_ERROR_CHECK(gptimer_enable(gptimer));
+    ESP_ERROR_CHECK(gptimer_start(gptimer));
+}
 void PIDService::resetGlobalVariables()
 {
     soma_erro = 0;
     speedTarget = 0;
     speed->linearSpeed->setData(0);
+}
+
+void PIDService::OpenLoopControl(float erro, int max, int min)
+{
+    
+    speed->right->setData(constrain(max, MIN_SPEED, MAX_SPEED));
+    speed->left->setData(constrain(min, MIN_SPEED, MAX_SPEED));
+    if(erro < 0)
+    {
+        speed->right->setData(constrain(min, MIN_SPEED, MAX_SPEED));
+        speed->left->setData(constrain(max, MIN_SPEED, MAX_SPEED));
+    }
 }
 
 float PIDService::calculatePID(PID_Consts pidConsts, float erro, float somaErro, float input, float *lastInput)
@@ -188,8 +177,8 @@ float PIDService::calculatePID(PID_Consts pidConsts, float erro, float somaErro,
 
 void PIDService::ControlMotors(float left, float right)
 {
-    motors.motorSpeed(0, left);  // velocidade do motor 0
-    motors.motorSpeed(1, right); // velocidade do motor 1
+    motors.motorSpeed(0, left);
+    motors.motorSpeed(1, right); 
 }
 
 float PIDService::calculateSpeed(float acceleration, float speedValue)

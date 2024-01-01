@@ -79,7 +79,9 @@ private:
     static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 
     // Protótipos de função
+    void TimerInit(float periodSeconds);
     float calculatePID(PID_Consts pidConsts, float erro, float somaErro, float input, float *lastInput);
+    void OpenLoopControl(float erro, int max, int min);
     void resetGlobalVariables();
     float calculateSpeed(float acceleration, float speedValue);
     void storingSpeedValue(float newSpeed);
