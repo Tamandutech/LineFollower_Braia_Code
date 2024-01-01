@@ -39,6 +39,12 @@ dataSpeed::dataSpeed(std::string name)
     RobotDiameter = new DataAbstract<uint16_t>("RobotDiameter", name, 112); //mm
     dataManager->registerParamData(RobotDiameter);
 
+
+    OpenLoopMaxSpeed = new DataAbstract<int8_t>("OpenLoopMaxSpeed", name, 20);
+    dataManager->registerParamData(OpenLoopMaxSpeed);
+    OpenLoopMinSpeed = new DataAbstract<int8_t>("OpenLoopMinSpeed", name, 0);
+    dataManager->registerParamData(OpenLoopMinSpeed);
+    
     right = new DataAbstract<float>("right", name, 0);
     dataManager->registerRuntimeData(right);
     left = new DataAbstract<float>("left", name, 0);

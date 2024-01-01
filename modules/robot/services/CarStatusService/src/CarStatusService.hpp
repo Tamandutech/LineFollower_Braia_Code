@@ -36,14 +36,16 @@ private:
     dataSLatMarks *latMarks;
     dataPID *PidTrans;
 
-    CarState actualCarState;
+    CarState actualCarState, initialRobotState;
 
     TrackSegment TrackLen = SHORT_CURVE;
 
     MappingService *mappingService;
 
     int numMarks = 0; // Número total de marcações laterais na pista
-
+    
+    int iloop = 0;
+    
     bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
     bool lastTransition = false;
 

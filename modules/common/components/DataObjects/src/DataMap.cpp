@@ -61,7 +61,7 @@ void DataMap::newData(std::string mapData)
         mapDataVector.push_back(s);
     }
 
-    if (mapDataVector.size() < 7)
+    if (mapDataVector.size() < 4)
     {
         ESP_LOGE(this->name.c_str(), "Dados inválidos. Quantidade de dados: %d", mapDataVector.size());
         return;
@@ -71,11 +71,11 @@ void DataMap::newData(std::string mapData)
     // setar dados na struct
     mapDataTemp.MapTime = std::stoi(mapDataVector[1]);
     mapDataTemp.MapEncMedia = std::stoi(mapDataVector[2]);
-    mapDataTemp.MapEncLeft = std::stoi(mapDataVector[3]);
-    mapDataTemp.MapEncRight = std::stoi(mapDataVector[4]);
-    mapDataTemp.MapStatus = std::stoi(mapDataVector[5]);
-    mapDataTemp.MapTrackStatus = std::stoi(mapDataVector[6]);
-    mapDataTemp.MapOffset = std::stoi(mapDataVector[7]);
+    //mapDataTemp.MapEncLeft = std::stoi(mapDataVector[3]);
+    //mapDataTemp.MapEncRight = std::stoi(mapDataVector[4]);
+    //mapDataTemp.MapStatus = std::stoi(mapDataVector[5]);
+    mapDataTemp.MapTrackStatus = std::stoi(mapDataVector[3]);
+    mapDataTemp.MapOffset = std::stoi(mapDataVector[4]);
 
     this->newData(mapDataTemp);
 }
@@ -103,9 +103,8 @@ std::string DataMap::getDataString(std::string ctrl)
 
     std::string line;
     line = std::to_string(posicao) + "," + std::to_string(itList->MapTime) + "," + 
-    std::to_string(itList->MapEncMedia) + "," + std::to_string(itList->MapEncLeft) + "," + 
-    std::to_string(itList->MapEncRight) + "," + std::to_string(itList->MapStatus) + "," + 
-    std::to_string(itList->MapTrackStatus) + "," + std::to_string(itList->MapOffset);
+    std::to_string(itList->MapEncMedia) + "," + std::to_string(itList->MapTrackStatus) + "," 
+    + std::to_string(itList->MapOffset);
 
     ESP_LOGD(this->name.c_str(), "Dados: %s", line.c_str());
 
@@ -126,10 +125,10 @@ void DataMap::setData(uint8_t posicao, MapData data)
     auto itList = this->mapDataList.begin();
     std::advance(itList, posicao);
 
-    itList->MapEncLeft = data.MapEncLeft;
-    itList->MapEncRight = data.MapEncRight;
+    //itList->MapEncLeft = data.MapEncLeft;
+    //itList->MapEncRight = data.MapEncRight;
     itList->MapEncMedia = data.MapEncMedia;
-    itList->MapStatus = data.MapStatus;
+    //itList->MapStatus = data.MapStatus;
     itList->MapTime = data.MapTime;
     itList->MapTrackStatus = data.MapTrackStatus;
     itList->MapOffset = data.MapOffset;
@@ -152,7 +151,7 @@ void DataMap::setData(std::string data)
         dataList.push_back(s);
     }
 
-    if (dataList.size() < 8)
+    if (dataList.size() < 5)
     {
         ESP_LOGE(this->name.c_str(), "Erro ao setar dados do tipo DataMap. Entrada inválida.");
         return;
@@ -163,11 +162,11 @@ void DataMap::setData(std::string data)
     // seta o valor do dado na lista
     tempMapData.MapTime = stoi(dataList[1]);
     tempMapData.MapEncMedia = stoi(dataList[2]);
-    tempMapData.MapEncLeft = stoi(dataList[3]);
-    tempMapData.MapEncRight = stoi(dataList[4]);
-    tempMapData.MapStatus = stoi(dataList[5]);
-    tempMapData.MapTrackStatus = stoi(dataList[6]);
-    tempMapData.MapOffset = stoi(dataList[7]);
+    //tempMapData.MapEncLeft = stoi(dataList[3]);
+    //tempMapData.MapEncRight = stoi(dataList[4]);
+    //tempMapData.MapStatus = stoi(dataList[5]);
+    tempMapData.MapTrackStatus = stoi(dataList[3]);
+    tempMapData.MapOffset = stoi(dataList[4]);
 
     setData(stoi(dataList[0]), tempMapData);
 }
@@ -201,7 +200,7 @@ void DataMap::saveData()
     {
         memcpy(dataSave + i, &mapData, sizeof(MapData));
         i += sizeof(MapData);
-        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia, mapData.MapEncLeft, mapData.MapEncRight, mapData.MapStatus,  mapData.MapTrackStatus, mapData.MapOffset);
+        ESP_LOGD(this->name.c_str(), "Serializando mapData: %d, %d, %d, %d", mapData.MapTime, mapData.MapEncMedia,  mapData.MapTrackStatus, mapData.MapOffset);
     }
     dataStorage->save_data(this->name, dataSave, sizeMap, "ab");
     free(dataSave);
@@ -244,7 +243,7 @@ void DataMap::loadData()
             MapData tempMapData;
             memcpy(&tempMapData, data + i, sizeof(MapData));
 
-            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapEncLeft, tempMapData.MapEncRight, tempMapData.MapStatus, tempMapData.MapTrackStatus, tempMapData.MapOffset);
+            ESP_LOGD(this->name.c_str(), "Deserializando mapData: %d, %d, %d, %d", tempMapData.MapTime, tempMapData.MapEncMedia, tempMapData.MapTrackStatus, tempMapData.MapOffset);
 
             mapDataListMutex.lock();
             this->mapDataList.push_back(tempMapData);

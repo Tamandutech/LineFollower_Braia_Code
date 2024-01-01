@@ -24,7 +24,6 @@ struct PID_Consts
     double KD;
 };
 
-bool existTrackSegmentInList(std::list<TrackSegment> list, TrackSegment trackSegment);
 TypePID getTypePID(TrackSegment trackSegment, CarState status);
 PID_Consts getTrackSegmentPID(TrackSegment TrackSegment, CarState status, dataPID *pid);
 std::map<TypePID, PID_Consts> getPIDValueFromDashboard(dataPID *pid);

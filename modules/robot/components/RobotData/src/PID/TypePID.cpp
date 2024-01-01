@@ -19,10 +19,6 @@ PID_Consts getTrackSegmentPID(TrackSegment TrackSegment, CarState status, dataPI
     return TrackSegmentPID[type];
 }
 
-bool existTrackSegmentInList(std::list<TrackSegment> list, TrackSegment trackSegment) {
-    return (std::find(list.begin(), list.end(), trackSegment) != list.end());
-}
-
 TypePID getTypePID(TrackSegment trackSegment, CarState status)
 {
 

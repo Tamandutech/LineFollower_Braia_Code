@@ -35,7 +35,8 @@ void PIDService::Run()
 {
     for (;;)
     {
-        // Trava a task até o semáfaro ser liberado com base no timer
+        // Trava a task até o semáfaro ser liberado com base no 
+        
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
         estado = (CarState)status->robotState->getData();
         if(estado == CAR_STOPPED)
@@ -46,7 +47,6 @@ void PIDService::Run()
         else
         {
             RealTracklen = (TrackSegment)status->RealTrackStatus->getData();
-            mapState = status->robotIsMapping->getData();
 
             if (!status->FirstMark->getData() && !status->TunningMode->getData())
             {
@@ -90,16 +90,34 @@ void PIDService::Run()
             speed->left->setData(
                 constrain(speed->linearSpeed->getData() - pid, MIN_SPEED, MAX_SPEED));
 
+            bool OpenLoopControl = status->OpenLoopControl->getData();
+            uint16_t OpenLoopThreshold = status->OpenLoopTreshold->getData();
+            if(abs(erro) >= OpenLoopThreshold && OpenLoopControl)
+            {
+                int8_t min = speed->OpenLoopMinSpeed->getData();
+                int8_t max = speed->OpenLoopMaxSpeed->getData();
+                if(erro >= 0)
+                {
+                    speed->right->setData(constrain(max, MIN_SPEED, MAX_SPEED));
+                    speed->left->setData(constrain(min, MIN_SPEED, MAX_SPEED));
+                
+                }
+                else
+                {
+                    speed->right->setData(constrain(min, MIN_SPEED, MAX_SPEED));
+                    speed->left->setData(constrain(max, MIN_SPEED, MAX_SPEED));
+                }
+            }
             ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
 
             // Altera a velocidade linear do carrinho
-            if (!mapState && status->FirstMark->getData())
+            if (estado == CAR_ENC_READING && status->FirstMark->getData())
             {
                 TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
                 speedTarget = getTrackSegmentSpeed(tracksegment, speed);
             }
 
-            else if (mapState)
+            else if (estado == CAR_MAPPING)
             {
                 speedTarget = speed->SetPointMap->getData();
             }

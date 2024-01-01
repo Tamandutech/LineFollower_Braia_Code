@@ -29,3 +29,13 @@ float getTrackSegmentSpeed(TrackSegment trackSegment, dataSpeed *speed)
 
     return speed->Default_speed->getData();
 }
+
+bool existTrackSegmentInList(std::list<TrackSegment> list, TrackSegment trackSegment) {
+    return (std::find(list.begin(), list.end(), trackSegment) != list.end());
+}
+
+bool LineSegment(TrackSegment trackSegment)
+{
+    const std::list<TrackSegment> line = {SHORT_LINE, MEDIUM_LINE, LONG_LINE, XLONG_LINE};
+    return existTrackSegmentInList(line, trackSegment);
+}

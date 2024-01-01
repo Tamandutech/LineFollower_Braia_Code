@@ -49,6 +49,10 @@ public:
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
 
+    // Velocidades em malha aberta
+    DataAbstract<int8_t> *OpenLoopMaxSpeed;
+    DataAbstract<int8_t> *OpenLoopMinSpeed;
+    
     DataAbstract<float> *initialspeed; // Velocidade inicial em rpm
     DataAbstract<float> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
 

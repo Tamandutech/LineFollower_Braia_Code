@@ -20,26 +20,24 @@ esp_err_t MappingService::startNewMapping(uint16_t leftMarksToStop, int32_t medi
 {
     ESP_LOGD(GetName().c_str(), "Iniciando novo mapeamento.");
 
-    status->robotIsMapping->setData(true);
-
     this->leftMarksToStop = leftMarksToStop;
     //this->rightMarksToStop = latMarks->MarkstoStop->getData();
     this->mediaPulsesToStop = mediaPulsesToStop;
     this->ticksToStop = timeToStop / portTICK_PERIOD_MS;
 
-    tempPreviousMark.MapEncLeft = 0;
-    tempPreviousMark.MapEncRight = 0;
-    tempPreviousMark.MapEncMedia = 0;
-    tempPreviousMark.MapStatus = CAR_IN_LINE;
-    tempPreviousMark.MapTrackStatus = LONG_LINE;
-    tempPreviousMark.MapTime = 0;
-    tempPreviousMark.MapOffset = 0;
+    EncLeft = 0;
+    EncRight = 0;
+    lastEncLeft = 0;
+    lastEncRight = 0;
+    lastEncMedia = 0;
+    tempActualMark.MapEncMedia = 0;
+    tempActualMark.MapTrackStatus = LONG_LINE;
+    tempActualMark.MapTime = 0;
+    tempActualMark.MapOffset = 0;
 
 
     latMarks->rightMarks->setData(0);
     latMarks->leftMarks->setData(0);
-
-    tempActualMark = tempPreviousMark;
 
     latMarks->marks->clearAllData();
 
@@ -54,7 +52,6 @@ esp_err_t MappingService::stopNewMapping()
 
     status->stateMutex.lock();
     status->robotState->setData(CAR_STOPPED);
-    status->robotIsMapping->setData(false);
     DataManager::getInstance()->saveAllParamDataChanged();
     status->stateMutex.unlock();
 
@@ -91,7 +88,7 @@ esp_err_t MappingService::saveMapping()
 
 esp_err_t MappingService::createNewMark()
 {
-    if (status->robotIsMapping->getData() && status->robotState->getData() != CAR_STOPPED)
+    if (status->robotState->getData() == CAR_MAPPING)
     {
         ESP_LOGD(GetName().c_str(), "Criando nova marcação.");
 
@@ -113,62 +110,60 @@ void MappingService::Run()
 
     latMarks->marks->newData(tempActualMark);
 
+    command.effect = LED_EFFECT_SET;
+    command.brightness = 1;
+    command.led[0] = LED_POSITION_NONE;
+    command.led[1] = LED_POSITION_NONE;
+
     ESP_LOGD(GetName().c_str(), "Offset iniciais: initialLeftPulses: %d, initialRightPulses: %d, initialMediaPulses: %d, initialTicks: %d", initialLeftPulses, initialRightPulses, initialMediaPulses, initialTicks);
 
     for (;;)
     {
-        tempPreviousMark = tempActualMark;
+        lastEncLeft = EncLeft;
+        lastEncRight = EncRight;
+        lastEncMedia = tempActualMark.MapEncMedia;
 
         vTaskDelay(0);
         this->Suspend();
         
         tempActualMark.MapOffset = 0;
-        tempActualMark.MapEncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;
-        tempActualMark.MapEncRight = speedMapping->EncRight->getData() - initialRightPulses;
-        tempActualMark.MapEncMedia = ((tempActualMark.MapEncLeft + tempActualMark.MapEncRight) / 2);
+        EncLeft = speedMapping->EncLeft->getData() - initialLeftPulses;
+        EncRight = speedMapping->EncRight->getData() - initialRightPulses;
+        tempActualMark.MapEncMedia = ((EncLeft + EncRight) / 2);
         tempActualMark.MapTime = ((xTaskGetTickCount() - initialTicks) * portTICK_PERIOD_MS);
 
         // variação de encoder em pulsos
-        tempDeltaPulses = std::abs((tempActualMark.MapEncRight - tempPreviousMark.MapEncRight) - (tempActualMark.MapEncLeft - tempPreviousMark.MapEncLeft));
+        tempDeltaPulses = std::abs((EncRight - lastEncRight) - (EncLeft - lastEncLeft));
         // Quantidade de pulsos que o encoder precisa dar para avançar "x" milimetros
         tempMilimiterInPulses = (speedMapping->MPR->getData() * latMarks->thresholdToCurve->getData()) / (M_PI * speedMapping->WheelDiameter->getData());
 
-        tempActualMark.MapStatus = (tempDeltaPulses > tempMilimiterInPulses) ? CAR_IN_CURVE : CAR_IN_LINE;
-        tempDeltaDist = ((tempActualMark.MapEncMedia - tempPreviousMark.MapEncMedia) * (M_PI * speedMapping->WheelDiameter->getData())) / (speedMapping->MPR->getData()); // distância entre marcacões em mm
-        if(tempActualMark.MapStatus == CAR_IN_LINE)
+        tempDeltaDist = ((tempActualMark.MapEncMedia - lastEncMedia) * (M_PI * speedMapping->WheelDiameter->getData())) / (speedMapping->MPR->getData()); // distância entre marcacões em mm
+        if(tempDeltaPulses <= tempMilimiterInPulses)
         {
             if(tempDeltaDist < latMarks->thresholdMediumLine->getData()) tempActualMark.MapTrackStatus = SHORT_LINE;
             else if(tempDeltaDist < latMarks->thresholdLongLine->getData()) tempActualMark.MapTrackStatus = MEDIUM_LINE;
             else tempActualMark.MapTrackStatus = LONG_LINE;
-        }
-        else if(tempActualMark.MapStatus == CAR_IN_CURVE)
-        {
-            if(tempDeltaDist < latMarks->thresholdMediumCurve->getData()) tempActualMark.MapTrackStatus = SHORT_CURVE;
-            else if(tempDeltaDist < latMarks->thresholdLongCurve->getData()) tempActualMark.MapTrackStatus = MEDIUM_CURVE;
-            else tempActualMark.MapTrackStatus = LONG_CURVE;
-        }
-        latMarks->marks->newData(tempActualMark);
-        
-        command.effect = LED_EFFECT_SET;
-        command.brightness = 1;
-        command.led[0] = LED_POSITION_NONE;
-        command.led[1] = LED_POSITION_NONE;
-        if(tempActualMark.MapStatus == CAR_IN_CURVE) 
-        {
-            if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
-            else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
-            command.color = LED_COLOR_RED;
-        }
-        else if(tempActualMark.MapStatus == CAR_IN_LINE)
-        {
+
             if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
             else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
             command.color = LED_COLOR_GREEN;
         }
+        else
+        {
+            if(tempDeltaDist < latMarks->thresholdMediumCurve->getData()) tempActualMark.MapTrackStatus = SHORT_CURVE;
+            else if(tempDeltaDist < latMarks->thresholdLongCurve->getData()) tempActualMark.MapTrackStatus = MEDIUM_CURVE;
+            else tempActualMark.MapTrackStatus = LONG_CURVE;
+
+            if(latMarks->latEsqPass->getData()) command.led[0] = LED_POSITION_LEFT;
+            else if(latMarks->latDirPass->getData()) command.led[0] = LED_POSITION_RIGHT;
+            command.color = LED_COLOR_RED;
+        }
+        latMarks->marks->newData(tempActualMark);
+        
         LEDsService::getInstance()->queueCommand(command);
         
 
-        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d, MapStatus: %d", tempActualMark.MapEncLeft, tempActualMark.MapEncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime, tempActualMark.MapStatus);
+        ESP_LOGD(GetName().c_str(), "Marcação: MapEncLeft: %d, MapEncRight: %d, MapEncMedia: %d, MapTime: %d", EncLeft, EncRight, tempActualMark.MapEncMedia, tempActualMark.MapTime);
 
         if ((leftMarksToStop <= latMarks->leftMarks->getData()) || (latMarks->MarkstoStop->getData() <= latMarks->rightMarks->getData()) || (mediaPulsesToStop <= tempActualMark.MapEncMedia) || (ticksToStop <= (tempActualMark.MapTime * portTICK_PERIOD_MS)))
         {
