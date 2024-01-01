@@ -27,7 +27,7 @@ Robot::Robot(std::string name)
     // Instânciando objetos componentes do Robô.
     ESP_LOGD(name.c_str(), "Criando sub-objetos para o %s", "Robô");
 
-    this->Status = new RobotStatus(CAR_IN_LINE, "RobotStatus");
+    this->Status = new RobotStatus("RobotStatus");
     ESP_LOGD(name.c_str(), "Status (%p)", this->Status);
     
     this->PID = new dataPID("PID"); 

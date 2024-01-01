@@ -3,10 +3,9 @@
 
 enum CarState
 {
-    CAR_IN_CURVE,
-    CAR_IN_LINE,
     CAR_MAPPING,
     CAR_ENC_READING,
+    CAR_ENC_READING_BEFORE_FIRSTMARK,
     CAR_TUNING,
     CAR_STOPPED,
 };

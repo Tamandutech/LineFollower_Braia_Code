@@ -176,8 +176,7 @@ static std::string start(int argc, char **argv)
     {
         status->robotState->setData(CAR_ENC_READING);
     }
-    auto carstate = status->robotState->getData();
-    xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
+    xSemaphoreGive(CarStatusService::getInstance()->SemaphoreButton);
     return ("O robô começará a se mover");
 }
 
@@ -208,8 +207,7 @@ static std::string resume(int argc, char **argv)
         }
     }
     status->robotState->setData(lastState);
-    auto carstate = CAR_IN_LINE;
-    xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
+    xSemaphoreGive(CarStatusService::getInstance()->SemaphoreButton);
     status->robotPaused->setData(false);
 
     return ("O robô voltará a andar");

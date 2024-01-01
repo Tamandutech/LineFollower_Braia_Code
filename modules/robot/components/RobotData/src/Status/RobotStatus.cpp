@@ -2,13 +2,13 @@
 
 std::mutex RobotStatus::stateMutex;
 
-RobotStatus::RobotStatus(CarState initialState, std::string name)
+RobotStatus::RobotStatus(std::string name)
 {
     // Definindo nome do objeto, para uso nas logs do componente.
     this->name = name;
     ESP_LOGD(name.c_str(), "Criando objeto: %s (%p)", name.c_str(), this);
     dataManager = dataManager->getInstance();
-    robotState = new DataAbstract<uint8_t>("robotState", name, initialState);
+    robotState = new DataAbstract<uint8_t>("robotState", name);
     robotPaused = new DataAbstract<bool>("robotPaused", name, false);
     TrackStatus = new DataAbstract<uint8_t>("TrackStatus", name, 0);
     RealTrackStatus = new DataAbstract<uint8_t>("RealTrackStatus", name, 0);
@@ -24,6 +24,4 @@ RobotStatus::RobotStatus(CarState initialState, std::string name)
     dataManager->registerParamData(LineColorBlack);
     OpenLoopTreshold = new DataAbstract<uint16_t>("OpenLoopTreshold", name, 3000);
     dataManager->registerParamData(OpenLoopTreshold);
-    TuningMapped = new DataAbstract<bool>("TuningMapped", name, false);
-    dataManager->registerParamData(TuningMapped);
 }
