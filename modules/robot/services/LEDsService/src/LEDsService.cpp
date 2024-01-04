@@ -73,7 +73,7 @@ void LEDsService::led_effect_set()
 void LEDsService::led_color_set(led_color_t color, float brightness, led_position_t pos)
 {
     // Lê os valores RGB da cor desejada
-    uint8_t R, G, B;
+    uint8_t R = 0, G = 0, B = 0;
     led_RGB_get(color, &R, &G, &B);
     R = brightness * R;
     G = brightness * G;

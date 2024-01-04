@@ -123,7 +123,7 @@ void CarStatusService::Run()
         pulsesAfterCurve = latMarks->PulsesAfterCurve->getData();
         actualCarState = (CarState) status->robotState->getData();
         if(status->robotPaused->getData()) lastPaused = true;
-        if(latMarks->rightMarks->getData() >= 1 && !firstmark)
+        if(latMarks->rightMarks->getData() >= 1 && !firstmark && actualCarState == CAR_ENC_READING_BEFORE_FIRSTMARK)
         {
             firstmark = true;
             actualCarState = CAR_ENC_READING;
@@ -132,90 +132,21 @@ void CarStatusService::Run()
             initialmediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
         }
 
-        else if ((lastState != status->robotState->getData() || lastTrack != (TrackSegment)status->TrackStatus->getData() || lastTransition != status->Transition->getData() || (lastPaused && !status->robotPaused->getData())) && status->robotState->getData() != CAR_STOPPED)
+        if ((lastState != status->robotState->getData() || lastTrack != (TrackSegment)status->TrackStatus->getData() || lastTransition != status->Transition->getData() || (lastPaused && !status->robotPaused->getData())) && status->robotState->getData() != CAR_STOPPED)
         {
             lastPaused = false;
             lastState = status->robotState->getData();
             lastTrack =  (TrackSegment)status->TrackStatus->getData();
             lastTransition = status->Transition->getData();
-            if (LineSegment(lastTrack) && !lastTransition && lastState == CAR_ENC_READING)
+            
+            led_color_t color = getStatusColor((CarState)lastState,(TrackSegment)lastTrack);
+            float brightness = getSegmentBrightness((CarState)lastState,(TrackSegment)lastTrack);
+            if(lastTransition && lastState == CAR_ENC_READING)
             {
-                led_color_t color = LED_COLOR_GREEN;
-                float brightness = 1;
-                switch (TrackLen)
-                {
-                    case SHORT_LINE:
-                        brightness = 0.05;
-                        break;
-                    case MEDIUM_LINE:
-                        brightness = 0.3;
-                        break;
-                    case LONG_LINE:
-                        brightness = 1;
-                        break;
-                    case XLONG_LINE:
-                        brightness = 1;
-                        break;
-                    case SPECIAL_TRACK:
-                        color = LED_COLOR_PURPLE;
-                        brightness = 0.05;
-                        break;
-                    default:
-                        color = LED_COLOR_WHITE;
-                        brightness = 1;
-                        break;
-                }
-                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, brightness);
+                color = LED_COLOR_BLUE;
+                brightness = 1;
             }
-            else if(!LineSegment(lastTrack) && !lastTransition && lastState == CAR_ENC_READING)
-            {
-                led_color_t color = LED_COLOR_RED;
-                float brightness = 1;
-                switch (TrackLen)
-                {
-                    case XLONG_CURVE:
-                        brightness = 1;
-                        break;
-                    case SHORT_CURVE:
-                        brightness = 0.05;
-                        break;
-                    case MEDIUM_CURVE:
-                        brightness = 0.3;
-                        break;
-                    case LONG_CURVE:
-                        brightness = 1;
-                        break;
-                    case ZIGZAG_TRACK:
-                        color = LED_COLOR_PURPLE;
-                        brightness = 1;
-                        break;
-                    case SPECIAL_TRACK:
-                        color = LED_COLOR_PURPLE;
-                        brightness = 0.05;
-                        break;
-                    default:
-                        color = LED_COLOR_WHITE;
-                        brightness = 1;
-                        break;
-                }
-                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, brightness);
-            }
-            else if(lastTransition && lastState == CAR_ENC_READING)
-            {
-                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLUE, 0.5);
-            }
-            else if(lastState == CAR_ENC_READING_BEFORE_FIRSTMARK)
-            {
-                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_PURPLE, 0.5);  
-            }
-            else if(lastState == CAR_TUNING)
-            {
-                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_WHITE, 0.5);  
-            }
-            else if(lastState == CAR_MAPPING)
-            {
-                LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_YELLOW, 0.5); 
-            }
+            LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, brightness);
         }
 
         mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2; // calcula media dos encoders

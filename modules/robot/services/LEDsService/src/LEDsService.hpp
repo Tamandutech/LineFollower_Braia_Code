@@ -4,6 +4,8 @@
 #include "thread.hpp"
 #include "singleton.hpp"
 #include "RobotData.h"
+#include "LedStatus.hpp"
+
 
 #include "driver/gpio.h"
 #include "driver/rmt_tx.h"
@@ -24,26 +26,6 @@ using namespace cpp_freertos;
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 #define RMT_LED_STRIP_GPIO_NUM      GPIO_NUM_32
 #define NUM_LEDS 3
-
-enum led_color_t
-{
-    // Red, Green, Blue
-    LED_COLOR_BLACK = 0x000000,
-    LED_COLOR_RED = 0xFF0000,
-    LED_COLOR_GREEN = 0x00FF00,
-    LED_COLOR_BLUE = 0x0000FF,
-    LED_COLOR_YELLOW = 0xFFFF00,
-    LED_COLOR_CYAN = 0x00FFFF,
-    LED_COLOR_MAGENTA = 0xFF00FF,
-    LED_COLOR_WHITE = 0xFFFFFF,
-    LED_COLOR_PURPLE = 0x7F007F,
-    LED_COLOR_ORANGE = 0xFF7F00,
-    LED_COLOR_BROWN = 0x7F3F00,
-    LED_COLOR_LIME = 0x3FFF00,
-    LED_COLOR_PINK = 0xFF007F,
-    LED_COLOR_TURQUOISE = 0x00FF7F,
-    LED_COLOR_VIOLET = 0x7F00FF,
-};
 
 enum led_position_t
 {

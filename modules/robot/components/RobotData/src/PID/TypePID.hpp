@@ -1,5 +1,5 @@
-#ifndef TYPE_PID__HPP
-#define TYPE_PID__HPP
+#ifndef TYPE_PID_HPP
+#define TYPE_PID_HPP
 
 #include <map>
 #include <list>
