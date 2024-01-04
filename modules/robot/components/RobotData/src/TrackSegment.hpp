@@ -1,5 +1,5 @@
-#ifndef TRACK_SEGMENT__HPP
-#define TRACK_SEGMENT__HPP
+#ifndef TRACK_SEGMENT_HPP
+#define TRACK_SEGMENT_HPP
 
 #include <map>
 #include <list>
@@ -9,19 +9,19 @@
 
 enum TrackSegment
 {
-    SHORT_LINE = 1,
-    MEDIUM_LINE = 2,
-    LONG_LINE = 3,
-    XLONG_LINE = 4,
+    SHORT_LINE = 2,
+    MEDIUM_LINE = 1,
+    LONG_LINE = 0,
+    XLONG_LINE = 11,
 
     SHORT_CURVE = 5,
-    MEDIUM_CURVE = 6,
-    LONG_CURVE = 7,
-    XLONG_CURVE = 8,
+    MEDIUM_CURVE = 4,
+    LONG_CURVE = 3,
+    XLONG_CURVE = 12,
 
-    ZIGZAG_TRACK = 9,
-    SPECIAL_TRACK = 10,
-    DEFAULT_TRACK = 11
+    ZIGZAG_TRACK = 6,
+    SPECIAL_TRACK = 7,
+    DEFAULT_TRACK = 13
 };
 
 float getTrackSegmentSpeed(TrackSegment trackSegment, dataSpeed *speed);

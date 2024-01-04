@@ -6,6 +6,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     this->robot = Robot::getInstance();
     this->speed = robot->getSpeed();
     this->status = robot->getStatus();
+    this->DataPID = robot->getPID();
 
     // GPIOs dos motores
     // motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
@@ -96,11 +97,10 @@ void PIDService::Run()
 
             if (iloop > 200)
             {
-                ESP_LOGD(GetName().c_str(), "dataPID: %.2f", DataPID->output->getData());
+                ESP_LOGD(GetName().c_str(), "dataPID: %.2f | estado: %d", DataPID->output->getData(), estado);
                 ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", pidConsts.KD, pidConsts.KP);
-                ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f", speed->left->getData(), speed->right->getData());
+                ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f | speedLinear: %.2f | speedTarget: %.2f", speed->left->getData(), speed->right->getData(), speed->linearSpeed->getData(), speedTarget);
                 ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
-                ESP_LOGD(GetName().c_str(), "speedMin: %d | speedMax: %d | speedBase: %d", speedMin, speedMax, speedBase);
                 iloop = 0;
             }
             iloop++;
@@ -184,6 +184,10 @@ void PIDService::ControlMotors(float left, float right)
 float PIDService::calculateSpeed(float acceleration, float speedValue)
 {
     float newSpeed = speedValue + (acceleration * TaskDelaySeconds);
+    
+    if(speedValue >= speedTarget)
+        return constrain(newSpeed, speedTarget, speedValue);
+        
     return constrain(newSpeed, speedValue, speedTarget);
 }
 

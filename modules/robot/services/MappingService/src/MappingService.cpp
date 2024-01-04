@@ -4,13 +4,12 @@ MappingService::MappingService(std::string name, uint32_t stackDepth, UBaseType_
 {
     this->robot = Robot::getInstance();
 
-    gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
-    gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
-
     speedMapping = robot->getSpeed();
     sLat = robot->getsLat();
     latMarks = robot->getSLatMarks();
     status = robot->getStatus();
+
+    esp_log_level_set(GetName().c_str(), ESP_LOG_ERROR);
 };
 
 esp_err_t MappingService::startNewMapping(uint16_t leftMarksToStop, int32_t mediaPulsesToStop, uint32_t timeToStop)
@@ -47,13 +46,9 @@ esp_err_t MappingService::stopNewMapping()
 {
     ESP_LOGD(GetName().c_str(), "Parando novo mapeamento.");
 
-    status->stateMutex.lock();
     status->robotState->setData(CAR_STOPPED);
     DataManager::getInstance()->saveAllParamDataChanged();
-    status->stateMutex.unlock();
-
     this->Cleanup();
-
     this->saveMapping();
     ESP_LOGD(GetName().c_str(), "Parada do novo mapeamento finalizada");
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);

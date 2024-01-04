@@ -1,6 +1,5 @@
 #include "RobotStatus.h"
 
-std::mutex RobotStatus::stateMutex;
 
 RobotStatus::RobotStatus(std::string name)
 {

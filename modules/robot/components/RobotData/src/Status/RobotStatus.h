@@ -45,8 +45,6 @@ public:
     DataAbstract<uint8_t> *RealTrackStatus; // status real do trecho da pista em que o robô se encontra
     DataAbstract<bool> *FirstMark; // Verifica se o robô já passou pela primeira marcação lateral
     DataAbstract<bool> *Transition; // Verifica se o robô está numa transição de curva para reta e vice-versa
-
-    static std::mutex stateMutex;
     
 private:
     std::string name;

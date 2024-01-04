@@ -62,10 +62,6 @@ private:
     // Variáveis para cálculo do pid
     float lastSensorArrayPosition = 0;
 
-    int8_t speedBase = 0;
-    int8_t speedMin = 0;
-    int8_t speedMax = 0;
-
     float soma_erro = 0;
 
     bool mapState = false;

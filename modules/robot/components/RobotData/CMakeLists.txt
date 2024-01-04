@@ -6,7 +6,8 @@ idf_component_register(
         "src/PID/dataPID.cpp" 
         "src/Sensor/dataSensor.cpp" 
         "src/Speed/dataSpeed.cpp" 
-        "src/Status/RobotStatus.cpp" 
+        "src/Status/RobotStatus.cpp"
+        "src/Status/LedStatus.cpp"
         "src/SLatMarks/dataSLatMarks.cpp"
 
     REQUIRES
