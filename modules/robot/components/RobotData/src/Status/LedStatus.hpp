@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "TrackSegment.hpp"
 
-enum led_color_t
+enum LedColor
 {
     // Red, Green, Blue
     LED_COLOR_BLACK = 0x000000,
@@ -42,14 +42,14 @@ static std::map<TrackSegment, float> segmentBrightness{
 
 };
 
-static std::map<CarState, led_color_t> statusColor{
+static std::map<CarState, LedColor> statusColor{
     {CAR_TUNING, LED_COLOR_WHITE},
     {CAR_MAPPING, LED_COLOR_YELLOW},
     {CAR_ENC_READING_BEFORE_FIRSTMARK, LED_COLOR_PURPLE},
 };
 
 
-led_color_t getStatusColor(CarState estado, TrackSegment segment);
+LedColor getStatusColor(CarState estado, TrackSegment segment);
 float getSegmentBrightness(CarState estado, TrackSegment segment);
 
 #endif

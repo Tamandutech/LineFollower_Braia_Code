@@ -139,7 +139,7 @@ void CarStatusService::Run()
             lastTrack =  (TrackSegment)status->TrackStatus->getData();
             lastTransition = status->Transition->getData();
             
-            led_color_t color = getStatusColor((CarState)lastState,(TrackSegment)lastTrack);
+            LedColor color = getStatusColor((CarState)lastState,(TrackSegment)lastTrack);
             float brightness = getSegmentBrightness((CarState)lastState,(TrackSegment)lastTrack);
             if(lastTransition && lastState == CAR_ENC_READING)
             {
@@ -199,7 +199,7 @@ void CarStatusService::Run()
                         int16_t offset = latMarks->marks->getData(mark).MapOffset;
                         int16_t offsetnxt = latMarks->marks->getData(mark+1).MapOffset;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
-                        if(!LineSegment((TrackSegment)latMarks->marks->getData(mark).MapTrackStatus) && LineSegment((TrackSegment)latMarks->marks->getData(mark + 1).MapTrackStatus) && offset == 0)
+                        if(!isLineSegment((TrackSegment)latMarks->marks->getData(mark).MapTrackStatus) && isLineSegment((TrackSegment)latMarks->marks->getData(mark + 1).MapTrackStatus) && offset == 0)
                         {
                             offset = pulsesAfterCurve; 
                         }
@@ -214,7 +214,7 @@ void CarStatusService::Run()
                         if(mark + 2 < numMarks)
                         {
                     
-                            if(LineSegment((TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus) && !LineSegment((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus) && offsetnxt == 0)
+                            if(isLineSegment((TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus) && !isLineSegment((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus) && offsetnxt == 0)
                             {
                                 offsetnxt = -pulsesBeforeCurve; 
                             }

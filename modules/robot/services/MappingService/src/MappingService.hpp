@@ -64,7 +64,7 @@ private:
     int32_t EncLeft = 0, EncRight = 0;
     int32_t lastEncLeft = 0, lastEncRight = 0, lastEncMedia = 0;
 
-    led_color_t color;
+    LedColor color;
     led_position_t led;
 
 };

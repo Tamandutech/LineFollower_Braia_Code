@@ -46,7 +46,7 @@ void LEDsService::Run()
     }
 }
 
-void LEDsService::LedComandSend(led_position_t led,  led_color_t color, float brightness, led_effect_t effect)
+void LEDsService::LedComandSend(led_position_t led,  LedColor color, float brightness, led_effect_t effect)
 {
     led_command_t command = {
         .led = led,
@@ -70,7 +70,7 @@ void LEDsService::led_effect_set()
     led_strip_refresh();
 }
 
-void LEDsService::led_color_set(led_color_t color, float brightness, led_position_t pos)
+void LEDsService::led_color_set(LedColor color, float brightness, led_position_t pos)
 {
     // Lê os valores RGB da cor desejada
     uint8_t R = 0, G = 0, B = 0;
@@ -87,7 +87,7 @@ void LEDsService::led_color_set(led_color_t color, float brightness, led_positio
     ESP_LOGD(GetName().c_str(), "led_effect_set: ledCommand.led = %d, R = %d, G = %d, B = %d", pos, R, G, B);
 }
 
-void LEDsService::led_RGB_get(led_color_t color, uint8_t * R, uint8_t * G, uint8_t * B)
+void LEDsService::led_RGB_get(LedColor color, uint8_t * R, uint8_t * G, uint8_t * B)
 {
     *R = ((uint8_t *)(&ledCommand.color))[0];
     *G = ((uint8_t *)(&ledCommand.color))[1];

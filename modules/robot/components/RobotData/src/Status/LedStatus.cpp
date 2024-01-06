@@ -1,9 +1,9 @@
 #include "LedStatus.hpp"
 
-led_color_t getStatusColor(CarState estado, TrackSegment segment)
+LedColor getStatusColor(CarState estado, TrackSegment segment)
 {
     
-    led_color_t color = LED_COLOR_BLACK;
+    LedColor color = LED_COLOR_BLACK;
     bool statusColorFound = statusColor.find(estado) != statusColor.end();
     if(statusColorFound)
         return statusColor[estado];
@@ -11,7 +11,7 @@ led_color_t getStatusColor(CarState estado, TrackSegment segment)
     if(estado == CAR_ENC_READING)
     {
         color = LED_COLOR_RED;
-        if(LineSegment(segment)) 
+        if(isLineSegment(segment)) 
             color = LED_COLOR_GREEN;
     }
 

@@ -51,7 +51,7 @@ struct LEDColor
 struct led_command_t
 {
     led_position_t led;
-    led_color_t color;
+    LedColor color;
     led_effect_t effect;
     float brightness;
 };
@@ -61,7 +61,7 @@ class LEDsService : public Thread, public Singleton<LEDsService>
 public:
     LEDsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
-    void LedComandSend(led_position_t led,  led_color_t color, float brightness, led_effect_t effect = LED_EFFECT_SET);
+    void LedComandSend(led_position_t led,  LedColor color, float brightness, led_effect_t effect = LED_EFFECT_SET);
 
     void Run() override;
 
@@ -78,8 +78,8 @@ private:
     esp_err_t queueCommand(led_command_t command);
 
     void led_effect_set();
-    void led_color_set(led_color_t color, float brightness, led_position_t pos);
-    void led_RGB_get(led_color_t color, uint8_t * R, uint8_t * G, uint8_t * B);
+    void led_color_set(LedColor color, float brightness, led_position_t pos);
+    void led_RGB_get(LedColor color, uint8_t * R, uint8_t * G, uint8_t * B);
     void led_strip_init();
     void led_strip_refresh();
 };
