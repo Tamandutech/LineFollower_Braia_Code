@@ -62,12 +62,6 @@ void SensorsService::calibAllsensors()
     std::vector<uint16_t> SLatMaxes(sLat.calibrationOn.maximum, sLat.calibrationOn.maximum + sLat.getSensorCount());
     std::vector<uint16_t> SLatMins(sLat.calibrationOn.minimum, sLat.calibrationOn.minimum + sLat.getSensorCount());
 
-    // armazenamento dos valores máximos e mínimos dos sensores no objeto robot
-    robot->getsArray()->setChannelsMaxes(sArrayMaxes);
-    robot->getsArray()->setChannelsMins(sArrayMins);
-    robot->getsLat()->setChannelsMaxes(SLatMaxes);
-    robot->getsLat()->setChannelsMins(SLatMins);
-
     ESP_LOGD(GetName().c_str(), "------------");
     ESP_LOGD(GetName().c_str(), "sArrayMaxes: %d | %d | %d | %d | %d | %d | %d | %d", sArrayMaxes[0], sArrayMaxes[1], sArrayMaxes[2], sArrayMaxes[3], sArrayMaxes[4], sArrayMaxes[5], sArrayMaxes[6], sArrayMaxes[7]);
     ESP_LOGD(GetName().c_str(), "sArrayMins: %d | %d | %d | %d | %d | %d | %d | %d", sArrayMins[0], sArrayMins[1], sArrayMins[2], sArrayMins[3], sArrayMins[4], sArrayMins[5], sArrayMins[6], sArrayMins[7]);

@@ -19,32 +19,20 @@
 class dataSensor
 {
 public:
-    dataSensor(uint16_t qtdChannels, std::string name = "dataSensor");
+    dataSensor(uint16_t sensorNumber, std::string name = "dataSensor");
 
     int setLine(uint16_t value);
     uint16_t getLine();
 
-    int setChannel(uint16_t channelNumber, uint16_t value, std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
-    int setChannel(uint16_t channelNumber, uint16_t value);
-    uint16_t getChannel(uint16_t channelNumber, std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
-    uint16_t getChannel(uint16_t channelNumber);
+    int setChannel(uint16_t sensorPosition, uint16_t value, std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
+    int setChannel(uint16_t sensorPosition, uint16_t value);
+    uint16_t getChannel(uint16_t sensorPosition, std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
+    uint16_t getChannel(uint16_t sensorPosition);
 
     int setChannels(std::vector<uint16_t> values, std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
     int setChannels(std::vector<uint16_t> values);
     std::vector<uint16_t> getChannels(std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
     std::vector<uint16_t> getChannels();
-
-    int setChannelMin(uint16_t channelNumber, uint16_t value);
-    uint16_t getChannelMin(uint16_t channelNumber);
-
-    int setChannelMax(uint16_t channelNumber, uint16_t value);
-    uint16_t getChannelMax(uint16_t channelNumber);
-
-    int setChannelsMins(std::vector<uint16_t> values);
-    std::vector<uint16_t> getChannelsMins();
-
-    int setChannelsMaxes(std::vector<uint16_t> values);
-    std::vector<uint16_t> getChannelsMaxes();
 
 private:
     std::string name;
@@ -58,13 +46,11 @@ private:
     uint16_t line;
 
     // Parâmetros
-    uint16_t qtdChannels = 0;
+    uint16_t sensorNumber = 0;
 
-    SemaphoreHandle_t xSemaphoremaxChannel;
-    std::vector<uint16_t> maxChannel;
+    esp_err_t  checksIfSensorExisty(uint16_t sensorPosition);
+    bool isSensorAvailableForReading(SemaphoreHandle_t *xSemaphoreOfArg);
 
-    SemaphoreHandle_t xSemaphoreminChannel;
-    std::vector<uint16_t> minChannel;
 };
 
 #endif
