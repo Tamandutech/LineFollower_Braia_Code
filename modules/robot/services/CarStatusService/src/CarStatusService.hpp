@@ -59,7 +59,6 @@ private:
     int32_t initialmediaEnc = 0;
     int32_t pulsesBeforeCurve = 200;
     int32_t pulsesAfterCurve = 200;
-    bool firstmark = false;
 
     static void IRAM_ATTR startRobotWithBootButton(void *arg);
     void configExternInterruptToReadButton(gpio_num_t gpio_num);
@@ -69,6 +68,13 @@ private:
     void deleteMappingIfBootButtonIsPressed();
     void startMappingTheTrack();
     void setTuningMode();
+    bool checkIfPassedFirstMark();
+    void resetEnconderValue();
+    bool trackSegmentChanged();
+    LedColor defineLedColor();
+    void setColorBrightness(LedColor color);
+    void logCarStatus();
+    void stopTunningMode();
 };
 
 #endif
