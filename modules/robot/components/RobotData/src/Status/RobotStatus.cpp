@@ -11,7 +11,6 @@ RobotStatus::RobotStatus(std::string name)
     robotPaused = new DataAbstract<bool>("robotPaused", name, false);
     TrackStatus = new DataAbstract<uint8_t>("TrackStatus", name, 0);
     RealTrackStatus = new DataAbstract<uint8_t>("RealTrackStatus", name, 0);
-    FirstMark = new DataAbstract<bool>("FirstMark", name, false);
     Transition = new DataAbstract<bool>("Transition", name, false);
     TunningMode = new DataAbstract<bool>("TunningMode", name, false);
     dataManager->registerParamData(TunningMode);

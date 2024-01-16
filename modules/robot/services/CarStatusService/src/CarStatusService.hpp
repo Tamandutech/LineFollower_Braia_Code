@@ -61,8 +61,14 @@ private:
     int32_t pulsesAfterCurve = 200;
     bool firstmark = false;
 
-    static void IRAM_ATTR gpio_isr_handler(void *arg);
-    void configExternInterrupt(gpio_num_t gpio_num);
+    static void IRAM_ATTR startRobotWithBootButton(void *arg);
+    void configExternInterruptToReadButton(gpio_num_t gpio_num);
+    void startFollowingDefinedMapping();
+    void defineIfRobotWillStartMappingMode();
+    void waitPressBootButtonToStart();
+    void deleteMappingIfBootButtonIsPressed();
+    void startMappingTheTrack();
+    void setTuningMode();
 };
 
 #endif
