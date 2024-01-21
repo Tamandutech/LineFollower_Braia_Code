@@ -19,6 +19,9 @@ public:
 
     void Run() override;
 
+    void resetEncondersValue();
+
+
 private:
     Robot *robot;
     dataSpeed *speed;
@@ -50,6 +53,7 @@ private:
     TickType_t initialTicksCar = 0;
     uint16_t deltaTimeMS_media = 0;
     int iloop=0;
+
 };
 
 #endif

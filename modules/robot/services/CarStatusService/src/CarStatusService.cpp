@@ -47,7 +47,7 @@ void CarStatusService::startFollowingDefinedMapping()
 
     initialRobotState = CAR_ENC_READING_BEFORE_FIRSTMARK;
     numMarks = latMarks->marks->getSize();
-    mediaEncFinal = latMarks->marks->getData(numMarks - 1).MapEncMedia;
+    finalMark = latMarks->marks->getData(numMarks - 1);
 }
 
 void CarStatusService::configExternInterruptToReadButton(gpio_num_t interruptPort)
@@ -103,8 +103,8 @@ void CarStatusService::Run()
         if (status->robotPaused->getData())
             lastPaused = true;
 
-        if (checkIfPassedFirstMark())
-            resetEnconderValue();
+        if (passedFirstMark())
+            resetEnconderInFirstMark();
 
         if (trackSegmentChanged())
         {
@@ -112,21 +112,13 @@ void CarStatusService::Run()
             setColorBrightness(color);
         }
 
-        mediaEncActual = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
-
-        if (iloop >= 30)
-        {
-            iloop = 0;
-            logCarStatus();
-        }
-        iloop++;
-
         if (actualCarState == CAR_TUNING && !status->TunningMode->getData())
             stopTunningMode();
 
         if (actualCarState == CAR_ENC_READING && (!status->TunningMode->getData() || !started_in_Tuning))
         {
-            if ((mediaEncActual - initialmediaEnc) >= mediaEncFinal)
+            robotPosition = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
+            if (robotPosition >= finalMark.markPosition)
             {
                 ESP_LOGD(GetName().c_str(), "Parando o robô");
 
@@ -134,50 +126,49 @@ void CarStatusService::Run()
                 DataManager::getInstance()->saveAllParamDataChanged();
                 LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
             }
-            if ((mediaEncActual - initialmediaEnc) < mediaEncFinal)
+            if (robotPosition < finalMark.markPosition)
             {
                 // define o status do carrinho se o mapeamento não estiver ocorrendo
                 int mark = 0;
                 for (mark = 0; mark < numMarks - 1; mark++)
                 {
-                    // Verifica a contagem do encoder e atribui o estado ao robô
-                    int32_t Manualmedia = latMarks->marks->getData(mark).MapEncMedia;        // Média dos encoders na chave mark
-                    int32_t ManualmediaNxt = latMarks->marks->getData(mark + 1).MapEncMedia; // Média dos encoders na chave mark + 1
+                    MapData currentMark = latMarks->marks->getData(mark);
+                    MapData nextMark = latMarks->marks->getData(mark + 1);
 
-                    if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt) // análise do valor das médias dos encoders
+                    if (robotPosition >= currentMark.markPosition && robotPosition <= nextMark.markPosition)
                     {
-                        TrackSegment trackLen = (TrackSegment)latMarks->marks->getData(mark + 1).MapTrackStatus;
-                        status->RealTrackStatus->setData(trackLen);
+                        defineTrackSegment(nextMark);
+
                         bool transition = false;
 
-                        int16_t offset = latMarks->marks->getData(mark).MapOffset;
-                        int16_t offsetnxt = latMarks->marks->getData(mark + 1).MapOffset;
+                        int16_t offset = currentMark.offsetMarkPosition;
+                        int16_t offsetnxt = nextMark.offsetMarkPosition;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
-                        if (!isLineSegment((TrackSegment)latMarks->marks->getData(mark).MapTrackStatus) && isLineSegment((TrackSegment)latMarks->marks->getData(mark + 1).MapTrackStatus) && offset == 0)
+                        if (!isLineSegment((TrackSegment)currentMark.trackSegmentBeforeMark) && isLineSegment((TrackSegment)nextMark.trackSegmentBeforeMark) && offset == 0)
                         {
                             offset = pulsesAfterCurve;
                         }
                         if (offset > 0)
                         {
-                            if ((mediaEncActual - initialmediaEnc) < (Manualmedia + offset))
+                            if (robotPosition < (currentMark.markPosition + offset))
                             {
                                 transition = true;
-                                trackLen = (TrackSegment)latMarks->marks->getData(mark).MapTrackStatus;
+                                trackLen = (TrackSegment)currentMark.trackSegmentBeforeMark;
                             }
                         }
                         if (mark + 2 < numMarks)
                         {
 
-                            if (isLineSegment((TrackSegment)latMarks->marks->getData(mark + 1).MapTrackStatus) && !isLineSegment((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus) && offsetnxt == 0)
+                            if (isLineSegment((TrackSegment)nextMark.trackSegmentBeforeMark) && !isLineSegment((TrackSegment)latMarks->marks->getData(mark + 2).trackSegmentBeforeMark) && offsetnxt == 0)
                             {
                                 offsetnxt = -pulsesBeforeCurve;
                             }
                             if (offsetnxt < 0)
                             {
-                                if ((mediaEncActual - initialmediaEnc) > (ManualmediaNxt + offsetnxt))
+                                if (robotPosition > (nextMark.markPosition + offsetnxt))
                                 {
                                     transition = true;
-                                    trackLen = (TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus;
+                                    trackLen = (TrackSegment)latMarks->marks->getData(mark + 2).trackSegmentBeforeMark;
                                 }
                             }
                         }
@@ -189,6 +180,12 @@ void CarStatusService::Run()
                 }
             }
         }
+        if (iloop >= 30)
+        {
+            iloop = 0;
+            logCarStatus();
+        }
+        iloop++;
     }
 }
 
@@ -223,20 +220,19 @@ void CarStatusService::setTuningMode()
     initialRobotState = CAR_TUNING;
     latMarks->marks->clearAllData();
     numMarks = 0;
-    mediaEncFinal = 0;
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_WHITE, 0.5);
 }
 
-bool CarStatusService::checkIfPassedFirstMark()
+bool CarStatusService::passedFirstMark()
 {
     return latMarks->rightMarks->getData() >= 1 && actualCarState == CAR_ENC_READING_BEFORE_FIRSTMARK;
 }
 
-void CarStatusService::resetEnconderValue()
+void CarStatusService::resetEnconderInFirstMark()
 {
+    SpeedService::getInstance()->resetEncondersValue();
     actualCarState = CAR_ENC_READING;
     status->robotState->setData(actualCarState);
-    initialmediaEnc = (speed->EncRight->getData() + speed->EncLeft->getData()) / 2;
 }
 
 bool CarStatusService::trackSegmentChanged()
@@ -263,10 +259,8 @@ void CarStatusService::setColorBrightness(LedColor color)
 void CarStatusService::logCarStatus()
 {
     ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
-    ESP_LOGD(GetName().c_str(), "initialEncMedia: %ld", initialmediaEnc);
-    ESP_LOGD(GetName().c_str(), "EncMedia: %ld", mediaEncActual);
-    ESP_LOGD(GetName().c_str(), "EncMediaoffset: %ld", mediaEncActual - initialmediaEnc);
-    ESP_LOGD(GetName().c_str(), "mediaEncFinal: %ld", mediaEncFinal);
+    ESP_LOGD(GetName().c_str(), "EncMedia: %ld", robotPosition);
+    ESP_LOGD(GetName().c_str(), "finalMark: %ld", finalMark.markPosition);
     ESP_LOGD(GetName().c_str(), "Speed: %.2f", speed->linearSpeed->getData());
 }
 
@@ -276,4 +270,10 @@ void CarStatusService::stopTunningMode()
     vTaskDelay(0);
     DataManager::getInstance()->saveAllParamDataChanged();
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
+}
+
+void CarStatusService::defineTrackSegment(MapData nextMark)
+{
+    trackLen = (TrackSegment) nextMark.trackSegmentBeforeMark;
+    status->RealTrackStatus->setData(trackLen);
 }

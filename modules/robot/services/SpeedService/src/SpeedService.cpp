@@ -26,9 +26,7 @@ void SpeedService::Run()
     // Variavel contendo quantidade de pulsos inicial do carro
     initialTicksCar = xTaskGetTickCount();
 
-    // Quando for começar a utilizar, necessario limpeza da contagem.
-    enc_motEsq.clearCount();
-    enc_motDir.clearCount();
+    resetEncondersValue();
 
     // Loop
     for (;;)
@@ -102,4 +100,9 @@ void SpeedService::Run()
         }
         iloop++;
     }
+}
+
+void SpeedService::resetEncondersValue() {
+    enc_motEsq.clearCount();
+    enc_motDir.clearCount();
 }

@@ -26,13 +26,10 @@
 
 struct MapData
 {
-    uint32_t MapTime;
-    int32_t MapEncMedia;
-    //int32_t MapEncLeft;
-    //int32_t MapEncRight;
-    int16_t MapOffset;
-    //uint8_t MapStatus;
-    uint8_t MapTrackStatus;
+    uint32_t timeUntilMarkReading;
+    int32_t markPosition;
+    int16_t offsetMarkPosition;
+    uint8_t trackSegmentBeforeMark;
 };
 
 class DataMap : public IDataAbstract
