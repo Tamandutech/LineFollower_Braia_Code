@@ -28,6 +28,10 @@ dataPID::dataPID(std::string name)
     erroquad = new DataAbstract<float>("erroquad", name, 0);
     dataManager->registerRuntimeData(erroquad);
 
+    Kp_acceleration = new DataAbstract<double>("Kp_acceleration", name, 0);
+    dataManager->registerParamData(Kp_acceleration);
+    Kp_desacceleration = new DataAbstract<double>("Kp_desacceleration", name, 0);
+    dataManager->registerParamData(Kp_desacceleration);
     Kp_default = new DataAbstract<double>("Kp_default", name, 0);
     dataManager->registerParamData(Kp_default);
     Kd_default = new DataAbstract<double>("Kd_default", name, 0);

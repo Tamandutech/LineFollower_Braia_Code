@@ -6,6 +6,7 @@
 #include "RobotData.h"
 #include "dataEnums.h"
 #include "SensorsService.hpp"
+#include "SpeedService.hpp"
 
 #include "TrackSegment.hpp"
 #include "TypePID.hpp"
@@ -27,6 +28,9 @@ using namespace cpp_freertos;
 #define ARRAY_TARGET_POSITION 3500
 #define MAX_SPEED 100
 #define MIN_SPEED -100
+
+#define SPEED_ERROR_THRESHOLD 10
+#define SAFE_POSITION_ERROR 1500
 
 #define TIMER_FREQ 1000000
 #include "esp_log.h"
@@ -55,6 +59,7 @@ private:
     const short TaskDelay = 5; // 5ms
     const float TaskDelaySeconds = TaskDelay / 1000.0;
 
+    float AccelerationStep = false, DesaccelerationStep = false;
     float accel = 300;    // aceleração em porcentagem
     float desaccel = 300; // aceleração em porcentagem
     float speedTarget = 0;
@@ -77,7 +82,11 @@ private:
     // Protótipos de função
     void TimerInit(float periodSeconds);
     float calculatePID(PID_Consts pidConsts, float erro, float somaErro, float input, float *lastInput);
-    void OpenLoopControl(float erro, int max, int min);
+    void OpenLoopControl(float PositionError, int max, int min);
+    void setAccelerationDirection(float SpeedError);
+    void EnableAccelerationControlIfNeeded(float linearSpeed, float SpeedError, int16_t PositionError);
+    void DisableAccelerationWhenEnded(float SpeedError, int16_t PositionError);
+    float AccelerationControl(int16_t RobotLinearSpeed, int16_t PositionError, double kpAcceleration);
     void resetGlobalVariables();
     float calculateSpeed(float acceleration, float speedValue);
     void storingSpeedValue(float newSpeed);

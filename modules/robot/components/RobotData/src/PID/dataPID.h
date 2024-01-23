@@ -44,6 +44,8 @@ public:
     DataAbstract<float> *erroquad;
 
     // Parâmetros do PID
+    DataAbstract<double> *Kp_acceleration;
+    DataAbstract<double> *Kp_desacceleration;
     DataAbstract<double> *Kp_default;
     DataAbstract<double> *Ki_default;
     DataAbstract<double> *Kd_default;

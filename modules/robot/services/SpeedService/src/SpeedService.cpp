@@ -45,8 +45,8 @@ void SpeedService::Run()
             lastPulseRight = 0;
         }
 
-        deltaTimeMS_inst = (xTaskGetTickCount() - lastTicksRevsCalc) * portTICK_PERIOD_MS;
-        lastTicksRevsCalc = xTaskGetTickCount();
+        deltaTime = (esp_timer_get_time() - lastdeltaTime);
+        lastdeltaTime = esp_timer_get_time();
 
         deltaTimeMS_media = (xTaskGetTickCount() - initialTicksCar) * portTICK_PERIOD_MS;
 
@@ -68,24 +68,6 @@ void SpeedService::Run()
             speed->positionY->setData(positionY / 10.0); // cm
         }
 
-        // Calculos de velocidade instantanea (RPM)
-        speed->RPMLeft_inst->setData(                   // -> Calculo velocidade instantanea motor esquerdo
-            (((enc_motEsq.getCount() - lastPulseLeft)   // Delta de pulsos do encoder esquerdo
-              / (float)MPR_Mot)                      // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
-             / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
-             ));
-        lastPulseLeft = enc_motEsq.getCount();  // Salva pulsos do encoder para ser usado no proximo calculo
-        speed->EncLeft->setData(lastPulseLeft); // Salva pulsos do encoder esquerdo na classe speed
-
-        speed->RPMRight_inst->setData(                  // -> Calculo velocidade instantanea motor direito
-            (((enc_motDir.getCount() - lastPulseRight)  // Delta de pulsos do encoder esquerdo
-              / (float)MPR_Mot)                      // Conversao para revolucoes de acordo com caixa de reducao e pulsos/rev
-             / ((float)deltaTimeMS_inst / (float)60000) // Divisao do delta tempo em minutos para calculo de RPM
-             ));
-        lastPulseRight = enc_motDir.getCount();   // Salva pulsos do motor para ser usado no proximo calculo
-        speed->EncRight->setData(lastPulseRight); // Salva pulsos do encoder direito na classe speed
-
-        speed->EncMedia->setData((lastPulseLeft + lastPulseRight)/2);
         // Calculo de velocidade media do carro (RPM)
         speed->RPMCar_media->setData(                                                                              // -> Calculo velocidade media do carro
             (((lastPulseRight / (float)speed->MPR->getData() + lastPulseLeft / (float)speed->MPR->getData())) / 2) // Revolucoes media desde inicializacao
@@ -102,4 +84,43 @@ void SpeedService::Run()
         }
         iloop++;
     }
+}
+
+int16_t SpeedService::CalculateWheelSpeed(int32_t ActualPulsesCount, int32_t lastPulsesCount, int64_t dt_MicroSeconds)
+{
+    float dt_Minutes = dt_MicroSeconds / MICROSECONDS_TO_MINUTES_RATIO;
+    int16_t WheelSpeed = (ActualPulsesCount - lastPulsesCount) / (MPR_Mot * dt_Minutes);
+    return WheelSpeed;
+
+}
+void SpeedService::storeWheelsSpeed(int16_t LeftWheelSpeed,int16_t RightWheelSpeed)
+{
+    speed->RPMLeft_inst->setData(LeftWheelSpeed);
+    speed->RPMRight_inst->setData(RightWheelSpeed);
+}
+void SpeedService::storeEncCount(int16_t LeftWheelCount,int16_t RightWheelCount)
+{
+    speed->EncLeft->setData(LeftWheelCount);
+    speed->EncRight->setData(RightWheelCount);
+    speed->EncMedia->setData((LeftWheelCount + RightWheelCount)/2);
+}
+void SpeedService::MeasureWheelsSpeed()
+{
+    deltaTime = (esp_timer_get_time() - lastdeltaTime);
+    lastdeltaTime = esp_timer_get_time();
+
+    int16_t LeftWheelSpeed = CalculateWheelSpeed(enc_motEsq.getCount(), lastPulseLeft, deltaTime);
+    int16_t RightWheelSpeed = CalculateWheelSpeed(enc_motDir.getCount(), lastPulseRight, deltaTime);
+    lastPulseLeft = enc_motEsq.getCount();
+    lastPulseRight = enc_motDir.getCount();
+
+    storeWheelsSpeed(LeftWheelSpeed, RightWheelSpeed);
+    storeEncCount(lastPulseLeft, lastPulseRight);
+}
+
+int16_t SpeedService::CalculateRobotLinearSpeed()
+{
+    int16_t RightWheelSpeed =  speed->RPMRight_inst->getData();
+    int16_t LeftWheelSpeed = speed->RPMRight_inst->getData();
+    return (RightWheelSpeed + LeftWheelSpeed) / (2.0 * MAX_MOTOR_SPEED);
 }

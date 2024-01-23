@@ -45,32 +45,42 @@ void PIDService::Run()
 
             // Cálculo do erro
             float SensorArrayPosition = SensorsService::getInstance()->getArraySensors(); // posição do robô
-            float erro = ARRAY_TARGET_POSITION - SensorArrayPosition;
-            soma_erro += erro;
+            float PositionError = ARRAY_TARGET_POSITION - SensorArrayPosition;
+            soma_erro += PositionError;
             DataPID->setpoint->setData(ARRAY_TARGET_POSITION);
-            DataPID->erro->setData(erro);
+            DataPID->erro->setData(PositionError);
             DataPID->erroquad->setData(soma_erro*soma_erro);
 
             // Cálculo do PID para posicionar o robô  na linha
             PID_Consts pidConsts = getTrackSegmentPID(RealTracklen, estado, DataPID);
-            float pid = calculatePID(pidConsts, erro, soma_erro, SensorArrayPosition, &lastSensorArrayPosition);
+            float pid = calculatePID(pidConsts, PositionError, soma_erro, SensorArrayPosition, &lastSensorArrayPosition);
             
             DataPID->output->setData(pid);
 
             // Calculo de velocidade do motor
+            SpeedService::getInstance()->MeasureWheelsSpeed();
+            float LinearSpeed = speed->linearSpeed->getData();
+            float RobotLinearSpeed = SpeedService::getInstance()->CalculateRobotLinearSpeed();
+            if(AccelerationStep || DesaccelerationStep)
+            {   
+                double kpAcceleration = DataPID->Kp_acceleration->getData();
+                if(DesaccelerationStep)
+                    kpAcceleration = DataPID->Kp_desacceleration->getData();
+                LinearSpeed = AccelerationControl(RobotLinearSpeed, PositionError, kpAcceleration);
+            }
             speed->right->setData(
-                constrain(speed->linearSpeed->getData() + pid, MIN_SPEED, MAX_SPEED));
+                constrain(LinearSpeed + pid, MIN_SPEED, MAX_SPEED));
 
             speed->left->setData(
-                constrain(speed->linearSpeed->getData() - pid, MIN_SPEED, MAX_SPEED));
+                constrain(LinearSpeed - pid, MIN_SPEED, MAX_SPEED));
 
             bool openloopControl = status->OpenLoopControl->getData();
             uint16_t OpenLoopThreshold = status->OpenLoopTreshold->getData();
-            if(abs(erro) >= OpenLoopThreshold && openloopControl)
+            if(abs(PositionError) >= OpenLoopThreshold && openloopControl)
             {
                 int8_t min = speed->OpenLoopMinSpeed->getData();
                 int8_t max = speed->OpenLoopMaxSpeed->getData();
-                OpenLoopControl(erro, max, min);         
+                OpenLoopControl(PositionError, max, min);         
             }
             ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
 
@@ -149,18 +159,57 @@ void PIDService::resetGlobalVariables()
     soma_erro = 0;
     speedTarget = 0;
     speed->linearSpeed->setData(0);
+    AccelerationStep = false;
+    DesaccelerationStep = false;
 }
 
-void PIDService::OpenLoopControl(float erro, int max, int min)
+void PIDService::OpenLoopControl(float PositionError, int max, int min)
 {
     
     speed->right->setData(constrain(max, MIN_SPEED, MAX_SPEED));
     speed->left->setData(constrain(min, MIN_SPEED, MAX_SPEED));
-    if(erro < 0)
+    if(PositionError < 0)
     {
         speed->right->setData(constrain(min, MIN_SPEED, MAX_SPEED));
         speed->left->setData(constrain(max, MIN_SPEED, MAX_SPEED));
     }
+}
+
+void PIDService::setAccelerationDirection(float SpeedError)
+{
+    if(!AccelerationStep && !DesaccelerationStep)
+    {
+        if(SpeedError > 0)
+            AccelerationStep = true;
+        else
+            DesaccelerationStep = true;
+    }
+}
+void PIDService::EnableAccelerationControlIfNeeded(float linearSpeed, float SpeedError, int16_t PositionError)
+{
+    if(abs(SpeedError) > SPEED_ERROR_THRESHOLD && abs(PositionError) < SAFE_POSITION_ERROR)
+        setAccelerationDirection(SpeedError);
+}
+void PIDService::DisableAccelerationWhenEnded(float SpeedError, int16_t PositionError)
+{
+    if((AccelerationStep && SpeedError < 0) || abs(PositionError) >= SAFE_POSITION_ERROR)
+        AccelerationStep = false;
+
+    else if(DesaccelerationStep && SpeedError > 0)
+        DesaccelerationStep = false;
+}
+
+float PIDService::AccelerationControl(int16_t RobotLinearSpeed, int16_t PositionError, double kpAccelerationControl)
+{
+    float LinearSpeed = speed->linearSpeed->getData();
+    float SpeedError = LinearSpeed - RobotLinearSpeed;
+    float newLinearSpeed = LinearSpeed + kpAccelerationControl*SpeedError;
+
+    EnableAccelerationControlIfNeeded(LinearSpeed, SpeedError, PositionError);
+    DisableAccelerationWhenEnded(SpeedError, PositionError);
+
+    return newLinearSpeed;
+
 }
 
 float PIDService::calculatePID(PID_Consts pidConsts, float erro, float somaErro, float input, float *lastInput)
