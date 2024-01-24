@@ -1,11 +1,11 @@
 #include "CarStatusService.hpp"
 
-SemaphoreHandle_t CarStatusService::SemaphoreButton;
+SemaphoreHandle_t CarStatusService::SemaphoreStartRobot;
 
 void IRAM_ATTR CarStatusService::startRobotWithBootButton(void *arg)
 {
     BaseType_t high_task_awoken = pdFALSE;
-    xSemaphoreGiveFromISR(SemaphoreButton, &high_task_awoken);
+    xSemaphoreGiveFromISR(SemaphoreStartRobot, &high_task_awoken);
 }
 
 CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
@@ -25,7 +25,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     lastRobotState = (CarState)status->robotState->getData();
     lastTrack = (TrackSegment)status->currentTrackSegment->getData();
 
-    SemaphoreButton = xSemaphoreCreateBinary();
+    SemaphoreStartRobot = xSemaphoreCreateBinary();
     configExternInterruptToReadButton(GPIO_NUM_0);
 
 }
@@ -181,7 +181,7 @@ void CarStatusService::Run()
 void CarStatusService::waitPressBootButtonToStart()
 {
     ESP_LOGD(GetName().c_str(), "Aguardando pressionamento do botão.");
-    xSemaphoreTake(SemaphoreButton, portMAX_DELAY);
+    xSemaphoreTake(SemaphoreStartRobot, portMAX_DELAY);
 }
 
 void CarStatusService::deleteMappingIfBootButtonIsPressed()

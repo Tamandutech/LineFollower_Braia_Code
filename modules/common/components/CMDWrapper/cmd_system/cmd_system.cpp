@@ -49,7 +49,6 @@ static void register_heap(void);
 static void register_version(void);
 static void register_restart(void);
 static void register_bat_voltage(void);
-static void register_start(void);
 static void register_resume(void);
 static void register_pause(void);
 static void register_calibrate(void);
@@ -64,7 +63,6 @@ void register_system_common(void)
     register_heap();
     register_version();
     register_restart();
-    register_start();
     register_resume();
     register_pause();
     register_calibrate();
@@ -161,53 +159,11 @@ static void register_bat_voltage(void)
     ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
 }
 
-static std::string start(int argc, char **argv)
-{
-    auto status = Robot::getInstance()->getStatus();
-    auto MappingData = Robot::getInstance()->getMappingData();
-    SensorsService::getInstance()->Suspend();
-    SensorsService::getInstance()->calibAllsensors();
-    SensorsService::getInstance()->Resume();
-    if (MappingData->TrackSideMarks->getSize() <= 0)
-    {
-        status->robotState->setData(CAR_MAPPING);
-    }
-    else
-    {
-        status->robotState->setData(CAR_ENC_READING);
-    }
-    xSemaphoreGive(CarStatusService::getInstance()->SemaphoreButton);
-    return ("O robô começará a se mover");
-}
-
-static void register_start(void)
-{
-    const better_console_cmd_t cmd = {
-        .command = "start",
-        .help = "Calibra e faz o robô se mover",
-        .hint = NULL,
-        .func = &start,
-        .argtable = NULL};
-    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
-}
-
 static std::string resume(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
-    auto MappingData = Robot::getInstance()->getMappingData();
-    if(!status->TunningMode->getData())
-    {
-        if (MappingData->TrackSideMarks->getSize() <= 0)
-        {
-            status->robotState->setData(CAR_MAPPING);
-        }
-        else
-        {
-            status->robotState->setData(CAR_ENC_READING);
-        }
-    }
     status->robotState->setData(lastState);
-    xSemaphoreGive(CarStatusService::getInstance()->SemaphoreButton);
+    xSemaphoreGive(CarStatusService::getInstance()->SemaphoreStartRobot);
     status->robotPaused->setData(false);
 
     return ("O robô voltará a andar");

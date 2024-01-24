@@ -23,7 +23,7 @@ public:
     CarStatusService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
     void Run() override;
-    static SemaphoreHandle_t SemaphoreButton;
+    static SemaphoreHandle_t SemaphoreStartRobot;
 
 
 private:
