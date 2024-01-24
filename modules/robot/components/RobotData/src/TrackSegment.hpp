@@ -29,6 +29,7 @@ float getTargetSpeed(TrackSegment trackSegment, CarState estado, dataSpeed *spee
 std::map<TrackSegment, float> getSpeedValuesFromDashboard(dataSpeed *speed);
 bool existTrackSegmentInList(std::list<TrackSegment> list, TrackSegment trackSegment);
 bool isLineSegment(TrackSegment trackSegment);
+bool isCurveSegment(TrackSegment trackSegment);
 #endif
 
 

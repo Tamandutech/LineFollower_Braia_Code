@@ -16,8 +16,6 @@
 using namespace cpp_freertos;
 #include "esp_log.h"
 
-#define ManualMap
-
 class CarStatusService : public Thread, public Singleton<CarStatusService>
 {
 public:
@@ -33,12 +31,10 @@ private:
     Robot *robot;
     RobotStatus *status;
     dataSpeed *speed;
-    dataSLatMarks *latMarks;
+    dataMapping *MappingData;
     dataPID *PidTrans;
 
-    CarState actualCarState, initialRobotState;
-
-    TrackSegment TrackLen = SHORT_CURVE;
+    CarState initialRobotState, currentRobotState, lastRobotState;
 
     MappingService *mappingService;
 
@@ -46,20 +42,15 @@ private:
     
     int iloop = 0;
     
-    bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
-    bool lastTransition = false;
+    bool transition, lastTransition = false;
 
-    TrackSegment trackLen;
+    TrackSegment transitionTrackSegment;
     TrackSegment lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
-    uint8_t lastState; // armazena último estado do mapeamento
     bool lastPaused = false;
-    bool lastMappingState;
 
-    bool started_in_Tuning = false;
     MapData finalMark;
     int32_t robotPosition = 0;
     int32_t pulsesBeforeCurve = 200;
-    int32_t pulsesAfterCurve = 200;
 
     static void IRAM_ATTR startRobotWithBootButton(void *arg);
     void configExternInterruptToReadButton(gpio_num_t gpio_num);
@@ -72,11 +63,13 @@ private:
     bool passedFirstMark();
     void resetEnconderInFirstMark();
     bool trackSegmentChanged();
+    bool RobotStateChanged();
     LedColor defineLedColor();
     void setColorBrightness(LedColor color);
     void logCarStatus();
     void stopTunningMode();
-    void defineTrackSegment(MapData nextMark);
+    void defineTrackSegment(MapData Mark);
+    TrackSegment getTrackSegment(MapData Mark);
 };
 
 #endif
