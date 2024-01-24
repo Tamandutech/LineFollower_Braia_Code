@@ -1,16 +1,6 @@
 #ifndef DATA_ENUMS_H
 #define DATA_ENUMS_H
 
-enum CarState
-{
-    CAR_MAPPING,
-    CAR_ENC_READING,
-    CAR_ENC_READING_BEFORE_FIRSTMARK,
-    CAR_TUNING,
-    CAR_STOPPED,
-};
-
-
 enum DataFunction
 {
     RETORNO_OK,

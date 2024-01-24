@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "dataSpeed.h"
+#include "RobotStatus.h"
 
 enum TrackSegment
 {

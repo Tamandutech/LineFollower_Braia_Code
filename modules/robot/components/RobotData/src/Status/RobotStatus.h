@@ -19,6 +19,15 @@
 
 #include "esp_log.h"
 
+enum CarState
+{
+    CAR_MAPPING,
+    CAR_ENC_READING,
+    CAR_ENC_READING_BEFORE_FIRSTMARK,
+    CAR_TUNING,
+    CAR_STOPPED,
+};
+
 class RobotStatus
 {
 public:

@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "dataPID.h"
+#include "RobotStatus.h"
 #include "TrackSegment.hpp"
 
 enum TypePID
