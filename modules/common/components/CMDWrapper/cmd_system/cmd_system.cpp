@@ -164,11 +164,11 @@ static void register_bat_voltage(void)
 static std::string start(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
-    auto latMarks = Robot::getInstance()->getSLatMarks();
+    auto MappingData = Robot::getInstance()->getMappingData();
     SensorsService::getInstance()->Suspend();
     SensorsService::getInstance()->calibAllsensors();
     SensorsService::getInstance()->Resume();
-    if (latMarks->marks->getSize() <= 0)
+    if (MappingData->TrackSideMarks->getSize() <= 0)
     {
         status->robotState->setData(CAR_MAPPING);
     }
@@ -194,10 +194,10 @@ static void register_start(void)
 static std::string resume(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
-    auto latMarks = Robot::getInstance()->getSLatMarks();
+    auto MappingData = Robot::getInstance()->getMappingData();
     if(!status->TunningMode->getData())
     {
-        if (latMarks->marks->getSize() <= 0)
+        if (MappingData->TrackSideMarks->getSize() <= 0)
         {
             status->robotState->setData(CAR_MAPPING);
         }

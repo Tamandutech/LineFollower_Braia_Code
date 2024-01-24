@@ -1,5 +1,5 @@
 idf_component_register(
-    REQUIRES "Service" "MappingService" "LEDsService"
+    REQUIRES "Service" "SpeedService" "MappingService" "LEDsService"
     SRCS "src/CarStatusService.cpp" 
     INCLUDE_DIRS "src"
 )

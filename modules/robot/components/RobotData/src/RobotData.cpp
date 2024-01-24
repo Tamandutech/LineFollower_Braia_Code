@@ -36,8 +36,8 @@ Robot::Robot(std::string name)
     this->speed = new dataSpeed("speed");
     ESP_LOGD(name.c_str(), "speed (%p)", this->speed);
 
-    this->sLatMarks = new dataSLatMarks("sLatMarks");
-    ESP_LOGD(name.c_str(), "sLatMarks (%p)", this->sLatMarks);
+    this->MappingData = new dataMapping("Mapping");
+    ESP_LOGD(name.c_str(), "MappingData (%p)", this->MappingData);
     
     this->sLat = new dataSensor(2, "sLat");
     ESP_LOGD(name.c_str(), "sLat (%p)", this->sLat);
@@ -51,9 +51,9 @@ Robot::Robot(std::string name)
     dataManager->loadAllParamData();
 }
 
-dataSLatMarks *Robot::getSLatMarks()
+dataMapping *Robot::getMappingData()
 {
-    return this->sLatMarks;
+    return this->MappingData;
 }
 
 dataSpeed *Robot::getSpeed()

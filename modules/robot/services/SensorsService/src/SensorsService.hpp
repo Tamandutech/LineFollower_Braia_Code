@@ -32,7 +32,7 @@ private:
 
   Robot *robot;
 
-  dataSLatMarks *latMarks;
+  dataMapping *MappingData;
   dataSensor *sLatData;
   RobotStatus *status;
   

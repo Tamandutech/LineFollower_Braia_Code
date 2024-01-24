@@ -1,8 +1,8 @@
-#include "dataSLatMarks.h"
+#include "dataMapping.h"
 
 #include "MappingService.hpp"
 
-dataSLatMarks::dataSLatMarks(std::string name)
+dataMapping::dataMapping(std::string name)
 {
     this->name = name;
     ESP_LOGD(name.c_str(), "Criando objeto: %s (%p)", name.c_str(), this);
@@ -15,8 +15,7 @@ dataSLatMarks::dataSLatMarks(std::string name)
     leftMarks = new DataAbstract<uint16_t>("leftMarks", name, 0);
     rightMarks = new DataAbstract<uint16_t>("rightMarks", name, 0);
 
-    marks = new DataMap("marks", name);
-    dataManager->registerParamData(marks);
+    TrackSideMarks = new DataMap("TrackSideMarks", name);
 
     thresholdToCurve = new DataAbstract<uint8_t>("thresholdToCurve", name, 25);
     dataManager->registerParamData(thresholdToCurve);
@@ -30,31 +29,28 @@ dataSLatMarks::dataSLatMarks(std::string name)
     MarkstoMean = new DataAbstract<uint16_t>("MarkstoMean", name, 6);
     dataManager->registerParamData(MarkstoMean);
 
-    PulsesAfterCurve = new DataAbstract<uint32_t>("PulsesAfterCurve", name, 200);
-    dataManager->registerParamData(PulsesAfterCurve);
-
-    thresholdLongLine = new DataAbstract<uint16_t>("thresholdLongLine", name, 1500);
-    dataManager->registerParamData(thresholdLongLine);
+    LongLineLength = new DataAbstract<uint16_t>("LongLine_Length", name, 1500);
+    dataManager->registerParamData(LongLineLength);
     
-    thresholdMediumLine = new DataAbstract<uint16_t>("thresholdMediumLine", name, 1000);
-    dataManager->registerParamData(thresholdMediumLine);
+    MediumLineLength = new DataAbstract<uint16_t>("MediumLine_Length", name, 1000);
+    dataManager->registerParamData(MediumLineLength);
 
-    thresholdLongCurve = new DataAbstract<uint16_t>("thresholdLongCurve", name, 900);
-    dataManager->registerParamData(thresholdLongCurve);
+    LongCurveLength = new DataAbstract<uint16_t>("LongCurve_Length", name, 900);
+    dataManager->registerParamData(LongCurveLength);
     
-    thresholdMediumCurve = new DataAbstract<uint16_t>("thresholdMediumCurve", name, 500);
-    dataManager->registerParamData(thresholdMediumCurve);
+    MediumCurveLength = new DataAbstract<uint16_t>("MediumCurve_Length", name, 500);
+    dataManager->registerParamData(MediumCurveLength);
 
 }
 
-void dataSLatMarks::leftPassedInc()
+void dataMapping::leftPassedInc()
 {
     this->leftMarks->setData(this->leftMarks->getData() + 1);
 
     MappingService::getInstance()->createNewMark();
 }
 
-void dataSLatMarks::rightPassedInc()
+void dataMapping::rightPassedInc()
 {
     this->rightMarks->setData(this->rightMarks->getData() + 1);
     if(this->rightMarks->getData() <= 1 || this->rightMarks->getData() == this->MarkstoStop->getData()) MappingService::getInstance()->createNewMark();

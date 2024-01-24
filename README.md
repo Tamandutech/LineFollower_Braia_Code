@@ -13,7 +13,7 @@ Além disso, os dados utilizados pelo robô são armazenados em classes, em que,
 
 - [dataPID](./modules/shared/components/RobotData/src/PID/)
 - [dataSensor](./modules/shared/components/RobotData/src/Sensor/)
-- [dataSLatMarks](./modules/shared/components/RobotData/src/SLatMarks/)
+- [dataMapping](./modules/shared/components/RobotData/src/Mapping/)
 - [dataSpeed](./modules/shared/components/RobotData/src/Speed/)
 - [RobotStatus](./modules/shared/components/RobotData/src/Status/)
 

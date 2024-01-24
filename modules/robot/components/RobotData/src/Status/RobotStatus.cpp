@@ -9,9 +9,8 @@ RobotStatus::RobotStatus(std::string name)
     dataManager = dataManager->getInstance();
     robotState = new DataAbstract<uint8_t>("robotState", name);
     robotPaused = new DataAbstract<bool>("robotPaused", name, false);
-    TrackStatus = new DataAbstract<uint8_t>("TrackStatus", name, 0);
-    RealTrackStatus = new DataAbstract<uint8_t>("RealTrackStatus", name, 0);
-    Transition = new DataAbstract<bool>("Transition", name, false);
+    transitionTrackSegment = new DataAbstract<uint8_t>("transitionTrackSegment", name, 0);
+    currentTrackSegment = new DataAbstract<uint8_t>("currentTrackSegment", name, 0);
     TunningMode = new DataAbstract<bool>("TunningMode", name, false);
     dataManager->registerParamData(TunningMode);
     OpenLoopControl = new DataAbstract<bool>("OpenLoopControl", name, false);

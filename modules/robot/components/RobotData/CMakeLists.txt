@@ -8,7 +8,7 @@ idf_component_register(
         "src/Speed/dataSpeed.cpp" 
         "src/Status/RobotStatus.cpp"
         "src/Status/LedStatus.cpp"
-        "src/SLatMarks/dataSLatMarks.cpp"
+        "src/Mapping/dataMapping.cpp"
 
     REQUIRES
         "DataObjects" "MappingService" "esp_adc"
@@ -17,7 +17,7 @@ idf_component_register(
         "src"
         "src/PID"
         "src/Sensor"
-        "src/SLatMarks"
+        "src/Mapping"
         "src/Speed"
         "src/Status"
 )

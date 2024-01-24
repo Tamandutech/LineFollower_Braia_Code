@@ -45,16 +45,16 @@ public:
     void newData(std::string mapData);
 
     /// @brief Definir dado estruturado de mapeamento
-    /// @param mapData Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
+    /// @param mapData Dados da struct separados por ",". Ex.: "Posicao,timeUntilMarkReading,markPosition,trackSegmentBeforeMark,offsetMarkPosition"
     void setData(std::string data);
 
     /// @brief Obter o primeiro dado da lista em formato string
-    /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
+    /// @return Dados da struct separados por ",". Ex.: "Posicao,timeUntilMarkReading,markPosition,trackSegmentBeforeMark,offsetMarkPosition"
     std::string getDataString();
 
     /// @brief Obter dado na posição especificada da lista em formato string
     /// @param ctrl Posição da lista
-    /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
+    /// @return Dados da struct separados por ",". Ex.: "Posicao,timeUntilMarkReading,markPosition,trackSegmentBeforeMark,offsetMarkPosition"
     std::string getDataString(std::string ctrl);
 
     std::uint8_t getSize();
