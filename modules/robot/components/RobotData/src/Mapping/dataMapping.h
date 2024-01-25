@@ -41,7 +41,7 @@ public:
     // Parâmetros
 
     // Número de leituras dos sensores laterais para determinar a média que será utilizada na contagem de marcações laterais 
-    DataAbstract<uint16_t> *MarkstoMean;
+    DataAbstract<uint16_t> *targetNumberSensorReadsToMean;
     //Número de marcações direita para a parada 
     DataAbstract<uint16_t> *MarkstoStop;
     //Pulsos antes de inicar uma curva para iniciar a desaceleração

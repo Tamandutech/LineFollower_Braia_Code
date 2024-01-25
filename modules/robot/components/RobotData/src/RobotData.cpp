@@ -39,11 +39,11 @@ Robot::Robot(std::string name)
     this->MappingData = new dataMapping("Mapping");
     ESP_LOGD(name.c_str(), "MappingData (%p)", this->MappingData);
     
-    this->sLat = new dataSensor(2, "sLat");
-    ESP_LOGD(name.c_str(), "sLat (%p)", this->sLat);
+    this->sideSensors = new dataSensor(2, "sideSensors");
+    ESP_LOGD(name.c_str(), "sideSensors (%p)", this->sideSensors);
 
-    this->sArray = new dataSensor(8, "sArray");
-    ESP_LOGD(name.c_str(), "sArray (%p)", this->sArray);
+    this->frontSensors = new dataSensor(8, "frontSensors");
+    ESP_LOGD(name.c_str(), "frontSensors (%p)", this->frontSensors);
 
 
     dataManager = dataManager->getInstance();
@@ -61,14 +61,14 @@ dataSpeed *Robot::getSpeed()
     return this->speed;
 }
 
-dataSensor *Robot::getsLat()
+dataSensor *Robot::getsideSensors()
 {
-    return this->sLat;
+    return this->sideSensors;
 }
 
-dataSensor *Robot::getsArray()
+dataSensor *Robot::getfrontSensors()
 {
-    return this->sArray;
+    return this->frontSensors;
 }
 
 dataPID *Robot::getPID()

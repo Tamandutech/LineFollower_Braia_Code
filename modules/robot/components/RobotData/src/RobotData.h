@@ -42,8 +42,8 @@ public:
     };
 
     dataSpeed *getSpeed();
-    dataSensor *getsLat();
-    dataSensor *getsArray();
+    dataSensor *getsideSensors();
+    dataSensor *getfrontSensors();
     dataPID *getPID();
     RobotStatus *getStatus();
     dataMapping *getMappingData();
@@ -60,9 +60,9 @@ private:
 
     dataSpeed *speed;
     dataPID *PID; 
-    dataSensor *sLat;
+    dataSensor *sideSensors;
     dataMapping *MappingData;
-    dataSensor *sArray;
+    dataSensor *frontSensors;
     RobotStatus *Status;
     DataStorage *storage;
     DataManager *dataManager;

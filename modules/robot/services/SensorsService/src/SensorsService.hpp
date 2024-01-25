@@ -20,15 +20,15 @@ public:
   SensorsService(std::string name, uint32_t stackDepth, UBaseType_t priority);
 
   void Run() override;
-  void calibAllsensors();
+  void calibrateAllSensors();
   uint16_t getArraySensors();
 
 
 private:
 
   // Componente de gerenciamento dos sensores
-  QTRSensors sArray;
-  QTRSensors sLat;
+  QTRSensors frontSensors;
+  QTRSensors sideSensors;
 
   Robot *robot;
 
@@ -36,19 +36,28 @@ private:
   dataSensor *sLatData;
   RobotStatus *status;
   
-  int sumSensEsq = 0;
-  int sumSensDir = 0;
-  int MarksToMean = 0;
+  int sumReadLeftSensor = 0;
+  int sumReadRightSensor = 0;
+  int targetNumberSensorReadsToMean = 0;
 
   int latloop = 0;
   int sloop = 0;
 
-  int nLatReads = 0;
+  int sensorsReadNumber = 0;
 
   void getLatSensors();
 
   void processSLat();
 
+  void processSensorData(int meanSensEsq, int meanSensDir);
+  void processWhiteSensors(int meanSensEsq, int meanSensDir);
+  void processBothWhiteSensors();
+  void processLeftWhiteRightBlack();
+  void processRightWhiteLeftBlack();
+  void processNoWhiteSensors();
+  void resetSensorData();
+  bool isWhite(int sensorValue);
+  bool isBlack(int sensorValue);
 };
 
 #endif

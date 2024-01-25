@@ -209,7 +209,7 @@ static void register_pause(void)
 static std::string calibrate(int argc, char **argv)
 {
     SensorsService::getInstance()->Suspend();
-    SensorsService::getInstance()->calibAllsensors();
+    SensorsService::getInstance()->calibrateAllSensors();
     SensorsService::getInstance()->Resume();
     return ("O robô será calibrado");
 }
