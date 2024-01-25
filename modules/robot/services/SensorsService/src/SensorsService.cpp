@@ -22,37 +22,36 @@ SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_
 
 void SensorsService::Run()
 {
-    // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
+    // Variavel necessária para funcionalidade do vTaskDelayUtil, guarda a contagem de pulsos da CPU
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    // Loop
     for (;;)
     {
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_PERIOD_MS);
 
-        getLatSensors(); // leitura dos sensores laterais
-        processsideSensors();
+        UpdateSideSensors();
+        processSideSensors();
     }
 }
 
 void SensorsService::calibrateAllSensors()
 {
-    calibrateSensors(frontSensors, LED_COLOR_BLUE);
-    calibrateSensors(sideSensors, LED_COLOR_RED);
+    calibrateSensors(&frontSensors, LED_COLOR_BLUE);
+    calibrateSensors(&sideSensors, LED_COLOR_RED);
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
 }
 
-void calibrateSensors(QTRSensors sensorIR, LedColor color) {
+void SensorsService::calibrateSensors(QTRSensors *sensorIR, LedColor color) {
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, 1);
     for (uint16_t i = 0; i < 40; i++)
     {   
-        ESP_LOGD(GetName().c_str(), "(%p) | sensor: (%p)", this, &sensorIR);
-        sensorIR.calibrate();
+        ESP_LOGD(GetName().c_str(), "(%p) | sensor: (%p)", this, sensorIR);
+        sensorIR->calibrate();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
-void SensorsService::getLatSensors() // função leitura dos sensores
+void SensorsService::UpdateSideSensors()
 {
     // Arrays para armazenar leitura bruta dos sensores laterais
     uint16_t sideSensorschannels[sideSensors.getSensorCount()];
@@ -60,7 +59,7 @@ void SensorsService::getLatSensors() // função leitura dos sensores
     sideSensors.readCalibrated(sideSensorschannels);                                                                 // leitura dos sensores laterais
     std::vector<uint16_t> sideSensorschannelsVec(sideSensorschannels, sideSensorschannels + sideSensors.getSensorCount());         // vector(array) com os valores dos sensores laterais
 
-    // armazenando da leitura bruta do sensor lateral no objeto Braia
+    // armazenando da leitura bruta do sensor lateral
     robot->getsideSensors()->setChannels(sideSensorschannelsVec);
 
     if (latloop >= 100)
@@ -71,31 +70,31 @@ void SensorsService::getLatSensors() // função leitura dos sensores
     latloop++;
 }
 
-uint16_t SensorsService::getArraySensors() // função leitura dos sensores frontais
+uint16_t SensorsService::UpdateFrontSensors() // função leitura dos sensores frontais
 {
     // Arrays para armazenar leitura bruta dos sensores array
     uint16_t frontSensorschannels[frontSensors.getSensorCount()];
 
-    if(status->LineColorBlack->getData()) robot->getfrontSensors()->setLine(frontSensors.readLineBlack(frontSensorschannels));
-    else robot->getfrontSensors()->setLine(frontSensors.readLineWhite(frontSensorschannels));
-    // cálculo dos valores do sensor array
+    if(status->LineColorBlack->getData()) robot->getfrontSensors()->setWeightedMean(frontSensors.readLineBlack(frontSensorschannels));
+    else robot->getfrontSensors()->setWeightedMean(frontSensors.readLineWhite(frontSensorschannels));
+
     std::vector<uint16_t> frontSensorsValues(frontSensorschannels, frontSensorschannels + frontSensors.getSensorCount()); // vector(array) com os valores do sensor array       // vector(array) com os valores dos sensores laterais
 
-    // armazenando da leitura bruta do sensor array no objeto Braia
+    // armazenando da leitura bruta do sensor array
     robot->getfrontSensors()->setChannels(frontSensorsValues);
 
     if (sloop >= 100)
     {
         ESP_LOGD(GetName().c_str(), "Array: %d | %d | %d | %d | %d | %d | %d | %d ", frontSensorschannels[0], frontSensorschannels[1], frontSensorschannels[2], frontSensorschannels[3], frontSensorschannels[4], frontSensorschannels[5], frontSensorschannels[6], frontSensorschannels[7]);
-        ESP_LOGD(GetName().c_str(), "Linha: %d", robot->getfrontSensors()->getLine());
+        ESP_LOGD(GetName().c_str(), "Linha: %d", robot->getfrontSensors()->getWeightedMean());
         sloop = 0;
     }
     sloop++;
 
-    return robot->getfrontSensors()->getLine();
+    return robot->getfrontSensors()->getWeightedMean();
 }
 
-void SensorsService::processsideSensors()
+void SensorsService::processSideSensors()
 {
     uint16_t leftSideSensoRead = sideSensorsData->getChannel(0);
     uint16_t rightSideSensoRead = sideSensorsData->getChannel(1);
@@ -108,37 +107,14 @@ void SensorsService::processsideSensors()
     targetNumberSensorReadsToMean = 1;
     if(status->robotState->getData() == CAR_MAPPING)
         targetNumberSensorReadsToMean = MappingData->targetNumberSensorReadsToMean->getData();
-    
-   
+
 
     if (sensorsReadNumber >= targetNumberSensorReadsToMean)  //valor definido na dashboard
     {
-        int meanSensEsq = (sumReadLeftSensor/sensorsReadNumber);
-        int meanSensDir = (sumReadRightSensor/sensorsReadNumber);
+        int meanLeftSideSensor = (sumReadLeftSensor/sensorsReadNumber);
+        int meanRightSideSensor = (sumReadRightSensor/sensorsReadNumber);
         
-        processSensorData(meanSensEsq, meanSensDir);
-       
-    }
-}
-
-
-
-void SensorsService::processSensorData(int meanSensEsq, int meanSensDir) {
-    if (isWhite(meanSensEsq) || isWhite(meanSensDir)) {
-        processWhiteSensors(meanSensEsq, meanSensDir);
-    } else {
-        processNoWhiteSensors();
-    }
-    resetSensorData();
-}
-
-void SensorsService::processWhiteSensors(int meanSensEsq, int meanSensDir) {
-    if (isWhite(meanSensEsq) && isBlack(meanSensDir)) {
-        processLeftWhiteRightBlack();
-    } else if (isWhite(meanSensDir) && isBlack(meanSensEsq)) {
-        processRightWhiteLeftBlack();
-    } else if (isWhite(meanSensEsq) && isWhite(meanSensDir)) {
-        processBothWhiteSensors();
+        processSensorData(meanLeftSideSensor, meanRightSideSensor);  
     }
 }
 
@@ -150,7 +126,66 @@ bool SensorsService::isBlack(int sensorValue) {
     return sensorValue > 600;
 }
 
-void SensorsService::processNoWhiteSensors() {
+void SensorsService::processSensorData(int meanLeftSideSensor, int meanRightSideSensor) {
+    if (isWhite(meanLeftSideSensor) || isWhite(meanRightSideSensor))
+        processSensorsReadingMark(meanLeftSideSensor, meanRightSideSensor);
+    else
+        processSensorsReadingNothing();
+
+    resetSensorData();
+}
+
+void SensorsService::processSensorsReadingMark(int meanLeftSideSensor, int meanRightSideSensor) {
+    if (isWhite(meanLeftSideSensor) && isBlack(meanRightSideSensor))
+        processLefSensorReadingMark();
+    else if (isWhite(meanRightSideSensor) && isBlack(meanLeftSideSensor))
+        processRightSensorReadingMark();
+    else if (isWhite(meanLeftSideSensor) && isWhite(meanRightSideSensor)) 
+        processBothSensorsReadingMark();
+}
+
+
+void SensorsService::processLefSensorReadingMark() {
+    if (!MappingData->latEsqPass->getData())
+    {
+        if(status->robotState->getData() != CAR_STOPPED)
+            MappingData->leftPassedInc();
+
+        MappingData->latEsqPass->setData(true);
+        MappingData->latDirPass->setData(false);
+
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
+    }
+}
+
+void SensorsService::processRightSensorReadingMark() {
+    if (!MappingData->latDirPass->getData())
+    {
+        if(status->robotState->getData() != CAR_STOPPED)
+            MappingData->rightPassedInc();
+
+        MappingData->latDirPass->setData(true);
+        MappingData->latEsqPass->setData(false);
+
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
+    }
+}
+
+void SensorsService::processBothSensorsReadingMark() {
+    if ((MappingData->latDirPass->getData() && !MappingData->latEsqPass->getData()) ||
+        (MappingData->latEsqPass->getData() && !MappingData->latDirPass->getData())) 
+    {
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
+    }
+
+    MappingData->latDirPass->setData(true);
+    MappingData->latEsqPass->setData(true);
+}
+
+void SensorsService::processSensorsReadingNothing() {
     if (MappingData->latDirPass->getData() || MappingData->latEsqPass->getData()) {
         LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
         LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
@@ -158,41 +193,6 @@ void SensorsService::processNoWhiteSensors() {
 
     MappingData->latDirPass->setData(false);
     MappingData->latEsqPass->setData(false);
-}
-
-void SensorsService::processLeftWhiteRightBlack() {
-    if (!MappingData->latEsqPass->getData() && status->robotState->getData() != CAR_STOPPED) {
-        MappingData->leftPassedInc();
-    }
-
-    MappingData->latEsqPass->setData(true);
-    MappingData->latDirPass->setData(false);
-
-    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
-    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
-}
-
-void SensorsService::processRightWhiteLeftBlack() {
-    if (!MappingData->latDirPass->getData() && status->robotState->getData() != CAR_STOPPED) {
-        MappingData->rightPassedInc();
-    }
-
-    MappingData->latDirPass->setData(true);
-    MappingData->latEsqPass->setData(false);
-
-    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
-    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
-}
-
-void SensorsService::processBothWhiteSensors() {
-    if ((MappingData->latDirPass->getData() && !MappingData->latEsqPass->getData()) ||
-        (MappingData->latEsqPass->getData() && !MappingData->latDirPass->getData())) {
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
-    }
-
-    MappingData->latDirPass->setData(true);
-    MappingData->latEsqPass->setData(true);
 }
 
 void SensorsService::resetSensorData() {

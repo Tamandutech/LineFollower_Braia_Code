@@ -26,7 +26,7 @@ dataMapping::dataMapping(std::string name)
     PulsesBeforeCurve = new DataAbstract<uint32_t>("PulsesBeforeCurve", name, 200);
     dataManager->registerParamData(PulsesBeforeCurve);
 
-    targetNumberSensorReadsToMean = new DataAbstract<uint16_t>("targetNumberSensorReadsToMean", name, 6);
+    targetNumberSensorReadsToMean = new DataAbstract<uint16_t>("SideSensor_ReadsNumber", name, 6);
     dataManager->registerParamData(targetNumberSensorReadsToMean);
 
     LongLineLength = new DataAbstract<uint16_t>("LongLine_Length", name, 1500);

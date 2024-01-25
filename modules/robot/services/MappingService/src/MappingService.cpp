@@ -4,8 +4,7 @@ MappingService::MappingService(std::string name, uint32_t stackDepth, UBaseType_
 {
     this->robot = Robot::getInstance();
 
-    speedMapping = robot->getSpeed();
-    sLat = robot->getsLat();
+    speed = robot->getSpeed();
     MappingData = robot->getMappingData();
     status = robot->getStatus();
 
@@ -101,16 +100,16 @@ void MappingService::Run()
         this->Suspend();
         
         currentMark.offsetMarkPosition = 0;
-        EncLeft = speedMapping->EncLeft->getData();
-        EncRight = speedMapping->EncRight->getData();
+        EncLeft = speed->EncLeft->getData();
+        EncRight = speed->EncRight->getData();
         currentMark.markPosition = ((EncLeft + EncRight) / 2);
         currentMark.timeUntilMarkReading = xTaskGetTickCount()*portTICK_PERIOD_MS;
 
         // variação de encoder em pulsos
         uint32_t DeltaPulses = std::abs((EncRight - lastEncRight) - (EncLeft - lastEncLeft));
         // Quantidade de pulsos que o encoder precisa dar para avançar "x" milimetros
-        uint32_t MilimiterInPulses = (speedMapping->MPR->getData() * MappingData->thresholdToCurve->getData()) / (M_PI * speedMapping->WheelDiameter->getData());
-        uint32_t DeltaDist = ((currentMark.markPosition - lastmarkPosition) * (M_PI * speedMapping->WheelDiameter->getData())) / (speedMapping->MPR->getData()); // distância entre marcacões em mm
+        uint32_t MilimiterInPulses = (speed->MPR->getData() * MappingData->thresholdToCurve->getData()) / (M_PI * speed->WheelDiameter->getData());
+        uint32_t DeltaDist = ((currentMark.markPosition - lastmarkPosition) * (M_PI * speed->WheelDiameter->getData())) / (speed->MPR->getData()); // distância entre marcacões em mm
         if(DeltaPulses <= MilimiterInPulses)
         {
             if(DeltaDist < MappingData->MediumLineLength->getData()) currentMark.trackSegmentBeforeMark = SHORT_LINE;

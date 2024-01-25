@@ -44,7 +44,7 @@ void PIDService::Run()
             speed->VelRot->setData(VelRot);
 
             // Cálculo do erro
-            float SensorArrayPosition = SensorsService::getInstance()->getArraySensors(); // posição do robô
+            float SensorArrayPosition = SensorsService::getInstance()->UpdateFrontSensors(); // posição do robô
             float erro = ARRAY_TARGET_POSITION - SensorArrayPosition;
             soma_erro += erro;
             DataPID->setpoint->setData(ARRAY_TARGET_POSITION);

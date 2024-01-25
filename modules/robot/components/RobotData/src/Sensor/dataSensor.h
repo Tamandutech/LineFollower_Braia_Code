@@ -21,8 +21,8 @@ class dataSensor
 public:
     dataSensor(uint16_t qtdChannels, std::string name = "dataSensor");
 
-    int setLine(uint16_t value);
-    uint16_t getLine();
+    int setWeightedMean(uint16_t value);
+    uint16_t getWeightedMean();
 
     int setChannel(uint16_t channelNumber, uint16_t value, std::vector<uint16_t> *channel, SemaphoreHandle_t *xSemaphoreOfArg);
     int setChannel(uint16_t channelNumber, uint16_t value);
@@ -54,8 +54,8 @@ private:
     SemaphoreHandle_t xSemaphorechannel;
     std::vector<uint16_t> channel;
 
-    SemaphoreHandle_t xSemaphoreline;
-    uint16_t line;
+    SemaphoreHandle_t xSemaphoreWeightedMean;
+    uint16_t WeightedMean;
 
     // Parâmetros
     uint16_t qtdChannels = 0;

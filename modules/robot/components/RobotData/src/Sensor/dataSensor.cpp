@@ -15,17 +15,17 @@ dataSensor::dataSensor(uint16_t qtdChannels, std::string name)
 
     ESP_LOGD(tag, "Criando Semáforos");
     (xSemaphorechannel) = xSemaphoreCreateMutex();
-    (xSemaphoreline) = xSemaphoreCreateMutex();
+    (xSemaphoreWeightedMean) = xSemaphoreCreateMutex();
     (xSemaphoremaxChannel) = xSemaphoreCreateMutex();
     (xSemaphoreminChannel) = xSemaphoreCreateMutex();
 }
 
-int dataSensor::setLine(uint16_t value)
+int dataSensor::setWeightedMean(uint16_t value)
 {
-    if (xSemaphoreTake(xSemaphoreline, (TickType_t)10) == pdTRUE)
+    if (xSemaphoreTake(xSemaphoreWeightedMean, (TickType_t)10) == pdTRUE)
     {
-        this->line = value;
-        xSemaphoreGive(xSemaphoreline);
+        this->WeightedMean = value;
+        xSemaphoreGive(xSemaphoreWeightedMean);
         return RETORNO_OK;
     }
     else
@@ -34,16 +34,16 @@ int dataSensor::setLine(uint16_t value)
         return RETORNO_VARIAVEL_OCUPADA;
     }
 }
-uint16_t dataSensor::getLine()
+uint16_t dataSensor::getWeightedMean()
 {
-    int16_t tempLine = 0;
+    int16_t tempWeightedMean = 0;
     for (;;)
     {
-        if (xSemaphoreTake(xSemaphoreline, (TickType_t)10) == pdTRUE)
+        if (xSemaphoreTake(xSemaphoreWeightedMean, (TickType_t)10) == pdTRUE)
         {
-            tempLine = this->line;
-            xSemaphoreGive(xSemaphoreline);
-            return tempLine;
+            tempWeightedMean = this->WeightedMean;
+            xSemaphoreGive(xSemaphoreWeightedMean);
+            return tempWeightedMean;
         }
         else
         {

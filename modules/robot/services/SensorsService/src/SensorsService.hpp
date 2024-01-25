@@ -21,7 +21,7 @@ public:
 
   void Run() override;
   void calibrateAllSensors();
-  uint16_t getArraySensors();
+  uint16_t UpdateFrontSensors();
 
 
 private:
@@ -33,7 +33,7 @@ private:
   Robot *robot;
 
   dataMapping *MappingData;
-  dataSensor *sLatData;
+  dataSensor *sideSensorsData;
   RobotStatus *status;
   
   int sumReadLeftSensor = 0;
@@ -45,16 +45,16 @@ private:
 
   int sensorsReadNumber = 0;
 
-  void getLatSensors();
-
-  void processSLat();
+  void calibrateSensors(QTRSensors *sensorIR, LedColor color);
+  void UpdateSideSensors();
+  void processSideSensors();
 
   void processSensorData(int meanSensEsq, int meanSensDir);
-  void processWhiteSensors(int meanSensEsq, int meanSensDir);
-  void processBothWhiteSensors();
-  void processLeftWhiteRightBlack();
-  void processRightWhiteLeftBlack();
-  void processNoWhiteSensors();
+  void processSensorsReadingMark(int meanSensEsq, int meanSensDir);
+  void processBothSensorsReadingMark();
+  void processLefSensorReadingMark();
+  void processRightSensorReadingMark();
+  void processSensorsReadingNothing();
   void resetSensorData();
   bool isWhite(int sensorValue);
   bool isBlack(int sensorValue);

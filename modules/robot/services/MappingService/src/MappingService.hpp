@@ -39,8 +39,7 @@ private:
     std::string name;
 
     Robot *robot;
-    dataSpeed *speedMapping;
-    dataSensor *sLat;
+    dataSpeed *speed;
     dataMapping *MappingData;
     RobotStatus *status;
 
