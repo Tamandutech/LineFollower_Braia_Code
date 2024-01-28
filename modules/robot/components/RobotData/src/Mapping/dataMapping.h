@@ -20,15 +20,20 @@
 
 #include "esp_log.h"
 
+enum SensorReading {
+    LEFT,
+    RIGHT,
+    BOTH,
+    NONE
+}
+
 class dataMapping
 {
 public:
     dataMapping(std::string name = "dataMapping");
 
-    // Estado do sensor da lateral esquerda
-    DataAbstract<bool> *latEsqPass;
-    // Estado do sensor da lateral direita
-    DataAbstract<bool> *latDirPass;
+    DataAbstract<bool> *leftSensorReadingMark;
+    DataAbstract<bool> *rigthSensorReadingMark;
 
     // Quantidade atual de marcas da lateral esquerda
     DataAbstract<uint16_t> *leftMarks;
@@ -57,14 +62,19 @@ public:
     DataAbstract<uint16_t> *MediumCurveLength;
 
     // Incrementa a contagem de marcas da lateral esquerda
-    void leftPassedInc();
+    void addMarkOnLeftSensor();
     // Incrementa a contagem de marcas da lateral direita
-    void rightPassedInc();
+    void addMarkOnRightSensor();
 
 private:
     std::string name;
-
     DataManager *dataManager;
+    void processSensorreadingMark(DataAbstract<bool> *sensorReading, Sensors sensorSide);
+    bool sensorWasNotReadingMark(DataAbstract<bool> *sensorReading);
+    void addMarkOnSensor(Sensors sensorSide);
+    void setSideSensorReading(Sensors sensorSide);
+    void setColorSideLED(Sensors sensorSide);
+    
 };
 
 #endif

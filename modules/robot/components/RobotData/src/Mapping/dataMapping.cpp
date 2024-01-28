@@ -9,8 +9,8 @@ dataMapping::dataMapping(std::string name)
 
     dataManager = dataManager->getInstance();
 
-    latEsqPass = new DataAbstract<bool>("latEsqPass", name, 0);
-    latDirPass = new DataAbstract<bool>("latDirPass", name, 0);
+    leftSensorReadingMark = new DataAbstract<bool>("leftSensorReadingMark", name, 0);
+    rigthSensorReadingMark = new DataAbstract<bool>("rigthSensorReadingMark", name, 0);
 
     leftMarks = new DataAbstract<uint16_t>("leftMarks", name, 0);
     rightMarks = new DataAbstract<uint16_t>("rightMarks", name, 0);
@@ -43,14 +43,14 @@ dataMapping::dataMapping(std::string name)
 
 }
 
-void dataMapping::leftPassedInc()
+void dataMapping::addMarkOnLeftSensor()
 {
     this->leftMarks->setData(this->leftMarks->getData() + 1);
 
     MappingService::getInstance()->createNewMark();
 }
 
-void dataMapping::rightPassedInc()
+void dataMapping::addMarkOnRightSensor()
 {
     this->rightMarks->setData(this->rightMarks->getData() + 1);
     if(this->rightMarks->getData() <= 1 || this->rightMarks->getData() == this->MarkstoStop->getData()) MappingService::getInstance()->createNewMark();

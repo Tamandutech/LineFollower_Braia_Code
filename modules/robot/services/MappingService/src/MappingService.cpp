@@ -116,8 +116,8 @@ void MappingService::Run()
             else if(DeltaDist < MappingData->LongLineLength->getData()) currentMark.trackSegmentBeforeMark = MEDIUM_LINE;
             else currentMark.trackSegmentBeforeMark = LONG_LINE;
 
-            if(MappingData->latEsqPass->getData()) led = LED_POSITION_LEFT;
-            else if(MappingData->latDirPass->getData()) led = LED_POSITION_RIGHT;
+            if(MappingData->leftSensorReadingMark->getData()) led = LED_POSITION_LEFT;
+            else if(MappingData->rigthSensorReadingMark->getData()) led = LED_POSITION_RIGHT;
             color = LED_COLOR_GREEN;
         }
         else
@@ -126,8 +126,8 @@ void MappingService::Run()
             else if(DeltaDist < MappingData->LongCurveLength->getData()) currentMark.trackSegmentBeforeMark = MEDIUM_CURVE;
             else currentMark.trackSegmentBeforeMark = LONG_CURVE;
 
-            if(MappingData->latEsqPass->getData()) led = LED_POSITION_LEFT;
-            else if(MappingData->latDirPass->getData()) led = LED_POSITION_RIGHT;
+            if(MappingData->leftSensorReadingMark->getData()) led = LED_POSITION_LEFT;
+            else if(MappingData->rigthSensorReadingMark->getData()) led = LED_POSITION_RIGHT;
             color = LED_COLOR_RED;
         }
         MappingData->TrackSideMarks->newData(currentMark);
