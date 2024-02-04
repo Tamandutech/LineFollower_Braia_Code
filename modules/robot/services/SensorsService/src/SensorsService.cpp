@@ -152,6 +152,9 @@ void SensorsService::processSLat()
             {
                 if (!(latMarks->latEsqPass->getData()))
                 {
+                    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
+                    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
+                    
                     if(status->robotState->getData() != CAR_STOPPED)
                     {
                         latMarks->leftPassedInc();
@@ -160,14 +163,15 @@ void SensorsService::processSLat()
                     latMarks->latEsqPass->setData(true);
                     latMarks->latDirPass->setData(false);
                     
-                    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
-                    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
                 }
             }
             else if ((meanSensDir < 300) && (meanSensEsq > 600)) // lendo sldir. branco e sLat esq. preto
             {
                 if (!(latMarks->latDirPass->getData()))
                 {
+                    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
+                    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
+                    
                     if(status->robotState->getData() != CAR_STOPPED)
                     {
                         latMarks->rightPassedInc();
@@ -177,8 +181,6 @@ void SensorsService::processSLat()
                     latMarks->latDirPass->setData(true);
                     latMarks->latEsqPass->setData(false);
 
-                    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
-                    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
                 }
             }
 

@@ -41,6 +41,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     lastTrack = (TrackSegment) status->TrackStatus->getData();
 
     firstmark = false;
+    transition = false;
 
     SemaphoreButton = xSemaphoreCreateBinary();
     configExternInterrupt(GPIO_NUM_0);
@@ -192,13 +193,41 @@ void CarStatusService::Run()
 
                     if ((mediaEncActual - initialmediaEnc) >= Manualmedia && (mediaEncActual - initialmediaEnc) <= ManualmediaNxt) // análise do valor das médias dos encoders
                     {
+                        if(lastMarkPassed != mark)
+                        {
+                            transition = false;
+                            lastMarkPassed = mark;
+                        }
                         TrackSegment trackLen = (TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus;
                         status->RealTrackStatus->setData(trackLen);
-                        bool transition = false;
 
                         int16_t offset = latMarks->marks->getData(mark).MapOffset;
-                        int16_t offsetnxt = latMarks->marks->getData(mark+1).MapOffset;
+                        if(!transition)
+                            offsetnxt = latMarks->marks->getData(mark+1).MapOffset;
                         // Verifica se o robô precisa reduzir a velocidade, entrando no modo curva
+                        if(mark + 2 < numMarks)
+                        {
+                    
+                            if(isLineSegment((TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus) && !isLineSegment((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus) && offsetnxt == 0 && !transition)
+                            {
+                                int16_t FinalSpeed =  getTrackSegmentSpeed((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus, speed);  
+                                float DecelerationOffsetGain = speed->DecelerationOffsetGain->getData();
+                                offsetnxt = SpeedService::getInstance()->CalculateOffsetToDecelerate(FinalSpeed, DecelerationOffsetGain);
+                            }
+
+                            transition = false;
+                            if(offsetnxt < 0)
+                            {
+                                if((mediaEncActual - initialmediaEnc) > (ManualmediaNxt + offsetnxt)) 
+                                {
+                                    transition = true;
+                                    trackLen = (TrackSegment)latMarks->marks->getData(mark+2).MapTrackStatus;
+                                }
+                            }
+                        }
+                        else
+                            transition = false;
+
                         if(!isLineSegment((TrackSegment)latMarks->marks->getData(mark).MapTrackStatus) && isLineSegment((TrackSegment)latMarks->marks->getData(mark + 1).MapTrackStatus) && offset == 0)
                         {
                             offset = pulsesAfterCurve; 
@@ -209,22 +238,6 @@ void CarStatusService::Run()
                             {
                                 transition = true;
                                 trackLen = (TrackSegment)latMarks->marks->getData(mark).MapTrackStatus;
-                            }
-                        }
-                        if(mark + 2 < numMarks)
-                        {
-                    
-                            if(isLineSegment((TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus) && !isLineSegment((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus) && offsetnxt == 0)
-                            {
-                                offsetnxt = -pulsesBeforeCurve; 
-                            }
-                            if(offsetnxt < 0)
-                            {
-                                if((mediaEncActual - initialmediaEnc) > (ManualmediaNxt + offsetnxt)) 
-                                {
-                                    transition = true;
-                                    trackLen = (TrackSegment)latMarks->marks->getData(mark+2).MapTrackStatus;
-                                }
                             }
                         }
                         // Atualiza estado do robô

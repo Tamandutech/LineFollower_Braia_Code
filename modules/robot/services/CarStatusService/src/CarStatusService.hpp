@@ -10,6 +10,7 @@
 
 #include "MappingService.hpp"
 #include "LEDsService.hpp"
+#include "SpeedService.hpp"
 
 
 using namespace cpp_freertos;
@@ -47,12 +48,15 @@ private:
     
     bool stateChanged; // verifica se o carrinho mudou seu estado quanto ao mapeamento
     bool lastTransition = false;
+    bool transition = false;
 
     TrackSegment lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
     uint8_t lastState; // armazena último estado do mapeamento
     bool lastPaused = false;
     bool lastMappingState;
+    int lastMarkPassed = 0;
 
+    int16_t offsetnxt = 0;
     bool started_in_Tuning = false;
     int32_t mediaEncActual = 0;
     int32_t mediaEncFinal = 0;
