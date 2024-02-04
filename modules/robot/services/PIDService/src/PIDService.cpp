@@ -61,13 +61,17 @@ void PIDService::Run()
             SpeedService::getInstance()->MeasureWheelsSpeed();
             float LinearSpeed = speed->linearSpeed->getData();
             float RobotLinearSpeed = SpeedService::getInstance()->CalculateRobotLinearSpeed();
-            if(AccelerationStep || DesaccelerationStep)
+            speed->RobotEstimatedLinearSpeed->setData(RobotLinearSpeed);
+            double kpAcceleration = DataPID->Kp_acceleration->getData();
+            bool fastAcceleration = status->FastAcceleration->getData();
+            AccelerationControl(RobotLinearSpeed, PositionError, kpAcceleration);
+            if((AccelerationStep || DesaccelerationStep) && fastAcceleration)
             {   
-                double kpAcceleration = DataPID->Kp_acceleration->getData();
                 if(DesaccelerationStep)
                     kpAcceleration = DataPID->Kp_desacceleration->getData();
                 LinearSpeed = AccelerationControl(RobotLinearSpeed, PositionError, kpAcceleration);
             }
+            speed->PwmMean->setData(LinearSpeed);
             speed->right->setData(
                 constrain(LinearSpeed + pid, MIN_SPEED, MAX_SPEED));
 
@@ -96,21 +100,24 @@ void PIDService::Run()
             TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
             speedTarget = getTargetSpeed(tracksegment, estado, speed);
 
+            float newSpeed = speedTarget;
             // Rampeia a velocidade linear do robô
-            float speedValue = speed->linearSpeed->getData();
-            float newSpeed = calculateSpeed(accel, speedValue);
+            if(!fastAcceleration)
+            {
+                float speedValue = speed->linearSpeed->getData();
+                newSpeed = calculateSpeed(accel, speedValue);
 
-            if (speedValue >= speedTarget)
-                newSpeed = calculateSpeed(-desaccel, speedValue);
-
+                if (speedValue >= speedTarget)
+                    newSpeed = calculateSpeed(-desaccel, speedValue);
+            }
             storingSpeedValue(newSpeed);
 
-            if (iloop > 200)
+            if (iloop > 20)
             {
-                ESP_LOGD(GetName().c_str(), "dataPID: %.2f | estado: %d", DataPID->output->getData(), estado);
-                ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", pidConsts.KD, pidConsts.KP);
+                //ESP_LOGD(GetName().c_str(), "dataPID: %.2f | estado: %d", DataPID->output->getData(), estado);
+                //ESP_LOGD(GetName().c_str(), "Kd: %.4f | Kp: %.4f\n", pidConsts.KD, pidConsts.KP);
                 ESP_LOGD(GetName().c_str(), "speedLeft: %.2f | speedRight: %.2f | speedLinear: %.2f | speedTarget: %.2f", speed->left->getData(), speed->right->getData(), speed->linearSpeed->getData(), speedTarget);
-                ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f\n", VelTrans, VelRot);
+                ESP_LOGD(GetName().c_str(), "VelTrans: %.2f | VelRot: %.2f | RobotLinearSpeed: %.2f\n", VelTrans, VelRot, RobotLinearSpeed);
                 iloop = 0;
             }
             iloop++;

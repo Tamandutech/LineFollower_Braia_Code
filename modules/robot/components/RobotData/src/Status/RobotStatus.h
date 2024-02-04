@@ -37,6 +37,7 @@ public:
     DataAbstract<bool> *robotPaused;
     DataAbstract<bool> *TunningMode;
     DataAbstract<bool> *OpenLoopControl;
+    DataAbstract<bool> *FastAcceleration;
     DataAbstract<bool> *HardDeleteMap;
     DataAbstract<bool> *LineColorBlack;
     

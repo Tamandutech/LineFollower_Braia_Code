@@ -24,6 +24,7 @@ public:
     void Run() override;
     void MeasureWheelsSpeed();
     int16_t CalculateRobotLinearSpeed();
+    int16_t CalculateOffsetToDecelerate(int16_t FinalSpeed, float DecelerationAdjustableGain);
 
 private:
     Robot *robot;
@@ -37,16 +38,15 @@ private:
     
     short const TaskDelay = 10; // 10 ms
     uint16_t MPR_Mot = 180;
+    int32_t lastPulseLeftToPositionCalculus = 0;
+    int32_t lastPulseRightToPositionCalculus = 0;
     int32_t lastPulseRight = 0;
     int32_t lastPulseLeft = 0;
-    int64_t lastdeltaTime = 0;
-    int64_t deltaTime = 0; // delta entre ultimo calculo e o atual em microsegundos
+    int64_t lastTimeWheelsSpeedMeasured = 0;
 
     float deltaS = 0;
     float deltaA = 0; // rad/s
     float Ang = 0; // rad/s
-    float deltaEncEsq = 0;
-    float deltaEncDir = 0;
     float diameterWheel = 0; // mm
     float diameterRobot = 0; // mm
     float positionX = 0, positionY = 0; // mm
@@ -54,7 +54,6 @@ private:
 
 
     TickType_t initialTicksCar = 0;
-    uint16_t deltaTimeMS_media = 0;
     int iloop=0;
 
     int16_t CalculateWheelSpeed(int32_t ActualPulsesCount, int32_t lastPulsesCount, int64_t dt_MicroSeconds);

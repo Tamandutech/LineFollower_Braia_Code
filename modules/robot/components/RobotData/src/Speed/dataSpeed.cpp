@@ -10,8 +10,9 @@ dataSpeed::dataSpeed(std::string name)
 
     // Valocidades atuais
     RPMRight_inst = new DataAbstract<int16_t>("RPMRight_inst", name, 0);
+    dataManager->registerRuntimeData(RPMRight_inst);
     RPMLeft_inst = new DataAbstract<int16_t>("RPMLeft_inst", name, 0);
-    RPMCar_media = new DataAbstract<int16_t>("RPMCar_media", name, 0);
+    dataManager->registerRuntimeData(RPMLeft_inst);
 
     // Contagem atual dos encoders
     EncRight = new DataAbstract<int32_t>("EncRight", name, 0);
@@ -45,6 +46,8 @@ dataSpeed::dataSpeed(std::string name)
     OpenLoopMinSpeed = new DataAbstract<int8_t>("OpenLoopMinSpeed", name, 0);
     dataManager->registerParamData(OpenLoopMinSpeed);
     
+    PwmMean = new DataAbstract<float>("PwmMean", name, 0);
+    dataManager->registerRuntimeData(PwmMean);
     right = new DataAbstract<float>("right", name, 0);
     dataManager->registerRuntimeData(right);
     left = new DataAbstract<float>("left", name, 0);
@@ -57,12 +60,15 @@ dataSpeed::dataSpeed(std::string name)
     desaccelration = new DataAbstract<float>("PWM_desaccel", name, 6000);
     dataManager->registerParamData(desaccelration);
 
+    DecelerationOffsetGain = new DataAbstract<float>("DecelerationOffsetGain", name, 0.13);
+    dataManager->registerParamData(DecelerationOffsetGain);
+
     initialspeed = new DataAbstract<float>("PWM_initial_speed", name, 1100);
     dataManager->registerParamData(initialspeed);
 
+    MotorMaxSpeed = new DataAbstract<float>("MotorMaxSpeed", name, 5000);
+    dataManager->registerParamData(MotorMaxSpeed);
     //Setpoints translacionais para os tipos de trechos
-    SetPointMap = new DataAbstract<float>("PWM_Setpoint_Map", name, 600);
-    dataManager->registerParamData(SetPointMap);
     XLong_Line = new DataAbstract<float>("PWM_XLong_line", name, 1000);
     dataManager->registerParamData(XLong_Line);
     Long_Line = new DataAbstract<float>("PWM_Long_line", name, 1000);
@@ -98,6 +104,9 @@ dataSpeed::dataSpeed(std::string name)
     // Velocidade linear desejada no momento
     linearSpeed = new DataAbstract<float>("linearSpeed", name, 0);
     dataManager->registerRuntimeData(linearSpeed);
+
+    RobotEstimatedLinearSpeed = new DataAbstract<float>("RobotEstimatedLinearSpeed", name, 0);
+    dataManager->registerRuntimeData(RobotEstimatedLinearSpeed);
 
 
 }

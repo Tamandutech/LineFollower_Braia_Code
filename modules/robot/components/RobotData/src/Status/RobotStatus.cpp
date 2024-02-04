@@ -17,6 +17,8 @@ RobotStatus::RobotStatus(std::string name)
     dataManager->registerParamData(TunningMode);
     OpenLoopControl = new DataAbstract<bool>("OpenLoopControl", name, false);
     dataManager->registerParamData(OpenLoopControl);
+    FastAcceleration = new DataAbstract<bool>("FastAcceleration", name, false);
+    dataManager->registerParamData(FastAcceleration);
     HardDeleteMap = new DataAbstract<bool>("HardDeleteMap", name, false);
     dataManager->registerParamData(HardDeleteMap);
     LineColorBlack = new DataAbstract<bool>("LineColorBlack", name, false);

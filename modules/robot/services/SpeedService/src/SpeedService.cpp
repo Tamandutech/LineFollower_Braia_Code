@@ -43,16 +43,15 @@ void SpeedService::Run()
             enc_motDir.clearCount();
             lastPulseLeft = 0;
             lastPulseRight = 0;
+            lastPulseLeftToPositionCalculus = 0;
+            lastPulseRightToPositionCalculus = 0;
         }
 
-        deltaTime = (esp_timer_get_time() - lastdeltaTime);
-        lastdeltaTime = esp_timer_get_time();
-
-        deltaTimeMS_media = (xTaskGetTickCount() - initialTicksCar) * portTICK_PERIOD_MS;
-
-        deltaEncDir=(enc_motDir.getCount() - lastPulseRight);
-        deltaEncEsq=(enc_motEsq.getCount() - lastPulseLeft);
-
+        float deltaEncDir = (enc_motDir.getCount() - lastPulseRightToPositionCalculus);
+        float deltaEncEsq = (enc_motEsq.getCount() - lastPulseLeftToPositionCalculus);
+        lastPulseRightToPositionCalculus = enc_motDir.getCount() ;
+        lastPulseLeftToPositionCalculus = enc_motEsq.getCount();
+        
         deltaS = ((deltaEncDir+deltaEncEsq) * M_PI * diameterWheel )/((float)2.0*MPR_Mot);
         deltaA = ((deltaEncEsq-deltaEncDir) * M_PI * diameterWheel )/((float)MPR_Mot*diameterRobot); 
 
@@ -67,12 +66,6 @@ void SpeedService::Run()
             speed->positionX->setData(positionX / 10.0); // cm
             speed->positionY->setData(positionY / 10.0); // cm
         }
-
-        // Calculo de velocidade media do carro (RPM)
-        speed->RPMCar_media->setData(                                                                              // -> Calculo velocidade media do carro
-            (((lastPulseRight / (float)speed->MPR->getData() + lastPulseLeft / (float)speed->MPR->getData())) / 2) // Revolucoes media desde inicializacao
-            / ((float)deltaTimeMS_media / (float)60000)                                                            // Divisao do delta tempo em minutos para calculo de RPM
-        );
 
         if (iloop >= 100)
         {
@@ -106,8 +99,8 @@ void SpeedService::storeEncCount(int16_t LeftWheelCount,int16_t RightWheelCount)
 }
 void SpeedService::MeasureWheelsSpeed()
 {
-    deltaTime = (esp_timer_get_time() - lastdeltaTime);
-    lastdeltaTime = esp_timer_get_time();
+    int64_t deltaTime = (esp_timer_get_time() - lastTimeWheelsSpeedMeasured);
+    lastTimeWheelsSpeedMeasured = esp_timer_get_time();
 
     int16_t LeftWheelSpeed = CalculateWheelSpeed(enc_motEsq.getCount(), lastPulseLeft, deltaTime);
     int16_t RightWheelSpeed = CalculateWheelSpeed(enc_motDir.getCount(), lastPulseRight, deltaTime);
@@ -120,7 +113,17 @@ void SpeedService::MeasureWheelsSpeed()
 
 int16_t SpeedService::CalculateRobotLinearSpeed()
 {
+    float MaxMotorSpeed = speed->MotorMaxSpeed->getData();
     int16_t RightWheelSpeed =  speed->RPMRight_inst->getData();
-    int16_t LeftWheelSpeed = speed->RPMRight_inst->getData();
-    return (RightWheelSpeed + LeftWheelSpeed) / (2.0 * MAX_MOTOR_SPEED);
+    int16_t LeftWheelSpeed = speed->RPMLeft_inst->getData();
+    return  100.0 * ((RightWheelSpeed + LeftWheelSpeed) / (2.0 * MaxMotorSpeed));
+}
+
+int16_t SpeedService::CalculateOffsetToDecelerate(int16_t FinalSpeed, float DecelerationAdjustableGain)
+{
+    int16_t CurrentSpeed = CalculateRobotLinearSpeed();
+    int16_t offset = (pow(FinalSpeed,2) - pow(CurrentSpeed,2)) * DecelerationAdjustableGain;
+    return offset;
+
+
 }
