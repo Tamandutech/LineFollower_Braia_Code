@@ -43,7 +43,6 @@ public:
      * @retval TRUE Se o robô está lendo o mapeamento
      * @retval FALSE Se o robô não está lendo o mapeamento
      */
-    DataAbstract<bool> *robotPaused;
     DataAbstract<bool> *TunningMode;
     DataAbstract<bool> *OpenLoopControl;
     DataAbstract<bool> *HardDeleteMap;

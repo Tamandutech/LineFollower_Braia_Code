@@ -164,8 +164,6 @@ static std::string resume(int argc, char **argv)
     auto status = Robot::getInstance()->getStatus();
     status->robotState->setData(lastState);
     xSemaphoreGive(CarStatusService::getInstance()->SemaphoreStartRobot);
-    status->robotPaused->setData(false);
-
     return ("O robô voltará a andar");
 }
 
@@ -186,7 +184,6 @@ static std::string pause(int argc, char **argv)
     if(status->robotState->getData() != CAR_STOPPED)
     {
         lastState = (CarState) status->robotState->getData();
-        status->robotPaused->setData(true);
         status->robotState->setData(CAR_STOPPED);
         vTaskDelay(0);
         DataManager::getInstance()->saveAllParamDataChanged();

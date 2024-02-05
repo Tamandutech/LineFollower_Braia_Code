@@ -8,7 +8,6 @@ RobotStatus::RobotStatus(std::string name)
     ESP_LOGD(name.c_str(), "Criando objeto: %s (%p)", name.c_str(), this);
     dataManager = dataManager->getInstance();
     robotState = new DataAbstract<uint8_t>("robotState", name);
-    robotPaused = new DataAbstract<bool>("robotPaused", name, false);
     transitionTrackSegment = new DataAbstract<uint8_t>("transitionTrackSegment", name, 0);
     currentTrackSegment = new DataAbstract<uint8_t>("currentTrackSegment", name, 0);
     TunningMode = new DataAbstract<bool>("TunningMode", name, false);
