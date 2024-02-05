@@ -44,6 +44,8 @@ private:
     dataMapping *MappingData;
     RobotStatus *status;
 
+    TickType_t initialTicks;
+
     MapData currentMark;
 
     uint16_t rightMarksToStop;

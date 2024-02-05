@@ -88,8 +88,13 @@ void MappingService::Run()
     this->Suspend();
 
     SpeedService::getInstance()->resetEncondersValue();
-
+    initialTicks = xTaskGetTickCount();
     MappingData->TrackSideMarks->newData(currentMark);
+
+    if(MappingData->latEsqPass->getData()) led = LED_POSITION_LEFT;
+    else if(MappingData->latDirPass->getData()) led = LED_POSITION_RIGHT;
+    LEDsService::getInstance()->LedComandSend(led, LED_COLOR_RED, 1);
+
 
     for (;;)
     {
@@ -104,7 +109,7 @@ void MappingService::Run()
         EncLeft = speedMapping->EncLeft->getData();
         EncRight = speedMapping->EncRight->getData();
         currentMark.markPosition = ((EncLeft + EncRight) / 2);
-        currentMark.timeUntilMarkReading = xTaskGetTickCount()*portTICK_PERIOD_MS;
+        currentMark.timeUntilMarkReading = (xTaskGetTickCount() - initialTicks)*portTICK_PERIOD_MS;
 
         // variação de encoder em pulsos
         uint32_t DeltaPulses = std::abs((EncRight - lastEncRight) - (EncLeft - lastEncLeft));
