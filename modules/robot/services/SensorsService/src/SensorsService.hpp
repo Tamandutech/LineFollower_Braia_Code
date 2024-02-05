@@ -10,8 +10,14 @@
 #include "QTRSensors.h"
 #include "esp_log.h"
 
-//#define LINE_COLOR_BLACK
 using namespace cpp_freertos;
+
+enum SensorReading{
+    LEFT,
+    RIGHT,
+    BOTH,
+    NONE
+};
 
 class SensorsService : public Thread, public Singleton<SensorsService>
 {
@@ -49,15 +55,20 @@ private:
   void UpdateSideSensors();
   void processSideSensors();
 
+  bool isWhite(int sensorValue);
+  bool isBlack(int sensorValue);
+
+  void processSensorReadingMark(DataAbstract<bool> *sensorReading, SensorReading sensorSide);
+  bool sensorWasNotReadingMark(DataAbstract<bool> *sensorReading);
+  void addMarkOnSensor(SensorReading sensorSide);
+  void setSideSensorReading(SensorReading sensorSide);
+  void setColorSideLED(SensorReading sensorSide);
+
   void processSensorData(int meanSensEsq, int meanSensDir);
   void processSensorsReadingMark(int meanSensEsq, int meanSensDir);
   void processBothSensorsReadingMark();
-  void processLefSensorReadingMark();
-  void processRightSensorReadingMark();
   void processSensorsReadingNothing();
   void resetSensorData();
-  bool isWhite(int sensorValue);
-  bool isBlack(int sensorValue);
 };
 
 #endif

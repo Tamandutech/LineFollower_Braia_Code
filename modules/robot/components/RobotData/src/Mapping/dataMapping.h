@@ -20,13 +20,6 @@
 
 #include "esp_log.h"
 
-enum SensorReading {
-    LEFT,
-    RIGHT,
-    BOTH,
-    NONE
-}
-
 class dataMapping
 {
 public:
@@ -69,11 +62,6 @@ public:
 private:
     std::string name;
     DataManager *dataManager;
-    void processSensorreadingMark(DataAbstract<bool> *sensorReading, Sensors sensorSide);
-    bool sensorWasNotReadingMark(DataAbstract<bool> *sensorReading);
-    void addMarkOnSensor(Sensors sensorSide);
-    void setSideSensorReading(Sensors sensorSide);
-    void setColorSideLED(Sensors sensorSide);
     
 };
 

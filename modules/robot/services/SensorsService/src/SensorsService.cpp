@@ -129,74 +129,13 @@ bool SensorsService::isBlack(int sensorValue)
     return sensorValue > 600;
 }
 
-void SensorsService::processSensorData(int meanLeftSideSensor, int meanRightSideSensor)
-{
-    if (isWhite(meanLeftSideSensor) || isWhite(meanRightSideSensor))
-        processSensorsReadingMark(meanLeftSideSensor, meanRightSideSensor);
-    else
-        processSensorsReadingNothing();
-
-    resetSensorData();
-}
-
-void SensorsService::processSensorsReadingMark(int meanLeftSideSensor, int meanRightSideSensor)
-{
-    if (isWhite(meanLeftSideSensor) && isBlack(meanRightSideSensor))
-        processLefSensorReadingMark();
-    else if (isWhite(meanRightSideSensor) && isBlack(meanLeftSideSensor))
-        processRightSensorReadingMark();
-    else if (isWhite(meanLeftSideSensor) && isWhite(meanRightSideSensor))
-        processBothSensorsReadingMark();
-}
-
-// TODO: Remover
-void SensorsService::processLefSensorReadingMark()
-{
-    if (!MappingData->leftSensorReadingMark->getData())
-    {
-        if (status->robotState->getData() != CAR_STOPPED)
-            MappingData->addMarkOnLeftSensor();
-
-        MappingData->leftSensorReadingMark->setData(true);
-        MappingData->rigthSensorReadingMark->setData(false);
-
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
-    }
-}
-
-// TODO: Remover
-void SensorsService::processRightSensorReadingMark()
-{
-    if (!MappingData->rigthSensorReadingMark->getData())
-    {
-        if (status->robotState->getData() != CAR_STOPPED)
-            MappingData->addMarkOnRightSensor();
-
-        MappingData->rigthSensorReadingMark->setData(true);
-        MappingData->leftSensorReadingMark->setData(false);
-
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
-    }
-}
-
-void SensorsService::processSensorreadingMark(DataAbstract<bool> *sensorReading, Sensors sensorSide)
-{
-    if (sensorWasNotReadingMark(sensorReading->getData()))
-    {
-        addMarkOnSensor(sensorSide);
-        setSideSensorReading(sensorSide);
-        setColorSideLED(sensorSide);
-    }
-}
 
 bool SensorsService::sensorWasNotReadingMark(DataAbstract<bool> *sensorReading)
 {
     return !sensorReading->getData();
 }
 
-void SensorsService::addMarkOnSensor(Sensors sensorSide)
+void SensorsService::addMarkOnSensor(SensorReading sensorSide)
 {
     if (status->robotState->getData() != CAR_STOPPED)
     {
@@ -207,23 +146,46 @@ void SensorsService::addMarkOnSensor(Sensors sensorSide)
     }
 }
 
-void SensorsService::setSideSensorReading(Sensors sensorSide)
+void SensorsService::setSideSensorReading(SensorReading sensorSide)
 {
     MappingData->leftSensorReadingMark->setData(sensorSide == LEFT || sensorSide == BOTH);
     MappingData->rigthSensorReadingMark->setData(sensorSide == RIGHT || sensorSide == BOTH);
 }
 
-void SensorsService::setColorSideLED(Sensors sensorSide)
+void SensorsService::setColorSideLED(SensorReading sensorSide)
 {
+    CarState robotState = (CarState) status->robotState->getData();
     LEDsService *ledService = LEDsService::getInstance();
 
-    ledService->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
-    ledService->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
+    if (sensorSide != LEFT)
+        ledService->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
+    if (sensorSide != RIGHT)
+        ledService->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
 
-    if (sensorSide == LEFT)
+    if (sensorSide == LEFT && robotState != CAR_MAPPING)
         ledService->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
-    else if ((sensorSide == RIGHT))
+    else if (sensorSide == RIGHT && robotState  != CAR_MAPPING)
         ledService->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
+}
+
+void SensorsService::processSensorReadingMark(DataAbstract<bool> *sensorReading, SensorReading sensorSide)
+{
+    if (sensorWasNotReadingMark(sensorReading))
+    {
+        addMarkOnSensor(sensorSide);
+        setSideSensorReading(sensorSide);
+        setColorSideLED(sensorSide);
+    }
+}
+
+// TODO: Remover
+void SensorsService::processSensorsReadingNothing()
+{
+    if (MappingData->rigthSensorReadingMark->getData() || MappingData->leftSensorReadingMark->getData())
+    {
+        setColorSideLED(NONE);
+    }
+    setSideSensorReading(NONE);
 }
 
 // TODO: Remover
@@ -232,26 +194,20 @@ void SensorsService::processBothSensorsReadingMark()
     if ((MappingData->rigthSensorReadingMark->getData() && !MappingData->leftSensorReadingMark->getData()) ||
         (MappingData->leftSensorReadingMark->getData() && !MappingData->rigthSensorReadingMark->getData()))
     {
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
+        setColorSideLED(BOTH);
     }
-
-    MappingData->rigthSensorReadingMark->setData(true);
-    MappingData->leftSensorReadingMark->setData(true);
+    setSideSensorReading(BOTH);
 }
 
 
-// TODO: Remover
-void SensorsService::processSensorsReadingNothing()
+void SensorsService::processSensorsReadingMark(int meanLeftSideSensor, int meanRightSideSensor)
 {
-    if (MappingData->rigthSensorReadingMark->getData() || MappingData->leftSensorReadingMark->getData())
-    {
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
-        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
-    }
-
-    MappingData->rigthSensorReadingMark->setData(false);
-    MappingData->leftSensorReadingMark->setData(false);
+    if (isWhite(meanLeftSideSensor) && isBlack(meanRightSideSensor))
+        processSensorReadingMark(MappingData->leftSensorReadingMark, LEFT);
+    else if (isWhite(meanRightSideSensor) && isBlack(meanLeftSideSensor))
+        processSensorReadingMark(MappingData->rigthSensorReadingMark, RIGHT);
+    else if (isWhite(meanLeftSideSensor) && isWhite(meanRightSideSensor))
+        processBothSensorsReadingMark();
 }
 
 void SensorsService::resetSensorData()
@@ -260,3 +216,16 @@ void SensorsService::resetSensorData()
     sumReadRightSensor = 0;
     sumReadLeftSensor = 0;
 }
+
+void SensorsService::processSensorData(int meanLeftSideSensor, int meanRightSideSensor)
+{
+    if (isWhite(meanLeftSideSensor) || isWhite(meanRightSideSensor))
+        processSensorsReadingMark(meanLeftSideSensor, meanRightSideSensor);
+    else
+        processSensorsReadingNothing();
+
+    resetSensorData();
+}
+
+
+
