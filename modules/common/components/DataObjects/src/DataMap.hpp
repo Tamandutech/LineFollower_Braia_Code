@@ -26,13 +26,10 @@
 
 struct MapData
 {
-    uint32_t MapTime;
-    int32_t MapEncMedia;
-    //int32_t MapEncLeft;
-    //int32_t MapEncRight;
-    int16_t MapOffset;
-    //uint8_t MapStatus;
-    uint8_t MapTrackStatus;
+    uint32_t timeUntilMarkReading;
+    int32_t markPosition;
+    int16_t offsetMarkPosition;
+    uint8_t trackSegmentBeforeMark;
 };
 
 class DataMap : public IDataAbstract
@@ -48,16 +45,16 @@ public:
     void newData(std::string mapData);
 
     /// @brief Definir dado estruturado de mapeamento
-    /// @param mapData Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
+    /// @param mapData Dados da struct separados por ",". Ex.: "Posicao,timeUntilMarkReading,markPosition,trackSegmentBeforeMark,offsetMarkPosition"
     void setData(std::string data);
 
     /// @brief Obter o primeiro dado da lista em formato string
-    /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
+    /// @return Dados da struct separados por ",". Ex.: "Posicao,timeUntilMarkReading,markPosition,trackSegmentBeforeMark,offsetMarkPosition"
     std::string getDataString();
 
     /// @brief Obter dado na posição especificada da lista em formato string
     /// @param ctrl Posição da lista
-    /// @return Dados da struct separados por ",". Ex.: "Posicao,MapTime,MapEncMedia,MapEncLeft,MapEncRight,MapStatus"
+    /// @return Dados da struct separados por ",". Ex.: "Posicao,timeUntilMarkReading,markPosition,trackSegmentBeforeMark,offsetMarkPosition"
     std::string getDataString(std::string ctrl);
 
     std::uint8_t getSize();

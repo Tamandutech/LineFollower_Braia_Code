@@ -67,7 +67,7 @@ private:
     bool mapState = false;
 
     CarState estado = CAR_STOPPED;
-    TrackSegment RealTracklen = TrackSegment::SHORT_LINE;
+    TrackSegment currentTrackSegment = TrackSegment::SHORT_LINE;
 
     int iloop = 0;
 

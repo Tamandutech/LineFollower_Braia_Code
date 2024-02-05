@@ -10,7 +10,7 @@
 
 #include "esp_adc/adc_oneshot.h"
 
-#include "dataSLatMarks.h"
+#include "dataMapping.h"
 #include "dataSpeed.h"
 #include "dataPID.h"
 #include "dataSensor.h"
@@ -46,7 +46,7 @@ public:
     dataSensor *getsArray();
     dataPID *getPID();
     RobotStatus *getStatus();
-    dataSLatMarks *getSLatMarks();
+    dataMapping *getMappingData();
     adc_oneshot_unit_handle_t getADC_handle();
     std::string GetName();
 
@@ -61,7 +61,7 @@ private:
     dataSpeed *speed;
     dataPID *PID; 
     dataSensor *sLat;
-    dataSLatMarks *sLatMarks;
+    dataMapping *MappingData;
     dataSensor *sArray;
     RobotStatus *Status;
     DataStorage *storage;

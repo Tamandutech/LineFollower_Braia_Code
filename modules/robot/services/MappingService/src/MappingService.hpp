@@ -11,6 +11,7 @@
 #include "RobotData.h"
 #include "TrackSegment.hpp"
 #include "LEDsService.hpp"
+#include "SpeedService.hpp"
 
 #include "driver/gpio.h"
 
@@ -26,7 +27,7 @@ public:
     
     void Run() override;
 
-    esp_err_t startNewMapping(uint16_t leftMarksToStop = INT16_MAX, int32_t mediaPulsesToStop = LONG_MAX, uint32_t timeToStop = (portMAX_DELAY / portTICK_PERIOD_MS));
+    esp_err_t startNewMapping();
     esp_err_t stopNewMapping();
 
     esp_err_t loadMapping();
@@ -40,29 +41,18 @@ private:
     Robot *robot;
     dataSpeed *speedMapping;
     dataSensor *sLat;
-    dataSLatMarks *latMarks;
+    dataMapping *MappingData;
     RobotStatus *status;
 
-    struct MapData tempActualMark;
+    TickType_t initialTicks;
 
-    // atributos de filtro
-    uint16_t leftMarksToStop;
+    MapData currentMark;
+
     uint16_t rightMarksToStop;
-    int32_t mediaPulsesToStop;
-    TickType_t ticksToStop;
 
-    // atributos para offsets iniciais
-    int32_t initialRightPulses = 0;
-    int32_t initialLeftPulses = 0;
-    int32_t initialMediaPulses = 0;
-    TickType_t initialTicks = 0;
-
-    // variáveis de calculos temporárias
-    uint32_t tempDeltaPulses = 0;
-    uint32_t tempMilimiterInPulses = 0;
-    uint32_t tempDeltaDist = 0;
+    // variáveis auxiliares para cálculos0;
     int32_t EncLeft = 0, EncRight = 0;
-    int32_t lastEncLeft = 0, lastEncRight = 0, lastEncMedia = 0;
+    int32_t lastEncLeft = 0, lastEncRight = 0, lastmarkPosition = 0;
 
     LedColor color;
     led_position_t led;

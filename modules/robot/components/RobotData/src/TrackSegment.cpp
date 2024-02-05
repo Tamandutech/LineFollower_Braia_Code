@@ -58,3 +58,7 @@ bool isLineSegment(TrackSegment trackSegment)
     const std::list<TrackSegment> line = {SHORT_LINE, MEDIUM_LINE, LONG_LINE, XLONG_LINE};
     return existTrackSegmentInList(line, trackSegment);
 }
+bool isCurveSegment(TrackSegment trackSegment)
+{
+    return !isLineSegment(trackSegment);
+}

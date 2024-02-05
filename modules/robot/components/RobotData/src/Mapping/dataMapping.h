@@ -1,5 +1,5 @@
-#ifndef DATA_SLATMARKS_H
-#define DATA_SLATMARKS_H
+#ifndef DATA_MAPPING_H
+#define DATA_MAPPING_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -20,10 +20,10 @@
 
 #include "esp_log.h"
 
-class dataSLatMarks
+class dataMapping
 {
 public:
-    dataSLatMarks(std::string name = "dataSensor");
+    dataMapping(std::string name = "dataMapping");
 
     // Estado do sensor da lateral esquerda
     DataAbstract<bool> *latEsqPass;
@@ -35,13 +35,8 @@ public:
     // Quantidade atual de marcas da lateral direita
     DataAbstract<uint16_t> *rightMarks;
 
-    // Média da contagem dos encoders para última marcação da pista
-    DataAbstract<int32_t> *finalEncPulses;
-    
-
-
     // Estrutura de dados que armazena os dados de mapeamento
-    DataMap *marks;
+    DataMap *TrackSideMarks;
 
     // Parâmetros
 
@@ -51,18 +46,15 @@ public:
     DataAbstract<uint16_t> *MarkstoStop;
     //Pulsos antes de inicar uma curva para iniciar a desaceleração
     DataAbstract<uint32_t> *PulsesBeforeCurve;
-
-    //Pulsos após sair de uma curva para iniciar a aceleração
-    DataAbstract<uint32_t> *PulsesAfterCurve;
-
+    
     // Limite de variação em milimetros de distância percorrida entre as rodas para considerar que o carro fez uma curva
     DataAbstract<uint8_t> *thresholdToCurve;
 
     // Condições para determinar que tipo de cada trecho da pista em mm
-    DataAbstract<uint16_t> *thresholdLongLine;
-    DataAbstract<uint16_t> *thresholdMediumLine;
-    DataAbstract<uint16_t> *thresholdLongCurve;
-    DataAbstract<uint16_t> *thresholdMediumCurve;
+    DataAbstract<uint16_t> *LongLineLength;
+    DataAbstract<uint16_t> *MediumLineLength;
+    DataAbstract<uint16_t> *LongCurveLength;
+    DataAbstract<uint16_t> *MediumCurveLength;
 
     // Incrementa a contagem de marcas da lateral esquerda
     void leftPassedInc();

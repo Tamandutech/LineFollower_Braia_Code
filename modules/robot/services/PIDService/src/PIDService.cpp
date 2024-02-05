@@ -35,7 +35,7 @@ void PIDService::Run()
         }
         else
         {
-            RealTracklen = (TrackSegment)status->RealTrackStatus->getData();
+            currentTrackSegment = (TrackSegment)status->currentTrackSegment->getData();
 
             // Velocidade do carrinho
             float VelRot = (speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData()) / 2.0;   // Rotacional
@@ -52,7 +52,7 @@ void PIDService::Run()
             DataPID->erroquad->setData(soma_erro*soma_erro);
 
             // Cálculo do PID para posicionar o robô  na linha
-            PID_Consts pidConsts = getTrackSegmentPID(RealTracklen, estado, DataPID);
+            PID_Consts pidConsts = getTrackSegmentPID(currentTrackSegment, estado, DataPID);
             float pid = calculatePID(pidConsts, erro, soma_erro, SensorArrayPosition, &lastSensorArrayPosition);
             
             DataPID->output->setData(pid);
@@ -83,8 +83,8 @@ void PIDService::Run()
             desaccel = speed->desaccelration->getData();
 
             // Altera a velocidade linear do carrinho
-            TrackSegment tracksegment = (TrackSegment)status->TrackStatus->getData();
-            speedTarget = getTargetSpeed(tracksegment, estado, speed);
+            TrackSegment transitionTrackSegment = (TrackSegment)status->transitionTrackSegment->getData();
+            speedTarget = getTargetSpeed(transitionTrackSegment, estado, speed);
 
             // Rampeia a velocidade linear do robô
             float speedValue = speed->linearSpeed->getData();

@@ -4,7 +4,7 @@ SensorsService::SensorsService(std::string name, uint32_t stackDepth, UBaseType_
 {
     this->robot = Robot::getInstance();
 
-    latMarks = robot->getSLatMarks();
+    MappingData = robot->getMappingData();
     sLatData = robot->getsLat();
     status = robot->getStatus();
     
@@ -134,7 +134,7 @@ void SensorsService::processSLat()
 
     if(status->robotState->getData() == CAR_MAPPING)
     {
-        MarksToMean = latMarks->MarkstoMean->getData();
+        MarksToMean = MappingData->MarkstoMean->getData();
     }
     else
     {
@@ -150,61 +150,61 @@ void SensorsService::processSLat()
         {
             if ((meanSensEsq < 300) && (meanSensDir > 600)) // lendo sLat esq. branco e dir. preto
             {
-                if (!(latMarks->latEsqPass->getData()))
+                if (!(MappingData->latEsqPass->getData()))
                 {
                     if(status->robotState->getData() != CAR_STOPPED)
                     {
-                        latMarks->leftPassedInc();
+                        MappingData->leftPassedInc();
                     }
-
-                    latMarks->latEsqPass->setData(true);
-                    latMarks->latDirPass->setData(false);
-                    
-                    LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
+                    if(status->robotState->getData() != CAR_MAPPING)
+                        LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_RED, 1);
                     LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
+                    MappingData->latEsqPass->setData(true);
+                    MappingData->latDirPass->setData(false);
+                    
                 }
             }
             else if ((meanSensDir < 300) && (meanSensEsq > 600)) // lendo sldir. branco e sLat esq. preto
             {
-                if (!(latMarks->latDirPass->getData()))
+                if (!(MappingData->latDirPass->getData()))
                 {
                     if(status->robotState->getData() != CAR_STOPPED)
                     {
-                        latMarks->rightPassedInc();
+                        MappingData->rightPassedInc();
 
                     }
 
-                    latMarks->latDirPass->setData(true);
-                    latMarks->latEsqPass->setData(false);
-
-                    LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
+                    if(status->robotState->getData() != CAR_MAPPING)
+                        LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_RED, 1);
                     LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
+                    MappingData->latDirPass->setData(true);
+                    MappingData->latEsqPass->setData(false);
                 }
             }
 
             else if ((meanSensEsq < 300) && (meanSensDir < 300)) // quando ler ambos brancos, contar nova marcação apenas se ambos os sensores lerem preto antes de lerem a nova marcação 
             {
-                if ((latMarks->latDirPass->getData() && !latMarks->latEsqPass->getData()) 
-                    || (latMarks->latEsqPass->getData() && !latMarks->latDirPass->getData()))
+                if ((MappingData->latDirPass->getData() && !MappingData->latEsqPass->getData()) 
+                    || (MappingData->latEsqPass->getData() && !MappingData->latDirPass->getData()))
                 { 
                                    
                     LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
                     LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
                 }
-                latMarks->latDirPass->setData(true);
-                latMarks->latEsqPass->setData(true);
+                MappingData->latDirPass->setData(true);
+                MappingData->latEsqPass->setData(true);
             }
         }
         else
         {
-            if (latMarks->latDirPass->getData() || latMarks->latEsqPass->getData())
+            if (MappingData->latDirPass->getData() || MappingData->latEsqPass->getData())
             {
                 LEDsService::getInstance()->LedComandSend(LED_POSITION_LEFT, LED_COLOR_BLACK, 1);
                 LEDsService::getInstance()->LedComandSend(LED_POSITION_RIGHT, LED_COLOR_BLACK, 1);
             }
 
-            latMarks->latDirPass->setData(false);
-            latMarks->latEsqPass->setData(false);
+            MappingData->latDirPass->setData(false);
+            MappingData->latEsqPass->setData(false);
         }
         nLatReads = 0;
         sumSensDir = 0;
