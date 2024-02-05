@@ -21,9 +21,9 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     status->currentTrackSegment->setData(DEFAULT_TRACK);
     status->transitionTrackSegment->setData(DEFAULT_TRACK);
 
-    lastPaused = status->robotPaused->getData();
     lastRobotState = (CarState)status->robotState->getData();
     lastTrack = (TrackSegment)status->currentTrackSegment->getData();
+    lastTransition = false;
 
     SemaphoreStartRobot = xSemaphoreCreateBinary();
     configExternInterruptToReadButton(GPIO_NUM_0);
@@ -64,7 +64,6 @@ void CarStatusService::configExternInterruptToReadButton(gpio_num_t interruptPor
 
 void CarStatusService::Run()
 {
-    // Variavel necerraria para funcionalidade do vTaskDelayUtil, guarda a conGetName().c_str()em de pulsos da CPU
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     waitPressBootButtonToStart();
@@ -73,7 +72,7 @@ void CarStatusService::Run()
 
     vTaskDelay(1500 / portTICK_PERIOD_MS);
 
-    if (!gpio_get_level(GPIO_NUM_0) && MappingData->TrackSideMarks->getSize() > 0 && !status->TunningMode->getData() && status->HardDeleteMap->getData())
+    if (!gpio_get_level(GPIO_NUM_0)  && !status->TunningMode->getData() && status->HardDeleteMap->getData())
         deleteMappingIfBootButtonIsPressed();
     
     ESP_LOGD(GetName().c_str(), "Iniciando delay de 1500ms");
@@ -90,16 +89,12 @@ void CarStatusService::Run()
 
     status->robotState->setData(initialRobotState);
 
-    // Loop
     for (;;)
     {
 
         vTaskDelayUntil(&xLastWakeTime, 30 / portTICK_PERIOD_MS);
         pulsesBeforeCurve = MappingData->PulsesBeforeCurve->getData();
         currentRobotState = (CarState)status->robotState->getData();
-
-        if (status->robotPaused->getData())
-            lastPaused = true;
 
         if (passedFirstMark())
             resetEnconderInFirstMark();
@@ -124,7 +119,7 @@ void CarStatusService::Run()
                 DataManager::getInstance()->saveAllParamDataChanged();
                 LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
             }
-            if (robotPosition < finalMark.markPosition)
+            else
             {
                 // define o status do carrinho se o mapeamento não estiver ocorrendo
                 for (int mark = 0; mark < numMarks - 1; mark++)

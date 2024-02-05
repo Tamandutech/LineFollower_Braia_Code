@@ -42,11 +42,10 @@ private:
     
     int iloop = 0;
     
-    bool transition, lastTransition = false;
+    bool transition = false, lastTransition = false;
 
     TrackSegment transitionTrackSegment;
     TrackSegment lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
-    bool lastPaused = false;
 
     MapData finalMark;
     int32_t robotPosition = 0;
