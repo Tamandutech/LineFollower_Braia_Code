@@ -119,10 +119,11 @@ int16_t SpeedService::CalculateRobotLinearSpeed()
     return  100.0 * ((RightWheelSpeed + LeftWheelSpeed) / (2.0 * MaxMotorSpeed));
 }
 
-int16_t SpeedService::CalculateOffsetToDecelerate(int16_t FinalSpeed, float DecelerationAdjustableGain)
+int16_t SpeedService::CalculateOffsetToDecelerate(int16_t FinalSpeed, float DecelerationAdjustableGain, float VariableDecelerationWeight)
 {
     int16_t CurrentSpeed = CalculateRobotLinearSpeed();
-    int16_t offset = (pow(FinalSpeed,2) - pow(CurrentSpeed,2)) * DecelerationAdjustableGain;
+    float accelerationVariable = pow(((float)FinalSpeed / (float)CurrentSpeed), VariableDecelerationWeight);
+    int16_t offset = (pow(FinalSpeed,2) - pow(CurrentSpeed,2)) * DecelerationAdjustableGain * accelerationVariable;
     return offset;
 
 

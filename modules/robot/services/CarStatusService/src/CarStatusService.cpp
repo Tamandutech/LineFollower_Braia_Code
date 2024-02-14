@@ -197,6 +197,7 @@ void CarStatusService::Run()
                         {
                             transition = false;
                             lastMarkPassed = mark;
+                            offsetnxt = 0;
                         }
                         TrackSegment trackLen = (TrackSegment)latMarks->marks->getData(mark+1).MapTrackStatus;
                         status->RealTrackStatus->setData(trackLen);
@@ -212,7 +213,8 @@ void CarStatusService::Run()
                             {
                                 int16_t FinalSpeed =  getTrackSegmentSpeed((TrackSegment)latMarks->marks->getData(mark + 2).MapTrackStatus, speed);  
                                 float DecelerationOffsetGain = speed->DecelerationOffsetGain->getData();
-                                offsetnxt = SpeedService::getInstance()->CalculateOffsetToDecelerate(FinalSpeed, DecelerationOffsetGain);
+                                float VariableAccelerationGain = speed->VariableAccelerationGain->getData();
+                                offsetnxt = SpeedService::getInstance()->CalculateOffsetToDecelerate(FinalSpeed, DecelerationOffsetGain, VariableAccelerationGain);
                             }
 
                             transition = false;

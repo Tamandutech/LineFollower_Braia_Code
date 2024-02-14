@@ -47,8 +47,9 @@ public:
     DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
+    DataAbstract<float> *MaxAccelration; // desaceleração em rpm/s
     DataAbstract<float> *DecelerationOffsetGain; // ganho para ajustar o offset para a desaceleração
-
+    DataAbstract<float> *VariableAccelerationGain;
     // Velocidades em malha aberta
     DataAbstract<int8_t> *OpenLoopMaxSpeed;
     DataAbstract<int8_t> *OpenLoopMinSpeed;

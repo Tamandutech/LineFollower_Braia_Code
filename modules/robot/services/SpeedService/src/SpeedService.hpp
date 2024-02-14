@@ -24,7 +24,7 @@ public:
     void Run() override;
     void MeasureWheelsSpeed();
     int16_t CalculateRobotLinearSpeed();
-    int16_t CalculateOffsetToDecelerate(int16_t FinalSpeed, float DecelerationAdjustableGain);
+    int16_t CalculateOffsetToDecelerate(int16_t FinalSpeed, float DecelerationAdjustableGain, float VariableDecelerationWeight);
 
 private:
     Robot *robot;

@@ -59,9 +59,13 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(accelration);
     desaccelration = new DataAbstract<float>("PWM_desaccel", name, 6000);
     dataManager->registerParamData(desaccelration);
+    MaxAccelration = new DataAbstract<float>("MaxAccelration", name, 40);
+    dataManager->registerParamData(MaxAccelration);
 
     DecelerationOffsetGain = new DataAbstract<float>("DecelerationOffsetGain", name, 0.13);
     dataManager->registerParamData(DecelerationOffsetGain);
+    VariableAccelerationGain = new DataAbstract<float>("VariableAccelerationGain", name, 0);
+    dataManager->registerParamData(VariableAccelerationGain);
 
     initialspeed = new DataAbstract<float>("PWM_initial_speed", name, 1100);
     dataManager->registerParamData(initialspeed);
