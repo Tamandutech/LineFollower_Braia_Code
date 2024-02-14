@@ -71,6 +71,15 @@ void PIDService::Run()
                     kpAcceleration = DataPID->Kp_desacceleration->getData();
                 LinearSpeed = AccelerationControl(RobotLinearSpeed, PositionError, kpAcceleration);
             }
+            float MaxAcceleration = speed->MaxAccelration->getData();
+            if(abs(LinearSpeed - lastPwm) > MaxAcceleration)
+            {
+                if(LinearSpeed > lastPwm)
+                    LinearSpeed = lastPwm + MaxAcceleration;
+                else
+                    LinearSpeed = lastPwm - MaxAcceleration;
+            }
+            lastPwm = LinearSpeed;
             speed->PwmMean->setData(LinearSpeed);
             speed->right->setData(
                 constrain(LinearSpeed + pid, MIN_SPEED, MAX_SPEED));

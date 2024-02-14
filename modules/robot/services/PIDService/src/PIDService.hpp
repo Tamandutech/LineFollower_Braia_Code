@@ -63,6 +63,7 @@ private:
     float accel = 300;    // aceleração em porcentagem
     float desaccel = 300; // aceleração em porcentagem
     float speedTarget = 0;
+    float lastPwm = 0;
 
     // Variáveis para cálculo do pid
     float lastSensorArrayPosition = 0;
