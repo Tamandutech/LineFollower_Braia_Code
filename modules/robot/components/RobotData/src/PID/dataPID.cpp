@@ -53,6 +53,10 @@ dataPID::dataPID(std::string name)
     dataManager->registerParamData(Kp_curve);
     Kd_curve = new DataAbstract<double>("Kd_curve", name);
     dataManager->registerParamData(Kd_curve);
+    Kp_LongCurve = new DataAbstract<double>("Kp_LongCurve", name);
+    dataManager->registerParamData(Kp_LongCurve);
+    Kd_LongCurve = new DataAbstract<double>("Kd_LongCurve", name);
+    dataManager->registerParamData(Kd_LongCurve);
     Kp_ZigZag = new DataAbstract<double>("Kp_ZigZag", name, 0.03);
     dataManager->registerParamData(Kp_ZigZag);
     Kd_ZigZag = new DataAbstract<double>("Kd_ZigZag", name, 0.94);

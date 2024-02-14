@@ -59,7 +59,10 @@ public:
     DataAbstract<double> *Kd_line; 
 
     DataAbstract<double> *Kp_curve; 
-    DataAbstract<double> *Kd_curve; 
+    DataAbstract<double> *Kd_curve;
+
+    DataAbstract<double> *Kp_LongCurve; 
+    DataAbstract<double> *Kd_LongCurve; 
 
     DataAbstract<double> *Kp_ZigZag;
     DataAbstract<double> *Kd_ZigZag;

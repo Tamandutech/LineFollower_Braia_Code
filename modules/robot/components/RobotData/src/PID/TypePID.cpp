@@ -5,6 +5,7 @@ std::map<TypePID, PID_Consts> getPIDValueFromDashboard(dataPID *pid)
     std::map<TypePID, PID_Consts> TrackSegmentPID{
         {TypePID::LINE, {pid->Kp_line->getData(), pid->Ki_default->getData(), pid->Kd_line->getData()}},
         {TypePID::CURVE, {pid->Kp_curve->getData(), pid->Ki_default->getData(), pid->Kd_curve->getData()}},
+        {TypePID::LONG_CURVE_PID, {pid->Kp_LongCurve->getData(), pid->Ki_default->getData(), pid->Kd_LongCurve->getData()}},
         {TypePID::ZIGZAG, {pid->Kp_ZigZag->getData(), pid->Ki_default->getData(), pid->Kd_ZigZag->getData()}},
         {TypePID::TUNNING, {pid->Kp_tunning->getData(), pid->Ki_tunning->getData(), pid->Kd_tunning->getData()}},
         {TypePID::DEFAULT, {pid->Kp_default->getData(), pid->Ki_default->getData(), pid->Kd_default->getData()}},
@@ -23,7 +24,8 @@ TypePID getTypePID(TrackSegment trackSegment, CarState status)
 {
 
     const std::list<TrackSegment> line = {SHORT_LINE, MEDIUM_LINE, LONG_LINE, XLONG_LINE};
-    const std::list<TrackSegment> curve = {SHORT_CURVE, MEDIUM_CURVE, LONG_CURVE, XLONG_CURVE};
+    const std::list<TrackSegment> curve = {SHORT_CURVE, MEDIUM_CURVE};
+    const std::list<TrackSegment> LongCurve = {LONG_CURVE, XLONG_CURVE};
 
     TypePID type = DEFAULT;
 
@@ -35,6 +37,8 @@ TypePID getTypePID(TrackSegment trackSegment, CarState status)
         type = LINE;
     else if (existTrackSegmentInList(curve, trackSegment))
         type = CURVE;
+    else if(existTrackSegmentInList(LongCurve, trackSegment))
+        type = LONG_CURVE_PID;
 
     return type;
 }
