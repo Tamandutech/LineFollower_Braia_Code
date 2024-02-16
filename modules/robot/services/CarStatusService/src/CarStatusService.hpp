@@ -34,22 +34,23 @@ private:
     dataMapping *MappingData;
     dataPID *PidTrans;
 
-    CarState initialRobotState, currentRobotState, lastRobotState;
+    CarState initialRobotState, currentRobotState, previousRobotState;
 
     MappingService *mappingService;
 
-    int numMarks = 0; // Número total de marcações laterais na pista
+    int TotalMarksNumber;
     
-    int iloop = 0;
+    int printInterval; // variável para o controle do intervalo entre os prints
     
-    bool transition = false, lastTransition = false;
+    bool inTransition, previouslyInTransition;
 
-    TrackSegment transitionTrackSegment;
-    TrackSegment lastTrack = SHORT_LINE; // armazena último tipo de trecho da pista percorrido
+    TrackSegment transitionTrackSegment; // trecho em que o robô estava ou estará
+    TrackSegment previousTrack; 
 
     MapData finalMark;
-    int32_t robotPosition = 0;
-    int32_t pulsesBeforeCurve = 200;
+    int32_t robotPosition;
+    int16_t previousMarkoffset, currentMarkOffset;
+    int previousMarkPassedNumber;
 
     static void IRAM_ATTR startRobotWithBootButton(void *arg);
     void configExternInterruptToReadButton(gpio_num_t gpio_num);
@@ -68,6 +69,7 @@ private:
     void logCarStatus();
     void stopTunningMode();
     void defineTrackSegment(MapData Mark);
+    void UpdateMarkPassedNumber(int markNumber);
     TrackSegment getTrackSegment(MapData Mark);
 };
 

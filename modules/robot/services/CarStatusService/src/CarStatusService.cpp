@@ -14,6 +14,7 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     this->status = robot->getStatus();
     this->speed = robot->getSpeed();
     this->MappingData = robot->getMappingData();
+    printInterval = 0;
 
     mappingService = MappingService::getInstance();
 
@@ -21,9 +22,14 @@ CarStatusService::CarStatusService(std::string name, uint32_t stackDepth, UBaseT
     status->currentTrackSegment->setData(DEFAULT_TRACK);
     status->transitionTrackSegment->setData(DEFAULT_TRACK);
 
-    lastRobotState = (CarState)status->robotState->getData();
-    lastTrack = (TrackSegment)status->currentTrackSegment->getData();
-    lastTransition = false;
+    previousRobotState = (CarState)status->robotState->getData();
+    previousTrack = (TrackSegment)status->currentTrackSegment->getData();
+    previouslyInTransition = false;
+    inTransition = false;
+
+    previousMarkPassedNumber = 0;
+    previousMarkoffset = 0;
+    currentMarkOffset = 0;
 
     SemaphoreStartRobot = xSemaphoreCreateBinary();
     configExternInterruptToReadButton(GPIO_NUM_0);
@@ -44,8 +50,8 @@ void CarStatusService::startFollowingDefinedMapping()
     status->currentTrackSegment->setData(SHORT_LINE);
 
     initialRobotState = CAR_ENC_READING_BEFORE_FIRSTMARK;
-    numMarks = MappingData->TrackSideMarks->getSize();
-    finalMark = MappingData->TrackSideMarks->getData(numMarks - 1);
+    TotalMarksNumber = MappingData->TrackSideMarks->getSize();
+    finalMark = MappingData->TrackSideMarks->getData(TotalMarksNumber - 1);
 }
 
 void CarStatusService::configExternInterruptToReadButton(gpio_num_t interruptPort)
@@ -93,7 +99,6 @@ void CarStatusService::Run()
     {
 
         vTaskDelayUntil(&xLastWakeTime, 30 / portTICK_PERIOD_MS);
-        pulsesBeforeCurve = MappingData->PulsesBeforeCurve->getData();
         currentRobotState = (CarState)status->robotState->getData();
 
         if (passedFirstMark())
@@ -121,42 +126,52 @@ void CarStatusService::Run()
             }
             else
             {
-                // define o status do carrinho se o mapeamento não estiver ocorrendo
-                for (int mark = 0; mark < numMarks - 1; mark++)
+                // define o trecho em que o robô, caso o robô esteja lendo o mapeamento
+                for (int markNumber = 0; markNumber < TotalMarksNumber - 1; markNumber++)
                 {
-                    MapData previousMark = MappingData->TrackSideMarks->getData(mark);
-                    MapData currentMark = MappingData->TrackSideMarks->getData(mark + 1);
+                    MapData previousMark = MappingData->TrackSideMarks->getData(markNumber);
+                    MapData currentMark = MappingData->TrackSideMarks->getData(markNumber + 1);
 
                     if (robotPosition >= previousMark.markPosition && robotPosition <= currentMark.markPosition)
                     {
                         defineTrackSegment(currentMark);
+                        UpdateMarkPassedNumber(markNumber);
 
-                        transition = false;
-
-                        int16_t previousMarkoffset = previousMark.offsetMarkPosition;
-                        int16_t currentMarkOffset = currentMark.offsetMarkPosition;
-                        
                         TrackSegment previousTrack = getTrackSegment(previousMark);
+                        TrackSegment currentTrack = getTrackSegment(currentMark);
+                        TrackSegment nextTrack = DEFAULT_TRACK;
+                        if(markNumber + 2 < TotalMarksNumber)
+                        {
+                            MapData nextMark = MappingData->TrackSideMarks->getData(markNumber + 2);
+                            nextTrack = getTrackSegment(nextMark);
+                        }
+
+                        if(robotPosition <= (currentMark.markPosition + currentMarkOffset) 
+                        || robotPosition >= (previousMark.markPosition + previousMarkoffset))
+                        {
+                            inTransition = false;
+                            currentMarkOffset = currentMark.offsetMarkPosition;
+                            if (isLineSegment(currentTrack) && isCurveSegment(nextTrack))
+                            {
+                                int16_t FinalSpeed =  getTrackSegmentSpeed(nextTrack, speed);  
+                                float DecelerationOffsetGain = speed->DecelerationOffsetGain->getData();
+                                currentMarkOffset += SpeedService::getInstance()->CalculateOffsetToDecelerate(FinalSpeed, DecelerationOffsetGain);
+                             }
+                            previousMarkoffset = previousMark.offsetMarkPosition;
+                        }
+                            
+                        if (robotPosition > (currentMark.markPosition + currentMarkOffset) && markNumber + 2 < TotalMarksNumber)
+                        {
+                            inTransition = true;
+                            transitionTrackSegment = nextTrack;
+                        }
+
                         if (robotPosition < (previousMark.markPosition + previousMarkoffset))
                         {
-                            transition = true;
+                            inTransition = true;
                             transitionTrackSegment = previousTrack;
                         }
-                        if (mark + 2 < numMarks)
-                        {
-                            MapData nextMark = MappingData->TrackSideMarks->getData(mark + 2);
-                            TrackSegment currentTrack = getTrackSegment(currentMark);
-                            TrackSegment nextTrack = getTrackSegment(nextMark);
-                            if (isLineSegment(currentTrack) && isCurveSegment(nextTrack) && currentMarkOffset == 0)
-                            {
-                               currentMarkOffset = -pulsesBeforeCurve;
-                            }
-                            if (robotPosition > (currentMark.markPosition + currentMarkOffset))
-                            {
-                                transition = true;
-                                transitionTrackSegment = nextTrack;
-                            }
-                        }
+                        
                         // Atualiza estado do robô
                         status->transitionTrackSegment->setData(transitionTrackSegment);
                         break;
@@ -164,12 +179,12 @@ void CarStatusService::Run()
                 }
             }
         }
-        if (iloop >= 30)
+        if (printInterval >= 30)
         {
-            iloop = 0;
+            printInterval = 0;
             logCarStatus();
         }
-        iloop++;
+        printInterval++;
     }
 }
 
@@ -201,7 +216,7 @@ void CarStatusService::setTuningMode()
 {
     initialRobotState = CAR_TUNING;
     MappingData->TrackSideMarks->clearAllData();
-    numMarks = 0;
+    TotalMarksNumber = 0;
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_WHITE, 0.5);
 }
 
@@ -219,28 +234,30 @@ void CarStatusService::resetEnconderInFirstMark()
 
 bool CarStatusService::trackSegmentChanged()
 {
-    return lastTrack != (TrackSegment)status->currentTrackSegment->getData() || lastTransition != transition;
+    return previousTrack != (TrackSegment)status->currentTrackSegment->getData() || previouslyInTransition != inTransition;
 }
 
 bool CarStatusService::RobotStateChanged()
 {
-    return lastRobotState != currentRobotState;
+    return previousRobotState != currentRobotState;
 }
 
 LedColor CarStatusService::defineLedColor()
 {
-    lastTrack = (TrackSegment)status->currentTrackSegment->getData();
-    lastTransition = transition;
-    lastRobotState = currentRobotState;
-    LedColor color = getStatusColor(lastRobotState, lastTrack);
-    if (lastTransition)
+    TrackSegment currentTrack = (TrackSegment)status->currentTrackSegment->getData();
+    previousTrack = currentTrack;
+    previouslyInTransition = inTransition;
+    previousRobotState = currentRobotState;
+    LedColor color = getStatusColor(currentRobotState, currentTrack);
+    if (inTransition)
         color = LED_COLOR_BLUE;
     return color;
 }
 
 void CarStatusService::setColorBrightness(LedColor color)
 {
-    float brightness = getSegmentBrightness(lastRobotState, lastTrack);
+    TrackSegment currentTrack = (TrackSegment)status->currentTrackSegment->getData();
+    float brightness = getSegmentBrightness(currentRobotState, currentTrack);
     LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, color, brightness);
 }
 
@@ -264,6 +281,17 @@ void CarStatusService::defineTrackSegment(MapData Mark)
 {
     transitionTrackSegment = (TrackSegment) Mark.trackSegmentBeforeMark;
     status->currentTrackSegment->setData(transitionTrackSegment);
+}
+
+void CarStatusService::UpdateMarkPassedNumber(int markNumber)
+{
+    if(previousMarkPassedNumber != markNumber)
+    {
+        inTransition = false;
+        previousMarkPassedNumber = markNumber;
+        currentMarkOffset = 0;
+        previousMarkoffset = 0;
+    }
 }
 
 TrackSegment CarStatusService::getTrackSegment(MapData Mark)

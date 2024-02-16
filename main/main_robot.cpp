@@ -62,7 +62,7 @@ void app_main(void)
   esp_log_level_set("Main", ESP_LOG_DEBUG);
   //esp_log_level_set("TaskStream", ESP_LOG_ERROR);
   //esp_log_level_set("SensorsService", ESP_LOG_ERROR);
-  //esp_log_level_set("SpeedService", ESP_LOG_ERROR);
+  //esp_log_level_set("SpeedService", ESP_LOG_DEBUG);
   //esp_log_level_set("PIDService", ESP_LOG_ERROR);
   //esp_log_level_set("CMD_PARAM", ESP_LOG_ERROR);
   //esp_log_level_set("DataManager", ESP_LOG_ERROR);
