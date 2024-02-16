@@ -44,8 +44,6 @@ public:
     DataAbstract<uint16_t> *MarkstoMean;
     //Número de marcações direita para a parada 
     DataAbstract<uint16_t> *MarkstoStop;
-    //Pulsos antes de inicar uma curva para iniciar a desaceleração
-    DataAbstract<uint32_t> *PulsesBeforeCurve;
     
     // Limite de variação em milimetros de distância percorrida entre as rodas para considerar que o carro fez uma curva
     DataAbstract<uint8_t> *thresholdToCurve;

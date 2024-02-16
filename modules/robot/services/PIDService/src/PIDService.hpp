@@ -6,6 +6,7 @@
 #include "RobotData.h"
 #include "dataEnums.h"
 #include "SensorsService.hpp"
+#include "SpeedService.hpp"
 
 #include "TrackSegment.hpp"
 #include "TypePID.hpp"

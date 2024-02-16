@@ -58,6 +58,7 @@ void PIDService::Run()
             DataPID->output->setData(pid);
 
             // Calculo de velocidade do motor
+            SpeedService::getInstance()->MeasureWheelsSpeed();
             speed->right->setData(
                 constrain(speed->linearSpeed->getData() + pid, MIN_SPEED, MAX_SPEED));
 

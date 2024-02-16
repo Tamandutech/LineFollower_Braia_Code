@@ -23,9 +23,6 @@ dataMapping::dataMapping(std::string name)
     MarkstoStop = new DataAbstract<uint16_t>("MarkstoStop", name, 2);
     dataManager->registerParamData(MarkstoStop);
 
-    PulsesBeforeCurve = new DataAbstract<uint32_t>("PulsesBeforeCurve", name, 200);
-    dataManager->registerParamData(PulsesBeforeCurve);
-
     MarkstoMean = new DataAbstract<uint16_t>("MarkstoMean", name, 6);
     dataManager->registerParamData(MarkstoMean);
 

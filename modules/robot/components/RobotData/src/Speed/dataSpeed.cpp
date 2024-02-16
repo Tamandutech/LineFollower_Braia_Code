@@ -56,13 +56,16 @@ dataSpeed::dataSpeed(std::string name)
     dataManager->registerParamData(accelration);
     desaccelration = new DataAbstract<float>("PWM_desaccel", name, 6000);
     dataManager->registerParamData(desaccelration);
+    DecelerationOffsetGain = new DataAbstract<float>("DecelerationOffsetGain", name, 0.23);
+    dataManager->registerParamData(DecelerationOffsetGain);
+
+    MotorMaxSpeed = new DataAbstract<float>("MotorMaxSpeed", name, 2500);
+    dataManager->registerParamData(MotorMaxSpeed);
 
     initialspeed = new DataAbstract<float>("PWM_initial_speed", name, 1100);
     dataManager->registerParamData(initialspeed);
 
     //Setpoints translacionais para os tipos de trechos
-    SetPointMap = new DataAbstract<float>("PWM_Setpoint_Map", name, 600);
-    dataManager->registerParamData(SetPointMap);
     XLong_Line = new DataAbstract<float>("PWM_XLong_line", name, 1000);
     dataManager->registerParamData(XLong_Line);
     Long_Line = new DataAbstract<float>("PWM_Long_line", name, 1000);

@@ -48,13 +48,14 @@ public:
     DataAbstract<float> *initialaccelration; // aceleração inicial em rpm/s
     DataAbstract<float> *accelration; // aceleração em rpm/s
     DataAbstract<float> *desaccelration; // desaceleração em rpm/s
+    DataAbstract<float> *DecelerationOffsetGain; // ganho para ajustar o offset para a desaceleração
 
     // Velocidades em malha aberta
     DataAbstract<int8_t> *OpenLoopMaxSpeed;
     DataAbstract<int8_t> *OpenLoopMinSpeed;
     
     DataAbstract<float> *initialspeed; // Velocidade inicial em rpm
-    DataAbstract<float> *SetPointMap; // Setpoint translacional para o mapeamento em rpm
+    DataAbstract<float> *MotorMaxSpeed; // em rpm
 
     //Setpoints translacionais para os tipos de trecho em rpm
     DataAbstract<float> *Long_Line;
@@ -69,6 +70,7 @@ public:
     DataAbstract<float> *Special_Track;
 
     DataAbstract<float> *linearSpeed; // Velocidade linear do robô
+
 
     // Velocidade para o modo Tunning
     DataAbstract<float> *Tunning_speed;
