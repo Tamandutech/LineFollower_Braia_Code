@@ -13,9 +13,10 @@ enum TypePID
 {
     LINE = 1,
     CURVE = 2,
-    ZIGZAG = 3,
-    TUNNING = 4,
-    DEFAULT = 5
+    LONG_CURVE_PID = 3,
+    ZIGZAG = 4,
+    TUNNING = 5,
+    DEFAULT = 6
 };
 
 struct PID_Consts

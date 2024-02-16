@@ -182,7 +182,7 @@ void CarStatusService::Run()
         if (printInterval >= 30)
         {
             printInterval = 0;
-            logCarStatus();
+            //logCarStatus();
         }
         printInterval++;
     }
