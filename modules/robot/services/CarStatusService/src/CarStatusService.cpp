@@ -46,8 +46,8 @@ void CarStatusService::defineIfRobotWillStartMappingMode()
 
 void CarStatusService::startFollowingDefinedMapping()
 {
-    status->transitionTrackSegment->setData(SHORT_LINE);
-    status->currentTrackSegment->setData(SHORT_LINE);
+    status->transitionTrackSegment->setData(DEFAULT_TRACK);
+    status->currentTrackSegment->setData(DEFAULT_TRACK);
 
     initialRobotState = CAR_ENC_READING_BEFORE_FIRSTMARK;
     TotalMarksNumber = MappingData->TrackSideMarks->getSize();
@@ -147,10 +147,11 @@ void CarStatusService::Run()
                         }
 
                         if(robotPosition <= (currentMark.markPosition + currentMarkOffset) 
-                        || robotPosition >= (previousMark.markPosition + previousMarkoffset))
+                        && robotPosition >= (previousMark.markPosition + previousMarkoffset))
                         {
                             inTransition = false;
-                            currentMarkOffset = currentMark.offsetMarkPosition;
+                            int16_t pulsesBeforeCurve = MappingData->pulsesBeforeCurve->getData();
+                            currentMarkOffset = currentMark.offsetMarkPosition - pulsesBeforeCurve;
                             if (isLineSegment(currentTrack) && isCurveSegment(nextTrack))
                             {
                                 int16_t FinalSpeed =  getTrackSegmentSpeed(nextTrack, speed);  

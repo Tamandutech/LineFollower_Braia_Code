@@ -45,6 +45,8 @@ public:
     //Número de marcações direita para a parada 
     DataAbstract<uint16_t> *MarkstoStop;
     
+    DataAbstract<uint16_t> *pulsesBeforeCurve;
+    
     // Limite de variação em milimetros de distância percorrida entre as rodas para considerar que o carro fez uma curva
     DataAbstract<uint8_t> *thresholdToCurve;
 
