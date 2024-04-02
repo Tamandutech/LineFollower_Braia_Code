@@ -10,7 +10,7 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
 
     // GPIOs dos motores
     // motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
-    motors.attachMotors(DRIVER_AIN2, DRIVER_AIN1, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
+    motors.attachMotors(DRIVER_AIN1, DRIVER_AIN2, DRIVER_PWMA, DRIVER_BIN2, DRIVER_BIN1, DRIVER_PWMB);
     motors.setSTBY(DRIVER_STBY);
 
     // Inicializa o semáforo
@@ -74,7 +74,6 @@ void PIDService::Run()
                 OpenLoopControl(erro, max, min);         
             }
             ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
-
             // Define a aceleração do robô
             accel = speed->accelration->getData();
             if (estado == CAR_ENC_READING_BEFORE_FIRSTMARK)
