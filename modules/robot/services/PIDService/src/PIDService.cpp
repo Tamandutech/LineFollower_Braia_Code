@@ -29,7 +29,6 @@ void PIDService::Run()
     {
         // Trava a task até o semáfaro ser liberado com base no timer
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
-        AnalogWrite(PWM_BRUSHLESS_A, 320);
         estado = (CarState)status->robotState->getData();
         if(estado == CAR_STOPPED)
         {
@@ -38,6 +37,7 @@ void PIDService::Run()
         }
         else
         {
+            //AnalogWrite(PWM_BRUSHLESS_A, speed->brushelesSpeed->getData());
             currentTrackSegment = (TrackSegment)status->currentTrackSegment->getData();
 
             // Velocidade do carrinho
@@ -76,7 +76,8 @@ void PIDService::Run()
                 int8_t max = speed->OpenLoopMaxSpeed->getData();
                 OpenLoopControl(erro, max, min);         
             }
-            ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
+            //ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
+            ControlMotors(35, 35);
             // Define a aceleração do robô
             accel = speed->accelration->getData();
             if (estado == CAR_ENC_READING_BEFORE_FIRSTMARK)
