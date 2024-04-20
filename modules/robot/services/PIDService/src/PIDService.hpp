@@ -32,6 +32,15 @@ using namespace cpp_freertos;
 #define TIMER_FREQ 1000000
 #include "esp_log.h"
 
+#define brushless_pin 2
+#define MIN_THROTTLE            205
+#define MAX_THROTTLE            409
+#define THROTTLE_SPEED          100
+#define PWM_BRUSHLESS_A         LEDC_CHANNEL_2
+#define BRUSHLESS_PWM_MODE      LEDC_HIGH_SPEED_MODE
+#define BRUSHLESS_TIMER         LEDC_TIMER_1
+#define BRUSHLESS_RESOLUTION    LEDC_TIMER_12_BIT
+#define BRUSHLESS_FREQUENCY     50
 
 class PIDService : public Thread, public Singleton<PIDService>
 {
@@ -52,7 +61,6 @@ private:
     dataPID *DataPID;
 
     ESP32MotorControl motors;
-
     const short TaskDelay = 5; // 5ms
     const float TaskDelaySeconds = TaskDelay / 1000.0;
 
@@ -72,6 +80,9 @@ private:
 
     int iloop = 0;
 
+    int Brushless_ActualPwm = 205;
+
+
     // Timer control
     static SemaphoreHandle_t SemaphoreTimer; // semáforo para sincronização do timer com a task timer
 
@@ -82,6 +93,10 @@ private:
     void resetGlobalVariables();
     float calculateSpeed(float acceleration, float speedValue);
     void storingSpeedValue(float newSpeed);
+    void initBrushlessPWM(gpio_num_t pin, ledc_channel_t channel);
+    void AnalogWrite(ledc_channel_t channel, int pwm);
+    void configBrushless();
+    void calibrateBrushless();
 };
 
 #endif

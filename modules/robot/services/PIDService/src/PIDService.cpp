@@ -16,6 +16,8 @@ PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priori
     // Inicializa o semáforo
     SemaphoreTimer = xSemaphoreCreateBinary();
 
+    configBrushless(); 
+
     //Inicializa o timer responsável por controlar a periodicidade da Task
     TimerInit(TaskDelaySeconds);
 
@@ -27,6 +29,7 @@ void PIDService::Run()
     {
         // Trava a task até o semáfaro ser liberado com base no timer
         xSemaphoreTake(SemaphoreTimer, portMAX_DELAY);
+        AnalogWrite(PWM_BRUSHLESS_A, 320);
         estado = (CarState)status->robotState->getData();
         if(estado == CAR_STOPPED)
         {
@@ -195,3 +198,55 @@ void PIDService::storingSpeedValue(float newSpeed)
 {
     speed->linearSpeed->setData(newSpeed);
 }
+
+void PIDService::configBrushless(){
+    initBrushlessPWM((gpio_num_t)brushless_pin, PWM_BRUSHLESS_A);
+
+    //ESP_LOGI(GetName().c_str(), "Calibracao Brushless...");
+    calibrateBrushless();
+    //ESP_LOGI(GetName().c_str(), "Fim Calibracao Brushless");
+}
+
+void PIDService::calibrateBrushless(){
+    AnalogWrite(PWM_BRUSHLESS_A, MAX_THROTTLE);
+    
+    vTaskDelay(5200 / portTICK_PERIOD_MS);
+    
+    AnalogWrite(PWM_BRUSHLESS_A, MIN_THROTTLE);
+
+    
+    vTaskDelay(5200 / portTICK_PERIOD_MS);
+
+    
+    Brushless_ActualPwm = MIN_THROTTLE;
+    
+}
+void PIDService::AnalogWrite(ledc_channel_t channel, int pwm){
+    ledc_set_duty_and_update(BRUSHLESS_PWM_MODE,channel,pwm,0); // Atribui um novo duty para o PWM
+}
+
+void PIDService::initBrushlessPWM(gpio_num_t pin, ledc_channel_t channel){
+    ledc_timer_config_t ledc_timer;
+    ledc_timer.speed_mode      = BRUSHLESS_PWM_MODE;
+    ledc_timer.duty_resolution = BRUSHLESS_RESOLUTION;
+    ledc_timer.timer_num       = BRUSHLESS_TIMER;
+    ledc_timer.freq_hz         = BRUSHLESS_FREQUENCY; // Frequência de 5Khz
+    ledc_timer.clk_cfg         = LEDC_AUTO_CLK; // Configuração da fonte de clock
+    ledc_timer_config(&ledc_timer);
+
+    // Prepara e aplica a configuração do canal do LEDC
+    ledc_channel_config_t ledc_channel;
+    ledc_channel.gpio_num       = pin;
+    ledc_channel.speed_mode     = BRUSHLESS_PWM_MODE;
+    ledc_channel.channel        = channel;
+    ledc_channel.intr_type      = LEDC_INTR_DISABLE;
+    ledc_channel.timer_sel      = BRUSHLESS_TIMER;
+    ledc_channel.duty           = 0; 
+    ledc_channel.hpoint         = 0; // Ponto de início do duty cycle
+    ledc_channel_config(&ledc_channel);
+
+    ledc_fade_func_install(0);
+}
+
+
+
