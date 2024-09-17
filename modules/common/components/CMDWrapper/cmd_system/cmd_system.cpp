@@ -144,7 +144,7 @@ static std::string bat_voltage(int argc, char **argv)
     } while (err == ESP_ERR_TIMEOUT);
     ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw, &calVoltage));
     
-    calVoltage *= 3.7;
+    calVoltage *= 4.293;
     return (std::to_string(calVoltage) + "mV");
 }
 
