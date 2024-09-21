@@ -151,12 +151,13 @@ void CarStatusService::Run()
                         {
                             inTransition = false;
                             int16_t pulsesBeforeCurve = MappingData->pulsesBeforeCurve->getData();
-                            currentMarkOffset = currentMark.offsetMarkPosition - pulsesBeforeCurve;
+                            currentMarkOffset = currentMark.offsetMarkPosition; //- pulsesBeforeCurve;
                             if (isLineSegment(currentTrack) && isCurveSegment(nextTrack))
                             {
-                                int16_t FinalSpeed =  getTrackSegmentSpeed(nextTrack, speed);  
-                                float DecelerationOffsetGain = speed->DecelerationOffsetGain->getData();
-                                currentMarkOffset += SpeedService::getInstance()->CalculateOffsetToDecelerate(FinalSpeed, DecelerationOffsetGain);
+                                currentMarkOffset -= pulsesBeforeCurve;
+                                //int16_t FinalSpeed =  getTrackSegmentSpeed(nextTrack, speed);  
+                                //float DecelerationOffsetGain = speed->DecelerationOffsetGain->getData();
+                                //currentMarkOffset += SpeedService::getInstance()->CalculateOffsetToDecelerate(FinalSpeed, DecelerationOffsetGain);
                              }
                             previousMarkoffset = previousMark.offsetMarkPosition;
                         }
@@ -183,7 +184,7 @@ void CarStatusService::Run()
         if (printInterval >= 30)
         {
             printInterval = 0;
-            //logCarStatus();
+            logCarStatus();
         }
         printInterval++;
     }
@@ -264,10 +265,13 @@ void CarStatusService::setColorBrightness(LedColor color)
 
 void CarStatusService::logCarStatus()
 {
-    ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
-    ESP_LOGD(GetName().c_str(), "EncMedia: %ld", robotPosition);
-    ESP_LOGD(GetName().c_str(), "finalMark: %ld", finalMark.markPosition);
-    ESP_LOGD(GetName().c_str(), "Speed: %.2f", speed->linearSpeed->getData());
+    //ESP_LOGD(GetName().c_str(), "CarStatus: %d", status->robotState->getData());
+    //ESP_LOGD(GetName().c_str(), "EncMedia: %ld", robotPosition);
+    ESP_LOGD(GetName().c_str(), "Encleft: %ld", speed->EncRight->getData());
+    ESP_LOGD(GetName().c_str(), "Encright: %ld", speed->EncLeft->getData());
+    
+    //ESP_LOGD(GetName().c_str(), "finalMark: %ld", finalMark.markPosition);
+    //ESP_LOGD(GetName().c_str(), "Speed: %.2f", speed->linearSpeed->getData());
 }
 
 void CarStatusService::stopTunningMode()

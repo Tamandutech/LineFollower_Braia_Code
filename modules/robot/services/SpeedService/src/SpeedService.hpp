@@ -63,7 +63,7 @@ private:
 
     int16_t CalculateWheelSpeed(int32_t ActualPulsesCount, int32_t lastPulsesCount, int64_t dt_MicroSeconds);
     void storeWheelsSpeed(int16_t LeftWheelSpeed,int16_t RightWheelSpeed);
-    void storeEncCount(int16_t LeftWheelCount,int16_t RightWheelCount);
+    void storeEncCount(int32_t LeftWheelCount,int32_t RightWheelCount);
 
 };
 

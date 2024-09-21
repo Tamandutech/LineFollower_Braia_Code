@@ -70,7 +70,9 @@ public:
     DataAbstract<float> *Special_Track;
 
     DataAbstract<float> *linearSpeed; // Velocidade linear do robô
-    DataAbstract<int> *brushelesSpeed; // Velocidade linear do robô
+    DataAbstract<int> *brushelesSpeedDefault;
+    DataAbstract<int> *brushelesSpeedLine;
+
 
 
     // Velocidade para o modo Tunning

@@ -101,7 +101,7 @@ void SpeedService::storeWheelsSpeed(int16_t LeftWheelSpeed,int16_t RightWheelSpe
     speed->RPMLeft_inst->setData(LeftWheelSpeed);
     speed->RPMRight_inst->setData(RightWheelSpeed);
 }
-void SpeedService::storeEncCount(int16_t LeftWheelCount,int16_t RightWheelCount)
+void SpeedService::storeEncCount(int32_t LeftWheelCount,int32_t RightWheelCount)
 {
     speed->EncLeft->setData(LeftWheelCount);
     speed->EncRight->setData(RightWheelCount);

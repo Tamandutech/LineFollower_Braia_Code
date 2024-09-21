@@ -52,8 +52,10 @@ dataSpeed::dataSpeed(std::string name)
 
     initialaccelration = new DataAbstract<float>("PWM_initial_accel", name, 2000);
     dataManager->registerParamData(initialaccelration);
-    brushelesSpeed = new DataAbstract<int>("BrushelesSpeed", name, 205);
-    dataManager->registerParamData(brushelesSpeed); 
+    brushelesSpeedDefault = new DataAbstract<int>("BrushelesSpeedDefault", name, 205);
+    dataManager->registerParamData(brushelesSpeedDefault); 
+    brushelesSpeedLine = new DataAbstract<int>("BrushelesSpeedLine", name, 205);
+    dataManager->registerParamData(brushelesSpeedLine); 
     accelration = new DataAbstract<float>("PWM_accel", name, 6000);
     dataManager->registerParamData(accelration);
     desaccelration = new DataAbstract<float>("PWM_desaccel", name, 6000);

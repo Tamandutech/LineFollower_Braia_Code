@@ -34,11 +34,21 @@ void PIDService::Run()
         {
             resetGlobalVariables();
             motors.motorsStop();
+            AnalogWrite(PWM_BRUSHLESS_A, MIN_THROTTLE);
         }
         else
         {
-            //AnalogWrite(PWM_BRUSHLESS_A, speed->brushelesSpeed->getData());
             currentTrackSegment = (TrackSegment)status->currentTrackSegment->getData();
+            TrackSegment transitionTrackSegment = (TrackSegment)status->transitionTrackSegment->getData();
+            int brushlessSpeed = speed->brushelesSpeedLine->getData();
+            if(isCurveSegment(transitionTrackSegment))
+            {
+                brushlessSpeed = speed->brushelesSpeedDefault->getData();
+            }
+            // Mapeando velocidade do brushless para valores entre 0 e 100%
+            brushlessSpeed = 205 + 204*((float)brushlessSpeed/100.0);
+            AnalogWrite(PWM_BRUSHLESS_A, brushlessSpeed);
+    
 
             // Velocidade do carrinho
             float VelRot = (speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData()) / 2.0;   // Rotacional
@@ -76,8 +86,7 @@ void PIDService::Run()
                 int8_t max = speed->OpenLoopMaxSpeed->getData();
                 OpenLoopControl(erro, max, min);         
             }
-            //ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
-            ControlMotors(35, 35);
+            ControlMotors(speed->left->getData(), speed->right->getData()); // Altera a velocidade dos motores
             // Define a aceleração do robô
             accel = speed->accelration->getData();
             if (estado == CAR_ENC_READING_BEFORE_FIRSTMARK)
@@ -87,7 +96,6 @@ void PIDService::Run()
             desaccel = speed->desaccelration->getData();
 
             // Altera a velocidade linear do carrinho
-            TrackSegment transitionTrackSegment = (TrackSegment)status->transitionTrackSegment->getData();
             speedTarget = getTargetSpeed(transitionTrackSegment, estado, speed);
 
             // Rampeia a velocidade linear do robô

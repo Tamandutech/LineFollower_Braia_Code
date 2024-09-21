@@ -57,7 +57,7 @@ void app_main(void)
   ESP_LOGD("Main", "Configurando LOGs...");
   esp_log_level_set("*", ESP_LOG_ERROR);
   //esp_log_level_set("LEDsService", ESP_LOG_ERROR);
-  //esp_log_level_set("CarStatusService", ESP_LOG_ERROR);
+  //esp_log_level_set("CarStatusService", ESP_LOG_DEBUG);
   esp_log_level_set("BLEServerService", ESP_LOG_DEBUG);
   esp_log_level_set("Main", ESP_LOG_DEBUG);
   //esp_log_level_set("TaskStream", ESP_LOG_ERROR);
