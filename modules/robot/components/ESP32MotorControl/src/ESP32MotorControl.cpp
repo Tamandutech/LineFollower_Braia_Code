@@ -165,13 +165,13 @@ void ESP32MotorControl::motorStop(uint8_t motor)
   switch (motor)
   {
   case 0:
-    gpio_set_level((gpio_num_t)gpioAIN1, 0);
-    gpio_set_level((gpio_num_t)gpioAIN2, 0);
+    gpio_set_level((gpio_num_t)gpioAIN1, 1);
+    gpio_set_level((gpio_num_t)gpioAIN2, 1);
     break;
 
   case 1:
-    gpio_set_level((gpio_num_t)gpioBIN1, 0);
-    gpio_set_level((gpio_num_t)gpioBIN2, 0);
+    gpio_set_level((gpio_num_t)gpioBIN1, 1);
+    gpio_set_level((gpio_num_t)gpioBIN2, 1);
     break;
 
   default:
