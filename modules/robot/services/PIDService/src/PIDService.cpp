@@ -1,5 +1,8 @@
 #include "PIDService.hpp"
 
+bool  firstStart = true;
+
+
 SemaphoreHandle_t PIDService::SemaphoreTimer;
 PIDService::PIDService(std::string name, uint32_t stackDepth, UBaseType_t priority) : Thread(name, stackDepth, priority)
 {
@@ -34,6 +37,7 @@ void PIDService::Run()
         {
             resetGlobalVariables();
             motors.motorsStop();
+
             AnalogWrite(PWM_BRUSHLESS_A, MIN_THROTTLE);
         }
         else
@@ -46,9 +50,17 @@ void PIDService::Run()
                 brushlessSpeed = speed->brushelesSpeedDefault->getData();
             }
             // Mapeando velocidade do brushless para valores entre 0 e 100%
-            brushlessSpeed = 205 + 204*((float)brushlessSpeed/100.0);
-            AnalogWrite(PWM_BRUSHLESS_A, brushlessSpeed);
-    
+            brushlessSpeed = MIN_THROTTLE + 204*((float)brushlessSpeed/100.0);
+
+            if(firstStart) {
+                for(int velMin = MIN_THROTTLE; velMin < brushlessSpeed; velMin++) {
+                    vTaskDelay(pdMS_TO_TICKS(25));
+                    AnalogWrite(PWM_BRUSHLESS_A, velMin);
+                }
+                firstStart = false;
+            }
+
+            AnalogWrite(PWM_BRUSHLESS_A, brushlessSpeed);   
 
             // Velocidade do carrinho
             float VelRot = (speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData()) / 2.0;   // Rotacional

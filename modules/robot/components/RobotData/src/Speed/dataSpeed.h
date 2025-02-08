@@ -72,6 +72,7 @@ public:
     DataAbstract<float> *linearSpeed; // Velocidade linear do robô
     DataAbstract<int> *brushelesSpeedDefault;
     DataAbstract<int> *brushelesSpeedLine;
+    DataAbstract<int> *brushelesSpeedStart;
 
 
 
