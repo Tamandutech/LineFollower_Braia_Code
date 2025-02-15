@@ -58,7 +58,7 @@ void PIDService::Run()
             // Rampa de aceleração ao iniciar
             if(firstStart) {
                 for(int velMin = MIN_THROTTLE; velMin < brushlessSpeedPWM; velMin+= 64) {
-                    vTaskDelay(pdMS_TO_TICKS(25));
+                    vTaskDelay(pdMS_TO_TICKS(50));
                     AnalogWrite(PWM_BRUSHLESS_A, velMin);
                     printf("CORLESS - velMin: %d\n", velMin);
                     printf("CORLESS - brushlessSpeed: %d\n", brushlessSpeedPWM);
