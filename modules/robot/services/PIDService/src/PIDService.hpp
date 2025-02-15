@@ -39,7 +39,7 @@ using namespace cpp_freertos;
 #define PWM_BRUSHLESS_A         LEDC_CHANNEL_2
 #define BRUSHLESS_PWM_MODE      LEDC_HIGH_SPEED_MODE
 #define BRUSHLESS_TIMER         LEDC_TIMER_1
-#define BRUSHLESS_RESOLUTION    LEDC_TIMER_13_BIT
+#define BRUSHLESS_RESOLUTION    LEDC_TIMER_12_BIT
 #define BRUSHLESS_FREQUENCY     2000
 
 class PIDService : public Thread, public Singleton<PIDService>
