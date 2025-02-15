@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <ctime>
 #include "sdkconfig.h"
 #include "nimconfig_rename.h"
 

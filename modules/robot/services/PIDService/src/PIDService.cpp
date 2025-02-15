@@ -38,29 +38,35 @@ void PIDService::Run()
             resetGlobalVariables();
             motors.motorsStop();
 
-            AnalogWrite(PWM_BRUSHLESS_A, MIN_THROTTLE);
+            AnalogWrite(PWM_BRUSHLESS_A, 0);
+
         }
         else
         {
             currentTrackSegment = (TrackSegment)status->currentTrackSegment->getData();
             TrackSegment transitionTrackSegment = (TrackSegment)status->transitionTrackSegment->getData();
-            int brushlessSpeed = speed->brushelesSpeedLine->getData();
+           
+            int brushlessSpeedDash = speed->brushelesSpeedLine->getData();
             if(isCurveSegment(transitionTrackSegment))
             {
-                brushlessSpeed = speed->brushelesSpeedDefault->getData();
+                brushlessSpeedDash = speed->brushelesSpeedDefault->getData();
             }
+            printf("BRUSHELESS SPEED DASH %d\n", brushlessSpeedDash);
             // Mapeando velocidade do brushless para valores entre 0 e 100%
-            brushlessSpeed = MIN_THROTTLE + 204*((float)brushlessSpeed/100.0);
+            int brushlessSpeedPWM = MIN_THROTTLE + ( MAX_THROTTLE *((float)brushlessSpeedDash/100.0) );
 
+            // Rampa de aceleração ao iniciar
             if(firstStart) {
-                for(int velMin = MIN_THROTTLE; velMin < brushlessSpeed; velMin++) {
+                for(int velMin = MIN_THROTTLE; velMin < brushlessSpeedPWM; velMin+= 64) {
                     vTaskDelay(pdMS_TO_TICKS(25));
                     AnalogWrite(PWM_BRUSHLESS_A, velMin);
+                    printf("CORLESS - velMin: %d\n", velMin);
+                    printf("CORLESS - brushlessSpeed: %d\n", brushlessSpeedPWM);
                 }
                 firstStart = false;
             }
 
-            AnalogWrite(PWM_BRUSHLESS_A, brushlessSpeed);   
+            AnalogWrite(PWM_BRUSHLESS_A, brushlessSpeedPWM);   
 
             // Velocidade do carrinho
             float VelRot = (speed->RPMRight_inst->getData() - speed->RPMLeft_inst->getData()) / 2.0;   // Rotacional
@@ -220,30 +226,12 @@ void PIDService::storingSpeedValue(float newSpeed)
     speed->linearSpeed->setData(newSpeed);
 }
 
-void PIDService::configBrushless(){
-    initBrushlessPWM((gpio_num_t)brushless_pin, PWM_BRUSHLESS_A);
-
-    //ESP_LOGI(GetName().c_str(), "Calibracao Brushless...");
-    calibrateBrushless();
-    //ESP_LOGI(GetName().c_str(), "Fim Calibracao Brushless");
-}
-
-void PIDService::calibrateBrushless(){
-    AnalogWrite(PWM_BRUSHLESS_A, MAX_THROTTLE);
-    
-    vTaskDelay(5200 / portTICK_PERIOD_MS);
-    
-    AnalogWrite(PWM_BRUSHLESS_A, MIN_THROTTLE);
-
-    
-    vTaskDelay(5200 / portTICK_PERIOD_MS);
-
-    
-    Brushless_ActualPwm = MIN_THROTTLE;
-    
-}
 void PIDService::AnalogWrite(ledc_channel_t channel, int pwm){
     ledc_set_duty_and_update(BRUSHLESS_PWM_MODE,channel,pwm,0); // Atribui um novo duty para o PWM
+}
+
+void PIDService::configBrushless(){
+    initBrushlessPWM((gpio_num_t)brushless_pin, PWM_BRUSHLESS_A);
 }
 
 void PIDService::initBrushlessPWM(gpio_num_t pin, ledc_channel_t channel){
@@ -268,6 +256,5 @@ void PIDService::initBrushlessPWM(gpio_num_t pin, ledc_channel_t channel){
 
     ledc_fade_func_install(0);
 }
-
 
 

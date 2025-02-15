@@ -42,7 +42,6 @@ void ESP32MotorControl::attachMotors(uint8_t _gpioAIN1, uint8_t _gpioAIN2,
                                      uint8_t _gpioPWMA, uint8_t _gpioBIN1,
                                      uint8_t _gpioBIN2, uint8_t _gpioPWMB)
 {
-
   gpioAIN1 = _gpioAIN1;
   gpioAIN2 = _gpioAIN2;
   gpioPWMA = _gpioPWMA;

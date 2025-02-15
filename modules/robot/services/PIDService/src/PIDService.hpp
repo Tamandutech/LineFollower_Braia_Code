@@ -32,15 +32,15 @@ using namespace cpp_freertos;
 #define TIMER_FREQ 1000000
 #include "esp_log.h"
 
-#define brushless_pin 2
-#define MIN_THROTTLE            205
-#define MAX_THROTTLE            409
+#define brushless_pin           2
+#define MIN_THROTTLE            0
+#define MAX_THROTTLE            4095
 #define THROTTLE_SPEED          100
 #define PWM_BRUSHLESS_A         LEDC_CHANNEL_2
 #define BRUSHLESS_PWM_MODE      LEDC_HIGH_SPEED_MODE
 #define BRUSHLESS_TIMER         LEDC_TIMER_1
-#define BRUSHLESS_RESOLUTION    LEDC_TIMER_12_BIT
-#define BRUSHLESS_FREQUENCY     50
+#define BRUSHLESS_RESOLUTION    LEDC_TIMER_13_BIT
+#define BRUSHLESS_FREQUENCY     2000
 
 class PIDService : public Thread, public Singleton<PIDService>
 {
