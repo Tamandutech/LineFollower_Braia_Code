@@ -1,2 +1,0 @@
-# LEDsService
-Essa pasta contém o serviço responsável por executar os comandos destinados aos leds que o robô possui, sendo esses comandos normalmente enviados por outros serviços para o LEDsService que, por fim, processa o comando e envia aos leds.

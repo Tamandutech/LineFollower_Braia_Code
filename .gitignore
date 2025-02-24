@@ -1,4 +1,11 @@
-.pio
 .vscode
-.venv
-build
+Release
+Drivers
+Debug
+*.mxproject
+*.settings
+*.cproject
+*.project
+*.vscode
+*.launch
+*.ld
