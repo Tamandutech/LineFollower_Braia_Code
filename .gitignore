@@ -1,11 +1,3 @@
-.vscode
+.settings
 Release
-Drivers
 Debug
-*.mxproject
-*.settings
-*.cproject
-*.project
-*.vscode
-*.launch
-*.ld
