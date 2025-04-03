@@ -6,30 +6,68 @@
 ## 🔧 Requisitos
 
 ### Obrigatórios
-- STM32CubeIDE 1.18.0 ou superior
+- STM32CubeIDE 1.18.0
 
 ### Opcionais
 Para desenvolvimento através do Visual Studio Code:
-- STM32CubeMX 6.14.0 ou superior
-- STM32CubeCLT (mesma versão do STM32CubeIDE)
+- STM32CubeCLT 1.18.0
+- STM32CubeMX 6.14.0 (opcional, mas recomendado)
 
 ## 🚀 Como Usar
 
 ### Configuração com STM32CubeIDE
 1. Clone o repositório:
-   ```bash
-   git clone [URL-do-repositório]
-   ```
+   - Para clonar **apenas a branch de desenvolvimento do STM32**, use:
+     ```bash
+     git clone --branch develop-stm32 --single-branch https://github.com/Tamandutech/LineFollower_Braia_Code.git
+     ```
+   - Para clonar o **repositório completo**, use:
+     ```bash
+     git clone --branch develop-stm32 https://github.com/Tamandutech/LineFollower_Braia_Code.git
+     ```
+
 2. Abra o STM32CubeIDE
+
 3. Importe o projeto através de:
    ```
    File > Open Projects from File System
    ```
 
 ### Configuração com Visual Studio Code  
-(Temporariamente apenas para Windows)
-1. Siga os passos 1-3 acima para configurar o projeto no STM32CubeIDE
-2. Abra o arquivo `STMCube_cli_helper.bat` 
-3. Modifique o caminho do workspace para o da sua CubeIDE
-4. Se necessário, altere o nome do projeto no mesmo arquivo
-5. Execute `STMCube_cli_helper.bat` para compilar ou fazer flash no dispositivo
+*(Temporariamente apenas para Windows)*
+
+
+1. Siga os passos 1-3 da seção anterior "Configuração com STM32CubeIDE"  
+
+2. Abra o Visual Studio Code  
+
+3. **Compile e/ou faça o upload do firmware**  
+   No terminal do Visual Studio Code, execute um dos comandos abaixo:
+   - Para compilar o projeto:  
+     ```bash
+     .\STMCube_cli_helper.bat build
+     ```
+   - Para fazer o upload do firmware no dispositivo STM32:  
+     ```bash
+     .\STMCube_cli_helper.bat flash
+     ```
+   - Para compilar e fazer o upload do firmware em sequência:  
+     ```bash
+     .\STMCube_cli_helper.bat all
+     ```
+
+#### Observações
+O arquivo de lote `STMCube_cli_helper.bat` é um script que automatiza o processo de compilação e upload do firmware no dispositivo STM32. Ele utiliza o STM32CubeCLT e a STM32CubeIDE para realizar essas operações. 
+
+- Não é possível compilar o código quando o STM32CubeIDE estiver aberto, pois ele bloqueia o acesso ao workspace. 
+
+- Não existem restrições para a função de upload do firmware, ou seja, o STM32CubeIDE pode estar aberto ou fechado. 
+
+- É recomendado realizar a instalação padrão do STM32CubeCLT e STM32CubeIDE (e utilizar o workspace padrão) 
+
+Caso tenha instalado em locais diferentes, será necessário modificar:
+- O arquivo `STMCube_cli_helper.bat` para apontar para os caminhos corretos.
+- O arquivo `.vscode\c_cpp_properties.json` para ajustar as configurações.
+
+
+

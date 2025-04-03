@@ -1,7 +1,7 @@
 @ECHO OFF
 
 REM Define the directory of your CubeIDE workspace
-set workspace=C:\Users\Samuel\STM32CubeIDE\workspace_1.18.0
+set workspace=%USERPROFILE%\STM32CubeIDE\workspace_1.18.0
 
 REM Define the name of your project
 set project=LineFollower_Braia_Code
