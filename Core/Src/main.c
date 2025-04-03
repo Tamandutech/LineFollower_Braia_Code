@@ -105,15 +105,39 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    int a = 0;
-    char buffer[] = "Hello World!\n";
+    uint32_t a = 0;
+    uint8_t buffer[50] = "Hello World!\n";
+    HAL_UART_Transmit(&huart1, buffer, 14, 100);
+    HAL_GPIO_WritePin(motor1a_GPIO_Port, motor1a_Pin, 0);
+    HAL_GPIO_WritePin(motor1b_GPIO_Port, motor1b_Pin, 0);
+    HAL_GPIO_WritePin(motor2a_GPIO_Port, motor2a_Pin, 0);
+    HAL_GPIO_WritePin(motor2b_GPIO_Port, motor2b_Pin, 0);
     while (1) {
-        HAL_UART_Transmit(&huart1, buffer, sizeof(buffer), 100);
-        HAL_Delay(500);
-        HAL_GPIO_WritePin(motor1a_GPIO_Port, motor1a_Pin, 0);
-        HAL_GPIO_WritePin(motor1b_GPIO_Port, motor1b_Pin, 0);
-        HAL_GPIO_WritePin(motor2a_GPIO_Port, motor2a_Pin, 0);
-        HAL_GPIO_WritePin(motor2b_GPIO_Port, motor2b_Pin, 0);
+        strcpy(buffer, "Liga ponte H\n");
+        HAL_UART_Transmit(&huart1, buffer, 14, 100);
+        HAL_GPIO_TogglePin(motor1b_GPIO_Port, motor1b_Pin);
+        HAL_GPIO_TogglePin(motor2b_GPIO_Port, motor2b_Pin);
+        HAL_Delay(1000);
+         strcpy(buffer, "Desliga ponte H e inverte sentido\n");
+        HAL_UART_Transmit(&huart1, buffer, 35, 100);
+        HAL_GPIO_TogglePin(motor1b_GPIO_Port, motor1b_Pin);
+        HAL_GPIO_TogglePin(motor2b_GPIO_Port, motor2b_Pin);
+        HAL_GPIO_TogglePin(motor1a_GPIO_Port, motor1a_Pin);
+        HAL_GPIO_TogglePin(motor2a_GPIO_Port, motor2a_Pin);
+        HAL_Delay(1000);
+        strcpy(buffer, "Liga ponte H\n");
+        HAL_UART_Transmit(&huart1, buffer, 14, 100);
+        HAL_GPIO_TogglePin(motor1b_GPIO_Port, motor1b_Pin);
+        HAL_GPIO_TogglePin(motor2b_GPIO_Port, motor2b_Pin);
+        HAL_Delay(1000);
+        strcpy(buffer, "Desliga ponte H e inverte sentido\n");
+        HAL_UART_Transmit(&huart1, buffer, 35, 100);
+        HAL_GPIO_TogglePin(motor1b_GPIO_Port, motor1b_Pin);
+        HAL_GPIO_TogglePin(motor2b_GPIO_Port, motor2b_Pin);
+        HAL_GPIO_TogglePin(motor1a_GPIO_Port, motor1a_Pin);
+        HAL_GPIO_TogglePin(motor2a_GPIO_Port, motor2a_Pin);
+        HAL_Delay(1000);
+
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
