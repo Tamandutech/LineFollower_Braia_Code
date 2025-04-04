@@ -6,12 +6,14 @@
 ## 🔧 Requisitos
 
 ### Obrigatórios
-- STM32CubeIDE 1.18.0
+- STM32CubeIDE 1.18.0 
 
 ### Opcionais
-Para desenvolvimento através do Visual Studio Code:
-- STM32CubeCLT 1.18.0
-- STM32CubeMX 6.14.0 (opcional, mas recomendado)
+Para desenvolvimento através do Visual Studio Code: 
+- STM32CubeCLT 1.18.0 (necessário para fazer upload do firmware e depuração) 
+- Pacote de extensão C/C++ para Visual Studio Code (necessário para intellisense) 
+- Extensão Cortex-Debug para Visual Studio Code (necessário para depuração) 
+- STM32CubeMX 6.14.0 (recomendado para editar .ioc sem o STM32CubeIDE aberto) 
 
 ## 🚀 Como Usar
 
@@ -56,12 +58,17 @@ Para desenvolvimento através do Visual Studio Code:
      .\STMCube_cli_helper.bat all
      ```
 
+4. **Debug**  
+   Para iniciar o debug utilize o atalho "F5" ou clique no botão "Iniciar Depuração" na barra lateral esquerda do Visual Studio Code. 
+
 #### Observações
 O arquivo de lote `STMCube_cli_helper.bat` é um script que automatiza o processo de compilação e upload do firmware no dispositivo STM32. Ele utiliza o STM32CubeCLT e a STM32CubeIDE para realizar essas operações. 
 
 - Não é possível compilar o código quando o STM32CubeIDE estiver aberto, pois ele bloqueia o acesso ao workspace. 
 
 - Não existem restrições para a função de upload do firmware, ou seja, o STM32CubeIDE pode estar aberto ou fechado. 
+
+- Ao utilizar a função de debug pelo VSCode, por padrão o codigo não está sendo compilado para otimizar o tempo de execução. Então lembre sempre de compilar antes de Debugar, ou descomente a linha ` // "preLaunchTask": "Build",` no arquivo `.vscode\launch.json` para sempre compilar o codigo antes de iniciar a sessão de debug. 
 
 - É recomendado realizar a instalação padrão do STM32CubeCLT e STM32CubeIDE (e utilizar o workspace padrão) 
 
