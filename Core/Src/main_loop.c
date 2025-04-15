@@ -1,4 +1,4 @@
-#include "setup_loop.h"
+#include "main_loop.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,20 +17,21 @@ static float_t acceleration_mg[3];
 static float_t angular_rate_mdps[3];
 static float_t temperature_degC;
 
-inline void setup(void) {
+void main_loop(void) {
     imu_init(&imu_ctx, &int1_route);
     adc_start();
 
     ble_log(tx_buffer, 14);
-}
-inline void loop(void) {
-    ble_log(tx_buffer, 14);
 
-    float vref = 1.087f * 4095.0f / adc_buffer[0];
-    float vbat = (adc_buffer[17] * vref / 4095.0f) * 5.6875f;  // 5.6875 é a constante do divisor de tensão
-    snprintf((char *)tx_buffer, sizeof(tx_buffer),
-             "Vbat [V]:%2.3f\tVref [V]:%2.3f\r\n", vbat, vref);
-    ble_log(tx_buffer, strlen((char const *)tx_buffer));
+    for (;;) {
+        ble_log(tx_buffer, 14);
 
-    delay_ms(1000);
+        float vref = 1.087f * 4095.0f / adc_buffer[0];
+        float vbat = (adc_buffer[17] * vref / 4095.0f) * 5.6875f;  // 5.6875 é a constante do divisor de tensão
+        snprintf((char *)tx_buffer, sizeof(tx_buffer),
+                 "Vbat [V]:%2.3f\tVref [V]:%2.3f\r\n", vbat, vref);
+        ble_log(tx_buffer, strlen((char const *)tx_buffer));
+
+        delay_ms(1000);
+    }
 }

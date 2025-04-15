@@ -28,7 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "setup_loop.h"
+#include "main_loop.h"
 
 /* USER CODE END Includes */
 
@@ -107,10 +107,9 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    setup();  // Initialize the system and peripherals
-    for (;;) {
-        loop();  // Main loop for processing and handling tasks
+    main_loop(); //substitui o loop infinito da main do MXCube
 
+    for (;;) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
