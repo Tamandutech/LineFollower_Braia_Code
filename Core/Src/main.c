@@ -50,6 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -100,13 +101,16 @@ int main(void) {
     MX_USART1_UART_Init();
     MX_I2C1_Init();
     /* USER CODE BEGIN 2 */
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
     setup();  // Initialize the system and peripherals
     for (;;) {
         loop();  // Main loop for processing and handling tasks
+
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -156,7 +160,6 @@ void SystemClock_Config(void) {
 }
 
 /* USER CODE BEGIN 4 */
-
 /* USER CODE END 4 */
 
 /**
