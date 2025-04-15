@@ -14,12 +14,12 @@ static float_t acceleration_mg[3];
 static float_t angular_rate_mdps[3];
 static float_t temperature_degC;
 
-void setup(void) {
+inline void setup(void) {
     imu_init(&imu_ctx, &int1_route);
 
     ble_log(tx_buffer, 14);
 }
-void loop(void) {
+inline void loop(void) {
     ble_log(tx_buffer, 14);
     delay_ms(1000);
 }

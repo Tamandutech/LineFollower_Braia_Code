@@ -26,6 +26,7 @@ void delay_ms(uint32_t millisec);
 
 void ble_log(uint8_t *tx_buffer, uint16_t len);
 
+uint8_t read_pin(pinhandler_t pin);
 void write_pin(pinhandler_t pin, uint8_t state);
 void toggle_pin(pinhandler_t pin);
 

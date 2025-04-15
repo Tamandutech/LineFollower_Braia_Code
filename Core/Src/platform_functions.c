@@ -11,6 +11,10 @@ void ble_log(uint8_t *tx_buffer, uint16_t len) {
     HAL_UART_Transmit(&BLE_BUS, tx_buffer, len, 1000);  // trocar por dma
 }
 
+uint8_t read_pin(pinhandler_t pin) {
+    return (uint8_t)HAL_GPIO_ReadPin(pin.port, pin.pin);
+}
+
 void write_pin(pinhandler_t pin, uint8_t state) {
     if (state) {
         HAL_GPIO_WritePin(pin.port, pin.pin, GPIO_PIN_SET);

@@ -3,7 +3,7 @@
 
 #include "platform_functions.h"
 
-void setup(void);
-void loop(void);
+inline void setup(void);
+inline void loop(void);
 
 #endif /* SETUP_H */
