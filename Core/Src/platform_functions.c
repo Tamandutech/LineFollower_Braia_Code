@@ -38,7 +38,7 @@ void delay_ms(uint32_t millisec) {
 }
 
 void ble_log(uint8_t *tx_buffer, uint16_t len) {
-    HAL_UART_Transmit(&BLE_BUS, tx_buffer, len, 1000);  // trocar por dma
+    HAL_UART_Transmit(&BLE_BUS, (const uint8_t *)tx_buffer, len, 1000);  // trocar por dma
 }
 
 void write_pin(pinhandler_t pin, uint8_t state) {

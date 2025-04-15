@@ -1,5 +1,8 @@
 #include "setup_loop.h"
 
+#include <stdio.h>
+#include <string.h>
+
 uint32_t a = 0;
 uint8_t tx_buffer[1000] = "Hello World!\n";
 

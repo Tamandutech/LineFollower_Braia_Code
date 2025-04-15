@@ -31,7 +31,7 @@ void ble_log(uint8_t *tx_buffer, uint16_t len);
 void write_pin(pinhandler_t pin, uint8_t state);
 void toggle_pin(pinhandler_t pin);
 
-void adc_start(ADC_HandleTypeDef *hadc);
+void adc_start(void);
 
 int32_t write_imu(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len);
 int32_t read_imu(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len);
