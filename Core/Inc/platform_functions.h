@@ -9,9 +9,11 @@ extern UART_HandleTypeDef huart1;
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
-extern volatile uint32_t adc_buffer[18];
 
-// Definições necessários para o funcionamento do projeto
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim5;
+
+// Definições necessários para o funcionamento do projeto presente em arquivos interplataforma
 #include <stdint.h>
 
 #include "lsm6dsr_reg.h"
@@ -19,10 +21,18 @@ extern volatile uint32_t adc_buffer[18];
 #define IMU_BUS hi2c1
 #define BLE_BUS huart1
 
+extern volatile uint32_t adc_update_time;
+extern volatile uint32_t adc_buffer[18];
+
 typedef struct pinhandler_t {
     GPIO_TypeDef *port;
     uint16_t pin;
 } pinhandler_t;
+
+typedef struct pwmhandler_t {
+    TIM_HandleTypeDef *htim;
+    uint32_t channel;
+} pwmhandler_t;
 
 void delay_ms(uint32_t millisec);
 
@@ -33,6 +43,9 @@ void write_pin(pinhandler_t pin, uint8_t state);
 void toggle_pin(pinhandler_t pin);
 
 void adc_start(void);
+
+void pwm_start(void);
+void set_pwm(pwmhandler_t pwmpin, uint16_t dutty);
 
 int32_t write_imu(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len);
 int32_t read_imu(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len);

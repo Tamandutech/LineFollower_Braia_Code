@@ -1,35 +1,38 @@
 #include "platform_functions.h"
 
-// Functions to configure platform peripherals
+// definições específicas de hardware
 
-volatile uint32_t adc1_buffer[8];
+#include "main.h"
+
+volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
 
+volatile uint32_t last_adc1_time = 0;
+volatile uint32_t last_adc2_time = 0;
+volatile uint32_t adc1_update_time = 0;
+volatile uint32_t adc2_update_time = 0;
+
+// teste temporario para debug
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+    uint32_t time = HAL_GetTick();  // Get the current time in milliseconds
     if (hadc->Instance == ADC1) {
-        adc_buffer[13] = adc1_buffer[0];
-        adc_buffer[12] = adc1_buffer[1];
-        adc_buffer[11] = adc1_buffer[2];
-        adc_buffer[10] = adc1_buffer[3];
-        adc_buffer[16] = adc1_buffer[4];
-        adc_buffer[15] = adc1_buffer[5];
-        adc_buffer[2] = adc1_buffer[6];
-        adc_buffer[3] = adc1_buffer[7];
-        adc_buffer[0] = adc1_buffer[8];  // Referência interterna
+        adc1_update_time = time - last_adc1_time;  // Calcula o tempo de atualização
+        last_adc1_time = time;                     // Atualiza o tempo da última conversão
     } else if (hadc->Instance == ADC2) {
-        adc_buffer[7] = adc2_buffer[0];
-        adc_buffer[6] = adc2_buffer[1];
-        adc_buffer[5] = adc2_buffer[2];
-        adc_buffer[14] = adc2_buffer[3];
-        adc_buffer[4] = adc2_buffer[4];
-        adc_buffer[1] = adc2_buffer[5];
-        adc_buffer[8] = adc2_buffer[6];
-        adc_buffer[9] = adc2_buffer[7];
-        adc_buffer[17] = adc2_buffer[8];  // Bateria
+        adc2_update_time = time - last_adc2_time;  // Calcula o tempo de atualização
+        last_adc2_time = time;                     // Atualiza o tempo da última conversão
     }
+    adc_update_time = adc1_update_time + adc2_update_time;  // Atualiza o tempo total de atualização
 }
 
-// Functions to be used in the main loop
+// Definições comuns a serem usadas no main loop e demais arquivos interplataforma
+pinhandler_t motorDirDir = {motor1dir_GPIO_Port, motor1dir_Pin};
+pwmhandler_t motorDirPWM = {&htim8, TIM_CHANNEL_1};
+pinhandler_t motorEsqDir = {motor2dir_GPIO_Port, motor2dir_Pin};
+pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_3};
+
+pwmhandler_t motorSucPWM = {&htim5, TIM_CHANNEL_2};
+
 void delay_ms(uint32_t millisec) {
     if (millisec == 0) {
         return;
@@ -38,7 +41,7 @@ void delay_ms(uint32_t millisec) {
 }
 
 void ble_log(uint8_t *tx_buffer, uint16_t len) {
-    HAL_UART_Transmit(&BLE_BUS, (const uint8_t *)tx_buffer, len, 1000);  // trocar por dma
+    HAL_UART_Transmit_DMA(&BLE_BUS, (const uint8_t *)tx_buffer, len);
 }
 
 uint8_t read_pin(pinhandler_t pin) {
@@ -61,9 +64,43 @@ void adc_start(void) {
     HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
     HAL_Delay(300);
-    HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 8);
+    HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
     HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
     ble_log((uint8_t *)"ADC started\n", 13);
+}
+
+void pwm_start(void) {
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
+}
+
+void set_pwm(pwmhandler_t pwmpin, uint16_t dutty) {
+    __HAL_TIM_SET_COMPARE(pwmpin.htim, pwmpin.channel, dutty);
+}
+
+void update_adc(void) {
+    // adc1
+    adc_buffer[12] = adc1_buffer[0];
+    adc_buffer[11] = adc1_buffer[1];
+    adc_buffer[10] = adc1_buffer[2];
+    adc_buffer[9] = adc1_buffer[3];
+    adc_buffer[15] = adc1_buffer[4];
+    adc_buffer[14] = adc1_buffer[5];
+    adc_buffer[1] = adc1_buffer[6];
+    adc_buffer[2] = adc1_buffer[7];
+    adc_buffer[16] = adc1_buffer[8];  // Referência interterna
+
+    // adc2
+    adc_buffer[6] = adc2_buffer[0];
+    adc_buffer[5] = adc2_buffer[1];
+    adc_buffer[4] = adc2_buffer[2];
+    adc_buffer[13] = adc2_buffer[3];
+    adc_buffer[3] = adc2_buffer[4];
+    adc_buffer[0] = adc2_buffer[5];
+    adc_buffer[7] = adc2_buffer[6];
+    adc_buffer[8] = adc2_buffer[7];
+    adc_buffer[17] = adc2_buffer[8];  // Bateria
 }
 
 /** Please note that is MANDATORY: return 0 -> no Error.**/

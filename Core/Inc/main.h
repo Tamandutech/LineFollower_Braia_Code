@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -48,6 +48,8 @@ extern "C" {
 /* USER CODE BEGIN EM */
 
 /* USER CODE END EM */
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
@@ -93,14 +95,14 @@ void Error_Handler(void);
 #define S1_GPIO_Port GPIOB
 #define S0_Pin GPIO_PIN_2
 #define S0_GPIO_Port GPIOB
-#define motor2b_Pin GPIO_PIN_6
-#define motor2b_GPIO_Port GPIOC
-#define motor2a_Pin GPIO_PIN_7
-#define motor2a_GPIO_Port GPIOC
-#define motor1b_Pin GPIO_PIN_8
-#define motor1b_GPIO_Port GPIOC
-#define motor1a_Pin GPIO_PIN_9
-#define motor1a_GPIO_Port GPIOC
+#define motor2pwm_Pin GPIO_PIN_6
+#define motor2pwm_GPIO_Port GPIOC
+#define motor2dir_Pin GPIO_PIN_7
+#define motor2dir_GPIO_Port GPIOC
+#define motor1pwm_Pin GPIO_PIN_8
+#define motor1pwm_GPIO_Port GPIOC
+#define motor1dir_Pin GPIO_PIN_9
+#define motor1dir_GPIO_Port GPIOC
 #define BTStatus_Pin GPIO_PIN_8
 #define BTStatus_GPIO_Port GPIOA
 #define EncEsqA_Pin GPIO_PIN_11
