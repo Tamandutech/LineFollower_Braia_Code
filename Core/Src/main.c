@@ -54,6 +54,10 @@
 uint32_t a = 0;
 uint8_t tx_buffer[1000] = "Hello World!\n";
 
+volatile uint32_t adc1_buffer[8];
+volatile uint32_t adc2_buffer[9];
+volatile uint32_t adc_buffer[18];
+
 stmdev_ctx_t imu_ctx;
 lsm6dsr_pin_int1_route_t int1_route;
 static int16_t data_raw_acceleration[3];
@@ -112,6 +116,10 @@ int main(void) {
     MX_USART1_UART_Init();
     MX_I2C1_Init();
     /* USER CODE BEGIN 2 */
+    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+    HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+    HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 8);
+    HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
     imu_init(&imu_ctx, &int1_route);
     /* USER CODE END 2 */
 
@@ -241,6 +249,12 @@ int main(void) {
             platform_log(tx_buffer, strlen((char const *)tx_buffer));
         }
 
+        float vref = 1.087f * 4095.0f / adc_buffer[0];
+        float vbat = (adc_buffer[17] * vref / 4095.0f) * 5.6875f;  // 5.6875 é a constante do divisor de tensão
+        snprintf((char *)tx_buffer, sizeof(tx_buffer),
+                 "Vbat [V]:%2.3f\tVref [V]:%2.3f\r\n", vbat, vref);
+        platform_log(tx_buffer, strlen((char const *)tx_buffer));
+
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -290,7 +304,29 @@ void SystemClock_Config(void) {
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+    if (hadc->Instance == ADC1) {
+        adc_buffer[13] = adc1_buffer[0];
+        adc_buffer[12] = adc1_buffer[1];
+        adc_buffer[11] = adc1_buffer[2];
+        adc_buffer[10] = adc1_buffer[3];
+        adc_buffer[16] = adc1_buffer[4];
+        adc_buffer[15] = adc1_buffer[5];
+        adc_buffer[2] = adc1_buffer[6];
+        adc_buffer[3] = adc1_buffer[7];
+        adc_buffer[0] = adc1_buffer[8];  // Referência interterna
+    } else if (hadc->Instance == ADC2) {
+        adc_buffer[7] = adc2_buffer[0];
+        adc_buffer[6] = adc2_buffer[1];
+        adc_buffer[5] = adc2_buffer[2];
+        adc_buffer[14] = adc2_buffer[3];
+        adc_buffer[4] = adc2_buffer[4];
+        adc_buffer[1] = adc2_buffer[5];
+        adc_buffer[8] = adc2_buffer[6];
+        adc_buffer[9] = adc2_buffer[7];
+        adc_buffer[17] = adc2_buffer[8];  // Bateria
+    }
+}
 /* USER CODE END 4 */
 
 /**
