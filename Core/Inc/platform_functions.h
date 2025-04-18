@@ -28,9 +28,6 @@ extern TIM_HandleTypeDef htim8;
 #define IMU_BUS hi2c1
 #define BLE_BUS huart1
 
-extern volatile uint32_t adc_update_time;
-extern volatile uint32_t adc_buffer[18];
-
 typedef struct pinhandler_t {
     GPIO_TypeDef *port;
     uint16_t pin;
@@ -57,7 +54,7 @@ void set_pwm(pwmhandler_t pwmpin, uint16_t dutty);
 
 void update_encoder_value(int32_t *encoderArray);
 
-void update_adc(void); //alterar para receber o buffer como argumento
+void update_adc(uint32_t *adc_buffer);
 
 int32_t write_imu(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len);
 int32_t read_imu(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len);

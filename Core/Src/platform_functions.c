@@ -12,18 +12,18 @@ volatile uint32_t last_adc2_time = 0;
 volatile uint32_t adc1_update_time = 0;
 volatile uint32_t adc2_update_time = 0;
 
-// teste temporario para debug
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-    uint32_t time = HAL_GetTick();  // Get the current time in milliseconds
-    if (hadc->Instance == ADC1) {
-        adc1_update_time = time - last_adc1_time;  // Calcula o tempo de atualização
-        last_adc1_time = time;                     // Atualiza o tempo da última conversão
-    } else if (hadc->Instance == ADC2) {
-        adc2_update_time = time - last_adc2_time;  // Calcula o tempo de atualização
-        last_adc2_time = time;                     // Atualiza o tempo da última conversão
-    }
-    adc_update_time = adc1_update_time + adc2_update_time;  // Atualiza o tempo total de atualização
-}
+// teste de tempo de atualização do adc // ultimo teste 276,6 us
+// void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+//     uint32_t time = NANOSECONDS;  // Get the current time in milliseconds
+//     if (hadc->Instance == ADC1) {
+//         adc1_update_time = time - last_adc1_time;  // Calcula o tempo de atualização
+//         last_adc1_time = time;                     // Atualiza o tempo da última conversão
+//     } else if (hadc->Instance == ADC2) {
+//         adc2_update_time = time - last_adc2_time;  // Calcula o tempo de atualização
+//         last_adc2_time = time;                     // Atualiza o tempo da última conversão
+//     }
+//     adc_update_time = adc1_update_time + adc2_update_time;  // Atualiza o tempo total de atualização
+// }
 
 // Definições comuns a serem usadas no main loop e demais arquivos interplataforma
 
@@ -107,7 +107,7 @@ void update_encoder_value(int32_t *encoderArray) {
     encoderArray[1] = (int16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
 }
 
-void update_adc(void) {
+void update_adc(uint32_t *adc_buffer) {
     // adc1
     adc_buffer[12] = adc1_buffer[0];
     adc_buffer[11] = adc1_buffer[1];

@@ -9,7 +9,7 @@ uint8_t tx_buffer[1000] = "Hello World!\n";
 int32_t encoder_values[2];
 
 volatile uint32_t adc_update_time;
-volatile uint32_t adc_buffer[18];
+uint32_t adc_buffer[18];
 
 stmdev_ctx_t imu_ctx;
 lsm6dsr_pin_int1_route_t int1_route;
@@ -26,7 +26,7 @@ void main_loop(void) {
     imu_init(&imu_ctx, &int1_route);
 
     for (;;) {
-        update_adc();
+        update_adc(adc_buffer);
 
         // Limpa o buffer
         tx_buffer[0] = '\0';
@@ -73,6 +73,6 @@ void main_loop(void) {
         // Envia tudo de uma vez
         ble_log(tx_buffer, strlen((char const *)tx_buffer));
 
-        delay_ms(300);
+        delay_us(1000);
     }
 }
