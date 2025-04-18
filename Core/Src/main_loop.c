@@ -6,6 +6,8 @@
 uint32_t a = 0;
 uint8_t tx_buffer[1000] = "Hello World!\n";
 
+int32_t encoder_values[2];
+
 volatile uint32_t adc_update_time;
 volatile uint32_t adc_buffer[18];
 
@@ -19,10 +21,9 @@ static float_t angular_rate_mdps[3];
 static float_t temperature_degC;
 
 void main_loop(void) {
-    ble_log(tx_buffer, 14);
+    mcu_start();
+
     imu_init(&imu_ctx, &int1_route);
-    adc_start();
-    pwm_start();
 
     for (;;) {
         update_adc();
@@ -63,6 +64,11 @@ void main_loop(void) {
         // Adiciona valor do PWM
         snprintf((char *)tx_buffer + strlen((char *)tx_buffer), sizeof(tx_buffer) - strlen((char *)tx_buffer),
                  "PWM: %d\n", k);
+
+        // valores de encoder
+        update_encoder_value(encoder_values);
+        snprintf((char *)tx_buffer + strlen((char *)tx_buffer), sizeof(tx_buffer) - strlen((char *)tx_buffer),
+                 "Enc Esquerdo: %d\tEnc Direito: %d\n", encoder_values[0], encoder_values[1]);
 
         // Envia tudo de uma vez
         ble_log(tx_buffer, strlen((char const *)tx_buffer));

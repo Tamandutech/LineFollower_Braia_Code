@@ -26,6 +26,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 }
 
 // Definições comuns a serem usadas no main loop e demais arquivos interplataforma
+
 pinhandler_t motorDirDir = {motor1dir_GPIO_Port, motor1dir_Pin};
 pwmhandler_t motorDirPWM = {&htim8, TIM_CHANNEL_1};
 pinhandler_t motorEsqDir = {motor2dir_GPIO_Port, motor2dir_Pin};
@@ -33,11 +34,48 @@ pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_3};
 
 pwmhandler_t motorSucPWM = {&htim5, TIM_CHANNEL_2};
 
+void mcu_start(void) {
+    ble_log("Hello World!\n", 14);
+
+    // inicia timer
+    HAL_TIM_Base_Start(&htim2);
+
+    // inicia pwm
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
+
+    // inicia encoders
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+
+    // inicia adc
+    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+    HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+    HAL_Delay(300);
+    HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
+    HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
+
+    ble_log("MCU Iniciado\n", 14);
+}
+
 void delay_ms(uint32_t millisec) {
-    if (millisec == 0) {
-        return;
+    uint32_t tickstart = MILISEONDS;
+    while ((MILISEONDS - tickstart) < millisec) {
+        __NOP();  // No Operation
     }
-    HAL_Delay(millisec - 1);
+}
+
+void delay_us(uint32_t microsec) {
+    uint32_t tickstart = MICROSECONDS;
+    while ((MICROSECONDS - tickstart) < microsec) {
+    }
+}
+
+void delay_ns(uint32_t nanosec) {
+    uint32_t tickstart = NANOSECONDS;
+    while ((NANOSECONDS - tickstart) < nanosec) {
+    }
 }
 
 void ble_log(uint8_t *tx_buffer, uint16_t len) {
@@ -60,23 +98,13 @@ void toggle_pin(pinhandler_t pin) {
     HAL_GPIO_TogglePin(pin.port, pin.pin);
 }
 
-void adc_start(void) {
-    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-    HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
-    HAL_Delay(300);
-    HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
-    HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
-    ble_log((uint8_t *)"ADC started\n", 13);
-}
-
-void pwm_start(void) {
-    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
-    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
-}
-
 void set_pwm(pwmhandler_t pwmpin, uint16_t dutty) {
     __HAL_TIM_SET_COMPARE(pwmpin.htim, pwmpin.channel, dutty);
+}
+
+void update_encoder_value(int32_t *encoderArray) {
+    encoderArray[0] = (int16_t)__HAL_TIM_GET_COUNTER(&htim3);  // Motor Esquerdo
+    encoderArray[1] = (int16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
 }
 
 void update_adc(void) {
