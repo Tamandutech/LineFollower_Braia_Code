@@ -27,10 +27,10 @@ volatile uint32_t adc2_update_time = 0;
 
 // Definições comuns a serem usadas no main loop e demais arquivos interplataforma
 
-pinhandler_t motorDirDir = {motor1dir_GPIO_Port, motor1dir_Pin};
-pwmhandler_t motorDirPWM = {&htim8, TIM_CHANNEL_1};
-pinhandler_t motorEsqDir = {motor2dir_GPIO_Port, motor2dir_Pin};
-pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_3};
+pinhandler_t motorDirDir = {motor2dir_GPIO_Port, motor2dir_Pin};
+pwmhandler_t motorDirPWM = {&htim8, TIM_CHANNEL_3};
+pinhandler_t motorEsqDir = {motor1dir_GPIO_Port, motor1dir_Pin};
+pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_1};
 
 pwmhandler_t motorSucPWM = {&htim5, TIM_CHANNEL_2};
 
