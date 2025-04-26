@@ -3,6 +3,10 @@
 
 #include "platform_functions.h"
 
+extern pinhandler_t bootSw;
+
+extern pinhandler_t leds;
+
 extern pinhandler_t motorDirDir;
 extern pwmhandler_t motorDirPWM;
 extern pinhandler_t motorEsqDir;
