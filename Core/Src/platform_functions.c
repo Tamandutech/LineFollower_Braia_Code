@@ -7,10 +7,10 @@
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
 
-volatile uint32_t last_adc1_time = 0;
-volatile uint32_t last_adc2_time = 0;
-volatile uint32_t adc1_update_time = 0;
-volatile uint32_t adc2_update_time = 0;
+// volatile uint32_t last_adc1_time = 0;
+// volatile uint32_t last_adc2_time = 0;
+// volatile uint32_t adc1_update_time = 0;
+// volatile uint32_t adc2_update_time = 0;
 
 // teste de tempo de atualização do adc // ultimo teste 276,6 us
 // void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
