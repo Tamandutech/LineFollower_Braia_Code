@@ -5,6 +5,8 @@
 
 #include "led_ws2812.h"
 
+uint8_t run = 0;
+
 uint32_t a = 0;
 uint8_t tx_buffer[1000] = "Hello World!\n";
 
@@ -201,9 +203,13 @@ void main_loop(void) {
     ble_log("Calibracao concluida\n", 22);
 
     for (;;) {
+        if (!run) {
+            set_pwm(motorDirPWM, 0);
+            set_pwm(motorEsqPWM, 0);
+            set_pwm(motorSucPWM, 0);
+        }
 
-
-        if (MICROSECONDS - ultimo_ciclo >= 1000) {
+        if (MICROSECONDS - ultimo_ciclo >= 1000 && run) {
             // readLine(&adc_buffer[2]);
             PIDControl(0.0423, 0.423);
             motorControl(70);

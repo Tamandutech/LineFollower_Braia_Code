@@ -6,6 +6,7 @@
 
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
+volatile uint8_t rx_buffer[32] = {0};
 
 // volatile uint32_t last_adc1_time = 0;
 // volatile uint32_t last_adc2_time = 0;
@@ -24,6 +25,19 @@ volatile uint32_t adc2_buffer[9];
 //     }
 //     adc_update_time = adc1_update_time + adc2_update_time;  // Atualiza o tempo total de atualização
 // }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART1) {
+        // se o buffer conter "1" run deve ser = 0, se contiver "2" run deve ser = 1
+        if (rx_buffer[0] == '1') {
+            run = 0;
+        } else if (rx_buffer[0] == '2') {
+            run = 1;
+        }
+
+        start_ble_cmd_listening();  // Reinicia a recepção DMA
+    }
+}
 
 // Definições comuns a serem usadas no main loop e demais arquivos interplataforma
 
@@ -60,6 +74,7 @@ void mcu_start(void) {
     HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
     HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
 
+    start_ble_cmd_listening();  // Reinicia a recepção DMA
     ble_log("MCU Iniciado\n", 14);
 }
 
@@ -84,6 +99,10 @@ void delay_ns(uint32_t nanosec) {
 
 void ble_log(uint8_t *tx_buffer, uint16_t len) {
     HAL_UART_Transmit_DMA(&BLE_BUS, (const uint8_t *)tx_buffer, len);
+}
+
+void start_ble_cmd_listening(void) {
+    HAL_UART_Receive_DMA(&BLE_BUS, rx_buffer, 1);  // Inicia a recepção DMA
 }
 
 uint8_t read_pin(pinhandler_t pin) {

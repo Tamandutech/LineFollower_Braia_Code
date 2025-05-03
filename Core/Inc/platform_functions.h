@@ -16,6 +16,8 @@ extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim8;
 
+extern uint8_t run;
+
 // Definições necessários para o funcionamento do projeto presente em arquivos interplataforma
 #include <stdint.h>
 
