@@ -5,9 +5,17 @@
 
 #include "led_ws2812.h"
 
-uint8_t run = 0;
+#define VELRETA 1.5f
+#define VELCURVA 1.25f
 
-uint32_t a = 0;
+volatile uint8_t run = 0;
+uint8_t last_run = 0;
+
+uint8_t leu_direita = 0;
+int32_t pos_direita = 0;
+
+uint8_t suc_ok = 0;
+
 uint8_t tx_buffer[1000] = "Hello World!\n";
 
 uint32_t ultimo_ciclo = 0;
@@ -157,7 +165,16 @@ void PIDControl(float kp, float kd) {
 
 float leftSpeed = 0;
 float rightSpeed = 0;
-void motorControl(float desiredSpeed) {
+void motorControl(float desiredVoltage) {
+    // caso o valor desejado seja maior que a tensão da bateria, o valor desejado é a tensão da bateria
+    float targetVoltage = desiredVoltage;
+    if (targetVoltage > get_battery_voltage(adc_buffer)) {
+        targetVoltage = get_battery_voltage(adc_buffer);
+    }
+
+    // map a value from 0v to vBat to 0 to 1000
+    float desiredSpeed = (targetVoltage * 1000.0f) / get_battery_voltage(adc_buffer);
+
     leftSpeed = desiredSpeed + PID;
     rightSpeed = desiredSpeed - PID;
     int MAX_SPEED = 1000;
@@ -181,8 +198,66 @@ void motorControl(float desiredSpeed) {
         write_pin(motorEsqDir, 0);
     }
 
-    set_pwm(motorDirPWM, rightSpeed);
-    set_pwm(motorEsqPWM, leftSpeed);
+    set_pwm(motorDirPWM, (uint16_t)rightSpeed);
+    set_pwm(motorEsqPWM, (uint16_t)leftSpeed);
+}
+
+void ler_laterais() {
+    static uint32_t ultimo_tempo_esq;
+    static uint32_t ultimo_tempo_dir;
+
+    static uint8_t ultimo_esq;
+    static uint8_t ultimo_dir;
+
+    update_adc(adc_buffer);
+
+    // if (adc_buffer[0] < 600 || adc_buffer[1] < 600) {
+    //     if (MILISEONDS - ultimo_tempo_esq >= 10 && !ultimo_esq) {
+    //         update_encoder_value(encoder_values);
+    //         snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
+    //         ble_log(tx_buffer, strlen(tx_buffer));
+    //         ultimo_tempo_esq = MILISEONDS;
+    //     }
+    //     ultimo_esq = 1;
+    // } else {
+    //     ultimo_esq = 0;
+    // }
+
+    if (adc_buffer[14] < 600 || adc_buffer[15] < 600) {
+        if (MILISEONDS - ultimo_tempo_dir >= 10 && !ultimo_dir) {
+            update_encoder_value(encoder_values);
+            // snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
+            // ble_log(tx_buffer, strlen(tx_buffer));
+
+            if (encoder_values[1] > 5100) {
+                leu_direita = 1;
+                pos_direita = encoder_values[1];
+            }
+
+            ultimo_tempo_dir = MILISEONDS;
+        }
+        ultimo_dir = 1;
+    } else {
+        ultimo_dir = 0;
+    }
+}
+
+void controla_suc(uint16_t target) {
+    static uint16_t last_pwm;
+    static uint32_t last_update;
+
+    if (MILISEONDS - last_update >= 3) {
+        suc_ok = 0;
+        if (target > last_pwm) {
+            last_pwm++;
+        } else if (target < last_pwm) {
+            last_pwm--;
+        } else {
+            suc_ok = 1;
+        }
+
+        set_pwm(motorSucPWM, last_pwm);
+    }
 }
 
 void main_loop(void) {
@@ -200,20 +275,106 @@ void main_loop(void) {
         calibrateSensors(&adc_buffer[2]);
         delay_ms(40);
     }
-    ble_log("Calibracao concluida\n", 22);
+
+    ble_log("Calibracao concluida\nAguardando start...\n", 42);
 
     for (;;) {
+        if (last_run && !run) {
+            update_encoder_value(encoder_values);
+            snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
+            ble_log(tx_buffer, strlen(tx_buffer));
+            last_run = 0;
+        }
+
         if (!run) {
             set_pwm(motorDirPWM, 0);
             set_pwm(motorEsqPWM, 0);
-            set_pwm(motorSucPWM, 0);
+            if (MICROSECONDS - ultimo_ciclo >= 1000000) {
+                controla_suc(0);
+            }
         }
 
+        ler_laterais();
+
         if (MICROSECONDS - ultimo_ciclo >= 1000 && run) {
-            // readLine(&adc_buffer[2]);
-            PIDControl(0.0423, 0.423);
-            motorControl(70);
-            update_encoder_value(encoder_values);
+            controla_suc(0);
+
+            if (suc_ok) {
+                PIDControl(0.1, 1.55);
+                update_encoder_value(encoder_values);
+                // motorControl(1.5f);
+
+                if (encoder_values[1] < 400) {
+                    motorControl(0.7f);
+                } else if (encoder_values[1] < 700) {
+                    motorControl(0.6f);
+                } else if (encoder_values[1] < 5500) {
+                    motorControl(0.7f);
+                }
+
+                if (encoder_values[1] > 5100 && leu_direita) {
+                    motorControl(0.6f);
+                    if (encoder_values[1] > pos_direita + 42) {
+                        run = 0;
+                    }
+                }
+
+                // if (encoder_values[0] < 100) {  // meio da primeira reta
+                //     motorControl(VELRETA + 0.2f);
+                // } else if (encoder_values[1] < 550) {  // marcação 1 leitura 1
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 724) {  // marcação 2 leitura 2
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 850) {  // marcação 3 leitura 3
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 950) {  // marcação 4
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 1300) {  // leitura 9 marcação 7
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 1355) {  // leitura 10 marcação 8
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 1500) {  // leitura 14 marcação 11
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 1600) {  //  marcação 12
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 2100) {  // leitura 22 marcação 17
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 2175) {  // leitura 23 marcação 18
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 2300) {  // leitura 27 marcação 21
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 2400) {  //  marcação 22
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 2920) {  // leitura 35 marcação 27
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 2990) {  // leitura 36 marcação 28
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 3120) {  // leitura 40 marcação 31
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 3220) {  // marcação 32
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 3420) {  // leitura 44 marcação 35
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 3570) {  // leitura 45 marcação 36
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 3610) {  // leitura 48 marcação 37
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 3710) {  // leitura 49 marcação 38
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 3850) {  // leitura 53 marcação 41
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 3950) {  // marcação 42
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 4450) {  // leitura 61 marcação 47
+                //     motorControl(VELRETA);
+                // } else if (encoder_values[1] < 4700) {  // leitura 62 marcação 48
+                //     motorControl(VELCURVA);
+                // } else if (encoder_values[1] < 5300) {  // leitura final
+                //     motorControl(2.5f);
+                // } else {
+                //     run = 0;
+                // }
+            }
 
             // float vref = 1.2f * 4095.0f / adc_buffer[16];
             // float vbat = (adc_buffer[17] * vref / 4095.0f) * 5.6875f;  // 5.6875 é a constante do divisor de tensão
@@ -230,16 +391,20 @@ void main_loop(void) {
             // set_pwm(motorEsqPWM, 0);
             // set_pwm(motorSucPWM, 0);
 
+            last_run = 1;
             ultimo_ciclo = MICROSECONDS;
         }
 
-        // if (MILISEONDS - ultimo_print >= 100) {
-        //     // snprintf(tx_buffer, sizeof(tx_buffer), "Sensor: %d  \n", arrayError);
-        //     snprintf(tx_buffer, sizeof(tx_buffer), "Velocidade motores: %.2f | %.2f \n", leftSpeed, rightSpeed);
+        // if (MILISEONDS - ultimo_print >= 200 && !run) {
+        //     //     // snprintf(tx_buffer, sizeof(tx_buffer), "Sensor: %d  \n", arrayError);
+        //     //     snprintf(tx_buffer, sizeof(tx_buffer), "Velocidade motores: %.2f | %.2f \n", leftSpeed, rightSpeed);
 
-        //     // snprintf(tx_buffer, sizeof(tx_buffer), "sensors: %d\nsensor0: %d, sendor1: %d, sensor2: %d, sensor3: %d, sensor4: %d, sensor5: %d, sensor6: %d, sensor7: %d, sensor8: %d, sensor9: %d, sensor10: %d, sensor11: %d\n",
-        //     //          lastPosition, calibratedSensors[0], calibratedSensors[1], calibratedSensors[2], calibratedSensors[3], calibratedSensors[4], calibratedSensors[5],
-        //     //          calibratedSensors[6], calibratedSensors[7], calibratedSensors[8], calibratedSensors[9], calibratedSensors[10], calibratedSensors[11]);
+        //     //     // snprintf(tx_buffer, sizeof(tx_buffer), "sensors: %d\nsensor0: %d, sendor1: %d, sensor2: %d, sensor3: %d, sensor4: %d, sensor5: %d, sensor6: %d, sensor7: %d, sensor8: %d, sensor9: %d, sensor10: %d, sensor11: %d\n",
+        //     //     //          lastPosition, calibratedSensors[0], calibratedSensors[1], calibratedSensors[2], calibratedSensors[3], calibratedSensors[4], calibratedSensors[5],
+        //     //     //          calibratedSensors[6], calibratedSensors[7], calibratedSensors[8], calibratedSensors[9], calibratedSensors[10], calibratedSensors[11]);
+
+        //     update_encoder_value(encoder_values);
+        //     snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
         //     ble_log(tx_buffer, strlen(tx_buffer));
         //     ultimo_print = MILISEONDS;

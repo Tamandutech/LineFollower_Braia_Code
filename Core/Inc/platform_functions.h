@@ -16,7 +16,7 @@ extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim8;
 
-extern uint8_t run;
+extern volatile uint8_t run;
 
 // Definições necessários para o funcionamento do projeto presente em arquivos interplataforma
 #include <stdint.h>
@@ -56,7 +56,11 @@ void set_pwm(pwmhandler_t pwmpin, uint16_t dutty);
 
 void update_encoder_value(int32_t *encoderArray);
 
+void reset_encoder_values(void);
+
 void update_adc(uint32_t *adc_buffer);
+
+float get_battery_voltage(uint32_t *adc_buffer);
 
 int32_t write_imu(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len);
 int32_t read_imu(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len);

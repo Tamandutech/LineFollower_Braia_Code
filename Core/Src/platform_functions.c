@@ -32,8 +32,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         if (rx_buffer[0] == '1') {
             run = 0;
         } else if (rx_buffer[0] == '2') {
+            reset_encoder_values();
             run = 1;
-        }
+        } 
 
         start_ble_cmd_listening();  // Reinicia a recepção DMA
     }
@@ -70,9 +71,15 @@ void mcu_start(void) {
     // inicia adc
     HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
-    HAL_Delay(300);
+    HAL_Delay(100);
     HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
     HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
+    HAL_Delay(50);
+    uint32_t adc_buffer[18] = {0};
+    uint8_t tx_buffer[40] = {0};
+    snprintf(tx_buffer, sizeof(tx_buffer), "tensão da bateria: %2.2f\n", get_battery_voltage(adc_buffer));
+    ble_log(tx_buffer, strlen(tx_buffer));
+    HAL_Delay(50);
 
     start_ble_cmd_listening();  // Reinicia a recepção DMA
     ble_log("MCU Iniciado\n", 14);
@@ -125,6 +132,11 @@ void set_pwm(pwmhandler_t pwmpin, uint16_t dutty) {
     __HAL_TIM_SET_COMPARE(pwmpin.htim, pwmpin.channel, dutty);
 }
 
+void reset_encoder_values() {
+    __HAL_TIM_SET_COUNTER(&htim3, 0);  // Motor Esquerdo
+    __HAL_TIM_SET_COUNTER(&htim4, 0);  // Motor Direito
+}
+
 void update_encoder_value(int32_t *encoderArray) {
     encoderArray[0] = (int16_t)__HAL_TIM_GET_COUNTER(&htim3);  // Motor Esquerdo
     encoderArray[1] = (int16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
@@ -152,6 +164,15 @@ void update_adc(uint32_t *adc_buffer) {
     adc_buffer[7] = adc2_buffer[6];
     adc_buffer[8] = adc2_buffer[7];
     adc_buffer[17] = adc2_buffer[8];  // Bateria
+}
+
+float get_battery_voltage(uint32_t *adc_buffer) {
+    update_adc(adc_buffer);
+
+    // calcula a tensão da bateria com base na leitura do ADC
+    float vref = 1.21f * 4095.0f / adc_buffer[16];            // Vref = 1.2V, 4095 é o valor máximo do ADC
+    float vbat = (adc_buffer[17] * vref / 4095.0f) * 6.015f;  // 5.6875 é a constante do divisor de tensão
+    return vbat;                                              // Retorna a tensão da bateria
 }
 
 /** Please note that is MANDATORY: return 0 -> no Error.**/
