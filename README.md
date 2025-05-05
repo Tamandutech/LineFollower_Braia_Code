@@ -3,6 +3,21 @@
 ![Versão](https://img.shields.io/badge/versão-0.0-blue)
 ![Linguagem](https://img.shields.io/badge/STM32-C/C++-brightgreen)
 
+## Alterações Necessárias Celeris Core v1
+
+- Circuito de proteção de corrente inversa com interruptor não funcionou, usar somente mosfet com interruptor e manter conectores xt para não ocorrer ligações invertidas
+
+- Corrigir leds no esquemáticos que ficaram com a pegada invertida
+
+- Utilizar pino com pwm comum para leds endereçaveis (atualmente em pwm invertido)
+
+- utilizar leds maiores (0805 exemplo) não tem necessidade de utilizar leds tão pequenos, apenas dificultam manutenção
+
+- remover leds de pinos de programação, não tem necessidade de utilizar e podem eceder o limite de corrente do pino
+
+- corrigir pull up/down no pino de boot do stm32
+
+
 ## 🔧 Requisitos
 
 ### Obrigatórios
