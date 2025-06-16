@@ -44,8 +44,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 pinhandler_t bootSw = {Boot_sw_GPIO_Port, Boot_sw_Pin};
 
-pinhandler_t leds = {Leds_GPIO_Port, Leds_Pin};
-
 pinhandler_t motorDirDir = {motor1dir_GPIO_Port, motor1dir_Pin};
 pwmhandler_t motorDirPWM = {&htim8, TIM_CHANNEL_3};
 pinhandler_t motorEsqDir = {motor2dir_GPIO_Port, motor2dir_Pin};

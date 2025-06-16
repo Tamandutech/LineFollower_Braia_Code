@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "led_ws2812.h"
+#include "CelerisV1_ws2812.h"
 
 volatile uint8_t run = 0;
 uint8_t last_run = 0;
@@ -260,11 +260,18 @@ void controla_suc(uint16_t target) {
 void main_loop(void) {
     mcu_start();
 
-    // uint32_t colors[4] = {0xFFFFFF, 0xFF0000, 0x00FF00, 0x0000FF};
-
-    // for (uint8_t i = 0; i < 100; i++) {
-    //     setLedsColor(leds, colors, 4);
-    // }
+    rgb_color_t led;
+    for (;;) {
+        led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
+        setLedsColor(&led, 1);
+        delay_ms(500);
+        led = (rgb_color_t){0, 128, 0};  // Muda o LED para verde
+        setLedsColor(&led, 1);
+        delay_ms(500);
+        led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
+        setLedsColor(&led, 1);
+        delay_ms(500);
+    }
 
     imu_init(&imu_ctx, &int1_route);
     ble_log("iniciando calibracao\n", 22);
