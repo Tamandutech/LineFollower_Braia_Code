@@ -160,87 +160,32 @@ void setLedsColor(rgb_color_t *colors, uint16_t ledsCount) {
 
     uint32_t total_buffer_size = data_len + RESET_CYCLES;
 
-    // Primeiro, para qualquer transferência em andamento. Essencial para evitar conflitos.
-
-    HAL_TIM_PWM_Stop_DMA(&htim1, TIM_CHANNEL_1);
-
     // Inicia a transferência DMA
+
+    if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1) != HAL_OK) {
+        // Tratar erro
+    }
 
     if (HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, pwm_buffer, total_buffer_size) != HAL_OK) {
         // Tratar erro
     }
 
-    // Habilita a saída no pino do canal complementar (N)
-
-    if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1) != HAL_OK) {
-        // Tratar erro
-    }
 }
 
 /**
-
 * @brief Exemplo de como usar a função em seu main.c
-
-* Lembre-se que delay_ms() deve ser substituído por uma função de delay
-
-* real, como HAL_Delay().
-
 */
-
 /*
-
-void main_example() {
-
-
-
-  // Em algum lugar no seu loop principal
-
-  rgb_color_t led_color;
-
-  while(1) {
-
-    // LED: Azul
-
-    led_color.r = 0;
-
-    led_color.g = 0;
-
-    led_color.b = 128;
-
-    setLedsColor(&led_color, 1);
-
-    HAL_Delay(500);
-
-
-
-    // LED: Verde
-
-    led_color.r = 0;
-
-    led_color.g = 128;
-
-    led_color.b = 0;
-
-    setLedsColor(&led_color, 1);
-
-    HAL_Delay(500);
-
-
-
-    // LED: Vermelho
-
-    led_color.r = 128;
-
-    led_color.g = 0;
-
-    led_color.b = 0;
-
-    setLedsColor(&led_color, 1);
-
-    HAL_Delay(500);
-
-  }
-
-}
-
+    rgb_color_t led;
+    for (;;) {
+        led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
+        setLedsColor(&led, 1);
+        delay_ms(500);
+        led = (rgb_color_t){0, 128, 0};  // Muda o LED para verde
+        setLedsColor(&led, 1);
+        delay_ms(500);
+        led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
+        setLedsColor(&led, 1);
+        delay_ms(500);
+    }
 */
