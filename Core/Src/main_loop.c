@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "CelerisV1_ws2812.h"
+#include "WS2812Driver.h"
 
 volatile uint8_t run = 0;
 uint8_t last_run = 0;
