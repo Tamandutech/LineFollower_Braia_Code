@@ -33,8 +33,30 @@ float_t angular_rate_mdps[3];
 float_t temperature_degC;
 
 #define sensorCount 12
-uint32_t gmaxSensorValues[sensorCount] = {0};
-uint32_t gminSensorValues[sensorCount] = {0};
+uint32_t gmaxSensorValues[sensorCount] = {3661
+,3473
+,3655
+,3523
+,3427
+,3508
+,3493
+,3515
+,3533
+,3481
+,3476
+,3646};
+uint32_t gminSensorValues[sensorCount] = {208
+,199
+,199
+,199
+,194
+,198
+,197
+,197
+,196
+,198
+,199
+,207};
 uint32_t calibratedSensors[sensorCount] = {0};
 int8_t calibrationInitialized = 0;
 
@@ -200,42 +222,54 @@ void motorControl(float desiredVoltage) {
 }
 
 void ler_laterais() {
-    static uint32_t ultimo_tempo_esq;
-    static uint32_t ultimo_tempo_dir;
+    static uint8_t readingWhiteRight = 0;
+    static uint8_t readingWhiteLeft = 0;
+    static uint8_t readingIntersec = 0;
+    static uint8_t firstTimeRight = 1;
 
-    static uint8_t ultimo_esq;
-    static uint8_t ultimo_dir;
+    static int qtdLeftMark = 0;
+    static int qtdRightMark = 0;
 
     update_adc(adc_buffer);
 
-    if (adc_buffer[0] < 600 || adc_buffer[1] < 600) {
-        if (MILISEONDS - ultimo_tempo_esq >= 10 && !ultimo_esq) {
+    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000))
+    {
+        if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000)  && readingWhiteLeft == 0) 
+        {
             update_encoder_value(encoder_values);
-            // snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
-            // ble_log(tx_buffer, strlen(tx_buffer));
-            ultimo_tempo_esq = MILISEONDS;
+            qtdLeftMark++;
+            readingWhiteLeft = 1;
+            snprintf(tx_buffer, sizeof(tx_buffer), "encoder Direito: %d\n", encoder_values[0]);
+            ble_log(tx_buffer, strlen(tx_buffer));
         }
-        ultimo_esq = 1;
-    } else {
-        ultimo_esq = 0;
+
+        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) 
+        {
+            update_encoder_value(encoder_values);
+            reset_encoder_values();
+            qtdRightMark++;
+            readingWhiteRight = 1;
+            firstTimeRight = 0;
+            encoder_values[0] = 0;
+            snprintf(tx_buffer, sizeof(tx_buffer), "Inicio Pista \n");
+            ble_log(tx_buffer, strlen(tx_buffer));
+        }
+
+        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0)
+        {
+            readingIntersec = 1;
+            readingWhiteRight = 1;
+            readingWhiteLeft = 1;
+            // snprintf(tx_buffer, sizeof(tx_buffer), "Intersec \n");
+            // ble_log(tx_buffer, strlen(tx_buffer));
+        }
     }
 
-    if (adc_buffer[14] < 600 || adc_buffer[15] < 600) {
-        if (MILISEONDS - ultimo_tempo_dir >= 10 && !ultimo_dir) {
-            update_encoder_value(encoder_values);
-            // snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
-            // ble_log(tx_buffer, strlen(tx_buffer));
-
-            if (encoder_values[1] > 5100) {
-                leu_direita = 1;
-                pos_direita = encoder_values[1];
-            }
-
-            ultimo_tempo_dir = MILISEONDS;
-        }
-        ultimo_dir = 1;
-    } else {
-        ultimo_dir = 0;
+    else
+    {
+        readingIntersec = 0;
+        readingWhiteRight = 0;
+        readingWhiteLeft = 0;
     }
 }
 
@@ -275,10 +309,10 @@ void main_loop(void) {
 
     imu_init(&imu_ctx, &int1_route);
     ble_log("iniciando calibracao\n", 22);
-    for (uint8_t i = 0; i < 200; i++) {
-        calibrateSensors(&adc_buffer[2]);
-        delay_ms(40);
-    }
+    // for (uint8_t i = 0; i < 200; i++) {
+    //     calibrateSensors(&adc_buffer[2]);
+    //     delay_ms(40);
+    // }
 
     ble_log("Calibracao concluida\nAguardando start...\n", 42);
 
@@ -304,7 +338,7 @@ void main_loop(void) {
             controla_suc(0);
 
             if (suc_ok) {
-                PIDControl(0.1, 1.55);
+                PIDControl(0.1, 1.2);
                 update_encoder_value(encoder_values);
                 // motorControl(1.5f);
 
