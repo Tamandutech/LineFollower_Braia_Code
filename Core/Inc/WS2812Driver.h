@@ -1,8 +1,8 @@
 /********************************************************************************
  * @file  WS2812Driver.h
- * @author Samuel Oliveira
+ * @author samuelc254
  * @brief  Driver para LEDs endereçáveis WS2812B usando TIM PWM e DMA.
- * @note  Este driver foi desenvolvido para a Celeris Core 1.0
+ * @note  Este driver foi desenvolvido para a Celeris Core S1
  * @note  e depende da configuração do timer TIM1 no CubeMX.
  * @note  Certifique-se de usar o .ioc correto para a configuração do projeto.
  * Esta implementação usa um PWM de alta frequência (4 MHz) para
