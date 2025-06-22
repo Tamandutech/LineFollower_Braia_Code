@@ -129,17 +129,23 @@ void setLedsColor(rgb_color_t *colors, uint16_t ledsCount) {
  * @brief Exemplo de como usar a função em seu main.c
  */
 /*
-    rgb_color_t led;
+rgb_color_t led;
     for (;;) {
-        led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
-        setLedsColor(&led, 1);
-        delay_ms(500);
-        led = (rgb_color_t){0, 128, 0};  // Muda o LED para verde
-        setLedsColor(&led, 1);
-        delay_ms(500);
-        led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
-        setLedsColor(&led, 1);
-        delay_ms(500);
+        for (uint8_t i = 0; i < 255; i++) {
+            led = (rgb_color_t){i, 0, 0};
+            setLedsColor(&led, 1);
+            delay_ms(10);
+        }
+        for (uint8_t i = 0; i < 255; i++) {
+            led = (rgb_color_t){0, i, 0};
+            setLedsColor(&led, 1);
+            delay_ms(10);
+        }
+        for (uint8_t i = 0; i < 255; i++) {
+            led = (rgb_color_t){0, 0, i};
+            setLedsColor(&led, 1);
+            delay_ms(10);
+        }
     }
 */
 
