@@ -34,7 +34,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         } else if (rx_buffer[0] == '2') {
             reset_encoder_values();
             run = 1;
-        } 
+        }
 
         start_ble_cmd_listening();  // Reinicia a recepção DMA
     }
@@ -84,8 +84,8 @@ void mcu_start(void) {
 }
 
 void delay_ms(uint32_t millisec) {
-    uint32_t tickstart = MILISEONDS;
-    while ((MILISEONDS - tickstart) < millisec) {
+    uint32_t tickstart = MILISECONDS;
+    while ((MILISECONDS - tickstart) < millisec) {
         __NOP();  // No Operation
     }
 }

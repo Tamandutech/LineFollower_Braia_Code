@@ -277,7 +277,7 @@ void controla_suc(uint16_t target) {
     static uint16_t last_pwm;
     static uint32_t last_update;
 
-    if (MILISEONDS - last_update >= 3) {
+    if (MILISECONDS - last_update >= 3) {
         suc_ok = 0;
         if (target > last_pwm) {
             last_pwm++;
@@ -296,15 +296,21 @@ void main_loop(void) {
 
     rgb_color_t led;
     for (;;) {
-        led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
-        setLedsColor(&led, 1);
-        delay_ms(500);
-        led = (rgb_color_t){0, 128, 0};  // Muda o LED para verde
-        setLedsColor(&led, 1);
-        delay_ms(500);
-        led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
-        setLedsColor(&led, 1);
-        delay_ms(500);
+        for (uint8_t i = 0; i < 255; i++) {
+            led = (rgb_color_t){i, 0, 0};
+            setLedsColor(&led, 1);
+            delay_ms(10);
+        }
+        for (uint8_t i = 0; i < 255; i++) {
+            led = (rgb_color_t){0, i, 0};
+            setLedsColor(&led, 1);
+            delay_ms(10);
+        }
+        for (uint8_t i = 0; i < 255; i++) {
+            led = (rgb_color_t){0, 0, i};
+            setLedsColor(&led, 1);
+            delay_ms(10);
+        }
     }
 
     imu_init(&imu_ctx, &int1_route);
@@ -362,7 +368,7 @@ void main_loop(void) {
             ultimo_ciclo = MICROSECONDS;
         }
 
-        // if (MILISEONDS - ultimo_print >= 200 && !run) {
+        // if (MILISECONDS - ultimo_print >= 200 && !run) {
         //     snprintf(tx_buffer, sizeof(tx_buffer), "Sensor: %d  \n", arrayError);
         //     snprintf(tx_buffer, sizeof(tx_buffer), "Velocidade motores: %.2f | %.2f \n", leftSpeed, rightSpeed);
         //     snprintf(tx_buffer, sizeof(tx_buffer), "sensors: %d\nsensor0: %d, sendor1: %d, sensor2: %d, sensor3: %d, sensor4: %d, sensor5: %d, sensor6: %d, sensor7: %d, sensor8: %d, sensor9: %d, sensor10: %d, sensor11: %d\n",
@@ -373,7 +379,7 @@ void main_loop(void) {
         //     snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
         //     ble_log(tx_buffer, strlen(tx_buffer));
-        //     ultimo_print = MILISEONDS;
+        //     ultimo_print = MILISECONDS;
         // }
     }
 }

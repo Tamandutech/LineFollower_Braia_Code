@@ -23,9 +23,9 @@ extern volatile uint8_t run;
 
 #include "lsm6dsr_reg.h"
 
-#define MILISEONDS HAL_GetTick()
-#define MICROSECONDS (volatile uint32_t)((TIM2->CNT) / (uint32_t)10)
-#define NANOSECONDS (volatile uint32_t)((TIM2->CNT) * 100U)
+#define MILISECONDS HAL_GetTick()
+#define MICROSECONDS (uint32_t)((TIM2->CNT) / (uint32_t)10)
+#define NANOSECONDS (uint32_t)((TIM2->CNT) * 100U)
 
 #define IMU_BUS hi2c1
 #define BLE_BUS huart1
