@@ -8,6 +8,9 @@
  * Esta implementação usa um PWM de alta frequência (6.4 MHz) para
  * gerar a temporização precisa de 800 kHz para o barramento de dados.
  *******************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -139,3 +142,7 @@ void setLedsColor(rgb_color_t *colors, uint16_t ledsCount) {
         delay_ms(500);
     }
 */
+
+#ifdef __cplusplus
+}
+#endif

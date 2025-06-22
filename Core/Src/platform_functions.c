@@ -2,7 +2,7 @@
 
 // definições específicas de hardware
 
-#include "main.h"
+#include "cube_HAL.h"
 
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
@@ -102,7 +102,7 @@ void delay_ns(uint32_t nanosec) {
     }
 }
 
-void ble_log(uint8_t *tx_buffer, uint16_t len) {
+void ble_log(char *tx_buffer, uint16_t len) {
     HAL_UART_Transmit_DMA(&BLE_BUS, (const uint8_t *)tx_buffer, len);
 }
 

@@ -1,9 +1,11 @@
-#include "main_loop.h"
+#include "main.hpp"
 
 #include <stdio.h>
 #include <string.h>
 
 #include "WS2812Driver.h"
+#include "cube_HAL.h"
+#include "platform_functions.h"
 
 volatile uint8_t run = 0;
 uint8_t last_run = 0;
@@ -13,7 +15,7 @@ int32_t pos_direita = 0;
 
 uint8_t suc_ok = 0;
 
-uint8_t tx_buffer[1000] = "Hello World!\n";
+char tx_buffer[1000] = "Hello World!\n";
 
 uint32_t ultimo_ciclo = 0;
 uint32_t ultimo_print = 0;
@@ -33,30 +35,8 @@ float_t angular_rate_mdps[3];
 float_t temperature_degC;
 
 #define sensorCount 12
-uint32_t gmaxSensorValues[sensorCount] = {3661
-,3473
-,3655
-,3523
-,3427
-,3508
-,3493
-,3515
-,3533
-,3481
-,3476
-,3646};
-uint32_t gminSensorValues[sensorCount] = {208
-,199
-,199
-,199
-,194
-,198
-,197
-,197
-,196
-,198
-,199
-,207};
+uint32_t gmaxSensorValues[sensorCount] = {3661, 3473, 3655, 3523, 3427, 3508, 3493, 3515, 3533, 3481, 3476, 3646};
+uint32_t gminSensorValues[sensorCount] = {208, 199, 199, 199, 194, 198, 197, 197, 196, 198, 199, 207};
 uint32_t calibratedSensors[sensorCount] = {0};
 int8_t calibrationInitialized = 0;
 
@@ -232,10 +212,8 @@ void ler_laterais() {
 
     update_adc(adc_buffer);
 
-    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000))
-    {
-        if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000)  && readingWhiteLeft == 0) 
-        {
+    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000)) {
+        if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000) && readingWhiteLeft == 0) {
             update_encoder_value(encoder_values);
             qtdLeftMark++;
             readingWhiteLeft = 1;
@@ -243,8 +221,7 @@ void ler_laterais() {
             ble_log(tx_buffer, strlen(tx_buffer));
         }
 
-        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) 
-        {
+        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) {
             update_encoder_value(encoder_values);
             reset_encoder_values();
             qtdRightMark++;
@@ -255,8 +232,7 @@ void ler_laterais() {
             ble_log(tx_buffer, strlen(tx_buffer));
         }
 
-        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0)
-        {
+        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0) {
             readingIntersec = 1;
             readingWhiteRight = 1;
             readingWhiteLeft = 1;
@@ -265,8 +241,7 @@ void ler_laterais() {
         }
     }
 
-    else
-    {
+    else {
         readingIntersec = 0;
         readingWhiteRight = 0;
         readingWhiteLeft = 0;
@@ -291,7 +266,8 @@ void controla_suc(uint16_t target) {
     }
 }
 
-void main_loop(void) {
+int main(void) {
+    cube_HAL_init();
     mcu_start();
 
     rgb_color_t led;
