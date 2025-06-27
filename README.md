@@ -1,4 +1,4 @@
-# 🤖 Seguidor de Linha - Braia
+ q# 🤖 Seguidor de Linha - Braia
 
 ![Versão](https://img.shields.io/badge/versão-0.0-blue)
 ![Linguagem](https://img.shields.io/badge/STM32-C/C++-brightgreen)
