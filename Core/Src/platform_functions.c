@@ -44,8 +44,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 pinhandler_t bootSw = {Boot_sw_GPIO_Port, Boot_sw_Pin};
 
-pinhandler_t leds = {Leds_GPIO_Port, Leds_Pin};
-
 pinhandler_t motorDirDir = {motor1dir_GPIO_Port, motor1dir_Pin};
 pwmhandler_t motorDirPWM = {&htim8, TIM_CHANNEL_3};
 pinhandler_t motorEsqDir = {motor2dir_GPIO_Port, motor2dir_Pin};
@@ -135,6 +133,14 @@ void set_pwm(pwmhandler_t pwmpin, uint16_t dutty) {
 void reset_encoder_values() {
     __HAL_TIM_SET_COUNTER(&htim3, 0);  // Motor Esquerdo
     __HAL_TIM_SET_COUNTER(&htim4, 0);  // Motor Direito
+}
+
+void set_right_encoder_values(uint16_t rightEncoderValue){
+    __HAL_TIM_SET_COUNTER(&htim4, rightEncoderValue);  // Motor Direito
+}
+
+void set_left_encoder_values(uint16_t leftEncoderValue){
+    __HAL_TIM_SET_COUNTER(&htim3, leftEncoderValue);  // Motor Esquerdo
 }
 
 void update_encoder_value(int32_t *encoderArray) {

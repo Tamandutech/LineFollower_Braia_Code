@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "led_ws2812.h"
+#include "WS2812Driver.h"
 
 volatile uint8_t run = 0;
 uint8_t last_run = 0;
@@ -57,8 +57,6 @@ uint32_t gminSensorValues[sensorCount] = {208
 ,198
 ,199
 ,207};
-// uint32_t gminSensorValues[sensorCount] = {0};
-// uint32_t gmaxSensorValues[sensorCount] = {0};
 uint32_t calibratedSensors[sensorCount] = {0};
 int8_t calibrationInitialized = 0;
 
@@ -300,15 +298,21 @@ void controla_suc(uint16_t target) {
 void main_loop(void) {
     mcu_start();
 
-    // uint32_t colors[4] = {0xFFFFFF, 0xFF0000, 0x00FF00, 0x0000FF};
-
-    // for (uint8_t i = 0; i < 100; i++) {
-    //     setLedsColor(leds, colors, 4);
-    // }
+    rgb_color_t led;
+    for (;;) {
+        led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
+        setLedsColor(&led, 1);
+        delay_ms(500);
+        led = (rgb_color_t){0, 128, 0};  // Muda o LED para verde
+        setLedsColor(&led, 1);
+        delay_ms(500);
+        led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
+        setLedsColor(&led, 1);
+        delay_ms(500);
+    }
 
     imu_init(&imu_ctx, &int1_route);
     ble_log("iniciando calibracao\n", 22);
-
     // for (uint8_t i = 0; i < 200; i++) {
     //     calibrateSensors(&adc_buffer[2]);
     //     delay_ms(40);
@@ -338,7 +342,7 @@ void main_loop(void) {
             controla_suc(50); //600  999
 
             if (suc_ok) {
-                PIDControl(0.1, 1.2);  //0.1 1.55  0.15  2.1
+                PIDControl(0.1, 1.2);
                 update_encoder_value(encoder_values);
                 //motorControl(350); //270  350
 

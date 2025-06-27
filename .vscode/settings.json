@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "cstdint": "c"
+        "cstdint": "c",
+        "string.h": "c"
     }
 }
