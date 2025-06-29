@@ -23,7 +23,11 @@
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
-#include "NimBLEAdvertising.h"
+#  if CONFIG_BT_NIMBLE_EXT_ADV
+#    include "NimBLEExtAdvertising.h"
+#  else
+#    include "NimBLEAdvertising.h"
+#  endif
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
@@ -35,7 +39,6 @@
 #endif
 
 #include "NimBLEUtils.h"
-#include "NimBLESecurity.h"
 #include "NimBLEAddress.h"
 
 #ifdef ESP_PLATFORM
@@ -59,7 +62,7 @@
 #define BLEAddress                      NimBLEAddress
 #define BLEUtils                        NimBLEUtils
 #define BLEClientCallbacks              NimBLEClientCallbacks
-#define BLEAdvertisedDeviceCallbacks    NimBLEAdvertisedDeviceCallbacks
+#define BLEAdvertisedDeviceCallbacks    NimBLEScanCallbacks
 #define BLEScanResults                  NimBLEScanResults
 #define BLEServer                       NimBLEServer
 #define BLEService                      NimBLEService
@@ -75,6 +78,7 @@
 #define BLEBeacon                       NimBLEBeacon
 #define BLEEddystoneTLM                 NimBLEEddystoneTLM
 #define BLEEddystoneURL                 NimBLEEddystoneURL
+#define BLEConnInfo                     NimBLEConnInfo
 
 #ifdef CONFIG_BT_NIMBLE_MAX_CONNECTIONS
 #define NIMBLE_MAX_CONNECTIONS          CONFIG_BT_NIMBLE_MAX_CONNECTIONS
@@ -93,6 +97,7 @@ class NimBLEDevice {
 public:
     static void             init(const std::string &deviceName);
     static void             deinit(bool clearAll = false);
+    static void             setDeviceName(const std::string &deviceName);
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
     static std::string      toString();
@@ -130,7 +135,6 @@ public:
     static void             setSecurityRespKey(uint8_t init_key);
     static void             setSecurityPasskey(uint32_t pin);
     static uint32_t         getSecurityPasskey();
-    static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
     static int              startSecurity(uint16_t conn_id);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
@@ -139,9 +143,19 @@ public:
     static void             removeIgnored(const NimBLEAddress &address);
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
-    static NimBLEAdvertising* getAdvertising();
-    static void               startAdvertising();
-    static void               stopAdvertising();
+#  if CONFIG_BT_NIMBLE_EXT_ADV
+    static NimBLEExtAdvertising* getAdvertising();
+    static bool                  startAdvertising(uint8_t inst_id,
+                                                  int duration = 0,
+                                                  int max_events = 0);
+    static bool                  stopAdvertising(uint8_t inst_id);
+    static bool                  stopAdvertising();
+#  endif
+#  if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
+    static NimBLEAdvertising*    getAdvertising();
+    static bool                  startAdvertising(uint32_t duration = 0);
+    static bool                  stopAdvertising();
+#  endif
 #endif
 
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
@@ -178,6 +192,10 @@ private:
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
     friend class NimBLEAdvertising;
+#  if CONFIG_BT_NIMBLE_EXT_ADV
+    friend class NimBLEExtAdvertising;
+    friend class NimBLEExtAdvertisement;
+#  endif
 #endif
 
     static void        onReset(int reason);
@@ -194,21 +212,26 @@ private:
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#  if CONFIG_BT_NIMBLE_EXT_ADV
+    static NimBLEExtAdvertising*      m_bleAdvertising;
+#  else
     static NimBLEAdvertising*         m_bleAdvertising;
+#  endif
 #endif
 
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     static std::list <NimBLEClient*>  m_cList;
 #endif
     static std::list <NimBLEAddress>  m_ignoreList;
-    static NimBLESecurityCallbacks*   m_securityCallbacks;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
     static gap_event_handler          m_customGapHandler;
     static uint8_t                    m_own_addr_type;
 #ifdef ESP_PLATFORM
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
     static uint16_t                   m_scanDuplicateSize;
     static uint8_t                    m_scanFilterMode;
+#  endif
 #endif
     static std::vector<NimBLEAddress> m_whiteList;
 };

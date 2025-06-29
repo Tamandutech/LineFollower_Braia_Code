@@ -24,11 +24,12 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "esp_attr.h"
 #include "esp_system.h"
 
-#include "driver/mcpwm.h"
+#include "driver/ledc.h"
 #include "driver/gpio.h"
 #include "soc/mcpwm_reg.h"
 #include "soc/mcpwm_struct.h"
@@ -36,9 +37,13 @@
 #include "esp_log.h"
 
 //////// Defines
+#define LEDC_TIMER              LEDC_TIMER_0 // Timer do LEDC utilizado
+#define LEDC_MODE               LEDC_HIGH_SPEED_MODE // Modo de velocidade do LEDC
+#define PWM_A_PIN               LEDC_CHANNEL_0 // Canal do LEDC utilizado
+#define PWM_B_PIN               LEDC_CHANNEL_1 // Canal do LEDC utilizado
+#define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Resolução do PWM
+#define LEDC_FREQUENCY          2000 // Frequência em Hertz do sinal PWM
 
-
-#define PWM_FREQ 2000 // PWM Frequency last 25000Hz
 
 //////// Class
 
@@ -87,6 +92,8 @@ private:
   // Methods
 
   bool isMotorValid(uint8_t motor);
+  void InitPWM(gpio_num_t pin, ledc_channel_t channel);
+  void PwmWrite(ledc_channel_t channel, int pwm);
 };
 
 #endif // ESP32MotorControl_H

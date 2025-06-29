@@ -58,7 +58,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_charProp           = chr->properties;
     m_pRemoteService     = pRemoteService;
     m_notifyCallback     = nullptr;
-    m_timestamp          = 0;
 
     NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteCharacteristic(): %s", m_uuid.toString().c_str());
  } // NimBLERemoteCharacteristic
@@ -267,6 +266,10 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
         }
     }
 
+    if (m_handle == m_endHandle) {
+        return true;
+    }
+
     desc_filter_t filter = {uuid_filter, &taskData};
 
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
@@ -431,55 +434,13 @@ NimBLEUUID NimBLERemoteCharacteristic::getUUID() {
  * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
-    ble_npl_hw_enter_critical();
-    std::string value = m_value;
+NimBLEAttValue NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
     if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+        *timestamp = m_value.getTimeStamp();
     }
-    ble_npl_hw_exit_critical(0);
 
-    return value;
-}
-
-
-/**
- * @brief Read an unsigned 16 bit value
- * @return The unsigned 16 bit value.
- * @deprecated Use readValue<uint16_t>().
- */
-uint16_t NimBLERemoteCharacteristic::readUInt16() {
-    return readValue<uint16_t>();
-} // readUInt16
-
-
-/**
- * @brief Read an unsigned 32 bit value.
- * @return the unsigned 32 bit value.
- * @deprecated Use readValue<uint32_t>().
- */
-uint32_t NimBLERemoteCharacteristic::readUInt32() {
-    return readValue<uint32_t>();
-} // readUInt32
-
-
-/**
- * @brief Read a byte value
- * @return The value as a byte
- * @deprecated Use readValue<uint8_t>().
- */
-uint8_t NimBLERemoteCharacteristic::readUInt8() {
-    return readValue<uint8_t>();
-} // readUInt8
-
-
-/**
- * @brief Read a float value.
- * @return the float value.
- */
-float NimBLERemoteCharacteristic::readFloat() {
-	return readValue<float>();
-} // readFloat
+    return m_value;
+} // getValue
 
 
 /**
@@ -487,12 +448,12 @@ float NimBLERemoteCharacteristic::readFloat() {
  * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
+NimBLEAttValue NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x",
                          getUUID().toString().c_str(), getHandle(), getHandle());
 
     NimBLEClient* pClient = getRemoteService()->getClient();
-    std::string value;
+    NimBLEAttValue value;
 
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
@@ -543,14 +504,11 @@ std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
         }
     } while(rc != 0 && retryCount--);
 
-    time_t t = time(nullptr);
-    ble_npl_hw_enter_critical();
+    value.setTimeStamp();
     m_value = value;
-    m_timestamp = t;
     if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+        *timestamp = value.getTimeStamp();
     }
-    ble_npl_hw_exit_critical(0);
 
     NIMBLE_LOGD(LOG_TAG, "<< readValue length: %d rc=%d", value.length(), rc);
     return value;
@@ -575,17 +533,17 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
 
     NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-    std::string *strBuf = (std::string*)pTaskData->buf;
+    NimBLEAttValue *valBuf = (NimBLEAttValue*)pTaskData->buf;
     int rc = error->status;
 
     if(rc == 0) {
         if(attr) {
             uint16_t data_len = OS_MBUF_PKTLEN(attr->om);
-            if(((*strBuf).length() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
+            if((valBuf->size() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
                 rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             } else {
                 NIMBLE_LOGD(LOG_TAG, "Got %u bytes", data_len);
-                (*strBuf) += std::string((char*) attr->om->om_data, data_len);
+                valBuf->append(attr->om->om_data, data_len);
                 return 0;
             }
         }
@@ -595,7 +553,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     xTaskNotifyGive(pTaskData->task);
 
     return rc;
-}
+} // onReadCB
 
 
 /**
@@ -648,26 +606,6 @@ bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback n
 bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
     return setNotify(0x00, nullptr, response);
 } // unsubscribe
-
-
- /**
- * @brief backward-compatibility method for subscribe/unsubscribe notifications/indications
- * @param [in] notifyCallback A callback to be invoked for a notification. If NULL is provided then we
- * will unregister for notifications.
- * @param [in] notifications If true, register for notifications, false register for indications.
- * @param [in] response If true, require a write response from the descriptor write operation.
- * @return true if successful.
- * @deprecated Use subscribe() / unsubscribe() instead.
- */
-bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications, bool response) {
-    bool success;
-    if(notifyCallback != nullptr) {
-        success = subscribe(notifications, notifyCallback, response);
-    } else {
-        success = unsubscribe(response);
-    }
-    return success;
-} // registerForNotify
 
 
 /**
@@ -736,22 +674,33 @@ std::string NimBLERemoteCharacteristic::toString() {
 
 
 /**
- * @brief Write the new value for the characteristic.
- * @param [in] newValue The new value to write.
- * @param [in] response Do we expect a response?
- * @return false if not connected or cant perform write for some reason.
+ * @brief Write a new value to the remote characteristic from a std::vector<uint8_t>.
+ * @param [in] vec A std::vector<uint8_t> value to write to the remote characteristic.
+ * @param [in] response Whether we require a response from the write.
+ * @return false if not connected or otherwise cannot perform write.
  */
-bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) {
-    return writeValue((uint8_t*)newValue.c_str(), newValue.length(), response);
+bool NimBLERemoteCharacteristic::writeValue(const std::vector<uint8_t>& vec, bool response) {
+    return writeValue((uint8_t*)&vec[0], vec.size(), response);
 } // writeValue
 
 
 /**
- * @brief Write the new value for the characteristic from a data buffer.
+ * @brief Write a new value to the remote characteristic from a const char*.
+ * @param [in] char_s A character string to write to the remote characteristic.
+ * @param [in] response Whether we require a response from the write.
+ * @return false if not connected or otherwise cannot perform write.
+ */
+bool NimBLERemoteCharacteristic::writeValue(const char* char_s, bool response) {
+    return writeValue((uint8_t*)char_s, strlen(char_s), response);
+} // writeValue
+
+
+/**
+ * @brief Write a new value to the remote characteristic from a data buffer.
  * @param [in] data A pointer to a data buffer.
  * @param [in] length The length of the data in the data buffer.
  * @param [in] response Whether we require a response from the write.
- * @return false if not connected or cant perform write for some reason.
+ * @return false if not connected or otherwise cannot perform write.
  */
 bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, bool response) {
 

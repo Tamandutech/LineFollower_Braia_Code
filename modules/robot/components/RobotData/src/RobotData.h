@@ -8,7 +8,9 @@
 #include <atomic>
 #include <mutex>
 
-#include "dataSLatMarks.h"
+#include "esp_adc/adc_oneshot.h"
+
+#include "dataMapping.h"
 #include "dataSpeed.h"
 #include "dataPID.h"
 #include "dataSensor.h"
@@ -42,13 +44,10 @@ public:
     dataSpeed *getSpeed();
     dataSensor *getsLat();
     dataSensor *getsArray();
-    dataPID *getPIDVel();
-    dataPID *getPIDRot();
-    dataPID *getPIDIR();
-    dataPID *getPIDClassic();
+    dataPID *getPID();
     RobotStatus *getStatus();
-    dataSLatMarks *getSLatMarks();
-
+    dataMapping *getMappingData();
+    adc_oneshot_unit_handle_t getADC_handle();
     std::string GetName();
 
 private:
@@ -57,18 +56,14 @@ private:
     static std::atomic<Robot *> instance;
     static std::mutex instanceMutex;
 
-    int Updateparams(struct CarParameters params);
+    adc_oneshot_unit_handle_t _adcHandle;
 
     dataSpeed *speed;
-    dataPID *PIDVel;
-    dataPID *PIDRot;
-    dataPID *PIDIR;
-    dataPID *PIDClassic; 
+    dataPID *PID; 
     dataSensor *sLat;
-    dataSLatMarks *sLatMarks;
+    dataMapping *MappingData;
     dataSensor *sArray;
     RobotStatus *Status;
-
     DataStorage *storage;
     DataManager *dataManager;
 

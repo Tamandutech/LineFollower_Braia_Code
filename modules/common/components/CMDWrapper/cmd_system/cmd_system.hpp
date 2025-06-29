@@ -11,9 +11,10 @@
 #include <string>
 
 #include "esp_err.h"
+#include "esp_adc/adc_oneshot.h"
 
 // Register all system functions
-void register_system(void);
+void register_system(adc_oneshot_unit_handle_t adc_handle);
 
 // Register common system functions: "version", "restart", "free", "heap", "tasks", "bat_voltage"
 void register_system_common(void);

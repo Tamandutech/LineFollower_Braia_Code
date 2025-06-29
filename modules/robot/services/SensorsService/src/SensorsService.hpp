@@ -21,7 +21,7 @@ public:
 
   void Run() override;
   void calibAllsensors();
-  void getArraySensors();
+  uint16_t getArraySensors();
 
 
 private:
@@ -32,11 +32,9 @@ private:
 
   Robot *robot;
 
-  dataSLatMarks *latMarks;
+  dataMapping *MappingData;
   dataSensor *sLatData;
   RobotStatus *status;
-
-  led_command_t command;
   
   int sumSensEsq = 0;
   int sumSensDir = 0;

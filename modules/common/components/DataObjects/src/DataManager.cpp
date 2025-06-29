@@ -223,7 +223,7 @@ int DataManager::NumItemsReadyStream()
     int num = 0;
     for (auto data : dataStreamList)
     {
-        ESP_LOGD(name.c_str(),"TempoStream: %d, StreamTime: %d",time,data->getStreamTime());
+        ESP_LOGD(name.c_str(),"TempoStream: %lu, StreamTime: %lu",time,data->getStreamTime());
         if(time > data->getStreamTime())
         {
             num++;
@@ -239,7 +239,7 @@ cJSON* DataManager::getStreamData()
     std::lock_guard<std::mutex> myLock(dataStreamListMutex);
     for (auto data : dataStreamList)
     {
-        ESP_LOGD(name.c_str(),"Tempo: %d, streamTime: %d",time,data->getStreamTime());
+        ESP_LOGD(name.c_str(),"Tempo: %lu, streamTime: %lu",time,data->getStreamTime());
         if(time > data->getStreamTime())
         {
             cJSON *Object = cJSON_CreateObject();
@@ -304,7 +304,7 @@ std::string DataManager::listRegistredRuntimeData()
     for (uint8_t i = 0; i < qtd; i++)
     {
         list += " " + std::to_string(i) + " - " + dataRuntimeList[i]->getName() + ": " + dataRuntimeList[i]->getDataString() + '\n';
-        ESP_LOGD(name.c_str(), "Dado %d (%p) -> %s: %s", i, dataRuntimeList[i], dataRuntimeList[i]->getName().c_str(), dataRuntimeList[i]->getDataString().c_str());
+        ESP_LOGD(name.c_str(), "Dado %u (%p) -> %s: %s", i, dataRuntimeList[i], dataRuntimeList[i]->getName().c_str(), dataRuntimeList[i]->getDataString().c_str());
     }
 
     ESP_LOGD(name.c_str(), "Retornando a lista.");

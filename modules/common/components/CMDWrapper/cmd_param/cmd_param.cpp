@@ -31,8 +31,8 @@ void register_cmd_param(void)
 
 static std::string map_SaveRuntime(int argc, char **argv)
 {
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->saveData();
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    TrackSideMarks->saveData();
     return "OK";
 
 }
@@ -64,12 +64,12 @@ static std::string map_add(int argc, char **argv)
         return "NOK";
     }
     std::string MapString = map_add_args.MapString->sval[0];
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
     std::stringstream ss(MapString);
     std::string s;
     while (std::getline(ss, s, ';'))
     {
-        MapMarks->newData(s);
+        TrackSideMarks->newData(s);
     }
     return "OK";
 }
@@ -103,13 +103,13 @@ static std::string map_set(int argc, char **argv)
         return "NOK";
     }
     std::string MapString = map_set_args.MapString->sval[0];
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->clearAllData();
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    TrackSideMarks->clearAllData();
     std::stringstream ss(MapString);
     std::string s;
     while (std::getline(ss, s, ';'))
     {
-        MapMarks->newData(s);
+        TrackSideMarks->newData(s);
     }
     return "OK";
 }
@@ -131,10 +131,10 @@ void register_map_set(void)
 static std::string map_getRuntime(int argc, char **argv)
 {
     std::string MapString = "";
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    for(int i = 0; i < MapMarks->getSize(); i++)
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    for(int i = 0; i < TrackSideMarks->getSize(); i++)
     {
-        MapString += MapMarks->getDataString(std::to_string(i)) + '\n';
+        MapString += TrackSideMarks->getDataString(std::to_string(i)) + '\n';
     }
     return MapString;
 }
@@ -154,11 +154,11 @@ void register_map_getRuntime(void)
 static std::string map_get(int argc, char **argv)
 {
     std::string MapString = "";
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->loadData();
-    for(int i = 0; i < MapMarks->getSize(); i++)
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    TrackSideMarks->loadData();
+    for(int i = 0; i < TrackSideMarks->getSize(); i++)
     {
-        MapString += MapMarks->getDataString(std::to_string(i)) + '\n';
+        MapString += TrackSideMarks->getDataString(std::to_string(i)) + '\n';
     }
     return MapString;
 }
@@ -177,8 +177,8 @@ void register_map_get(void)
 }
 static std::string map_clear(int argc, char **argv)
 {
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->clearAllData();
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    TrackSideMarks->clearAllData();
     return "OK";
 }
 
@@ -196,9 +196,9 @@ void register_map_clear(void)
 }
 static std::string map_clearFlash(int argc, char **argv)
 {
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->clearAllData();
-    DataStorage::getInstance()->delete_data("sLatMarks.marks");
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    TrackSideMarks->clearAllData();
+    DataStorage::getInstance()->delete_data("Mapping.TrackSideMarks");
     return "OK";
 }
 
@@ -228,8 +228,8 @@ static std::string map_clearAtIndex(int argc, char **argv)
         arg_print_errors(stderr, map_clearAtIndex_args.end, argv[0]);
         return "NOK";
     }
-    DataMap* MapMarks = Robot::getInstance()->getSLatMarks()->marks;
-    MapMarks->clearData(std::stoi(map_clearAtIndex_args.pos->sval[0]));
+    DataMap* TrackSideMarks = Robot::getInstance()->getMappingData()->TrackSideMarks;
+    TrackSideMarks->clearData(std::stoi(map_clearAtIndex_args.pos->sval[0]));
     return "OK";
 }
 

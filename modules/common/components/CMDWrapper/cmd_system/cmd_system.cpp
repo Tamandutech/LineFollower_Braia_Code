@@ -15,12 +15,14 @@
 #include "esp_log.h"
 #include "better_console.hpp"
 #include "esp_system.h"
+#include "esp_chip_info.h"
+#include "esp_flash.h"
 #include "esp_sleep.h"
-#include "esp_spi_flash.h"
-#include "esp_adc_cal.h"
+#include "spi_flash_mmap.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 #include "driver/rtc_io.h"
 #include "driver/uart.h"
-#include "driver/adc.h"
 #include "argtable3/argtable3.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -39,12 +41,14 @@
 static const char *TAG = "CMD_SYSTEM";
 CarState lastState = CAR_STOPPED;
 
+adc_oneshot_unit_handle_t ADChandle;
+adc_cali_handle_t adc1_cali_chan0_handle;
+
 static void register_free(void);
 static void register_heap(void);
 static void register_version(void);
 static void register_restart(void);
 static void register_bat_voltage(void);
-static void register_start(void);
 static void register_resume(void);
 static void register_pause(void);
 static void register_calibrate(void);
@@ -59,7 +63,6 @@ void register_system_common(void)
     register_heap();
     register_version();
     register_restart();
-    register_start();
     register_resume();
     register_pause();
     register_calibrate();
@@ -70,8 +73,23 @@ void register_system_common(void)
     register_delete_data();
 }
 
-void register_system(void)
+void register_system(adc_oneshot_unit_handle_t adc_handle)
 {
+    //-------------ADC1 Config---------------//
+    adc_oneshot_chan_cfg_t ADCconfig = {
+        .atten = ADC_ATTEN_DB_11,
+        .bitwidth = ADC_BITWIDTH_12,
+    };
+    ADChandle = adc_handle;
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(ADChandle, ADC_CHANNEL_0, &ADCconfig));
+
+    //-------------ADC1 Calibration---------------//
+    adc_cali_line_fitting_config_t cali_config = {
+        .unit_id = ADC_UNIT_1,
+        .atten = ADC_ATTEN_DB_11,
+        .bitwidth = ADC_BITWIDTH_12,
+    };
+    ESP_ERROR_CHECK(adc_cali_create_scheme_line_fitting(&cali_config, &adc1_cali_chan0_handle));
     register_system_common();
 }
 
@@ -80,6 +98,9 @@ static std::string get_version(int argc, char **argv)
 {
     esp_chip_info_t info;
     esp_chip_info(&info);
+    uint32_t size_flash_chip;
+    esp_flash_get_size(NULL, &size_flash_chip);
+
 
     std::stringstream ss;
     ss << "IDF Version: " << esp_get_idf_version() << std::endl;
@@ -92,7 +113,7 @@ static std::string get_version(int argc, char **argv)
     ss << (info.features & CHIP_FEATURE_BLE ? "/BLE" : "");
     ss << (info.features & CHIP_FEATURE_BT ? "/BT" : "");
     ss << (info.features & CHIP_FEATURE_EMB_FLASH ? "/Embedded-Flash:" : "/External-Flash:");
-    ss << (spi_flash_get_chip_size() / (1024 * 1024));
+    ss << (size_flash_chip / (1024 * 1024));
     ss << "MB";
     ss << std::endl;
     ss << "    Revision: " << info.revision << std::endl;
@@ -113,13 +134,17 @@ static void register_version(void)
 
 static std::string bat_voltage(int argc, char **argv)
 {
-    esp_adc_cal_characteristics_t *adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, adc_chars);
-    uint32_t calVoltage = 0;
-    esp_adc_cal_get_voltage(ADC_CHANNEL_0, adc_chars, &calVoltage);
+    int calVoltage = 0;
+    int adc_raw;
 
-    calVoltage *= 3.7;
-
+    esp_err_t err;
+    do {
+        err = adc_oneshot_read(ADChandle, ADC_CHANNEL_0, &adc_raw);
+        ESP_ERROR_CHECK_WITHOUT_ABORT(err);
+    } while (err == ESP_ERR_TIMEOUT);
+    ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw, &calVoltage));
+    
+    calVoltage *= 4.293;
     return (std::to_string(calVoltage) + "mV");
 }
 
@@ -134,64 +159,11 @@ static void register_bat_voltage(void)
     ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
 }
 
-static std::string start(int argc, char **argv)
-{
-    auto status = Robot::getInstance()->getStatus();
-    auto latMarks = Robot::getInstance()->getSLatMarks();
-    status->robotIsMapping->setData(false);
-    status->encreading->setData(false);
-    SensorsService::getInstance()->Suspend();
-    SensorsService::getInstance()->calibAllsensors();
-    SensorsService::getInstance()->Resume();
-    if (latMarks->marks->getSize() <= 0)
-    {
-        status->encreading->setData(false);
-        status->robotIsMapping->setData(true);
-    }
-    else
-    {
-        status->robotIsMapping->setData(false);
-        status->encreading->setData(true);
-    }
-    status->robotState->setData(CAR_IN_LINE);
-    auto carstate = status->robotState->getData();
-    xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
-    return ("O robô começará a se mover");
-}
-
-static void register_start(void)
-{
-    const better_console_cmd_t cmd = {
-        .command = "start",
-        .help = "Calibra e faz o robô se mover",
-        .hint = NULL,
-        .func = &start,
-        .argtable = NULL};
-    ESP_ERROR_CHECK(better_console_cmd_register(&cmd));
-}
-
 static std::string resume(int argc, char **argv)
 {
     auto status = Robot::getInstance()->getStatus();
-    auto latMarks = Robot::getInstance()->getSLatMarks();
-    if(!status->TunningMode->getData())
-    {
-        if (latMarks->marks->getSize() <= 0)
-        {
-            status->encreading->setData(false);
-            status->robotIsMapping->setData(true);
-        }
-        else
-        {
-            status->robotIsMapping->setData(false);
-            status->encreading->setData(true);
-        }
-        status->robotState->setData(lastState);
-    }
-    auto carstate = CAR_IN_LINE;
-    xQueueSend(CarStatusService::getInstance()->gpio_evt_queue, &carstate, portMAX_DELAY);
-    status->robotPaused->setData(false);
-
+    status->robotState->setData(lastState);
+    xSemaphoreGive(CarStatusService::getInstance()->SemaphoreStartRobot);
     return ("O robô voltará a andar");
 }
 
@@ -212,19 +184,10 @@ static std::string pause(int argc, char **argv)
     if(status->robotState->getData() != CAR_STOPPED)
     {
         lastState = (CarState) status->robotState->getData();
-        status->robotPaused->setData(true);
-        status->robotIsMapping->setData(false);
-        status->encreading->setData(false);
         status->robotState->setData(CAR_STOPPED);
         vTaskDelay(0);
         DataManager::getInstance()->saveAllParamDataChanged();
-        led_command_t command;
-        command.led[0] = LED_POSITION_FRONT;
-        command.led[1] = LED_POSITION_NONE;
-        command.color = LED_COLOR_BLACK;
-        command.effect = LED_EFFECT_SET;
-        command.brightness = 1;
-        LEDsService::getInstance()->queueCommand(command);
+        LEDsService::getInstance()->LedComandSend(LED_POSITION_FRONT, LED_COLOR_BLACK, 1);
     }
     return ("O robô será pausado");
 }
@@ -242,9 +205,6 @@ static void register_pause(void)
 
 static std::string calibrate(int argc, char **argv)
 {
-    auto status = Robot::getInstance()->getStatus();
-    status->robotIsMapping->setData(false);
-    status->encreading->setData(false);
     SensorsService::getInstance()->Suspend();
     SensorsService::getInstance()->calibAllsensors();
     SensorsService::getInstance()->Resume();

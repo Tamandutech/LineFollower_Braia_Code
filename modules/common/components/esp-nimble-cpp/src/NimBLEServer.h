@@ -25,9 +25,12 @@
 
 #include "NimBLEUtils.h"
 #include "NimBLEAddress.h"
+#if CONFIG_BT_NIMBLE_EXT_ADV
+#include "NimBLEExtAdvertising.h"
+#else
 #include "NimBLEAdvertising.h"
+#endif
 #include "NimBLEService.h"
-#include "NimBLESecurity.h"
 #include "NimBLEConnInfo.h"
 
 
@@ -46,11 +49,20 @@ public:
     NimBLEService*         createService(const NimBLEUUID &uuid);
     void                   removeService(NimBLEService* service, bool deleteSvc = false);
     void                   addService(NimBLEService* service);
-    NimBLEAdvertising*     getAdvertising();
     void                   setCallbacks(NimBLEServerCallbacks* pCallbacks,
                                         bool deleteCallbacks = true);
-    void                   startAdvertising();
-    void                   stopAdvertising();
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    NimBLEExtAdvertising*  getAdvertising();
+    bool                   startAdvertising(uint8_t inst_id,
+                                            int duration = 0,
+                                            int max_events = 0);
+    bool                   stopAdvertising(uint8_t inst_id);
+#endif
+#  if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
+    NimBLEAdvertising*     getAdvertising();
+    bool                   startAdvertising(uint32_t duration = 0);
+#endif
+    bool                   stopAdvertising();
     void                   start();
     NimBLEService*         getServiceByUUID(const char* uuid, uint16_t instanceId = 0);
     NimBLEService*         getServiceByUUID(const NimBLEUUID &uuid, uint16_t instanceId = 0);
@@ -66,7 +78,9 @@ public:
     NimBLEConnInfo         getPeerInfo(size_t index);
     NimBLEConnInfo         getPeerInfo(const NimBLEAddress& address);
     NimBLEConnInfo         getPeerIDInfo(uint16_t id);
+#if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
     void                   advertiseOnDisconnect(bool);
+#endif
 
 private:
     NimBLEServer();
@@ -75,9 +89,15 @@ private:
     friend class           NimBLEService;
     friend class           NimBLEDevice;
     friend class           NimBLEAdvertising;
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    friend class           NimBLEExtAdvertising;
+    friend class           NimBLEExtAdvertisementData;
+#endif
 
     bool                   m_gattsStarted;
+#if !CONFIG_BT_NIMBLE_EXT_ADV
     bool                   m_advertiseOnDisconnect;
+#endif
     bool                   m_svcChanged;
     NimBLEServerCallbacks* m_pServerCallbacks;
     bool                   m_deleteCallbacks;
@@ -108,41 +128,28 @@ public:
      * @brief Handle a client connection.
      * This is called when a client connects.
      * @param [in] pServer A pointer to the %BLE server that received the client connection.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
      */
-    virtual void onConnect(NimBLEServer* pServer);
+    virtual void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo);
 
     /**
-     * @brief Handle a client connection.
-     * This is called when a client connects.
-     * @param [in] pServer A pointer to the %BLE server that received the client connection.
-     * @param [in] desc A pointer to the connection description structure containig information
-     * about the connection parameters.
-     */
-    virtual void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
-
-    /**
-     * @brief Handle a client disconnection.
-     * This is called when a client disconnects.
-     * @param [in] pServer A reference to the %BLE server that received the existing client disconnection.
-     */
-    virtual void onDisconnect(NimBLEServer* pServer);
-
-     /**
      * @brief Handle a client disconnection.
      * This is called when a client discconnects.
      * @param [in] pServer A pointer to the %BLE server that received the client disconnection.
-     * @param [in] desc A pointer to the connection description structure containig information
-     * about the connection.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
+     * @param [in] reason The reason code for the disconnection.
      */
-    virtual void onDisconnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
+    virtual void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason);
 
-     /**
+    /**
      * @brief Called when the connection MTU changes.
      * @param [in] MTU The new MTU value.
-     * @param [in] desc A pointer to the connection description structure containig information
-     * about the connection.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
      */
-    virtual void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc);
+    virtual void onMTUChange(uint16_t MTU, NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when a client requests a passkey for pairing.
@@ -150,15 +157,12 @@ public:
      */
     virtual uint32_t onPassKeyRequest();
 
-    //virtual void onPassKeyNotify(uint32_t pass_key);
-    //virtual bool onSecurityRequest();
-
     /**
      * @brief Called when the pairing procedure is complete.
-     * @param [in] desc A pointer to the struct containing the connection information.\n
-     * This can be used to check the status of the connection encryption/pairing.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
      */
-    virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when using numeric comparision for pairing.

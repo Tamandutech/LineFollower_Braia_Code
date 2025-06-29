@@ -36,8 +36,7 @@ esp_err_t DataStorage::mount_storage(std::string _basePath)
 
     basePath = _basePath.at(0) == '/' ? _basePath : "/" + _basePath;
 
-    esp_err_t err = esp_vfs_fat_spiflash_mount(basePath.c_str(), "storage", &mount_config, &s_wl_handle);
-
+    esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(basePath.c_str(), "storage", &mount_config, &s_wl_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE(name.c_str(), "Falha ao montar FATFS (%s)", esp_err_to_name(err));
