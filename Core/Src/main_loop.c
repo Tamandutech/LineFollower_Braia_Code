@@ -391,11 +391,17 @@ void main_loop(void) {
 
         if (MICROSECONDS - ultimo_ciclo >= 1000 && run) {
             controla_suc(999); //600  999
+            snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
+
+            ble_log(tx_buffer, strlen(tx_buffer));
+            ultimo_print = MICROSECONDS;
 
             if (suc_ok) {
                 PIDControl(0.1, 1.9);  //seguidor 0.1, 1.9  perseguidor 0.19, 1.9
+                motorControl(200); //270  350
+                update_encoder_position_TIM3();
+                update_encoder_position_TIM4();
                 update_encoder_value(encoder_values);
-                motorControl(475); //270  350
 
                 // if (encoder_values[0] < 45) {
                 //     motorControl(420); //500

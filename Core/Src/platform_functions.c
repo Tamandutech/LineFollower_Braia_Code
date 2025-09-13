@@ -143,9 +143,41 @@ void set_left_encoder_values(uint16_t leftEncoderValue){
     __HAL_TIM_SET_COUNTER(&htim3, leftEncoderValue);  // Motor Esquerdo
 }
 
+volatile int32_t encoder_position_TIM4 = 0;
+uint16_t last_counter_TIM4 = 0;
+
+void update_encoder_position_TIM4(void)
+{
+    uint16_t current = __HAL_TIM_GET_COUNTER(&htim4);
+    int16_t delta = (int16_t)(current - last_counter_TIM4);
+    encoder_position_TIM4 += delta;
+    last_counter_TIM4 = current;
+}
+
+int32_t get_encoder_position_TIM4(void)
+{
+    return encoder_position_TIM4;
+}
+
+volatile int32_t encoder_position_TIM3 = 0;
+uint16_t last_counter_TIM3 = 0;
+
+void update_encoder_position_TIM3(void)
+{
+    uint16_t current = __HAL_TIM_GET_COUNTER(&htim3);
+    int16_t delta = (int16_t)(current - last_counter_TIM3);
+    encoder_position_TIM3 += delta;
+    last_counter_TIM3 = current;
+}
+
+int32_t get_encoder_position_TIM3(void)
+{
+    return encoder_position_TIM3;
+}
+
 void update_encoder_value(int32_t *encoderArray) {
-    encoderArray[0] = (int16_t)__HAL_TIM_GET_COUNTER(&htim3);  // Motor Esquerdo
-    encoderArray[1] = (int16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
+    encoderArray[0] = get_encoder_position_TIM3();  // Motor Esquerdo
+    encoderArray[1] = get_encoder_position_TIM4();  // Motor Direito
 }
 
 void update_adc(uint32_t *adc_buffer) {
