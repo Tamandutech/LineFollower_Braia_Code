@@ -54,8 +54,6 @@ pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_1};
 pwmhandler_t motorSucPWM = {&htim5, TIM_CHANNEL_2};
 
 void mcu_start(void) {
-	bleLog("Starting Braia...\n");
-
     // inicia timer
     HAL_TIM_Base_Start(&htim2);
 
@@ -77,11 +75,12 @@ void mcu_start(void) {
     HAL_Delay(50);
     uint32_t adc_buffer[18] = {0};
     uint8_t tx_buffer[40] = {0};
-    bleLog("tensão da bateria: %2.2f\n", get_battery_voltage(adc_buffer));
+    snprintf(tx_buffer, sizeof(tx_buffer), "tensão da bateria: %2.2f\n", get_battery_voltage(adc_buffer));
+    ble_log(tx_buffer, strlen(tx_buffer));
     HAL_Delay(50);
 
     start_ble_cmd_listening();  // Reinicia a recepção DMA
-    bleLog("MCU Iniciado\n");
+    ble_log("MCU Iniciado\n", 14);
 }
 
 void delay_ms(uint32_t millisec) {
@@ -233,13 +232,13 @@ void imu_init(stmdev_ctx_t *imu_ctx, lsm6dsr_pin_int1_route_t *int1_route) {
     imu_ctx->handle = &IMU_BUS;
 
     while (1) {
-    	bleLog("Conectando com a IMU...\n");
+        ble_log("Conectando com a IMU...\n", 25);
         lsm6dsr_device_id_get(imu_ctx, &whoamI);
         if (whoamI != LSM6DSR_ID) {
-        	bleLog("Error: Device ID mismatch\n");
+            ble_log("Error: Device ID mismatch\n", 27);
             delay_ms(500);
         } else {
-        	bleLog("IMU conectada\n");
+            ble_log("IMU conectada\n", 15);
             break;
         }
     }
