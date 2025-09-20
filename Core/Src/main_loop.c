@@ -1,9 +1,8 @@
 #include "main_loop.h"
 #include "WS2812Driver.h"
 #include "boolean.h"
-#include "main.h"
-#include "cmsis_os.h"
 #include <stdlib.h>
+#include "logger.h"
 //#include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -347,39 +346,33 @@ void controla_suc(uint16_t target) {
     }
 }
 
-#define SAMPLING_TIME 10     // ms
 #define MM_PER_COUNT 0.016873f    //0.01687378866674205352689896348441 valor perfeito
 
 float robotSpeed = 0;
+int32_t leftPrev = 0, rightPrev = 0;
+float previousTime = 0;
 
-void robotSpeedTask(void *argument)
+void robotSpeedTask()
 {
-    TickType_t xLastWakeTime;
-    int32_t leftPrev, rightPrev;
+    float timerNow = MICROSECONDS;
+    int32_t leftNow  = get_encoder_position_TIM3();
+    int32_t rightNow = get_encoder_position_TIM4();
 
-    // Leitura inicial dos encoders
-    leftPrev  = get_encoder_position_TIM3();
-    rightPrev = get_encoder_position_TIM4();
+    int32_t leftDist  = leftNow  - leftPrev;
+    int32_t rightDist = rightNow - rightPrev;
 
-    xLastWakeTime = xTaskGetTickCount();
+    float elapsedTime = timerNow - previousTime;
+    float elapsedTimeMS = elapsedTime/1000;
 
-    for(;;)
-    {
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SAMPLING_TIME));
+    leftPrev  = leftNow;
+    rightPrev = rightNow;
 
-        int32_t leftNow  = get_encoder_position_TIM3();
-        int32_t rightNow = get_encoder_position_TIM4();
+    previousTime = timerNow;
 
-        int32_t leftDist  = leftNow  - leftPrev;
-        int32_t rightDist = rightNow - rightPrev;
-
-        leftPrev  = leftNow;
-        rightPrev = rightNow;
-
-        // velocidade em m/s
-        robotSpeed = ((leftDist + rightDist) / 2.0f) * MM_PER_COUNT / SAMPLING_TIME;
-        bleLogMessage("RobotSpeed %d", robotSpeed);
-    }
+    // velocidade em m/s
+    robotSpeed = (((leftDist + rightDist) / 2.0f) * MM_PER_COUNT) / elapsedTimeMS;
+    //bleLogMessage("RobotSpeed %f", robotSpeed);
+    //bleLogMessage("ElapsedTime %f", elapsedTime);
 }
 
 void main_loop(void) {
@@ -403,7 +396,7 @@ void main_loop(void) {
     // }
 
     imu_init(&imu_ctx, &int1_route);
-    ble_log("iniciando calibracao\n", 22);
+    bleLogMessage("iniciando calibracao\n");
     // for (uint8_t i = 0; i < 200; i++) {
     //     calibrateSensors(&adc_buffer[2]);
     //     delay_ms(40);
@@ -434,11 +427,16 @@ void main_loop(void) {
             // snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
             // ble_log(tx_buffer, strlen(tx_buffer));
-            ultimo_print = MICROSECONDS;
+            // ultimo_print = MICROSECONDS;
 
             if (suc_ok) {
                 PIDControl(0.1, 1.9);  //seguidor 0.1, 1.9  perseguidor 0.19, 1.9
-                motorControl(200); //270  350
+                motorControl(500); //270  350
+                // write_pin(motorDirDir, 0);
+                // write_pin(motorEsqDir, 0);
+                // set_pwm(motorDirPWM, (uint16_t)500);
+                // set_pwm(motorEsqPWM, (uint16_t)500);
+                robotSpeedTask();
                 update_encoder_position_TIM3();
                 update_encoder_position_TIM4();
                 update_encoder_value(encoder_values);
