@@ -375,6 +375,57 @@ void robotSpeedTask()
     //bleLogMessage("ElapsedTime %f", elapsedTime);
 }
 
+float translacionalErrorBuffer[9]; // buffer to store the last 5 values of translationalError
+int translacionalErrorIndex = 0; // index to keep track of the current position in the buffer
+float translacionalError = 0;
+float P_Translacional = 0;
+float D_Translacional = 0;
+float I_Translacional = 0;
+float PIDTranslacional = 0;
+float lastTranslacionalError = 0;
+float last_pwm, run_pwm;
+
+float curva_acel(float pwm_goal)
+{
+
+  if (pwm_goal > last_pwm)
+  {
+    run_pwm = pwm_goal;
+  }
+  else if (pwm_goal < last_pwm)
+  {
+    last_pwm -= 0.02f;
+    run_pwm = pwm_goal;
+  }
+  else
+  {
+    run_pwm = pwm_goal;
+  }
+  return run_pwm;
+}
+
+void calcula_PID_translacional(float KpParam_Translacional,
+							   float KdParam_Translacional,
+							   float KiParam_Translacional,
+							   float desiredSpeed)
+{
+  translacionalError = curva_acel(desiredSpeed) - robotSpeed;
+  P_Translacional = translacionalError;
+  D_Translacional = translacionalError - lastTranslacionalError;
+
+  // update the buffer and calculate the sum of the last 5 values
+  translacionalErrorBuffer[translacionalErrorIndex] = translacionalError;
+  translacionalErrorIndex = (translacionalErrorIndex + 1) % 9;
+  float sum = 0;
+  for (int i = 0; i < 9; i++) {
+    sum += translacionalErrorBuffer[i];
+  }
+  I_Translacional = sum;
+
+  PIDTranslacional = (KpParam_Translacional * P_Translacional) + (KdParam_Translacional * D_Translacional) + (KiParam_Translacional * I_Translacional);
+  lastTranslacionalError = translacionalError;
+}
+
 void main_loop(void) {
     mcu_start();
     //init_lista(&marcacoes_mapeadas);
