@@ -4,6 +4,8 @@
 
 #include "main.h"
 
+#include "logger.h"
+
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
 volatile uint8_t rx_buffer[32] = {0};
@@ -52,8 +54,6 @@ pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_1};
 pwmhandler_t motorSucPWM = {&htim5, TIM_CHANNEL_2};
 
 void mcu_start(void) {
-    ble_log("Hello World!\n", 14);
-
     // inicia timer
     HAL_TIM_Base_Start(&htim2);
 

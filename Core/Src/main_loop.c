@@ -1,19 +1,23 @@
 #include "main_loop.h"
+#include "WS2812Driver.h"
+#include "boolean.h"
 
 #include <stdlib.h>
 //#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "WS2812Driver.h"
-
+/* TODO
+ * This variable seems to not be updated, since no pointer is passed to outside this file (?)
+ */
 volatile uint8_t run = 0;
-uint8_t last_run = 0;
+
+boolean last_run = false;
 
 uint8_t leu_direita = 0;
 int32_t pos_direita = 0;
 
-uint8_t suc_ok = 0;
+boolean suc_ok = false;
 
 uint8_t tx_buffer[1000] = "Hello World!\n";
 
@@ -163,7 +167,7 @@ void readCalibrated(uint32_t* frontSensors) {
 
 uint32_t lastPosition = 0;
 uint32_t readLine(uint32_t* sensorValues) {
-    char onLine = 0;
+    boolean onLine = false;
     uint32_t avg = 0;  // this is for the weighted total
     uint16_t sum = 0;  // this is for the denominator, which is <= 64000
 
@@ -178,7 +182,7 @@ uint32_t readLine(uint32_t* sensorValues) {
 
         // keep track of whether we see the line at all
         if (value > 200) {
-            onLine = 1;
+            onLine = true;
         }
         // only average in values that are above a noise threshold
         if (value > 50) {
@@ -329,13 +333,13 @@ void controla_suc(uint16_t target) {
     static uint32_t last_update;
 
     if (MILISEONDS - last_update >= 3) {
-        suc_ok = 0;
+        suc_ok = false;
         if (target > last_pwm) {
             last_pwm++;
         } else if (target < last_pwm) {
             last_pwm--;
         } else {
-            suc_ok = 1;
+            suc_ok = true;
         }
 
         set_pwm(motorSucPWM, last_pwm);
@@ -376,7 +380,7 @@ void main_loop(void) {
             update_encoder_value(encoder_values);
             snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
             ble_log(tx_buffer, strlen(tx_buffer));
-            last_run = 0;
+            last_run = false;
         }
 
         if (!run) {
@@ -496,7 +500,7 @@ void main_loop(void) {
                 // }
             }
 
-            last_run = 1;
+            last_run = true;
             ultimo_ciclo = MICROSECONDS;
         }
 
