@@ -1,7 +1,8 @@
 #include "main_loop.h"
 #include "WS2812Driver.h"
 #include "boolean.h"
-
+#include "main.h"
+#include "cmsis_os.h"
 #include <stdlib.h>
 //#include <math.h>
 #include <stdio.h>
@@ -277,7 +278,7 @@ void ler_laterais() {
 
     if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000))
     {
-        if ((adc_buffer[0] < 500 || adc_buffer[1] < 500) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000)  && readingWhiteLeft == 0) 
+        if ((adc_buffer[0] < 500 || adc_buffer[1] < 500) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000)  && readingWhiteLeft == 0)
         {
             update_encoder_value(encoder_values);
             qtdLeftMark++;
@@ -287,7 +288,7 @@ void ler_laterais() {
             //adicionar_lista(&marcacoes_mapeadas, leitura_atual);
         }
 
-        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) 
+        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1)
         {
             update_encoder_value(encoder_values);
             reset_encoder_values();
@@ -346,6 +347,41 @@ void controla_suc(uint16_t target) {
     }
 }
 
+#define SAMPLING_TIME 10     // ms
+#define MM_PER_COUNT 0.016873f    //0.01687378866674205352689896348441 valor perfeito
+
+float robotSpeed = 0;
+
+void robotSpeedTask(void *argument)
+{
+    TickType_t xLastWakeTime;
+    int32_t leftPrev, rightPrev;
+
+    // Leitura inicial dos encoders
+    leftPrev  = get_encoder_position_TIM3();
+    rightPrev = get_encoder_position_TIM4();
+
+    xLastWakeTime = xTaskGetTickCount();
+
+    for(;;)
+    {
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SAMPLING_TIME));
+
+        int32_t leftNow  = get_encoder_position_TIM3();
+        int32_t rightNow = get_encoder_position_TIM4();
+
+        int32_t leftDist  = leftNow  - leftPrev;
+        int32_t rightDist = rightNow - rightPrev;
+
+        leftPrev  = leftNow;
+        rightPrev = rightNow;
+
+        // velocidade em m/s
+        robotSpeed = ((leftDist + rightDist) / 2.0f) * MM_PER_COUNT / SAMPLING_TIME;
+        bleLogMessage("RobotSpeed %d", robotSpeed);
+    }
+}
+
 void main_loop(void) {
     mcu_start();
     //init_lista(&marcacoes_mapeadas);
@@ -395,9 +431,9 @@ void main_loop(void) {
 
         if (MICROSECONDS - ultimo_ciclo >= 1000 && run) {
             controla_suc(999); //600  999
-            snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
+            // snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
-            ble_log(tx_buffer, strlen(tx_buffer));
+            // ble_log(tx_buffer, strlen(tx_buffer));
             ultimo_print = MICROSECONDS;
 
             if (suc_ok) {
@@ -417,7 +453,7 @@ void main_loop(void) {
                 //     led[2] = (rgb_color_t){128, 0, 0};
                 //     led[3] = (rgb_color_t){128, 0, 0};
                 //     setLedsColor(&led, 4);
-                // } 
+                // }
                 // else if (encoder_values[0] > 1080 && encoder_values[0] <= 1220) { //reta1
                 //     motorControl(999); //999
                 //     led[0] = (rgb_color_t){0, 128, 0};
@@ -425,7 +461,7 @@ void main_loop(void) {
                 //     led[2] = (rgb_color_t){0, 128, 0};
                 //     led[3] = (rgb_color_t){0, 128, 0};
                 //     setLedsColor(&led, 4);
-                // } 
+                // }
                 // else if (encoder_values[0] > 1560 && encoder_values[0] < 1700) { //reta2
                 //     motorControl(999);
                 //     led[0] = (rgb_color_t){0, 128, 0};
@@ -476,15 +512,15 @@ void main_loop(void) {
                 // }
                 // else if (encoder_values[0] > 6760 && encoder_values[0] <= 6810) {
                 //     motorControl(150);
-                // } 
+                // }
                 // else if (encoder_values[0] > 6810 && encoder_values[0] <= 6880) {
                 //     motorControl(75);
-                // } 
+                // }
                 // else if (encoder_values[0] > 6880)
                 // {
                 //     set_pwm(motorDirPWM, 0);
                 //     set_pwm(motorEsqPWM, 0);
-                //     if (MICROSECONDS - ultimo_ciclo >= 500000) 
+                //     if (MICROSECONDS - ultimo_ciclo >= 500000)
                 //     {
                 //         controla_suc(0);
                 //     }
@@ -512,7 +548,7 @@ void main_loop(void) {
         //              lastPosition, gminSensorValues[0], gminSensorValues[1], gminSensorValues[2], gminSensorValues[3], gminSensorValues[4], gminSensorValues[5], gminSensorValues[6], gminSensorValues[7], gminSensorValues[8], gminSensorValues[9], gminSensorValues[10], gminSensorValues[11]);
         //     snprintf(tx_buffer, sizeof(tx_buffer), "sensors: %d\nsensor0 max: %d, sensor1 max: %d, sensor2 max: %d, sensor3 max: %d, sensor4 max: %d, sensor5 max: %d, sensor6 max: %d, sensor7 max: %d, sensor8 max: %d, sensor9 max: %d, sensor10 max: %d, sensor11 max: %d\n",
         //            lastPosition, gmaxSensorValues[0], gmaxSensorValues[1], gmaxSensorValues[2], gmaxSensorValues[3], gmaxSensorValues[4], gmaxSensorValues[5], gmaxSensorValues[6], gmaxSensorValues[7], gmaxSensorValues[8], gmaxSensorValues[9], gmaxSensorValues[10], gmaxSensorValues[11]);
-         
+
         //     // update_encoder_value(encoder_values);
         //     // snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 

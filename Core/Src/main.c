@@ -1095,10 +1095,11 @@ void StartDefaultTask(void *argument)
 void StartRobotSpeedTask(void *argument)
 {
   /* USER CODE BEGIN StartRobotSpeedTask */
+  
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    RobotSpeedTask();
   }
   /* USER CODE END StartRobotSpeedTask */
 }
