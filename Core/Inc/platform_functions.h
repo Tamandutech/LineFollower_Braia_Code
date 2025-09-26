@@ -58,7 +58,7 @@ void toggle_pin(pinhandler_t pin);
 
 void set_pwm(pwmhandler_t pwmpin, uint16_t dutty);
 
-void update_encoder_value(int32_t *encoderArray);
+void update_encoder_value(uint32_t *encoderArray);
 
 void reset_encoder_values(void);
 

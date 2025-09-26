@@ -20,7 +20,7 @@ char tx_buffer[1000] = "Hello World!\n";
 uint32_t ultimo_ciclo = 0;
 uint32_t ultimo_print = 0;
 
-int32_t encoder_values[2];
+uint32_t encoder_values[2];
 
 // volatile uint32_t adc_update_time;
 uint32_t adc_buffer[18];
@@ -181,8 +181,7 @@ void motorControl(float desiredVoltage) {
         if (rightSpeed > MAX_SPEED) rightSpeed = MAX_SPEED;
         write_pin(motorDirDir, 1);
 
-    } 
-    else {
+    } else {
         if (rightSpeed < -MAX_SPEED) rightSpeed = -MAX_SPEED;
         rightSpeed = (-1) * rightSpeed;
         write_pin(motorDirDir, 0);
@@ -192,8 +191,7 @@ void motorControl(float desiredVoltage) {
         if (leftSpeed > MAX_SPEED) leftSpeed = MAX_SPEED;
         write_pin(motorEsqDir, 1);
 
-    } 
-    else {
+    } else {
         if (leftSpeed < -MAX_SPEED) leftSpeed = -MAX_SPEED;
         leftSpeed = (-1) * leftSpeed;
         write_pin(motorEsqDir, 0);
@@ -258,11 +256,9 @@ void controla_suc(uint16_t target) {
         suc_ok = 0;
         if (target > last_pwm) {
             last_pwm++;
-        } 
-        else if (target < last_pwm) {
+        } else if (target < last_pwm) {
             last_pwm--;
-        } 
-        else {
+        } else {
             suc_ok = 1;
         }
 
@@ -276,21 +272,23 @@ int main(void) {
 
     rgb_color_t led;
     for (;;) {
-        for (uint8_t i = 0; i < 255; i++) {
-            led = (rgb_color_t){i, 0, 0};
-            setLedsColor(&led, 1);
-            delay_ms(10);
-        }
-        for (uint8_t i = 0; i < 255; i++) {
-            led = (rgb_color_t){0, i, 0};
-            setLedsColor(&led, 1);
-            delay_ms(10);
-        }
-        for (uint8_t i = 0; i < 255; i++) {
-            led = (rgb_color_t){0, 0, i};
-            setLedsColor(&led, 1);
-            delay_ms(10);
-        }
+        update_encoder_value(encoder_values);
+
+        //       for (uint8_t i = 0; i < 255; i++) {
+        //         led = (rgb_color_t){i, 0, 0};
+        //        setLedsColor(&led, 1);
+        //      delay_ms(10);
+        // }
+        // for (uint8_t i = 0; i < 255; i++) {
+        //     led = (rgb_color_t){0, i, 0};
+        //     setLedsColor(&led, 1);
+        //     delay_ms(10);
+        // }
+        // for (uint8_t i = 0; i < 255; i++) {
+        //     led = (rgb_color_t){0, 0, i};
+        //     setLedsColor(&led, 1);
+        //     delay_ms(10);
+        // }
     }
 
     imu_init(&imu_ctx, &int1_route);
@@ -330,11 +328,9 @@ int main(void) {
 
                 if (encoder_values[1] < 400) {
                     motorControl(0.7f);
-                } 
-                else if (encoder_values[1] < 700) {
+                } else if (encoder_values[1] < 700) {
                     motorControl(0.6f);
-                } 
-                else if (encoder_values[1] < 5500) {
+                } else if (encoder_values[1] < 5500) {
                     motorControl(0.7f);
                 }
 

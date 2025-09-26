@@ -8,6 +8,11 @@ volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
 volatile uint8_t rx_buffer[32] = {0};
 
+volatile uint32_t encoder_u32bit_left = 0;
+volatile uint32_t encoder_u32bit_right = 0;
+volatile uint16_t encoder_overflow_left = 0;
+volatile uint16_t encoder_overflow_right = 0;
+
 // volatile uint32_t last_adc1_time = 0;
 // volatile uint32_t last_adc2_time = 0;
 // volatile uint32_t adc1_update_time = 0;
@@ -40,6 +45,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM3) {  // Encoder esquerdo
+        // Verifica se é overflow (contando para cima) ou underflow (contando para baixo)
+        if (__HAL_TIM_IS_TIM_COUNTING_DOWN(htim)) {
+            encoder_overflow_left--;  // Underflow
+        } else {
+            encoder_overflow_left++;  // Overflow
+        }
+        encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(htim);
+    } else if (htim->Instance == TIM4) {  // Encoder direito
+        if (__HAL_TIM_IS_TIM_COUNTING_DOWN(htim)) {
+            encoder_overflow_right--;  // Underflow
+        } else {
+            encoder_overflow_right++;  // Overflow
+        }
+        encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(htim);
+    }
+}
+
 // Definições comuns a serem usadas no main loop e demais arquivos interplataforma
 
 pinhandler_t bootSw = {Boot_sw_GPIO_Port, Boot_sw_Pin};
@@ -66,6 +90,9 @@ void mcu_start(void) {
     HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
     HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
+    __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);  // Habilita interrupção de overflow/underflow
+    __HAL_TIM_ENABLE_IT(&htim4, TIM_IT_UPDATE);  // Habilita interrupção de overflow/underflow
+
     // inicia adc
     HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
@@ -78,6 +105,8 @@ void mcu_start(void) {
     snprintf(tx_buffer, sizeof(tx_buffer), "tensão da bateria: %2.2f\n", get_battery_voltage(adc_buffer));
     ble_log(tx_buffer, strlen(tx_buffer));
     HAL_Delay(50);
+
+    reset_encoder_values();
 
     start_ble_cmd_listening();  // Reinicia a recepção DMA
     ble_log("MCU Iniciado\n", 14);
@@ -133,11 +162,17 @@ void set_pwm(pwmhandler_t pwmpin, uint16_t dutty) {
 void reset_encoder_values() {
     __HAL_TIM_SET_COUNTER(&htim3, 0);  // Motor Esquerdo
     __HAL_TIM_SET_COUNTER(&htim4, 0);  // Motor Direito
+    encoder_overflow_left = 0;
+    encoder_overflow_right = 0;
+    encoder_u32bit_left = 0;
+    encoder_u32bit_right = 0;
 }
 
-void update_encoder_value(int32_t *encoderArray) {
-    encoderArray[0] = (int16_t)__HAL_TIM_GET_COUNTER(&htim3);  // Motor Esquerdo
-    encoderArray[1] = (int16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
+void update_encoder_value(uint32_t *encoderArray) {
+	encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);   // Motor Esquerdo
+	encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
+    encoderArray[0] = encoder_u32bit_left;
+    encoderArray[1] = encoder_u32bit_right;
 }
 
 void update_adc(uint32_t *adc_buffer) {
