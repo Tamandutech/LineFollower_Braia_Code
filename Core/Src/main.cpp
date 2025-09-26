@@ -1,9 +1,11 @@
-#include "main_loop.h"
+#include "main.hpp"
 
 #include <stdio.h>
 #include <string.h>
 
 #include "WS2812Driver.h"
+#include "cube_HAL.h"
+#include "platform_functions.h"
 
 volatile uint8_t run = 0;
 uint8_t last_run = 0;
@@ -13,12 +15,12 @@ int32_t pos_direita = 0;
 
 uint8_t suc_ok = 0;
 
-uint8_t tx_buffer[1000] = "Hello World!\n";
+char tx_buffer[1000] = "Hello World!\n";
 
 uint32_t ultimo_ciclo = 0;
 uint32_t ultimo_print = 0;
 
-int32_t encoder_values[2];
+uint32_t encoder_values[2];
 
 // volatile uint32_t adc_update_time;
 uint32_t adc_buffer[18];
@@ -33,30 +35,8 @@ float_t angular_rate_mdps[3];
 float_t temperature_degC;
 
 #define sensorCount 12
-uint32_t gmaxSensorValues[sensorCount] = {3661
-,3473
-,3655
-,3523
-,3427
-,3508
-,3493
-,3515
-,3533
-,3481
-,3476
-,3646};
-uint32_t gminSensorValues[sensorCount] = {208
-,199
-,199
-,199
-,194
-,198
-,197
-,197
-,196
-,198
-,199
-,207};
+uint32_t gmaxSensorValues[sensorCount] = {3661, 3473, 3655, 3523, 3427, 3508, 3493, 3515, 3533, 3481, 3476, 3646};
+uint32_t gminSensorValues[sensorCount] = {208, 199, 199, 199, 194, 198, 197, 197, 196, 198, 199, 207};
 uint32_t calibratedSensors[sensorCount] = {0};
 int8_t calibrationInitialized = 0;
 
@@ -201,8 +181,7 @@ void motorControl(float desiredVoltage) {
         if (rightSpeed > MAX_SPEED) rightSpeed = MAX_SPEED;
         write_pin(motorDirDir, 1);
 
-    } 
-    else {
+    } else {
         if (rightSpeed < -MAX_SPEED) rightSpeed = -MAX_SPEED;
         rightSpeed = (-1) * rightSpeed;
         write_pin(motorDirDir, 0);
@@ -212,8 +191,7 @@ void motorControl(float desiredVoltage) {
         if (leftSpeed > MAX_SPEED) leftSpeed = MAX_SPEED;
         write_pin(motorEsqDir, 1);
 
-    } 
-    else {
+    } else {
         if (leftSpeed < -MAX_SPEED) leftSpeed = -MAX_SPEED;
         leftSpeed = (-1) * leftSpeed;
         write_pin(motorEsqDir, 0);
@@ -234,10 +212,8 @@ void ler_laterais() {
 
     update_adc(adc_buffer);
 
-    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000))
-    {
-        if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000)  && readingWhiteLeft == 0) 
-        {
+    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000)) {
+        if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000) && readingWhiteLeft == 0) {
             update_encoder_value(encoder_values);
             qtdLeftMark++;
             readingWhiteLeft = 1;
@@ -245,8 +221,7 @@ void ler_laterais() {
             ble_log(tx_buffer, strlen(tx_buffer));
         }
 
-        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) 
-        {
+        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) {
             update_encoder_value(encoder_values);
             reset_encoder_values();
             qtdRightMark++;
@@ -257,8 +232,7 @@ void ler_laterais() {
             ble_log(tx_buffer, strlen(tx_buffer));
         }
 
-        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0)
-        {
+        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0) {
             readingIntersec = 1;
             readingWhiteRight = 1;
             readingWhiteLeft = 1;
@@ -267,8 +241,7 @@ void ler_laterais() {
         }
     }
 
-    else
-    {
+    else {
         readingIntersec = 0;
         readingWhiteRight = 0;
         readingWhiteLeft = 0;
@@ -279,15 +252,13 @@ void controla_suc(uint16_t target) {
     static uint16_t last_pwm;
     static uint32_t last_update;
 
-    if (MILISEONDS - last_update >= 3) {
+    if (MILISECONDS - last_update >= 3) {
         suc_ok = 0;
         if (target > last_pwm) {
             last_pwm++;
-        } 
-        else if (target < last_pwm) {
+        } else if (target < last_pwm) {
             last_pwm--;
-        } 
-        else {
+        } else {
             suc_ok = 1;
         }
 
@@ -295,20 +266,29 @@ void controla_suc(uint16_t target) {
     }
 }
 
-void main_loop(void) {
+int main(void) {
+    cube_HAL_init();
     mcu_start();
 
     rgb_color_t led;
     for (;;) {
-        led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
-        setLedsColor(&led, 1);
-        delay_ms(500);
-        led = (rgb_color_t){0, 128, 0};  // Muda o LED para verde
-        setLedsColor(&led, 1);
-        delay_ms(500);
-        led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
-        setLedsColor(&led, 1);
-        delay_ms(500);
+        update_encoder_value(encoder_values);
+
+        //       for (uint8_t i = 0; i < 255; i++) {
+        //         led = (rgb_color_t){i, 0, 0};
+        //        setLedsColor(&led, 1);
+        //      delay_ms(10);
+        // }
+        // for (uint8_t i = 0; i < 255; i++) {
+        //     led = (rgb_color_t){0, i, 0};
+        //     setLedsColor(&led, 1);
+        //     delay_ms(10);
+        // }
+        // for (uint8_t i = 0; i < 255; i++) {
+        //     led = (rgb_color_t){0, 0, i};
+        //     setLedsColor(&led, 1);
+        //     delay_ms(10);
+        // }
     }
 
     imu_init(&imu_ctx, &int1_route);
@@ -348,11 +328,9 @@ void main_loop(void) {
 
                 if (encoder_values[1] < 400) {
                     motorControl(0.7f);
-                } 
-                else if (encoder_values[1] < 700) {
+                } else if (encoder_values[1] < 700) {
                     motorControl(0.6f);
-                } 
-                else if (encoder_values[1] < 5500) {
+                } else if (encoder_values[1] < 5500) {
                     motorControl(0.7f);
                 }
 
@@ -368,7 +346,7 @@ void main_loop(void) {
             ultimo_ciclo = MICROSECONDS;
         }
 
-        // if (MILISEONDS - ultimo_print >= 200 && !run) {
+        // if (MILISECONDS - ultimo_print >= 200 && !run) {
         //     snprintf(tx_buffer, sizeof(tx_buffer), "Sensor: %d  \n", arrayError);
         //     snprintf(tx_buffer, sizeof(tx_buffer), "Velocidade motores: %.2f | %.2f \n", leftSpeed, rightSpeed);
         //     snprintf(tx_buffer, sizeof(tx_buffer), "sensors: %d\nsensor0: %d, sendor1: %d, sensor2: %d, sensor3: %d, sensor4: %d, sensor5: %d, sensor6: %d, sensor7: %d, sensor8: %d, sensor9: %d, sensor10: %d, sensor11: %d\n",
@@ -379,7 +357,7 @@ void main_loop(void) {
         //     snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
         //     ble_log(tx_buffer, strlen(tx_buffer));
-        //     ultimo_print = MILISEONDS;
+        //     ultimo_print = MILISECONDS;
         // }
     }
 }
