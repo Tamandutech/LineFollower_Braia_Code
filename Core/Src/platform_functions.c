@@ -3,6 +3,7 @@
 // definições específicas de hardware
 
 #include "cube_HAL.h"
+#include "logger.h"
 
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
@@ -167,8 +168,29 @@ void reset_encoder_values() {
     encoder_u32bit_left = 0;
     encoder_u32bit_right = 0;
 }
+ 
+void set_right_encoder_position(uint32_t rightEncoderValue) {
+    encoder_u32bit_right = rightEncoderValue;
+    encoder_overflow_right = rightEncoderValue >> 16;
+    __HAL_TIM_SET_COUNTER(&htim4, (uint16_t)(rightEncoderValue & 0xFFFF));  // Motor Direito
+}
 
-void update_encoder_value(uint32_t *encoderArray) {
+void set_left_encoder_position(uint32_t leftEncoderValue) {
+    encoder_u32bit_left = leftEncoderValue;
+    encoder_overflow_left = leftEncoderValue >> 16;
+    __HAL_TIM_SET_COUNTER(&htim3, (uint16_t)(leftEncoderValue & 0xFFFF));  // Motor Esquerdo
+}
+
+uint32_t get_left_encoder_position() {
+    return encoder_u32bit_left;
+}
+
+uint32_t get_right_encoder_position() {
+    return encoder_u32bit_right;
+}
+
+
+void update_encoder_values(uint32_t *encoderArray) {
 	encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);   // Motor Esquerdo
 	encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
     encoderArray[0] = encoder_u32bit_left;

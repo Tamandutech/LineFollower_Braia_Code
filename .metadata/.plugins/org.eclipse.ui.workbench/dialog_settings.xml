@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="ImportExportAction">
+		<section name="ImportExportWizard.dialogBounds">
+			<item key="DIALOG_X_ORIGIN" value="657"/>
+			<item key="DIALOG_Y_ORIGIN" value="162"/>
+			<item key="DIALOG_WIDTH" value="613"/>
+			<item key="DIALOG_HEIGHT" value="550"/>
+			<item key="DIALOG_FONT_NAME" value="1|Adwaita Sans|11.0|0|GTK|1|"/>
+		</section>
+	</section>
+	<section name="FileSystemImportWizard">
+		<section name="FileSystemImportWizard.dialogBounds">
+			<item key="DIALOG_X_ORIGIN" value="657"/>
+			<item key="DIALOG_Y_ORIGIN" value="162"/>
+			<item key="DIALOG_WIDTH" value="715"/>
+			<item key="DIALOG_HEIGHT" value="685"/>
+			<item key="DIALOG_FONT_NAME" value="1|Adwaita Sans|11.0|0|GTK|1|"/>
+		</section>
+	</section>
+</section>
