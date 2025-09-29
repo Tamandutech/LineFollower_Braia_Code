@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug STM32 (CubeCLT)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "stlink",
+            "serverpath": "C:/ST/STM32CubeCLT_1.18.0/STLink-gdb-server/bin/ST-LINK_gdbserver.exe",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/Debug/LineFollower_Braia_Code.elf",
+            "device": "STM32G474RCT6",
+            "interface": "swd",
+            "runToEntryPoint": "main",
+            // "preLaunchTask": "Build", // caso queria rodar o build antes de debugar descomentar essa linha
+            "svdFile": "C:/ST/STM32CubeCLT_1.18.0/STMicroelectronics_CMSIS_SVD/STM32G474.svd"
+        }
+    ]
+}

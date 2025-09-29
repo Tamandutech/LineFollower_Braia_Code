@@ -1,56 +1,95 @@
-# Seguidor de linha - Braia
-O algoritmo para esse seguidor de linha tem suas classes e arquivos separados em pastas de acordo com as suas funções e responsabilidades que podem ser as listadas abaixo:
- - Drivers (interface entre software e hardware)
- - Serviços (camada de aplicação)
- - Estrutura de dados
- - Gerenciamento e armazenamento de dados
- - Tratamento e execução de comandos do bluetooth
+ q# 🤖 Seguidor de Linha - Braia
 
-## Drivers
-Atualmente, os drivers para cada componente de hardware do robô estão armazenados na pasta [robot/components](./modules/robot/components), sendo os drivers responsáveis por se comunicar ou receber informações dos hardwares instalados no robô, abaixo estão listadas as pastas que contém drivers e a sua função:
-  - [ESP32Encoder](./modules/robot/components/ESP32Encoder): leitura dos sinais enviados pelos encoders
-  - [ESP32MotorControl](./modules/robot/components/ESP32MotorControl): acionamento dos motores, através da ponte H
-  - [LedStripEncoder](./modules/robot/components/LedStripEncoder): controle dos Leds RGB endereçaveis
-  - [MCP3008](./modules/robot/components/MCP3008): comunicação com o ADC externo
-  - [QTRSensors](./modules/robot/components/QTRSensors): leitura e calibração dos sensores infravermelhos
+![Versão](https://img.shields.io/badge/versão-0.0-blue)
+![Linguagem](https://img.shields.io/badge/STM32-C/C++-brightgreen)
 
-## Serviços
-Os serviços do robô estão em sua maioria na pasta [robot/services](./modules/robot/services/), neles que a lógica utilizada no robô para executar as suas tarefas é implementada, eles possuem cada um a sua função e geralmente executam paralelamente no microcontrolador, atráves das tasks do FreeRTOS, ou auxiliam outros serviços nas suas funções, os serviços utilizados atualmente pelo robô e suas tarefas principais estão listadas abaixo:
+## Alterações Necessárias Celeris Core v1
 
-- [CarStatusService](./modules/robot/services/CarStatusService/): responsável pela definição do estado do robô com base na pista e nos dados armazenados nele
-- [LEDsService](./modules/robot/services/LEDsService/): responsável por receber comandos de outros serviços para o acionamento dos leds
-- [MappingService](./modules/robot/services/MappingService/): responsável por criar o mapeamento quando o robô está no modo mapeamento
-- [PIDService](./modules/robot/services/PIDService/): responsável pelas estratégias de controle implementadas no robô
-- [SensorsService](./modules/robot/services/SensorsService/): responsável pela leitura e calibração dos sensores IR frontais e laterais
-- [SpeedService](./modules/robot/services/SpeedService/): responsável pelo cálculo da velocidade e deslocamento do robô ou de suas rodas
-- [BLEServerService](./modules/common/services/BLEServerService): responsável pela comunicação bluetooth do robô com a dashboard
+- Circuito de proteção de corrente inversa com interruptor não funcionou, usar somente mosfet com interruptor e manter conectores xt para não ocorrer ligações invertidas
 
-## Gerenciamento e armazenamento de dados
-Os parâmetros do robô e mapeamento são armazenados na memória flash permitindo que eles sejam salvos no robô, entretanto para possibilitar o gerenciamento desses parâmetros e facilitar o armazenamento e carregamento deles da memória flash, criamos a pasta [DataObjects](modules/common/components/DataObjects), onde se encontram as classes encarregadas de gerenciar os dados e parâmetros armazenados nas estruturas de dados do robô e também de lidar com o armazenamento do ESP32 para facilitar o uso da flash, as classes que estão nessas pastas são lisatadas abaixo:
+- Corrigir leds no esquemáticos que ficaram com a pegada invertida
 
-- [DataAbstract](./modules/common/components/DataObjects/src/DataAbstract.hpp): classe responsável por lidar com os parâmetros do robô, permitindo a leitura e escrita deles em tempo de execução, funcionando como um tipo genérico para diferentes tipos de parâmetros. 
+- Utilizar pino com pwm comum para leds endereçaveis (atualmente em pwm invertido)
 
-- [DataMap](./modules/common/components/DataObjects/src/DataMap.hpp): classe responsável por lidar com os dados do mapeamento.
+- utilizar leds maiores (0805 exemplo) não tem necessidade de utilizar leds tão pequenos, apenas dificultam manutenção
 
-- [DataStorage](./modules/common/components/DataObjects/src/DataStorage.hpp): classe responsável por carregar parâmetros da flash ou salvá-los nela, através de arquivos.
+- remover leds de pinos de programação, não tem necessidade de utilizar e podem eceder o limite de corrente do pino
 
-- [DataManager](./modules/common/components/DataObjects/src/DataManager.hpp): classe responsável por gerenciar os parâmetros do robô através de uma lista de parâmetros que o permite facilmente acessá-los quando necessário.
+- corrigir pull up/down no pino de boot do stm32
 
-- [IDataAbstract](./modules/common/components/DataObjects/src/IDataAbstract.hpp): Interface utilizada como base para a classe DataMap e DataAbstract.
 
-## Estrutura de dados
-Os dados utilizados pelo robô são armazenados em classes, em que, cada classe tratará dos dados de sistemas ou funções específicas, sendo essas classes as listadas abaixo:
+## 🔧 Requisitos
 
-- [dataPID](./modules/robot/components/RobotData/src/PID/): dados e parãmetros sobre o controlador PID do robô
-- [dataSensor](./modules/robot/components/RobotData/src/Sensor/): dados sobre as leituras dos sensores infravermelho
-- [dataSLatMarks](./modules/robot/components/RobotData/src/SLatMarks/): dados e parâmetros sobre o mapeamento
-- [dataSpeed](./modules/robot/components/RobotData/src/Speed/): dados e parâmetros sobre posição, velocidade e aceleração
-- [RobotStatus](./modules/robot/components/RobotData/src/Status/): dados e parâmetros sobre o estado do robô
+### Obrigatórios
+- STM32CubeIDE 1.18.0 
 
-Todas essas classes de dados relacionadas ao robô estão localizadas na pasta [RobotData](./modules/robot/components/RobotData/) que também armazena algumas enums e maps (dicionários) do robô.
+### Opcionais
+Para desenvolvimento através do Visual Studio Code: 
+- STM32CubeCLT 1.18.0 (necessário para fazer upload do firmware e depuração) 
+- Pacote de extensão C/C++ para Visual Studio Code (necessário para intellisense) 
+- Extensão Cortex-Debug para Visual Studio Code (necessário para depuração) 
+- STM32CubeMX 6.14.0 (recomendado para editar .ioc sem o STM32CubeIDE aberto) 
 
-## Tratamento e execução de comandos do bluetooth
+## 🚀 Como Usar
 
-O robô também possui uma dashboard hospedada no firebase que permite a edição e backup de parâmetros, alteração e backup do mapeamento da pista e geração de gráficos em tempo real, e com o intuito de possibilitar a comunicação à distância da dash com o robô, utilizamos comunicação bluetooth (BLE GATT), sendo o serviço [BLEService](./modules/common/services/BLEServerService) responsável por tratar dessa comunicação sem fio com a dashboard, sendo ele responsável pela interpretação dos comandos enviados pela dash e retorno dos dados solicitados. Os comandos recebidos e enviados pelo robô são comandos de texto e para simplificar a interpretação deles utilizamos a biblioteca [BetterConsole](modules/common/components/BetterConsole) para extrair as partes importantes dos comandos e executar as funções relativas à esses comandos que estão na pasta [CMDWrapper](modules/common/components/CMDWrapper) que encapsula a função executada por cada comando.
+### Configuração com STM32CubeIDE
+1. Clone o repositório:
+   - Para clonar **apenas a branch de desenvolvimento do STM32**, use:
+     ```bash
+     git clone --branch develop-stm32 --single-branch https://github.com/Tamandutech/LineFollower_Braia_Code.git
+     ```
+   - Para clonar o **repositório completo**, use:
+     ```bash
+     git clone --branch develop-stm32 https://github.com/Tamandutech/LineFollower_Braia_Code.git
+     ```
 
-Para mais informações sobre o dashboard, acesse o repositório a seguir: [LineFollower_CCenter_Code](https://github.com/Tamandutech/LineFollower_CCenter_Code) 
+2. Abra o STM32CubeIDE
+
+3. Importe o projeto através de:
+   ```
+   File > Open Projects from File System
+   ```
+
+### Configuração com Visual Studio Code  
+*(Temporariamente apenas para Windows)*
+
+
+1. Siga os passos 1-3 da seção anterior "Configuração com STM32CubeIDE"  
+
+2. Abra o Visual Studio Code  
+
+3. **Compile e/ou faça o upload do firmware**  
+   No terminal do Visual Studio Code, execute um dos comandos abaixo:
+   - Para compilar o projeto:  
+     ```bash
+     .\STMCube_cli_helper.bat build
+     ```
+   - Para fazer o upload do firmware no dispositivo STM32:  
+     ```bash
+     .\STMCube_cli_helper.bat flash
+     ```
+   - Para compilar e fazer o upload do firmware em sequência:  
+     ```bash
+     .\STMCube_cli_helper.bat all
+     ```
+
+4. **Debug**  
+   Para iniciar o debug utilize o atalho "F5" ou clique no botão "Iniciar Depuração" na barra lateral esquerda do Visual Studio Code. 
+
+#### Observações
+O arquivo de lote `STMCube_cli_helper.bat` é um script que automatiza o processo de compilação e upload do firmware no dispositivo STM32. Ele utiliza o STM32CubeCLT e a STM32CubeIDE para realizar essas operações. 
+
+- Não é possível compilar o código quando o STM32CubeIDE estiver aberto, pois ele bloqueia o acesso ao workspace. 
+
+- Não existem restrições para a função de upload do firmware, ou seja, o STM32CubeIDE pode estar aberto ou fechado. 
+
+- Ao utilizar a função de debug pelo VSCode, por padrão o codigo não está sendo compilado para otimizar o tempo de execução. Então lembre sempre de compilar antes de Debugar, ou descomente a linha ` // "preLaunchTask": "Build",` no arquivo `.vscode\launch.json` para sempre compilar o codigo antes de iniciar a sessão de debug. 
+
+- É recomendado realizar a instalação padrão do STM32CubeCLT e STM32CubeIDE (e utilizar o workspace padrão) 
+
+Caso tenha instalado em locais diferentes, será necessário modificar:
+- O arquivo `STMCube_cli_helper.bat` para apontar para os caminhos corretos.
+- O arquivo `.vscode\c_cpp_properties.json` para ajustar as configurações.
+
+
+

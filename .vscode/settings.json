@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "cstdint": "c",
+        "string.h": "c",
+        "compare": "c",
+        "ws2812driver.h": "c"
+    }
+}
