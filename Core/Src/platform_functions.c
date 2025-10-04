@@ -74,13 +74,11 @@ void mcu_start(void) {
     HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
     HAL_Delay(50);
     uint32_t adc_buffer[18] = {0};
-    uint8_t tx_buffer[40] = {0};
-    snprintf(tx_buffer, sizeof(tx_buffer), "tensão da bateria: %2.2f\n", get_battery_voltage(adc_buffer));
-    ble_log(tx_buffer, strlen(tx_buffer));
+    bleLog("Battery voltage: %2.2f V\n", get_battery_voltage(adc_buffer));
     HAL_Delay(50);
 
     start_ble_cmd_listening();  // Reinicia a recepção DMA
-    ble_log("MCU Iniciado\n", 14);
+    bleLog("MCU initialized\n");
 }
 
 void delay_ms(uint32_t millisec) {
@@ -232,13 +230,13 @@ void imu_init(stmdev_ctx_t *imu_ctx, lsm6dsr_pin_int1_route_t *int1_route) {
     imu_ctx->handle = &IMU_BUS;
 
     while (1) {
-        ble_log("Conectando com a IMU...\n", 25);
+        bleLog("Connecting with IMU...\n");
         lsm6dsr_device_id_get(imu_ctx, &whoamI);
         if (whoamI != LSM6DSR_ID) {
-            ble_log("Error: Device ID mismatch\n", 27);
+            bleLog("Error: Device ID mismatch\n");
             delay_ms(500);
         } else {
-            ble_log("IMU conectada\n", 15);
+            bleLog("IMU connected\n");
             break;
         }
     }
