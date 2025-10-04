@@ -21,6 +21,14 @@ typedef struct {
     uint8_t b;
 } rgb_color_t;
 
+#define LED_COLOR_RED (rgb_color_t){128, 0, 0}
+#define LED_COLOR_GREEN (rgb_color_t){0, 128, 0}
+#define LED_COLOR_BLUE (rgb_color_t){0, 0, 128}
+#define LED_COLOR_MAGENTA (rgb_color_t){128, 0, 128}
+#define LED_COLOR_WHITE (rgb_color_t){128, 128, 128}
+#define LED_COLOR_YELLOW (rgb_color_t){128, 128, 0}
+#define LED_COLOR_CYAN (rgb_color_t){9, 62, 9}
+
 /* --- Configuração do Driver --- */
 // Defina o número máximo de LEDs que sua fita terá.
 // O buffer de memória será alocado estaticamente para este tamanho.
