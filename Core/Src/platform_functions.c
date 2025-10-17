@@ -2,8 +2,10 @@
 
 // definições específicas de hardware
 
-#include "cube_HAL.h"
+#include "main.h"
 #include "logger.h"
+
+void start_ble_cmd_listening(void);
 
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
