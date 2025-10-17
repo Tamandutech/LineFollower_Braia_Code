@@ -1,3 +1,12 @@
-.settings
+# SETTINGS
+# The not ignored files store settings for formatting and compilation options
+.settings/*
+!.settings/org.eclipse.cdt.core.prefs
+!.settings/org.eclipse.core.runtime.prefs
+!.settings/org.eclipse.core.resources.prefs
+!.settings/org.eclipse.cdt.codan.core.prefs
+
+.idea
+
 Release
 Debug
