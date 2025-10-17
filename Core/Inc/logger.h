@@ -10,8 +10,6 @@
 
 #include <stdarg.h>
 
-#include "boolean.h"
-
 typedef enum _LogLevelFlag
 {
 	LOG_LEVEL_SILENT,
@@ -26,7 +24,27 @@ typedef enum _LogLevelFlag
 } LogLevelFlag;
 
 // The base function for logging
-void _bleLog(LogLevelFlag flag, const char *format, ...);
+#define USE_CODE_EXPANSION 1
+
+#if USE_CODE_EXPANSION
+/*
+* A simpler alternative, may be more compatible if we find
+* problems with the previous implementation:
+*/
+#include <stdio.h>
+#include <string.h>
+
+#define BLE_LOG_BUFFER_SIZE 1024
+extern char ble_log_buffer[BLE_LOG_BUFFER_SIZE];
+#define bleLog(format, ...) \
+	do { \
+		snprintf(ble_log_buffer, BLE_LOG_BUFFER_SIZE, \
+			format, ##__VA_ARGS__); \
+			ble_log((char *) ble_log_buffer, strlen(ble_log_buffer)); \
+		} while (0);
+		
+#else
+void _bleLog(LogLevelFlag flag, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
 
 // Variations of logging functions
 // TODO add descriptions
@@ -40,20 +58,6 @@ void _bleLog(LogLevelFlag flag, const char *format, ...);
 
 void bleLogSetDoubleBreak (boolean active);
 void bleLogSetStartVisible (boolean active);
-
-/*
- * A simpler alternative, may be more compatible if we find
- * problems with the previous implementation:
- */
-
-/*
-#define bleLog(format, ...) \
-	do { \
-		snprintf(ble_log_buffer, BLE_LOG_BUFFER_SIZE, \
-				 format, ##__VA_ARGS__); \
-		ble_log(ble_log_buffer, strlen(ble_log_buffer)); \
-	} while (0);
-*/
-
+#endif /* USE_CODE_EXPANSION */
 
 #endif /* INC_LOGGER_H_ */

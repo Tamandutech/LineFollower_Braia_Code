@@ -3,6 +3,7 @@
         "cstdint": "c",
         "string.h": "c",
         "math.h": "c",
-        "compare": "c"
+        "compare": "c",
+        "ws2812driver.h": "c"
     }
 }

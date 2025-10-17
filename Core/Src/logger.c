@@ -5,10 +5,16 @@
  *      Author: Kelvin Novais
  */
 
+#include "logger.h"
+
+
+#if USE_CODE_EXPANSION
+char ble_log_buffer[BLE_LOG_BUFFER_SIZE];
+#else
+#include "stm32g4xx_hal.h"
+
 #include <string.h>
 
-#include "stm32g4xx_hal.h"
-#include "logger.h"
 
 #define BLE_LOG_BUFFER_SIZE ((unsigned int) 512)
 #define BLE_LOG_FORMATTED_BUFFER (BLE_LOG_BUFFER_SIZE + 256)
@@ -72,3 +78,5 @@ void bleLogSetDoubleBreak (boolean active) {
 void bleLogSetStartVisible (boolean active) {
 	ld.show_start = active;
 }
+
+#endif /* USE_CODE_EXPANSION */

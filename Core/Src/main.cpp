@@ -1,6 +1,8 @@
 #include "main.hpp"
 
 #include <stdlib.h>
+
+#include "logger.h"
 // #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -69,10 +71,39 @@ float_t temperature_degC;
 // Lista marcacoes_mapeadas;
 
 #define sensorCount 12
-uint32_t gmaxSensorValues[sensorCount] = {3661, 3473, 3655, 3523, 3427, 3508, 3493, 3515, 3533, 3481, 3476, 3646};
-uint32_t gminSensorValues[sensorCount] = {208, 199, 199, 199, 194, 198, 197, 197, 196, 198, 199, 207};
+uint32_t gmaxSensorValues[sensorCount] =
+    {
+        3661,
+        3473,
+        3655,
+        3523,
+        3427,
+        3508,
+        3493,
+        3515,
+        3533,
+        3481,
+        3476,
+        3646};
+
+uint32_t gminSensorValues[sensorCount] =
+    {
+        208,
+        199,
+        199,
+        199,
+        194,
+        198,
+        197,
+        197,
+        196,
+        198,
+        199,
+        207};
+
 // uint32_t gmaxSensorValues[sensorCount] = {0};
 // uint32_t gminSensorValues[sensorCount] = {0};
+
 uint32_t calibratedSensors[sensorCount] = {0};
 int8_t calibrationInitialized = 0;
 
@@ -241,6 +272,7 @@ void motorControl(float desiredSpeed) {
     set_pwm(motorEsqPWM, (uint16_t)leftSpeed);
 }
 
+int lateral_count = 0;
 void ler_laterais() {
     static uint8_t readingWhiteRight = 0;
     static uint8_t readingWhiteLeft = 0;
@@ -257,8 +289,7 @@ void ler_laterais() {
             update_encoder_values(encoder_values);
             qtdLeftMark++;
             readingWhiteLeft = 1;
-            snprintf(tx_buffer, sizeof(tx_buffer), "encoder Direito: %d\n", encoder_values[0]);
-            ble_log(tx_buffer, strlen(tx_buffer));
+            bleLog("%02d Encoder: %f\n", lateral_count++, ((encoder_values[0] + encoder_values[1]) / 2.0f));
             // adicionar_lista(&marcacoes_mapeadas, leitura_atual);
         }
 
@@ -269,7 +300,7 @@ void ler_laterais() {
             readingWhiteRight = 1;
             firstTimeRight = 0;
             encoder_values[0] = 0;
-            snprintf(tx_buffer, sizeof(tx_buffer), "Inicio Pista \n");
+            bleLog("Inicio Pista\n");
             ble_log(tx_buffer, strlen(tx_buffer));
         }
 
@@ -318,6 +349,77 @@ void controla_suc(uint16_t target) {
     }
 }
 
+#define MM_PER_COUNT 0.016873f  // 0.01687378866674205352689896348441 valor perfeito
+
+float robotSpeed = 0;
+int32_t leftPrev = 0, rightPrev = 0;
+float previousTime = 0;
+
+void robotSpeedTask() {
+    float timerNow = MICROSECONDS;
+    int32_t leftNow = get_left_encoder_position();
+    int32_t rightNow = get_right_encoder_position();
+
+    int32_t leftDist = leftNow - leftPrev;
+    int32_t rightDist = rightNow - rightPrev;
+
+    float elapsedTime = timerNow - previousTime;
+    float elapsedTimeMS = elapsedTime / 1000;
+
+    leftPrev = leftNow;
+    rightPrev = rightNow;
+
+    previousTime = timerNow;
+
+    // velocidade em m/s
+    robotSpeed = (((leftDist + rightDist) / 2.0f) * MM_PER_COUNT) / elapsedTimeMS;
+    // bleLog("RobotSpeed %f", robotSpeed);
+    // bleLog("ElapsedTime %f", elapsedTime);
+}
+
+float translacionalErrorBuffer[9];  // buffer to store the last 5 values of translationalError
+int translacionalErrorIndex = 0;    // index to keep track of the current position in the buffer
+float translacionalError = 0;
+float P_Translacional = 0;
+float D_Translacional = 0;
+float I_Translacional = 0;
+float PIDTranslacional = 0;
+float lastTranslacionalError = 0;
+float last_pwm, run_pwm;
+
+float curva_acel(float pwm_goal) {
+    if (pwm_goal > last_pwm) {
+        run_pwm = pwm_goal;
+    } else if (pwm_goal < last_pwm) {
+        last_pwm -= 0.02f;
+        run_pwm = pwm_goal;
+    } else {
+        run_pwm = pwm_goal;
+    }
+    return run_pwm;
+}
+
+void calcula_PID_translacional(float KpParam_Translacional,
+                               float KdParam_Translacional,
+                               float KiParam_Translacional,
+                               float desiredSpeed) {
+    translacionalError = curva_acel(desiredSpeed) - robotSpeed;
+    P_Translacional = translacionalError;
+    D_Translacional = translacionalError - lastTranslacionalError;
+
+    // update the buffer and calculate the sum of the last 5 values
+    translacionalErrorBuffer[translacionalErrorIndex] = translacionalError;
+    translacionalErrorIndex = (translacionalErrorIndex + 1) % 9;
+    float sum = 0;
+    for (int i = 0; i < 9; i++) {
+        sum += translacionalErrorBuffer[i];
+    }
+    I_Translacional = sum;
+
+    PIDTranslacional = (KpParam_Translacional * P_Translacional) + (KdParam_Translacional * D_Translacional) + (KiParam_Translacional * I_Translacional);
+    lastTranslacionalError = translacionalError;
+}
+
 int main(void) {
     cube_HAL_init();
     mcu_start();
@@ -330,19 +432,18 @@ int main(void) {
     }
 
     imu_init(&imu_ctx, &int1_route);
-    ble_log("iniciando calibracao\n", 22);
+    // bleLog("Initializing calibration");
     // for (uint8_t i = 0; i < 200; i++) {
     //     calibrateSensors(&adc_buffer[2]);
     //     delay_ms(40);
     // }
 
-    ble_log("Calibracao concluida\nAguardando start...\n", 42);
+    // bleLog("Calibracao concluida\nAguardando start...\n");
 
     for (;;) {
         if (last_run && !run) {
             update_encoder_values(encoder_values);
-            snprintf(tx_buffer, sizeof(tx_buffer), "%d, %d\n\0", encoder_values[0], encoder_values[1]);
-            ble_log(tx_buffer, strlen(tx_buffer));
+            bleLog("Encoders: %d, %d\n0", encoder_values[0], encoder_values[1]);
             last_run = false;
         }
 
@@ -356,109 +457,57 @@ int main(void) {
 
         ler_laterais();
 
+        // bleLog ("[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+        //         adc_buffer[2], adc_buffer[3], adc_buffer[4], adc_buffer[5],
+        //         adc_buffer[6], adc_buffer[7], adc_buffer[8], adc_buffer[9],
+        //         adc_buffer[10], adc_buffer[11], adc_buffer[12], adc_buffer[13]);
+
         if (MICROSECONDS - ultimo_ciclo >= 1000 && run) {
             controla_suc(999);  // 600  999
-            snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
+            // snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
-            ble_log(tx_buffer, strlen(tx_buffer));
-            ultimo_print = MICROSECONDS;
+            // ble_log(tx_buffer, strlen(tx_buffer));
+            // ultimo_print = MICROSECONDS;
 
             if (suc_ok) {
-                PIDControl(0.1, 1.9);  // seguidor 0.1, 1.9  perseguidor 0.19, 1.9
-                motorControl(200);     // 270  350
+                PIDControl(0.12, 1.80);  // seguidor 0.1, 1.9  perseguidor 0.19, 1.9
+                // motorControl(150);     // 270  350
+                // write_pin(motorDirDir, 0);
+                // write_pin(motorEsqDir, 0);
+                // set_pwm(motorDirPWM, (uint16_t)500);
+                // set_pwm(motorEsqPWM, (uint16_t)500);
+                // robotSpeedTask();
                 update_encoder_values(encoder_values);
 
-                // if (encoder_values[0] < 45) {
-                //     motorControl(420); //500
-                // }
-                // else if (encoder_values[0] > 45 && encoder_values[0] <= 1000) { //Zig
-                //     motorControl(230);
-                //     led[0] = (rgb_color_t){128, 0, 0};
-                //     led[1] = (rgb_color_t){128, 0, 0};
-                //     led[2] = (rgb_color_t){128, 0, 0};
-                //     led[3] = (rgb_color_t){128, 0, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 1080 && encoder_values[0] <= 1220) { //reta1
-                //     motorControl(999); //999
-                //     led[0] = (rgb_color_t){0, 128, 0};
-                //     led[1] = (rgb_color_t){0, 128, 0};
-                //     led[2] = (rgb_color_t){0, 128, 0};
-                //     led[3] = (rgb_color_t){0, 128, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 1560 && encoder_values[0] < 1700) { //reta2
-                //     motorControl(999);
-                //     led[0] = (rgb_color_t){0, 128, 0};
-                //     led[1] = (rgb_color_t){0, 128, 0};
-                //     led[2] = (rgb_color_t){0, 128, 0};
-                //     led[3] = (rgb_color_t){0, 128, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 1760 && encoder_values[0] < 1990) { //balao quadrado
-                //     motorControl(190);
-                //     led[0] = (rgb_color_t){128, 0, 0};
-                //     led[1] = (rgb_color_t){128, 0, 0};
-                //     led[2] = (rgb_color_t){128, 0, 0};
-                //     led[3] = (rgb_color_t){128, 0, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 3080 && encoder_values[0] < 3190) { //reta3
-                //     motorControl(999);
-                //     led[0] = (rgb_color_t){0, 128, 0};
-                //     led[1] = (rgb_color_t){0, 128, 0};
-                //     led[2] = (rgb_color_t){0, 128, 0};
-                //     led[3] = (rgb_color_t){0, 128, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 3600 && encoder_values[0] < 3740) { //pescoço dino
-                //     motorControl(999);
-                //     led[0] = (rgb_color_t){0, 128, 0};
-                //     led[1] = (rgb_color_t){0, 128, 0};
-                //     led[2] = (rgb_color_t){0, 128, 0};
-                //     led[3] = (rgb_color_t){0, 128, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 4300 && encoder_values[0] < 5350) { //pós dino
-                //     motorControl(400);
-                //     led[0] = (rgb_color_t){0, 128, 0};
-                //     led[1] = (rgb_color_t){0, 128, 0};
-                //     led[2] = (rgb_color_t){0, 128, 0};
-                //     led[3] = (rgb_color_t){0, 128, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 5750 && encoder_values[0] < 5850) { //reta final
-                //     motorControl(300);
-                //     led[0] = (rgb_color_t){0, 128, 0};
-                //     led[1] = (rgb_color_t){0, 128, 0};
-                //     led[2] = (rgb_color_t){0, 128, 0};
-                //     led[3] = (rgb_color_t){0, 128, 0};
-                //     setLedsColor(&led, 4);
-                // }
-                // else if (encoder_values[0] > 6760 && encoder_values[0] <= 6810) {
-                //     motorControl(150);
-                // }
-                // else if (encoder_values[0] > 6810 && encoder_values[0] <= 6880) {
-                //     motorControl(75);
-                // }
-                // else if (encoder_values[0] > 6880)
-                // {
-                //     set_pwm(motorDirPWM, 0);
-                //     set_pwm(motorEsqPWM, 0);
-                //     if (MICROSECONDS - ultimo_ciclo >= 500000)
-                //     {
-                //         controla_suc(0);
-                //     }
-                // }
-                // else
-                // {
-                //     motorControl(300); //300
-                //     led[0] = (rgb_color_t){128, 0, 128};  // Muda o LED para verde
-                //     led[1] = (rgb_color_t){128, 0, 128};
-                //     led[2] = (rgb_color_t){128, 0, 128};
-                //     led[3] = (rgb_color_t){128, 0, 128};
-                //     setLedsColor(&led, 4);
-                // }
+                if (encoder_values[0] > 242000 && encoder_values[0] <= 311000) {  // Segmento 1
+                    motorControl(250);
+                    led[0] = LED_COLOR_GREEN;
+                    led[1] = LED_COLOR_GREEN;
+                    led[2] = LED_COLOR_GREEN;
+                    led[3] = LED_COLOR_GREEN;
+                    setLedsColor(led, 4);
+                } else if (encoder_values[0] > 311000 && encoder_values[0] <= 440000) {
+                    motorControl(145);
+                    led[0] = LED_COLOR_RED;
+                    led[1] = LED_COLOR_RED;
+                    led[2] = LED_COLOR_RED;
+                    led[3] = LED_COLOR_RED;
+                    setLedsColor(led, 4);
+                } else if (((encoder_values[0] + encoder_values[1]) / 2) > 1512000) {
+                    motorControl(0);
+                    led[0] = LED_COLOR_WHITE;
+                    led[1] = LED_COLOR_WHITE;
+                    led[2] = LED_COLOR_WHITE;
+                    led[3] = LED_COLOR_WHITE;
+                    setLedsColor(led, 4);
+                } else {
+                    motorControl(165);        // 300
+                    led[0] = LED_COLOR_CYAN;  // Muda o LED para verde
+                    led[1] = LED_COLOR_CYAN;
+                    led[2] = LED_COLOR_CYAN;
+                    led[3] = LED_COLOR_CYAN;
+                    setLedsColor(led, 4);
+                }
             }
 
             last_run = true;

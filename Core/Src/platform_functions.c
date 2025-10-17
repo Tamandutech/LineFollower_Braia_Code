@@ -102,15 +102,13 @@ void mcu_start(void) {
     HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
     HAL_Delay(50);
     uint32_t adc_buffer[18] = {0};
-    uint8_t tx_buffer[40] = {0};
-    snprintf(tx_buffer, sizeof(tx_buffer), "tensão da bateria: %2.2f\n", get_battery_voltage(adc_buffer));
-    ble_log(tx_buffer, strlen(tx_buffer));
+    bleLog("Battery voltage: %2.2f V\n", get_battery_voltage(adc_buffer));
     HAL_Delay(50);
 
     reset_encoder_values();
 
     start_ble_cmd_listening();  // Reinicia a recepção DMA
-    ble_log("MCU Iniciado\n", 14);
+    bleLog("MCU initialized\n");
 }
 
 void delay_ms(uint32_t millisec) {
@@ -168,7 +166,7 @@ void reset_encoder_values() {
     encoder_u32bit_left = 0;
     encoder_u32bit_right = 0;
 }
- 
+
 void set_right_encoder_position(uint32_t rightEncoderValue) {
     encoder_u32bit_right = rightEncoderValue;
     encoder_overflow_right = rightEncoderValue >> 16;
@@ -182,17 +180,18 @@ void set_left_encoder_position(uint32_t leftEncoderValue) {
 }
 
 uint32_t get_left_encoder_position() {
+    encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);  // Motor Esquerdo
     return encoder_u32bit_left;
 }
 
 uint32_t get_right_encoder_position() {
+    encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
     return encoder_u32bit_right;
 }
 
-
 void update_encoder_values(uint32_t *encoderArray) {
-	encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);   // Motor Esquerdo
-	encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
+    encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);    // Motor Esquerdo
+    encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
     encoderArray[0] = encoder_u32bit_left;
     encoderArray[1] = encoder_u32bit_right;
 }
@@ -249,13 +248,13 @@ void imu_init(stmdev_ctx_t *imu_ctx, lsm6dsr_pin_int1_route_t *int1_route) {
     imu_ctx->handle = &IMU_BUS;
 
     while (1) {
-        ble_log("Conectando com a IMU...\n", 25);
+        bleLog("Connecting with IMU...\n");
         lsm6dsr_device_id_get(imu_ctx, &whoamI);
         if (whoamI != LSM6DSR_ID) {
-            ble_log("Error: Device ID mismatch\n", 27);
+            bleLog("Error: Device ID mismatch\n");
             delay_ms(500);
         } else {
-            ble_log("IMU conectada\n", 15);
+            bleLog("IMU connected\n");
             break;
         }
     }
