@@ -1,5 +1,5 @@
-#ifndef MAIN_LOOP_H
-#define MAIN_LOOP_H
+#ifndef MAIN_CPP_H
+#define MAIN_CPP_H
 
 #include "platform_functions.h"
 
@@ -14,6 +14,6 @@ extern pwmhandler_t motorEsqPWM;
 
 extern pwmhandler_t motorSucPWM;
 
-void main_loop(void);
+int main(void);
 
-#endif  // MAIN_LOOP_H
+#endif  // MAIN_CPP_H

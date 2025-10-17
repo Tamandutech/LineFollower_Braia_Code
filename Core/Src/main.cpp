@@ -1,30 +1,31 @@
-#include "main_loop.h"
-#include "WS2812Driver.h"
-#include "boolean.h"
+#include "main.hpp"
+
 #include <stdlib.h>
+
 #include "logger.h"
-//#include <math.h>
+// #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-/* TODO
- * This variable seems to not be updated, since no pointer is passed to outside this file (?)
- */
+#include "WS2812Driver.h"
+#include "cube_HAL.h"
+#include "platform_functions.h"
+
 volatile uint8_t run = 0;
 
-boolean last_run = false;
+bool last_run = false;
 
 uint8_t leu_direita = 0;
 int32_t pos_direita = 0;
 
-boolean suc_ok = false;
+bool suc_ok = false;
 
-uint8_t tx_buffer[1000] = "Hello World!\n";
+char tx_buffer[1000] = "Hello World!\n";
 
 uint32_t ultimo_ciclo = 0;
 uint32_t ultimo_print = 0;
 
-int32_t encoder_values[2];
+uint32_t encoder_values[2];
 
 // volatile uint32_t adc_update_time;
 uint32_t adc_buffer[18];
@@ -71,36 +72,34 @@ float_t temperature_degC;
 
 #define sensorCount 12
 uint32_t gmaxSensorValues[sensorCount] =
-{
-    3661,
-    3473,
-    3655,
-    3523,
-    3427,
-    3508,
-    3493,
-    3515,
-    3533,
-    3481,
-    3476,
-    3646
-};
+    {
+        3661,
+        3473,
+        3655,
+        3523,
+        3427,
+        3508,
+        3493,
+        3515,
+        3533,
+        3481,
+        3476,
+        3646};
 
 uint32_t gminSensorValues[sensorCount] =
-{
-    208,
-    199,
-    199,
-    199,
-    194,
-    198,
-    197,
-    197,
-    196,
-    198,
-    199,
-    207
-};
+    {
+        208,
+        199,
+        199,
+        199,
+        194,
+        198,
+        197,
+        197,
+        196,
+        198,
+        199,
+        207};
 
 // uint32_t gmaxSensorValues[sensorCount] = {0};
 // uint32_t gminSensorValues[sensorCount] = {0};
@@ -176,7 +175,7 @@ void readCalibrated(uint32_t* frontSensors) {
 
 uint32_t lastPosition = 0;
 uint32_t readLine(uint32_t* sensorValues) {
-    boolean onLine = false;
+    bool onLine = false;
     uint32_t avg = 0;  // this is for the weighted total
     uint16_t sum = 0;  // this is for the denominator, which is <= 64000
 
@@ -238,13 +237,13 @@ float leftSpeed = 0;
 float rightSpeed = 0;
 void motorControl(float desiredSpeed) {
     // caso o valor desejado seja maior que a tensão da bateria, o valor desejado é a tensão da bateria
-//    float targetVoltage = desiredVoltage;
-//    if (targetVoltage > get_battery_voltage(adc_buffer)) {
-//        targetVoltage = get_battery_voltage(adc_buffer);
-//    }
+    //    float targetVoltage = desiredVoltage;
+    //    if (targetVoltage > get_battery_voltage(adc_buffer)) {
+    //        targetVoltage = get_battery_voltage(adc_buffer);
+    //    }
 
     // map a value from 0v to vBat to 0 to 1000
-    //float desiredSpeed = (targetVoltage * 1000.0f) / get_battery_voltage(adc_buffer);
+    // float desiredSpeed = (targetVoltage * 1000.0f) / get_battery_voltage(adc_buffer);
 
     leftSpeed = desiredSpeed + PID;
     rightSpeed = desiredSpeed - PID;
@@ -273,7 +272,6 @@ void motorControl(float desiredSpeed) {
     set_pwm(motorEsqPWM, (uint16_t)leftSpeed);
 }
 
-
 int lateral_count = 0;
 void ler_laterais() {
     static uint8_t readingWhiteRight = 0;
@@ -282,24 +280,21 @@ void ler_laterais() {
     static uint8_t firstTimeRight = 1;
 
     static int qtdLeftMark = 0;
-    static int qtdRightMark = 0;       
+    static int qtdRightMark = 0;
 
     update_adc(adc_buffer);
 
-    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000))
-    {
-        if ((adc_buffer[0] < 500 || adc_buffer[1] < 500) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000)  && readingWhiteLeft == 0)
-        {
-            update_encoder_value(encoder_values);
+    if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) || (adc_buffer[14] < 2000 || adc_buffer[15] < 2000)) {
+        if ((adc_buffer[0] < 500 || adc_buffer[1] < 500) && (adc_buffer[14] > 3000 || adc_buffer[15] > 3000) && readingWhiteLeft == 0) {
+            update_encoder_values(encoder_values);
             qtdLeftMark++;
             readingWhiteLeft = 1;
-            bleLog("%02d Encoder: %f\n", lateral_count++, ((encoder_values[0] + encoder_values[1])/2.0f));
-            //adicionar_lista(&marcacoes_mapeadas, leitura_atual);
+            bleLog("%02d Encoder: %f\n", lateral_count++, ((encoder_values[0] + encoder_values[1]) / 2.0f));
+            // adicionar_lista(&marcacoes_mapeadas, leitura_atual);
         }
 
-        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1)
-        {
-            update_encoder_value(encoder_values);
+        else if ((adc_buffer[0] > 3000 || adc_buffer[1] > 3000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingWhiteRight == 0 && firstTimeRight == 1) {
+            update_encoder_values(encoder_values);
             reset_encoder_values();
             qtdRightMark++;
             readingWhiteRight = 1;
@@ -309,8 +304,7 @@ void ler_laterais() {
             ble_log(tx_buffer, strlen(tx_buffer));
         }
 
-        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0)
-        {
+        else if ((adc_buffer[0] < 2000 || adc_buffer[1] < 2000) && (adc_buffer[14] < 2000 || adc_buffer[15] < 2000) && readingIntersec == 0) {
             readingIntersec = 1;
             readingWhiteRight = 1;
             readingWhiteLeft = 1;
@@ -319,8 +313,7 @@ void ler_laterais() {
         }
     }
 
-    else
-    {
+    else {
         readingIntersec = 0;
         readingWhiteRight = 0;
         readingWhiteLeft = 0;
@@ -342,7 +335,7 @@ void controla_suc(uint16_t target) {
     static uint16_t last_pwm;
     static uint32_t last_update;
 
-    if (MILISEONDS - last_update >= 3) {
+    if (MILISECONDS - last_update >= 3) {
         suc_ok = false;
         if (target > last_pwm) {
             last_pwm++;
@@ -356,37 +349,36 @@ void controla_suc(uint16_t target) {
     }
 }
 
-#define MM_PER_COUNT 0.016873f    //0.01687378866674205352689896348441 valor perfeito
+#define MM_PER_COUNT 0.016873f  // 0.01687378866674205352689896348441 valor perfeito
 
 float robotSpeed = 0;
 int32_t leftPrev = 0, rightPrev = 0;
 float previousTime = 0;
 
-void robotSpeedTask()
-{
+void robotSpeedTask() {
     float timerNow = MICROSECONDS;
-    int32_t leftNow  = get_encoder_position_TIM3();
-    int32_t rightNow = get_encoder_position_TIM4();
+    int32_t leftNow = get_left_encoder_position();
+    int32_t rightNow = get_right_encoder_position();
 
-    int32_t leftDist  = leftNow  - leftPrev;
+    int32_t leftDist = leftNow - leftPrev;
     int32_t rightDist = rightNow - rightPrev;
 
     float elapsedTime = timerNow - previousTime;
-    float elapsedTimeMS = elapsedTime/1000;
+    float elapsedTimeMS = elapsedTime / 1000;
 
-    leftPrev  = leftNow;
+    leftPrev = leftNow;
     rightPrev = rightNow;
 
     previousTime = timerNow;
 
     // velocidade em m/s
     robotSpeed = (((leftDist + rightDist) / 2.0f) * MM_PER_COUNT) / elapsedTimeMS;
-    //bleLog("RobotSpeed %f", robotSpeed);
-    //bleLog("ElapsedTime %f", elapsedTime);
+    // bleLog("RobotSpeed %f", robotSpeed);
+    // bleLog("ElapsedTime %f", elapsedTime);
 }
 
-float translacionalErrorBuffer[9]; // buffer to store the last 5 values of translationalError
-int translacionalErrorIndex = 0; // index to keep track of the current position in the buffer
+float translacionalErrorBuffer[9];  // buffer to store the last 5 values of translationalError
+int translacionalErrorIndex = 0;    // index to keep track of the current position in the buffer
 float translacionalError = 0;
 float P_Translacional = 0;
 float D_Translacional = 0;
@@ -395,66 +387,49 @@ float PIDTranslacional = 0;
 float lastTranslacionalError = 0;
 float last_pwm, run_pwm;
 
-float curva_acel(float pwm_goal)
-{
-
-  if (pwm_goal > last_pwm)
-  {
-    run_pwm = pwm_goal;
-  }
-  else if (pwm_goal < last_pwm)
-  {
-    last_pwm -= 0.02f;
-    run_pwm = pwm_goal;
-  }
-  else
-  {
-    run_pwm = pwm_goal;
-  }
-  return run_pwm;
+float curva_acel(float pwm_goal) {
+    if (pwm_goal > last_pwm) {
+        run_pwm = pwm_goal;
+    } else if (pwm_goal < last_pwm) {
+        last_pwm -= 0.02f;
+        run_pwm = pwm_goal;
+    } else {
+        run_pwm = pwm_goal;
+    }
+    return run_pwm;
 }
 
 void calcula_PID_translacional(float KpParam_Translacional,
-							   float KdParam_Translacional,
-							   float KiParam_Translacional,
-							   float desiredSpeed)
-{
-  translacionalError = curva_acel(desiredSpeed) - robotSpeed;
-  P_Translacional = translacionalError;
-  D_Translacional = translacionalError - lastTranslacionalError;
+                               float KdParam_Translacional,
+                               float KiParam_Translacional,
+                               float desiredSpeed) {
+    translacionalError = curva_acel(desiredSpeed) - robotSpeed;
+    P_Translacional = translacionalError;
+    D_Translacional = translacionalError - lastTranslacionalError;
 
-  // update the buffer and calculate the sum of the last 5 values
-  translacionalErrorBuffer[translacionalErrorIndex] = translacionalError;
-  translacionalErrorIndex = (translacionalErrorIndex + 1) % 9;
-  float sum = 0;
-  for (int i = 0; i < 9; i++) {
-    sum += translacionalErrorBuffer[i];
-  }
-  I_Translacional = sum;
+    // update the buffer and calculate the sum of the last 5 values
+    translacionalErrorBuffer[translacionalErrorIndex] = translacionalError;
+    translacionalErrorIndex = (translacionalErrorIndex + 1) % 9;
+    float sum = 0;
+    for (int i = 0; i < 9; i++) {
+        sum += translacionalErrorBuffer[i];
+    }
+    I_Translacional = sum;
 
-  PIDTranslacional = (KpParam_Translacional * P_Translacional) + (KdParam_Translacional * D_Translacional) + (KiParam_Translacional * I_Translacional);
-  lastTranslacionalError = translacionalError;
+    PIDTranslacional = (KpParam_Translacional * P_Translacional) + (KdParam_Translacional * D_Translacional) + (KiParam_Translacional * I_Translacional);
+    lastTranslacionalError = translacionalError;
 }
 
-void main_loop(void) {
+int main(void) {
+    cube_HAL_init();
     mcu_start();
-    //init_lista(&marcacoes_mapeadas);
+    // init_lista(&marcacoes_mapeadas);
 
     rgb_color_t led[4];
-    // for (;;) {
-    //     // led = (rgb_color_t){0, 0, 128};  // Inicializa o LED com azul
-    //     // setLedsColor(&led, 4);
-    //     // delay_ms(500);
-    //     led[0] = (rgb_color_t){128, 0, 128};  // Muda o LED para verde
-    //     led[1] = (rgb_color_t){128, 0, 128};
-    //     led[2] = (rgb_color_t){128, 0, 128};
-    //     led[3] = (rgb_color_t){128, 0, 128};
-    //     setLedsColor(&led, 4);
-    //     delay_ms(500);
-    //     // led = (rgb_color_t){128, 0, 0};  // Muda o LED para vermelho
-    //     // setLedsColor(&led, 1);
-    //     // delay_ms(500);
-    // }
+    for (;;) {
+        update_encoder_values(encoder_values);
+        delay_ms(10);
+    }
 
     imu_init(&imu_ctx, &int1_route);
     // bleLog("Initializing calibration");
@@ -467,7 +442,7 @@ void main_loop(void) {
 
     for (;;) {
         if (last_run && !run) {
-            update_encoder_value(encoder_values);
+            update_encoder_values(encoder_values);
             bleLog("Encoders: %d, %d\n0", encoder_values[0], encoder_values[1]);
             last_run = false;
         }
@@ -488,58 +463,50 @@ void main_loop(void) {
         //         adc_buffer[10], adc_buffer[11], adc_buffer[12], adc_buffer[13]);
 
         if (MICROSECONDS - ultimo_ciclo >= 1000 && run) {
-            controla_suc(999); //600  999
+            controla_suc(999);  // 600  999
             // snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
             // ble_log(tx_buffer, strlen(tx_buffer));
             // ultimo_print = MICROSECONDS;
 
             if (suc_ok) {
-                PIDControl(0.12, 1.80);  //seguidor 0.1, 1.9  perseguidor 0.19, 1.9
-                // motorControl(150); //270  350
+                PIDControl(0.12, 1.80);  // seguidor 0.1, 1.9  perseguidor 0.19, 1.9
+                // motorControl(150);     // 270  350
                 // write_pin(motorDirDir, 0);
                 // write_pin(motorEsqDir, 0);
                 // set_pwm(motorDirPWM, (uint16_t)500);
                 // set_pwm(motorEsqPWM, (uint16_t)500);
                 // robotSpeedTask();
-                update_encoder_position_TIM3();
-                update_encoder_position_TIM4();
-                update_encoder_value(encoder_values);
+                update_encoder_values(encoder_values);
 
-                if (encoder_values[0] > 242000 && encoder_values[0] <= 311000) { // Segmento 1
+                if (encoder_values[0] > 242000 && encoder_values[0] <= 311000) {  // Segmento 1
                     motorControl(250);
                     led[0] = LED_COLOR_GREEN;
                     led[1] = LED_COLOR_GREEN;
                     led[2] = LED_COLOR_GREEN;
                     led[3] = LED_COLOR_GREEN;
-                    setLedsColor(&led, 4);
-                }
-                else if(encoder_values[0] > 311000 && encoder_values[0] <= 440000)
-                {
+                    setLedsColor(led, 4);
+                } else if (encoder_values[0] > 311000 && encoder_values[0] <= 440000) {
                     motorControl(145);
                     led[0] = LED_COLOR_RED;
                     led[1] = LED_COLOR_RED;
                     led[2] = LED_COLOR_RED;
                     led[3] = LED_COLOR_RED;
-                    setLedsColor(&led, 4);
-                }
-                else if (((encoder_values[0] + encoder_values[1])/2) > 1512000)
-                {
+                    setLedsColor(led, 4);
+                } else if (((encoder_values[0] + encoder_values[1]) / 2) > 1512000) {
                     motorControl(0);
                     led[0] = LED_COLOR_WHITE;
                     led[1] = LED_COLOR_WHITE;
                     led[2] = LED_COLOR_WHITE;
                     led[3] = LED_COLOR_WHITE;
-                    setLedsColor(&led, 4);
-                }
-                else 
-                {
-                    motorControl(165); //300
+                    setLedsColor(led, 4);
+                } else {
+                    motorControl(165);        // 300
                     led[0] = LED_COLOR_CYAN;  // Muda o LED para verde
                     led[1] = LED_COLOR_CYAN;
                     led[2] = LED_COLOR_CYAN;
                     led[3] = LED_COLOR_CYAN;
-                    setLedsColor(&led, 4);
+                    setLedsColor(led, 4);
                 }
             }
 
@@ -556,11 +523,11 @@ void main_loop(void) {
         //     snprintf(tx_buffer, sizeof(tx_buffer), "sensors: %d\nsensor0 max: %d, sensor1 max: %d, sensor2 max: %d, sensor3 max: %d, sensor4 max: %d, sensor5 max: %d, sensor6 max: %d, sensor7 max: %d, sensor8 max: %d, sensor9 max: %d, sensor10 max: %d, sensor11 max: %d\n",
         //            lastPosition, gmaxSensorValues[0], gmaxSensorValues[1], gmaxSensorValues[2], gmaxSensorValues[3], gmaxSensorValues[4], gmaxSensorValues[5], gmaxSensorValues[6], gmaxSensorValues[7], gmaxSensorValues[8], gmaxSensorValues[9], gmaxSensorValues[10], gmaxSensorValues[11]);
 
-        //     // update_encoder_value(encoder_values);
+        //     // update_encoder_values(encoder_values);
         //     // snprintf(tx_buffer, sizeof(tx_buffer), "encoderA: %d, encoderB: %d, vBat: %2.3f vRef: %2.3f\n", encoder_values[0], encoder_values[1], get_battery_voltage(adc_buffer), 1.21f * 4095.0f / adc_buffer[16]);
 
         //     ble_log(tx_buffer, strlen(tx_buffer));
-        //     ultimo_print = MILISEONDS;
+        //     ultimo_print = MILISECONDS;
         // }
     }
 }

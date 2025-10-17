@@ -1,6 +1,10 @@
 #ifndef PLATFORM_FUNCTIONS_H
 #define PLATFORM_FUNCTIONS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Definições especificas de hardware
 #include "stm32g4xx_hal.h"
 
@@ -23,9 +27,9 @@ extern volatile uint8_t run;
 
 #include "lsm6dsr_reg.h"
 
-#define MILISEONDS HAL_GetTick()
-#define MICROSECONDS (volatile uint32_t)((TIM2->CNT) / (uint32_t)10)
-#define NANOSECONDS (volatile uint32_t)((TIM2->CNT) * 100U)
+#define MILISECONDS HAL_GetTick()
+#define MICROSECONDS (uint32_t)((TIM2->CNT) / (uint32_t)10)
+#define NANOSECONDS (uint32_t)((TIM2->CNT) * 100U)
 
 #define IMU_BUS hi2c1
 #define BLE_BUS huart1
@@ -46,7 +50,7 @@ void delay_ms(uint32_t millisec);
 void delay_us(uint32_t microsec);
 void delay_ns(uint32_t nanosec);
 
-void ble_log(uint8_t *tx_buffer, uint16_t len);
+void ble_log(char *tx_buffer, uint16_t len);
 
 uint8_t read_pin(pinhandler_t pin);
 void write_pin(pinhandler_t pin, uint8_t state);
@@ -54,7 +58,15 @@ void toggle_pin(pinhandler_t pin);
 
 void set_pwm(pwmhandler_t pwmpin, uint16_t dutty);
 
-void update_encoder_value(int32_t *encoderArray);
+void set_right_encoder_position(uint32_t rightEncoderValue);
+
+void set_left_encoder_position(uint32_t leftEncoderValue);
+
+uint32_t get_left_encoder_position();
+
+uint32_t get_right_encoder_position();
+
+void update_encoder_values(uint32_t *encoderArray);
 
 void reset_encoder_values(void);
 
@@ -66,5 +78,9 @@ int32_t write_imu(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len);
 int32_t read_imu(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len);
 
 void imu_init(stmdev_ctx_t *imu_ctx, lsm6dsr_pin_int1_route_t *int1_route);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PLATFORM_FUNCTIONS_H */

@@ -2,13 +2,17 @@
 
 // definições específicas de hardware
 
-#include "main.h"
-
+#include "cube_HAL.h"
 #include "logger.h"
 
 volatile uint32_t adc1_buffer[9];
 volatile uint32_t adc2_buffer[9];
 volatile uint8_t rx_buffer[32] = {0};
+
+volatile uint32_t encoder_u32bit_left = 0;
+volatile uint32_t encoder_u32bit_right = 0;
+volatile uint16_t encoder_overflow_left = 0;
+volatile uint16_t encoder_overflow_right = 0;
 
 // volatile uint32_t last_adc1_time = 0;
 // volatile uint32_t last_adc2_time = 0;
@@ -36,9 +40,28 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         } else if (rx_buffer[0] == '2') {
             reset_encoder_values();
             run = 1;
-        } 
+        }
 
         start_ble_cmd_listening();  // Reinicia a recepção DMA
+    }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM3) {  // Encoder esquerdo
+        // Verifica se é overflow (contando para cima) ou underflow (contando para baixo)
+        if (__HAL_TIM_IS_TIM_COUNTING_DOWN(htim)) {
+            encoder_overflow_left--;  // Underflow
+        } else {
+            encoder_overflow_left++;  // Overflow
+        }
+        encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(htim);
+    } else if (htim->Instance == TIM4) {  // Encoder direito
+        if (__HAL_TIM_IS_TIM_COUNTING_DOWN(htim)) {
+            encoder_overflow_right--;  // Underflow
+        } else {
+            encoder_overflow_right++;  // Overflow
+        }
+        encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(htim);
     }
 }
 
@@ -54,6 +77,8 @@ pwmhandler_t motorEsqPWM = {&htim8, TIM_CHANNEL_1};
 pwmhandler_t motorSucPWM = {&htim5, TIM_CHANNEL_2};
 
 void mcu_start(void) {
+    ble_log("Hello World!\n", 14);
+
     // inicia timer
     HAL_TIM_Base_Start(&htim2);
 
@@ -66,6 +91,9 @@ void mcu_start(void) {
     HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
     HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
+    __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);  // Habilita interrupção de overflow/underflow
+    __HAL_TIM_ENABLE_IT(&htim4, TIM_IT_UPDATE);  // Habilita interrupção de overflow/underflow
+
     // inicia adc
     HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
@@ -77,13 +105,15 @@ void mcu_start(void) {
     bleLog("Battery voltage: %2.2f V\n", get_battery_voltage(adc_buffer));
     HAL_Delay(50);
 
+    reset_encoder_values();
+
     start_ble_cmd_listening();  // Reinicia a recepção DMA
     bleLog("MCU initialized\n");
 }
 
 void delay_ms(uint32_t millisec) {
-    uint32_t tickstart = MILISEONDS;
-    while ((MILISEONDS - tickstart) < millisec) {
+    uint32_t tickstart = MILISECONDS;
+    while ((MILISECONDS - tickstart) < millisec) {
         __NOP();  // No Operation
     }
 }
@@ -100,7 +130,7 @@ void delay_ns(uint32_t nanosec) {
     }
 }
 
-void ble_log(uint8_t *tx_buffer, uint16_t len) {
+void ble_log(char *tx_buffer, uint16_t len) {
     HAL_UART_Transmit_DMA(&BLE_BUS, (const uint8_t *)tx_buffer, len);
 }
 
@@ -131,51 +161,39 @@ void set_pwm(pwmhandler_t pwmpin, uint16_t dutty) {
 void reset_encoder_values() {
     __HAL_TIM_SET_COUNTER(&htim3, 0);  // Motor Esquerdo
     __HAL_TIM_SET_COUNTER(&htim4, 0);  // Motor Direito
+    encoder_overflow_left = 0;
+    encoder_overflow_right = 0;
+    encoder_u32bit_left = 0;
+    encoder_u32bit_right = 0;
 }
 
-void set_right_encoder_values(uint16_t rightEncoderValue){
-    __HAL_TIM_SET_COUNTER(&htim4, rightEncoderValue);  // Motor Direito
+void set_right_encoder_position(uint32_t rightEncoderValue) {
+    encoder_u32bit_right = rightEncoderValue;
+    encoder_overflow_right = rightEncoderValue >> 16;
+    __HAL_TIM_SET_COUNTER(&htim4, (uint16_t)(rightEncoderValue & 0xFFFF));  // Motor Direito
 }
 
-void set_left_encoder_values(uint16_t leftEncoderValue){
-    __HAL_TIM_SET_COUNTER(&htim3, leftEncoderValue);  // Motor Esquerdo
+void set_left_encoder_position(uint32_t leftEncoderValue) {
+    encoder_u32bit_left = leftEncoderValue;
+    encoder_overflow_left = leftEncoderValue >> 16;
+    __HAL_TIM_SET_COUNTER(&htim3, (uint16_t)(leftEncoderValue & 0xFFFF));  // Motor Esquerdo
 }
 
-volatile int32_t encoder_position_TIM4 = 0;
-uint16_t last_counter_TIM4 = 0;
-
-void update_encoder_position_TIM4(void)
-{
-    uint16_t current = __HAL_TIM_GET_COUNTER(&htim4);
-    int16_t delta = (int16_t)(current - last_counter_TIM4);
-    encoder_position_TIM4 += delta;
-    last_counter_TIM4 = current;
+uint32_t get_left_encoder_position() {
+    encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);  // Motor Esquerdo
+    return encoder_u32bit_left;
 }
 
-int32_t get_encoder_position_TIM4(void)
-{
-    return encoder_position_TIM4;
+uint32_t get_right_encoder_position() {
+    encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
+    return encoder_u32bit_right;
 }
 
-volatile int32_t encoder_position_TIM3 = 0;
-uint16_t last_counter_TIM3 = 0;
-
-void update_encoder_position_TIM3(void)
-{
-    uint16_t current = __HAL_TIM_GET_COUNTER(&htim3);
-    int16_t delta = (int16_t)(current - last_counter_TIM3);
-    encoder_position_TIM3 += delta;
-    last_counter_TIM3 = current;
-}
-
-int32_t get_encoder_position_TIM3(void)
-{
-    return encoder_position_TIM3;
-}
-
-void update_encoder_value(int32_t *encoderArray) {
-    encoderArray[0] = get_encoder_position_TIM3();  // Motor Esquerdo
-    encoderArray[1] = get_encoder_position_TIM4();  // Motor Direito
+void update_encoder_values(uint32_t *encoderArray) {
+    encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);    // Motor Esquerdo
+    encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);  // Motor Direito
+    encoderArray[0] = encoder_u32bit_left;
+    encoderArray[1] = encoder_u32bit_right;
 }
 
 void update_adc(uint32_t *adc_buffer) {

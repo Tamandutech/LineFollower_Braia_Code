@@ -10,8 +10,6 @@
 
 #include <stdarg.h>
 
-#include "boolean.h"
-
 typedef enum _LogLevelFlag
 {
 	LOG_LEVEL_SILENT,
@@ -42,7 +40,7 @@ extern char ble_log_buffer[BLE_LOG_BUFFER_SIZE];
 	do { \
 		snprintf(ble_log_buffer, BLE_LOG_BUFFER_SIZE, \
 			format, ##__VA_ARGS__); \
-			ble_log((const uint8_t *) ble_log_buffer, strlen(ble_log_buffer)); \
+			ble_log((char *) ble_log_buffer, strlen(ble_log_buffer)); \
 		} while (0);
 		
 #else
