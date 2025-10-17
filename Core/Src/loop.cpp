@@ -1,4 +1,4 @@
-#include "main.hpp"
+#include "loop.hpp"
 
 #include <stdlib.h>
 
@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "WS2812Driver.h"
-#include "cube_HAL.h"
+#include "main.h"
 #include "platform_functions.h"
 
 volatile uint8_t run = 0;
@@ -420,8 +420,7 @@ void calcula_PID_translacional(float KpParam_Translacional,
     lastTranslacionalError = translacionalError;
 }
 
-int main(void) {
-    cube_HAL_init();
+int loop(void) {
     mcu_start();
     // init_lista(&marcacoes_mapeadas);
 
