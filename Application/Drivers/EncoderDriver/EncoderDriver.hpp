@@ -19,9 +19,9 @@ public:
     _N_ENCODERS
   };
 
-  // TODO avoid overflow  
+  // TODO avoid overflow
   static int32_t getCounter(Encoder encoder);
-  static void setCounter(Encoder encoder, int32_t value);
+  static void setCounter(Encoder encoder, uint32_t value);
 
 private:
   static TIM_HandleTypeDef *encoders[_N_ENCODERS];
