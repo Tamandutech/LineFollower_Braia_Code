@@ -56,7 +56,8 @@ public:
     RgbColor magenta;
     RgbColor white;
     RgbColor yellow;
-    RgbColor cyan;  
+    RgbColor cyan;
+    RgbColor black;
   } PredefinedColors;
   const static PredefinedColors Colors;
 

@@ -26,7 +26,8 @@ const LedDriver::PredefinedColors LedDriver::Colors = {
   .magenta = {128, 0, 128},
   .white = {128, 128, 128},
   .yellow = {128, 128, 0},
-  .cyan = {9, 62, 9}
+  .cyan = {9, 62, 9},
+  .black = {0, 0, 0}
 };
 
 uint32_t LedDriver::pwmBuffer[RESET_CYCLES + RESET_CYCLES
