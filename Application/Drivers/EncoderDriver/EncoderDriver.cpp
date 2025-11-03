@@ -11,12 +11,14 @@
 // TODO tmp
 #include "platform_functions.h"
 
+// TODO are encoders inverted?
+
 TIM_HandleTypeDef *EncoderDriver::encoders[_N_ENCODERS] = {
   &htim4,
   &htim3
 };
 
-int32_t EncoderDriver::getCounter(Encoder index) {
+uint32_t EncoderDriver::getCounter(Encoder index) {
   // if (index >= _N_ENCODERS) {
   //   // TODO emit error
   //   index = Left;

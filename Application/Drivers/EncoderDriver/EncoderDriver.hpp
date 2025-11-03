@@ -19,8 +19,7 @@ public:
     _N_ENCODERS
   };
 
-  // TODO avoid overflow
-  static int32_t getCounter(Encoder encoder);
+  static uint32_t getCounter(Encoder encoder);
   static void setCounter(Encoder encoder, uint32_t value);
 
 private:
