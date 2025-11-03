@@ -69,19 +69,18 @@ public:
    */
   enum Leds : uint8_t {
     MainBoard = 0,
-    Left,
     Center,
     Right,
+    Left,
 
     _N_LEDS
   };
 
   static void setColorForAll(RgbColor color);
-  /* TODO
-   * static void setColorFor(RgbColor color, Leds led);
-   */
+  static void setColorFor(RgbColor color, Leds led);
 
 private:
+  static RgbColor ledsColors[_N_LEDS];
   /*
    * DMA Static buffer for DMA:
    * Main buffer. Declared as 'static' to avoid stack overflow. 
@@ -90,6 +89,8 @@ private:
    */
   static uint32_t pwmBuffer[RESET_CYCLES + RESET_CYCLES
                             + _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT];
+
+  static void outputColors();
 };
 
 #endif /* DRIVERS_LEDDRIVER_LEDDRIVER_HPP_ */

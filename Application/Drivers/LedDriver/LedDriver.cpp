@@ -9,6 +9,7 @@
 #include "LedDriver.hpp"
 
 #include "tim.h"
+#include <cstdint>
 
 /*
  * CCR register values ​​to generate logic levels on channel N (inverted)
@@ -30,11 +31,11 @@ const LedDriver::PredefinedColors LedDriver::Colors = {
   .black = {0, 0, 0}
 };
 
+LedDriver::RgbColor LedDriver::ledsColors[_N_LEDS] = {{0}};
 uint32_t LedDriver::pwmBuffer[RESET_CYCLES + RESET_CYCLES
                               + _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT] = {0};
 
-// FIXME this is just a workaround. We possibly need to rewrite this function
-void LedDriver::setColorForAll(RgbColor newColor) {
+void LedDriver::outputColors() {
   // Pointer to the start of our DMA buffer
   uint32_t *buffer_ptr = pwmBuffer;
 
@@ -46,9 +47,10 @@ void LedDriver::setColorForAll(RgbColor newColor) {
   // 1. Loop through each LED
   for (uint16_t i = 0; i < Leds::_N_LEDS; i++) {
     // Garante que os valores sejam pares pois por algum motivo valores ímpares causam problemas
-    uint8_t r = newColor.r % 2 ? newColor.r - 1 : newColor.r;
-    uint8_t g = newColor.g % 2 ? newColor.g - 1 : newColor.g;
-    uint8_t b = newColor.b % 2 ? newColor.b - 1 : newColor.b;
+    uint8_t r = ledsColors[i].r % 2 ? ledsColors[i].r - 1 : ledsColors[i].r;
+    uint8_t g = ledsColors[i].g % 2 ? ledsColors[i].g - 1 : ledsColors[i].g;
+    uint8_t b = ledsColors[i].b % 2 ? ledsColors[i].b - 1 : ledsColors[i].b;
+
 
     // GRB format is the standard for most WS2812 chips
     uint32_t color = (g << 16) | (r << 8) | b;
@@ -97,4 +99,18 @@ void LedDriver::setColorForAll(RgbColor newColor) {
   // Starts DMA transfer
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, pwmBuffer, total_buffer_size);
+}
+
+void LedDriver::setColorForAll(RgbColor color) {
+  for (uint8_t i = 0; i < _N_LEDS; i++) {
+    ledsColors[i] = color;
+  }
+
+  outputColors();
+}
+
+void LedDriver::setColorFor(RgbColor color, Leds led) {
+  ledsColors[led] = color;
+
+  outputColors();
 }
