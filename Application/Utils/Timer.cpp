@@ -10,63 +10,14 @@
 
 Timer::Timer(Type newType) {
   type = newType;
-
-  switch (type) {
-  case Microseconds:
-    tickStart = getMicroseconds();
-    break;
-
-  case Nanoseconds:
-    tickStart = getNanoseconds();
-    break;
-
-  default:
-  case Miliseconds:
-    tickStart = getMiliseconds();
-    break;
-  }
-}
-
-uint32_t Timer::getElapsedTime() {
-  uint32_t now = 0;
-
-  switch (type) {
-  case Microseconds:
-    now = getMicroseconds();
-    break;
-
-  case Nanoseconds:
-    now = getNanoseconds();
-    break;
-
-  default:
-  case Miliseconds:
-    now = getMiliseconds();
-    break;
-  }
-
-  return (now - tickStart);
-}
-
-void Timer::reset() {
-  switch (type) {
-  case Microseconds:
-    tickStart = getMicroseconds();
-    break;
-
-  case Nanoseconds:
-    tickStart = getNanoseconds();
-    break;
-
-  default:
-  case Miliseconds:
-    tickStart = getMiliseconds();
-    break;
-  }
 }
 
 uint32_t Timer::getTickByType() {
   switch (type) {
+  case Miliseconds:
+    return getMiliseconds();
+    break;
+
   case Microseconds:
     return getMicroseconds();
     break;
@@ -76,10 +27,24 @@ uint32_t Timer::getTickByType() {
     break;
 
   default:
-  case Miliseconds:
     return getMiliseconds();
     break;
   }
+}
+
+uint32_t Timer::getElapsedTime() {
+  uint32_t now = getTickByType();
+  uint32_t elapsed = now - tickStart;
+
+  return elapsed;
+}
+
+void Timer::start() {
+  tickStart = getTickByType();
+}
+
+void Timer::reset() {
+  tickStart = getTickByType();
 }
 
 uint32_t Timer::getMiliseconds() {

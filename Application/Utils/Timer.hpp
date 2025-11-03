@@ -22,6 +22,7 @@ public:
   Timer(Type type);
 
   uint32_t getElapsedTime();
+  void start();
   void reset();
 
   // Static functions
@@ -33,7 +34,7 @@ public:
   static void delayMicroseconds(uint32_t microseconds);
   static void delayNanoseconds(uint32_t nanoseconds);
 
-private:
+protected:
   Type type;
   uint32_t tickStart;
 
