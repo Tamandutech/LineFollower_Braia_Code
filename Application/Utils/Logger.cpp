@@ -7,16 +7,21 @@
 
 #include "Logger.hpp"
 
+#include "Timestamp.hpp"
 #include "stm32g4xx_hal.h"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
 // Initialize class variables
 char Logger::buffer[LOGGER_BUFFER_SIZE] = {0};
 char Logger::formatted[LOGGER_FORMATTED_BUFFER] = {0};
+char Logger::timestampStr[LOGGER_TIMESTAMP_LENGTH] = {0};
 bool Logger::useDoubleBreak = false;
 bool Logger::showLogLevel = true;
+bool Logger::showTimestamp = true;
+Timestamp Logger::timestamp;
 
 extern "C" {
   extern UART_HandleTypeDef huart1;
@@ -49,9 +54,18 @@ Logger::~Logger() {
 }
 
 void Logger::formatLog(const char *logLevelStamp) {
-  // [logLevelStamp] tag: buffer useDoubleBreak
+  // MM:SS.mmm 
+  uint8_t minutes = 0, seconds = 0;
+  uint32_t milliseconds = 0;
+
+  timestamp.getTimestamp(&minutes, &seconds, &milliseconds);
+  snprintf(timestampStr, LOGGER_TIMESTAMP_LENGTH,
+    "%02d:%02d.%03d ", minutes, seconds, milliseconds);
+
+  // Timestamp [logLevelStamp] tag: buffer useDoubleBreak
   snprintf(formatted, LOGGER_FORMATTED_BUFFER,
-           "%s%s%s%s",
+           "%s%s%s%s%s",
+           (showTimestamp) ? timestampStr : "",
            (showLogLevel && logLevelStamp) ? logLevelStamp : "",
            (showTag) ? tag : "",
            buffer,

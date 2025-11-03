@@ -8,11 +8,15 @@
 #ifndef UTILS_LOGGER_HPP_
 #define UTILS_LOGGER_HPP_
 
+#include "Timestamp.hpp"
 #include <cstdarg>
 #include <cstdint>
 
 #define LOGGER_BUFFER_SIZE ((unsigned int) 512)
 #define LOGGER_FORMATTED_BUFFER (LOGGER_BUFFER_SIZE + 32)
+
+// MM:SS.mmm (+ space and null terminator)
+#define LOGGER_TIMESTAMP_LENGTH 11
 
 class Logger {
 public:
@@ -46,6 +50,9 @@ private:
   static char formatted[LOGGER_FORMATTED_BUFFER];
   static bool useDoubleBreak;
   static bool showLogLevel;
+  static char timestampStr[LOGGER_TIMESTAMP_LENGTH];
+  static bool showTimestamp;
+  static Timestamp timestamp;
   
   static void sendLog();
   
