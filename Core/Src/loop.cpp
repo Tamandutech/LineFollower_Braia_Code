@@ -420,7 +420,7 @@ void calcula_PID_translacional(float KpParam_Translacional,
     lastTranslacionalError = translacionalError;
 }
 
-int loop(void) {
+int loop_old(void) {
     mcu_start();
     // init_lista(&marcacoes_mapeadas);
 

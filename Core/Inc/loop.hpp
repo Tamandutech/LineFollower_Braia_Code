@@ -14,6 +14,6 @@ extern pwmhandler_t motorEsqPWM;
 
 extern pwmhandler_t motorSucPWM;
 
-int loop(void);
+int loop_old(void);
 
 #endif  // MAIN_CPP_H
