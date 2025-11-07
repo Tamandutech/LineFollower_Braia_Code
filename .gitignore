@@ -8,5 +8,7 @@
 
 .idea
 
+.cache
+
 Release
 Debug

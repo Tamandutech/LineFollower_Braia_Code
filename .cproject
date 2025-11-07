@@ -231,7 +231,6 @@
 		<project id="LineFollower_Braia_Code.null.2116059577" name="LineFollower_Braia_Code"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.696601418;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.696601418.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1187114148;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.867065266">
@@ -256,4 +255,16 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
+		<buildTargets>
+			<target name="Generate compile_commands.json" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>bear</buildCommand>
+				<buildArguments>--output ../compile_commands.json -- make all</buildArguments>
+				<buildTarget/>
+				<stopOnError>false</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+		</buildTargets>
+	</storageModule>
 </cproject>
