@@ -2,15 +2,20 @@
     "files.associations": {
         "*.cpp": "cpp",
         "*.hpp": "cpp",
-
         "cstdint": "cpp",
         "string.h": "c",
         "math.h": "c",
         "compare": "c",
         "ws2812driver.h": "c"
     },
+    "editor.tabSize": 2,
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
     
+    // TODO add documentaion and tell user to cahnge these paths
     "cortex-debug.gdbPath": "/opt/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.linux64_1.0.0.202410170706/tools/bin/arm-none-eabi-gdb",
     "cortex-debug.JLinkGDBServerPath": "/opt/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.ide.mcu.externaltools.jlink.linux64_2.5.0.202506031126/tools/bin/JLinkGDBServerr",
-    "clangd.arguments": ["--query-driver=/opt/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.linux64_1.0.0.202410170706/tools/bin/arm-none-eabi-g++"]
+    "clangd.arguments": [
+        "--query-driver=/opt/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.linux64_1.0.0.202410170706/tools/bin/arm-none-eabi-g++"
+    ]
 }

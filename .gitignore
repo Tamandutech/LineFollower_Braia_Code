@@ -10,5 +10,9 @@
 
 .cache
 
+# This file has paths specific to the develper's system,
+# not realitve to the projet
+compile_commands.json
+
 Release
 Debug
