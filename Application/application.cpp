@@ -10,6 +10,8 @@
 #include "adc.h"
 #include "tim.h"
 
+#include "Services/BLEListener/BLEListener.hpp"
+
 #include "Utils/Battery.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/Timer.hpp"
@@ -19,7 +21,6 @@
 #include "Drivers/MotorDriver/MotorDriver.hpp"
 #include "Drivers/QTRSensorDriver/QTRSensorDriver.hpp"
 #include "Drivers/VacuumDriver/VacuumDriver.hpp"
-
 
 /*
  * Here we declare private (aka static) variables to this file, but they are
@@ -67,13 +68,13 @@ void setup(void) {
   // TODO
   // EncoderDriver::reset();
 
-  // TODO
-  // start_ble_cmd_listening(); // Reinicia a recepção DMA
-
-  logger->info("Robot started!");
+  // Start DMA reception
+  BLEListener::start();
 
   // TODO tmp
   // imu_init(&imu_ctx, &int1_route);
+  
+  logger->info("Robot started!");
 
   QTRSensorDriver::calibrateSensors();
 
@@ -85,7 +86,10 @@ void setup(void) {
 }
 
 void loop(void) {
-  // ...
+  if(BLEListener::run) {
+    logger->debug("Run == 1");
+  }
+  
   Timer::delayMiliseconds(1000);
 
   logger->debug("Encoders L:%05lu R:%05lu",
