@@ -53,8 +53,8 @@ uint32_t *const rawSensorValues[_N_SENSORS] = {
     [C_7] = &adc2_buffer[7]};
 
 // BATTERY
-uint32_t *const batteryVoltage = &adc2_buffer[8] ;
-uint32_t *const referenceVoltage = &adc1_buffer[8];
+uint32_t *const rawBatteryVoltage = &adc2_buffer[8] ;
+uint32_t *const rawReferenceVoltage = &adc1_buffer[8];
 
 
 #ifdef ADC_UPDATE_TIME_TEST

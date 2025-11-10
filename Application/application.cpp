@@ -10,6 +10,7 @@
 #include "adc.h"
 #include "tim.h"
 
+#include "Utils/Battery.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/Timer.hpp"
 
@@ -57,7 +58,11 @@ void setup(void) {
   HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
   HAL_Delay(50);
 
-  // TODO print battery voltage
+  // Print battery information
+  logger->info("Battery voltage: %f V", Battery::getBatteryVoltage());
+  if(Battery::getBatteryVoltage() < 7.5F) {
+    logger->warning("Low battery");
+  }
 
   // TODO
   // EncoderDriver::reset();

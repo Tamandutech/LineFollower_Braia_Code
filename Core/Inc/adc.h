@@ -92,8 +92,8 @@ extern uint32_t *const rawSensorValues[_N_SENSORS];
  * The same happens here: we are going to expose a pointer to the desired
  * variable, matching the correct ADC address.
  */
-extern uint32_t *const batteryVoltage;
-extern uint32_t *const referenceVoltage;
+extern uint32_t *const rawBatteryVoltage;
+extern uint32_t *const rawReferenceVoltage;
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
