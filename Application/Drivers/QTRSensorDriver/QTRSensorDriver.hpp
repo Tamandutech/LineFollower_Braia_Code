@@ -10,14 +10,11 @@
 
 #include "../../Utils/Logger.hpp"
 
-#define ADC_EXPOSE_SENSORS
 #include "adc.h"
-#undef ADC_EXPOSE_SENSORS
 
 class QTRSensorDriver {
 public:
   typedef _Sensor Sensor;
-
   static uint16_t sensorValues[_N_SENSORS];
 
   static void     calibrateSensors();

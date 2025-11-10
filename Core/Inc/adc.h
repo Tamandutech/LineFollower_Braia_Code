@@ -45,15 +45,13 @@ void MX_ADC1_Init(void);
 void MX_ADC2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
-#ifdef ADC_EXPOSE_PRIVATE_BUFFERS
+// BUFFERS
 #define ADC_BUFFER_SIZE 9
 // Buffer for the ADC values
 extern uint32_t adc1_buffer[ADC_BUFFER_SIZE];
 extern uint32_t adc2_buffer[ADC_BUFFER_SIZE];
-#endif
 
-#ifdef ADC_EXPOSE_SENSORS
+// SENSORS
 enum _Sensor {
   // Left
   L_1 = 0,
@@ -88,16 +86,14 @@ enum _Sensor {
  * For example, to access the right encoder: *sensorValues[R_1]
  */
 extern uint32_t *const rawSensorValues[_N_SENSORS];
-#endif
 
-#ifdef ADC_EXPOSE_BATTERY
+// BATTERY
 /*
  * The same happens here: we are going to expose a pointer to the desired
  * variable, matching the correct ADC address.
  */
 extern uint32_t *const batteryVoltage;
 extern uint32_t *const referenceVoltage;
-#endif
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
