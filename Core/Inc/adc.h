@@ -21,6 +21,7 @@
 #ifndef __ADC_H__
 #define __ADC_H__
 
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +46,58 @@ void MX_ADC2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+#ifdef ADC_EXPOSE_PRIVATE_BUFFERS
+#define ADC_BUFFER_SIZE 9
+// Buffer for the ADC values
+extern uint32_t adc1_buffer[ADC_BUFFER_SIZE];
+extern uint32_t adc2_buffer[ADC_BUFFER_SIZE];
+#endif
+
+#ifdef ADC_EXPOSE_SENSORS
+enum _Sensor {
+  // Left
+  L_1 = 0,
+  L_2,
+
+  // Center
+  C_1,
+  C_2,
+  C_3,
+  C_4,
+  C_5,
+  C_6,
+  C_7,
+  C_8,
+  C_9,
+  C_10,
+  C_11,
+  C_12,
+
+  // Right
+  R_1,
+  R_2,
+
+  _N_SENSORS
+};
+
+/*
+ * Since the ADC buffers are in a messy order, we create an array of pointers
+ * to get the correct values in the correct order.
+ * We just need to translate manually the addresses on the ".c" file.
+ *
+ * For example, to access the right encoder: *sensorValues[R_1]
+ */
+extern uint32_t *const sensorValues[_N_SENSORS];
+#endif
+
+#ifdef ADC_EXPOSE_BATTERY
+/*
+ * The same happens here: we are going to expose a pointer to the desired
+ * variable, matching the correct ADC address.
+ */
+extern uint32_t *const batteryVoltage;
+extern uint32_t *const referenceVoltage;
+#endif
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
