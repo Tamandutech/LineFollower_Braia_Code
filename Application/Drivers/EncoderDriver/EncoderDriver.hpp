@@ -8,26 +8,18 @@
 #ifndef DRIVERS_ENCODERDRIVER_ENCODERDRIVER_HPP_
 #define DRIVERS_ENCODERDRIVER_ENCODERDRIVER_HPP_
 
+#include "encoders.h"
 #include "stm32g4xx_hal.h"
 
 class EncoderDriver {
 public:
-  enum Encoder : uint8_t {
-    Left = 0,
-    Right,
+  typedef _Encoder Encoder;
 
-    _N_ENCODERS
-  };
-
-  static uint32_t getCounter(Encoder encoder);
-  static void setCounter(Encoder encoder, uint32_t value);
-
-private:
-  static TIM_HandleTypeDef *encoders[_N_ENCODERS];
+  static int32_t getCounter(Encoder encoder);
+  static void    setCounter(Encoder encoder, uint32_t value);
+  static void    reset();
 };
 
 #endif /* DRIVERS_ENCODERDRIVER_ENCODERDRIVER_HPP_ */
 
-/*
-  Tchaikovsky: Pax de Deux
-*/
+// Tchaikovsky: Pax de Deux

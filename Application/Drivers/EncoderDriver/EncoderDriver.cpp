@@ -6,44 +6,43 @@
  */
 
 #include "EncoderDriver.hpp"
-#include "tim.h"
+#include "../../Utils/Logger.hpp"
+#include "encoders.h"
 
-// TODO tmp
-#include "platform_functions.h"
+#include <cstdint>
 
-// TODO are encoders inverted?
+static Logger *logger = new Logger(
+    "EncoderDriver", true,
+    static_cast<Logger::Level>(Logger::Level::Info | Logger::Level::Debug));
 
-TIM_HandleTypeDef *EncoderDriver::encoders[_N_ENCODERS] = {
-  &htim4,
-  &htim3
-};
-
-uint32_t EncoderDriver::getCounter(Encoder index) {
-  // if (index >= _N_ENCODERS) {
-  //   // TODO emit error
-  //   index = Left;
-  // }
-
-  // return (int32_t)__HAL_TIM_GET_COUNTER(encoders[index]);
-
-  if (index == Left) {
-    return get_left_encoder_position();
-  } else {
-    return get_right_encoder_position();
+int32_t EncoderDriver::getCounter(Encoder index) {
+  if(index >= _N_ENCODERS) {
+    logger->error("Invalid encoder");
+    index = Left;
   }
+
+  encoderValues[index] = ((uint32_t)encoderOverflow[index] << 16) +
+                         (uint16_t)__HAL_TIM_GET_COUNTER(encoders[index]);
+
+  return static_cast<int32_t>(encoderValues[index]);
 }
 
-void  EncoderDriver::setCounter(Encoder index, uint32_t value) {
-  // if (index >= _N_ENCODERS) {
-  //   // TODO emit error
-  //   index = Left;
-  // }
+void EncoderDriver::setCounter(Encoder index, uint32_t value) {
+  if(index >= _N_ENCODERS) {
+    logger->error("Invalid encoder");
+    index = Left;
+  }
 
-  // __HAL_TIM_SET_COUNTER(encoders[index], value);
+  encoderValues[index]   = value;
+  encoderOverflow[index] = value >> 16;
 
-  if (index == Left) {
-    set_left_encoder_position(value);
-  } else {
-    set_right_encoder_position(value);
+  __HAL_TIM_SET_COUNTER(encoders[index], (uint16_t)(value & 0xFFFF));
+}
+
+void EncoderDriver::reset() {
+  for(uint8_t index = 0; index < _N_ENCODERS; index++) {
+    __HAL_TIM_SET_COUNTER(encoders[index], 0);
+    encoderValues[index]   = 0;
+    encoderOverflow[index] = 0;
   }
 }

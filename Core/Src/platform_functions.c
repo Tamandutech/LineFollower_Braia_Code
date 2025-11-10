@@ -48,25 +48,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    if (htim->Instance == TIM3) {  // Encoder esquerdo
-        // Verifica se é overflow (contando para cima) ou underflow (contando para baixo)
-        if (__HAL_TIM_IS_TIM_COUNTING_DOWN(htim)) {
-            encoder_overflow_left--;  // Underflow
-        } else {
-            encoder_overflow_left++;  // Overflow
-        }
-        encoder_u32bit_left = ((uint32_t)encoder_overflow_left << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(htim);
-    } else if (htim->Instance == TIM4) {  // Encoder direito
-        if (__HAL_TIM_IS_TIM_COUNTING_DOWN(htim)) {
-            encoder_overflow_right--;  // Underflow
-        } else {
-            encoder_overflow_right++;  // Overflow
-        }
-        encoder_u32bit_right = ((uint32_t)encoder_overflow_right << 16) + (uint16_t)__HAL_TIM_GET_COUNTER(htim);
-    }
-}
-
 // Definições comuns a serem usadas no main loop e demais arquivos interplataforma
 
 pinhandler_t bootSw = {Boot_sw_GPIO_Port, Boot_sw_Pin};
