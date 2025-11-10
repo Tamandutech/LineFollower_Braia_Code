@@ -87,7 +87,7 @@ enum _Sensor {
  *
  * For example, to access the right encoder: *sensorValues[R_1]
  */
-extern uint32_t *const sensorValues[_N_SENSORS];
+extern uint32_t *const rawSensorValues[_N_SENSORS];
 #endif
 
 #ifdef ADC_EXPOSE_BATTERY
