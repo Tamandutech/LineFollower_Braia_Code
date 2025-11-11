@@ -12,7 +12,7 @@
 #include <cstdarg>
 #include <cstdint>
 
-#define LOGGER_BUFFER_SIZE ((unsigned int) 512)
+#define LOGGER_BUFFER_SIZE      ((unsigned int)512)
 #define LOGGER_FORMATTED_BUFFER (LOGGER_BUFFER_SIZE + 32)
 
 // MM:SS.mmm (+ space and null terminator)
@@ -26,7 +26,8 @@ public:
     Error   = 1 << 0,
     Warning = 1 << 1,
     Info    = 1 << 2,
-    Debug   = 1 << 3
+    Debug   = 1 << 3,
+    All     = (Error | Warning | Info | Debug)
   };
 
   // Constructor and destructor
@@ -36,7 +37,10 @@ public:
   // Class wide methods
   static void setUseDoubleBreak(bool useDoubleBreak);
   static void setShowLogLevel(bool showLogLevel);
-  static void log(const char *format, ...) __attribute__((format(printf, 1, 2)));
+  static void setShowTimestamp(bool showTimestamp);
+  static void resetTimestamp();
+  static void log(const char *format, ...)
+      __attribute__((format(printf, 1, 2)));
 
   // Per instance methods
   void error(const char *format, ...) __attribute__((format(printf, 2, 3)));
@@ -46,19 +50,19 @@ public:
 
 private:
   // Class wide variables and methods
-  static char buffer[LOGGER_BUFFER_SIZE];
-  static char formatted[LOGGER_FORMATTED_BUFFER];
-  static bool useDoubleBreak;
-  static bool showLogLevel;
-  static char timestampStr[LOGGER_TIMESTAMP_LENGTH];
-  static bool showTimestamp;
+  static char      buffer[LOGGER_BUFFER_SIZE];
+  static char      formatted[LOGGER_FORMATTED_BUFFER];
+  static bool      useDoubleBreak;
+  static bool      showLogLevel;
+  static char      timestampStr[LOGGER_TIMESTAMP_LENGTH];
+  static bool      showTimestamp;
   static Timestamp timestamp;
-  
+
   static void sendLog();
-  
+
   // Per instance variables and methods
-  int level;
-  bool showTag;
+  int   level;
+  bool  showTag;
   char *tag;
 
   void formatLog(const char *logLevelStamp);
@@ -66,6 +70,4 @@ private:
 
 #endif /* UTILS_LOGGER_HPP_ */
 
-/*
-  Maurice Ravel, Bolero
-*/
+// Maurice Ravel, Bolero
