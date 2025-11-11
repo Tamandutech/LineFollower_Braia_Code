@@ -55,6 +55,37 @@ uint32_t *const rawSensorValues[_N_SENSORS] = {
 // BATTERY
 uint32_t *const batteryVoltage = &adc2_buffer[8] ;
 uint32_t *const referenceVoltage = &adc1_buffer[8];
+
+
+#ifdef ADC_UPDATE_TIME_TEST
+volatile uint32_t last_adc1_time = 0;
+volatile uint32_t last_adc2_time = 0;
+volatile uint32_t adc1_update_time = 0;
+volatile uint32_t adc2_update_time = 0;
+
+// ADC update time test: last test 276,6 us
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+  // Get the current time in microseconds
+  uint32_t time = (uint32_t)((TIM2->CNT) / (uint32_t)10);
+
+  if (hadc->Instance == ADC1) {
+    // Calculates update time
+    adc1_update_time = time - last_adc1_time;
+
+    // Updates last conversion time
+    last_adc1_time = time;
+  } else if (hadc->Instance == ADC2) {
+    // Calculates update time
+    adc2_update_time = time - last_adc2_time;
+
+    // Updates last conversion time
+    last_adc2_time = time;
+  }
+
+  // Updates total update time
+  uint32_t adc_update_time = adc1_update_time + adc2_update_time;
+}
+#endif
 /* USER CODE END 0 */
 
 ADC_HandleTypeDef hadc1;
