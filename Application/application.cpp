@@ -10,7 +10,7 @@
 #include "adc.h"
 #include "tim.h"
 
-#include "Services/BLEListener/BLEListener.hpp"
+#include "Services/BLEListener/ble_listener.h"
 
 #include "Utils/Battery.hpp"
 #include "Utils/Logger.hpp"
@@ -69,7 +69,7 @@ void setup(void) {
   // EncoderDriver::reset();
 
   // Start DMA reception
-  BLEListener::start();
+  start_ble_listening();
 
   // TODO tmp
   // imu_init(&imu_ctx, &int1_route);
@@ -86,7 +86,7 @@ void setup(void) {
 }
 
 void loop(void) {
-  if(BLEListener::run) {
+  if(run) {
     logger->debug("Run == 1");
   }
   

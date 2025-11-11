@@ -7,6 +7,8 @@
 
 #include "BLEListener.hpp"
 
+#if 0
+
 #include "stm32g4xx_hal.h"
 #include "usart.h"
 
@@ -41,3 +43,5 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   }
 }
 }
+
+#endif

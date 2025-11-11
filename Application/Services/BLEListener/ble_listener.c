@@ -9,8 +9,6 @@
 #include "usart.h"
 #include "ble_listener.h"
 
-#if 0
-
 #define BLE_BUS huart1
 
 uint8_t          rx_buffer[32] = {0};
@@ -35,5 +33,3 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     start_ble_listening();
   }
 }
-
-#endif
