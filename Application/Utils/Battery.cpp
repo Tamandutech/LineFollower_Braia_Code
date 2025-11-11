@@ -8,6 +8,13 @@
 #include "Battery.hpp"
 #include "adc.h"
 
+/*
+ * TSince the ADC buffers are in a messy order, we are going to expose a pointer
+ * to the desired variable, matching the correct ADC address.
+ */
+uint32_t *const Battery::rawBatteryVoltage = &adc2_buffer[8];
+uint32_t *const Battery::rawReferenceVoltage = &adc1_buffer[8];
+
 float Battery::getBatteryVoltage() {
   // Calculates battery voltage based on ADC reading
 

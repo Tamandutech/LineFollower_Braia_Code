@@ -9,6 +9,8 @@
 #include "../../Utils/Timer.hpp"
 #include "../LedDriver/LedDriver.hpp"
 
+#include "adc.h"
+
 #include <algorithm>
 
 // The delay between two sensors readings while calibrating
@@ -16,6 +18,36 @@
 
 // How many samples we are getting to determine min and max sensors values
 #define SAMPLES ((uint16_t)500)
+
+/*
+ * Since the ADC buffers are in a messy order, we create an array of pointers
+ * to get the correct values in the correct order.
+ * We just need to translate manually the addresses.
+ *
+ * For example, to access the right encoder: *sensorValues[R_1]
+ */
+uint32_t *const QTRSensorDriver::rawSensorValues[_N_SENSORS] = {
+    // Left
+    [L_1] = &adc2_buffer[5],
+    [L_2] = &adc1_buffer[6],
+
+    // Center
+    [C_1]  = &adc1_buffer[7],
+    [C_2]  = &adc2_buffer[4],
+    [C_3]  = &adc2_buffer[2],
+    [C_4]  = &adc2_buffer[1],
+    [C_5]  = &adc2_buffer[0],
+    [C_6]  = &adc2_buffer[6],
+    [C_7]  = &adc2_buffer[7],
+    [C_8]  = &adc1_buffer[3],
+    [C_9]  = &adc1_buffer[2],
+    [C_10] = &adc1_buffer[1],
+    [C_11] = &adc1_buffer[0],
+    [C_12] = &adc2_buffer[3],
+
+    // Right
+    [R_1] = &adc1_buffer[5],
+    [R_2] = &adc1_buffer[4]};
 
 // Minimum values ​​measured in practice
 uint32_t QTRSensorDriver::minValues[_N_SENSORS] = {

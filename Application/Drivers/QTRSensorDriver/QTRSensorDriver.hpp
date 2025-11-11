@@ -10,24 +10,50 @@
 
 #include "../../Utils/Logger.hpp"
 
-#include "adc.h"
+#include <cstdint>
 
 class QTRSensorDriver {
 public:
-  typedef _Sensor Sensor;
+  enum Sensor : uint8_t {
+    // Left
+    L_1 = 0,
+    L_2,
+
+    // Center
+    C_1,
+    C_2,
+    C_3,
+    C_4,
+    C_5,
+    C_6,
+    C_7,
+    C_8,
+    C_9,
+    C_10,
+    C_11,
+    C_12,
+
+    // Right
+    R_1,
+    R_2,
+
+    _N_SENSORS
+  };
+
   static uint16_t sensorValues[_N_SENSORS];
 
   static void     calibrateSensors();
   static uint16_t readLine();
 
 private:
-  static uint32_t     maxValues[_N_SENSORS];
-  static uint32_t     minValues[_N_SENSORS];
-  static bool         calibrated;
-  static uint16_t     lastPosition;
-  static Logger      *logger;
-  const static Sensor firstCentralSensor;
-  const static Sensor lastCentralSensor;
+  static uint32_t *const rawSensorValues[_N_SENSORS];
+  static uint32_t        maxValues[_N_SENSORS];
+  static uint32_t        minValues[_N_SENSORS];
+  static bool            calibrated;
+  static uint16_t        lastPosition;
+  static Logger         *logger;
+  const static Sensor    firstCentralSensor;
+  const static Sensor    lastCentralSensor;
 
   static void readCalibrated();
 };
