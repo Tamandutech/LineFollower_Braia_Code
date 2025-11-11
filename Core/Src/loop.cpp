@@ -11,8 +11,6 @@
 #include "main.h"
 #include "platform_functions.h"
 
-volatile uint8_t run = 0;
-
 bool last_run = false;
 
 uint8_t leu_direita = 0;
