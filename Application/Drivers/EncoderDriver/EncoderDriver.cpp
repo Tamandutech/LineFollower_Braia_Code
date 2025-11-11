@@ -11,9 +11,7 @@
 
 #include <cstdint>
 
-static Logger *logger = new Logger(
-    "EncoderDriver", true,
-    static_cast<Logger::Level>(Logger::Level::Info | Logger::Level::Debug));
+static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
 
 int32_t EncoderDriver::getCounter(Encoder index) {
   if(index >= _N_ENCODERS) {

@@ -45,8 +45,7 @@ uint16_t                      QTRSensorDriver::lastPosition             = 0;
 const QTRSensorDriver::Sensor QTRSensorDriver::firstCentralSensor       = C_1;
 const QTRSensorDriver::Sensor QTRSensorDriver::lastCentralSensor        = C_12;
 Logger                       *QTRSensorDriver::logger =
-    new Logger("QTRSensorDriver", false,
-               static_cast<Logger::Level>(Logger::Debug | Logger::Info));
+    new Logger("QTRSensorDriver", false, Logger::Level::Info);
 
 void QTRSensorDriver::calibrateSensors() {
   // Reset the values

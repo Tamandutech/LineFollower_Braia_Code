@@ -26,9 +26,7 @@
  * Here we declare private (aka static) variables to this file, but they are
  * still sharede between functions
  */
-static Logger *logger = new Logger(
-    "Main", true,
-    static_cast<Logger::Level>(Logger::Level::Debug | Logger::Level::Info));
+static Logger *logger = new Logger("Main", true, Logger::Level::All);
 
 void setup(void) {
   logger->info("Robot is starting...");
@@ -57,46 +55,42 @@ void setup(void) {
   // Init DMA
   HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
   HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
+  HAL_Delay(50);
+
+  // Start DMA reception
+  start_ble_listening();
 
   // Print battery information
-  Timer::delayMiliseconds(100);
+  Timer::delayMiliseconds(25);
   logger->info("Battery voltage: %.2f V", Battery::getBatteryVoltage());
   if(Battery::getBatteryVoltage() < 7.5F) {
     logger->warning("Low battery");
   }
 
   // TODO
-  // EncoderDriver::reset();
-
-  // Start DMA reception
-  start_ble_listening();
-
-  Timer::delayMiliseconds(100);
-  logger->info("Robot started!");
-  // Start DMA reception
-
-  // TODO tmp
   // imu_init(&imu_ctx, &int1_route);
 
+  Timer::delayMiliseconds(25);
   logger->info("Robot started!");
 
+  Timer::delayMiliseconds(1000);
   QTRSensorDriver::calibrateSensors();
 
-  LedDriver::setColorForAll(LedDriver::Colors.blue);
-  Timer::delayMiliseconds(500);
+  LedDriver::setColorForAll(LedDriver::Colors.white);
+  EncoderDriver::reset();
 
-  LedDriver::setColorFor(LedDriver::Colors.magenta, LedDriver::Leds::Center);
-  Timer::delayMiliseconds(500);
+  Timer::delayMiliseconds(25);
+  logger->info("Waiting for run command...");
 }
 
 void loop(void) {
   if(run) {
-    logger->debug("Run == 1");
+    Timer::delayMiliseconds(1000);
+
+    logger->debug("Encoders L:%05d R:%05d",
+                  EncoderDriver::getCounter(EncoderDriver::Encoder::Left),
+                  EncoderDriver::getCounter(EncoderDriver::Encoder::Right));
   }
 
   Timer::delayMiliseconds(1000);
-
-  logger->debug("Encoders L:%05lu R:%05lu",
-                EncoderDriver::getCounter(EncoderDriver::Encoder::Left),
-                EncoderDriver::getCounter(EncoderDriver::Encoder::Right));
 }

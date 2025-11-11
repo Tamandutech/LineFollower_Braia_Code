@@ -25,7 +25,7 @@ private:
     uint32_t pwmChannel;
   } Pin;
 
-  static Pin pin;
+  static Pin      pin;
   static uint16_t lastPWM;
 };
 
