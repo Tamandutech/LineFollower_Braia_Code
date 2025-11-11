@@ -16,12 +16,45 @@
   *
   ******************************************************************************
   */
+
+#define ADC_EXPOSE_PRIVATE_BUFFERS
+#define ADC_EXPOSE_SENSORS
+#define ADC_EXPOSE_BATTERY
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "adc.h"
 
 /* USER CODE BEGIN 0 */
+// BUFFERS
+uint32_t adc1_buffer[ADC_BUFFER_SIZE];
+uint32_t adc2_buffer[ADC_BUFFER_SIZE];
 
+// SENSORS
+// Here we need to match the adress of the ADC buffer with each sensor
+uint32_t *const rawSensorValues[_N_SENSORS] = {
+    // adc1
+    [C_11] = &adc1_buffer[0],
+    [C_10] = &adc1_buffer[1],
+    [C_9] = &adc1_buffer[2],
+    [C_8] = &adc1_buffer[3],
+    [R_2] = &adc1_buffer[4],
+    [R_1] = &adc1_buffer[5],
+    [L_2] = &adc1_buffer[6],
+    [C_1] = &adc1_buffer[7],
+
+    // adc2
+    [C_5] = &adc2_buffer[0],
+    [C_4] = &adc2_buffer[1],
+    [C_3] = &adc2_buffer[2],
+    [C_12] = &adc2_buffer[3],
+    [C_2] = &adc2_buffer[4],
+    [L_1] = &adc2_buffer[5],
+    [C_6] = &adc2_buffer[6],
+    [C_7] = &adc2_buffer[7]};
+
+// BATTERY
+uint32_t *const batteryVoltage = &adc2_buffer[8] ;
+uint32_t *const referenceVoltage = &adc1_buffer[8];
 /* USER CODE END 0 */
 
 ADC_HandleTypeDef hadc1;
