@@ -9,11 +9,6 @@
 #include "../../Utils/Timer.hpp"
 #include "../LedDriver/LedDriver.hpp"
 
-#define ADC_EXPOSE_SENSORS
-#include "adc.h"
-#undef ADC_EXPOSE_SENSORS
-
-
 #include <algorithm>
 
 // The delay between two sensors readings while calibrating

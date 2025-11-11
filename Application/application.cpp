@@ -10,6 +10,7 @@
 #include "adc.h"
 #include "tim.h"
 
+#include "Utils/Battery.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/Timer.hpp"
 
@@ -55,9 +56,13 @@ void setup(void) {
   // Init DMA
   HAL_ADC_Start_DMA(&hadc1, adc1_buffer, 9);
   HAL_ADC_Start_DMA(&hadc2, adc2_buffer, 9);
-  HAL_Delay(50);
 
-  // TODO print battery voltage
+  // Print battery information
+  Timer::delayMiliseconds(100);
+  logger->info("Battery voltage: %.2f V", Battery::getBatteryVoltage());
+  if(Battery::getBatteryVoltage() < 7.5F) {
+    logger->warning("Low battery");
+  }
 
   // TODO
   // EncoderDriver::reset();
@@ -65,6 +70,7 @@ void setup(void) {
   // TODO
   // start_ble_cmd_listening(); // Reinicia a recepção DMA
 
+  Timer::delayMiliseconds(100);
   logger->info("Robot started!");
 
   // TODO tmp
