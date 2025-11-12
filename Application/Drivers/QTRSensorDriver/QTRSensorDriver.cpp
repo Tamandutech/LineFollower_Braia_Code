@@ -12,6 +12,7 @@
 #include "adc.h"
 
 #include <algorithm>
+#include <cstdint>
 
 // The delay between two sensors readings while calibrating
 #define DELAY 100
@@ -74,6 +75,7 @@ uint32_t QTRSensorDriver::maxValues[_N_SENSORS] = {
 uint16_t                      QTRSensorDriver::sensorValues[_N_SENSORS] = {0};
 bool                          QTRSensorDriver::calibrated               = false;
 uint16_t                      QTRSensorDriver::lastPosition             = 0;
+uint16_t                      QTRSensorDriver::arraySensorCenter        = 5500;
 const QTRSensorDriver::Sensor QTRSensorDriver::firstCentralSensor       = C_1;
 const QTRSensorDriver::Sensor QTRSensorDriver::lastCentralSensor        = C_12;
 Logger                       *QTRSensorDriver::logger =
@@ -205,4 +207,18 @@ uint16_t QTRSensorDriver::readLine() {
 
   lastPosition = avg / sum;
   return lastPosition;
+}
+
+int16_t QTRSensorDriver::getError() {
+  /*
+   * The readLine() returns a value from 0 to 11000; 5500 is the middle of the
+   * sensor array.
+   *
+   * The error is computed according to the defined center value.
+   */
+  return (readLine() - arraySensorCenter);
+}
+
+void QTRSensorDriver::setArraySensorCenter(uint16_t center) {
+  arraySensorCenter = center;
 }

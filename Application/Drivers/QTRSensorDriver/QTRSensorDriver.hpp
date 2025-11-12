@@ -44,6 +44,8 @@ public:
 
   static void     calibrateSensors();
   static uint16_t readLine();
+  static int16_t  getError();
+  static void     setArraySensorCenter(uint16_t center);
 
 private:
   static uint32_t *const rawSensorValues[_N_SENSORS];
@@ -51,6 +53,7 @@ private:
   static uint32_t        minValues[_N_SENSORS];
   static bool            calibrated;
   static uint16_t        lastPosition;
+  static uint16_t        arraySensorCenter;
   static Logger         *logger;
   const static Sensor    firstCentralSensor;
   const static Sensor    lastCentralSensor;
