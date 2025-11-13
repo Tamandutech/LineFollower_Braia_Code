@@ -28,6 +28,11 @@ constexpr float EPSILON_TOLERANCE = 1e-6F;
 constexpr float INTEGRAL_MAX = 1000.0F;  // Maximum value for the full term
 constexpr float INTEGRAL_MIN = -1000.0F; // Minimum value for the full term
 
+namespace PID {
+const float kp = 0.1;
+const float kd = 1.9; 
+}
+
 namespace MotorDriver {
 // TODO set unit (prefer SI [m/s])
 const float   MAX_SPEED          = 1000; // TODO this is a PWM value by now
