@@ -7,58 +7,68 @@
  */
 
 #include <algorithm>
+#include <cstdint>
 
 #include "MotorDriver.hpp"
-#include "main.h"
+#include "../../Context/RobotEnv.hpp"
+#include "../../Services/PID/PID.hpp"
 #include "tim.h"
 
-#define MAX_DUTY ((int16_t) 1000)
+const MotorDriver::Pin MotorDriver::motorPins[_N_MOTORS] = {
+    // Left
+    {motor2dir_GPIO_Port, motor2dir_Pin, &htim8, TIM_CHANNEL_1},
 
-const MotorDriver::Pin MotorDriver::motorPins[_N_MOTORS] = 
-{
-  // Left
-  {
-    motor2dir_GPIO_Port,
-    motor2dir_Pin,
-    &htim8,
-    TIM_CHANNEL_1
-  },
-
-  // Right
-  {
-    motor1dir_GPIO_Port,
-    motor1dir_Pin,
-    &htim8,
-    TIM_CHANNEL_3
-  }
+    // Right
+    {motor1dir_GPIO_Port, motor1dir_Pin, &htim8, TIM_CHANNEL_3}
 };
+float   MotorDriver::motorSpeed[_N_MOTORS];
+int16_t MotorDriver::motorPWM[_N_MOTORS];
 
-
-MotorDriver::MotorDriver(Motors newMotor) {
-  if (newMotor >= _N_MOTORS) {
-    // TODO emit error
-    newMotor = Left;
-  }
-
-  motor = newMotor;
-  HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin, GPIO_PIN_RESET);
-  HAL_TIM_PWM_Start(motorPins[motor].pwmhtim, motorPins[motor].pwmChannel);
-
-  // TODO EncoderDriver
-  // HAL_TIM_Encoder_Start(motorPins[motor].encoderhtim, TIM_CHANNEL_ALL);
-} 
-
-void MotorDriver::pwmOutput(int16_t duty) {
-  if (duty > 0) {
+void MotorDriver::pwmOutput(Motors motor, int16_t duty) {
+  if(duty >= 0) {
     // Defines the direction
-    HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin,
+                      GPIO_PIN_RESET);
   } else {
     // Inverts the direction
-    HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin,
+                      GPIO_PIN_SET);
     // Makes the duty positive
     duty = -duty;
   }
+
   // Make sure the duty is within the allowed interval
-  duty = std::min(duty, MAX_DUTY);
-  __HAL_TIM_SET_COMPARE(motorPins[motor].pwmhtim, motorPins[motor].pwmChannel, duty);
+  duty            = std::min(duty, RobotEnv::MAX_MOTOR_PWM);
+  motorPWM[motor] = duty;
+  __HAL_TIM_SET_COMPARE(motorPins[motor].pwmhtim, motorPins[motor].pwmChannel,
+                        duty);
+}
+
+// TODO desiredSpeed should be in m/s (?), but currently its a PWM value
+void MotorDriver::speedOutput(float desiredSpeed) {
+  // TODO
+  // caso o valor desejado seja maior que a tensão da bateria, o valor
+  // desejado é a tensão da bateria
+  //    float targetVoltage = desiredVoltage;
+  //    if (targetVoltage > get_battery_voltage(adc_buffer)) {
+  //        targetVoltage = get_battery_voltage(adc_buffer);
+  //    }
+
+  // map a value from 0v to vBat to 0 to 1000
+  // float desiredSpeed = (targetVoltage * 1000.0f) /
+  // get_battery_voltage(adc_buffer);
+
+  int PID = PID::getPID();
+
+  // TODO why (+ PID) and (- PID)?
+  motorSpeed[Left]  = desiredSpeed + PID;
+  motorSpeed[Right] = desiredSpeed - PID;
+
+  pwmOutput(Right, motorSpeed[Right]);
+  pwmOutput(Left, motorSpeed[Left]);
+}
+
+void MotorDriver::stop() {
+  pwmOutput(Left, 0);
+  pwmOutput(Right, 0);
 }
