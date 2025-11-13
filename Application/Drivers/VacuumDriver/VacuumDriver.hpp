@@ -16,6 +16,7 @@ class VacuumDriver {
 public:
   static void pwmOutput(uint16_t duty);
   static void pwmAcceleratedOutput(uint16_t duty);
+  static void stopAfter(uint32_t miliseconds);
 
 private:
   typedef struct _Pin {
