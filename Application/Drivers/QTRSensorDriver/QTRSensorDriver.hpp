@@ -40,12 +40,15 @@ public:
     _N_SENSORS
   };
 
-  static uint16_t sensorValues[_N_SENSORS];
 
   static void     calibrateSensors();
   static uint16_t readLine();
   static int16_t  getError();
   static void     setArraySensorCenter(uint16_t center);
+
+  // TODO
+  static uint16_t sensorValues[_N_SENSORS];
+  static void     readCalibrated();
 
 private:
   static uint32_t *const rawSensorValues[_N_SENSORS];
@@ -57,8 +60,6 @@ private:
   static Logger         *logger;
   const static Sensor    firstCentralSensor;
   const static Sensor    lastCentralSensor;
-
-  static void readCalibrated();
 };
 
 #endif /* DRIVERS_QTRSENSORDRIVER_QTRSENSORDRIVER_HPP_ */

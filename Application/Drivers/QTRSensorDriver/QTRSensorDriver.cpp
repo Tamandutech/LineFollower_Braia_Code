@@ -144,12 +144,13 @@ void QTRSensorDriver::calibrateSensors() {
 
 void QTRSensorDriver::readCalibrated() {
   // Emit a warning once, if sensors aren't calibrated
-  if(!calibrated) {
-    logger->warning("Sensors not calibrated!");
-    calibrated = true;
-  }
+  // TODO
+  // if(!calibrated) {
+  //   logger->warning("Sensors not calibrated!");
+  //   calibrated = true;
+  // }
 
-  for(uint8_t i = firstCentralSensor; i <= lastCentralSensor; i++) {
+  for(uint8_t i = 0; i <= _N_SENSORS; i++) {
     uint16_t calmin, calmax;
 
     calmax = maxValues[i];
