@@ -16,16 +16,10 @@
 
 #include <cstdint>
 
-// Raw       |  Convert       Norm
-// 3000      |  732           < 268
-// 2000      |  490           > 510
-// 500       |  130           > 870
-
-// 1000 no preto
-// 0 no branco
-#define NOT_READING_LINE_THRESHOLD      800
-#define PROBABLY_READING_LINE_THRESHOLD 510
-#define READING_LINE_THRESHOLD          200
+// Returns ~1000 if reading BLACK
+// Returns ~0    if reading WHITE
+#define NOT_READING_LINE_THRESHOLD 800
+#define READING_LINE_THRESHOLD     200
 
 uint8_t Mapper::qtdLeftMark        = 0;
 uint8_t Mapper::qtdRightMark       = 0;
@@ -38,12 +32,6 @@ Logger *Mapper::logger = new Logger("Mapper", true, Logger::Level::Info);
 
 void Mapper::readLateral() {
   QTRSensorDriver::readCalibrated();
-
-  //   bool readRight = sensorValues[R_1] > PROBABLY_READING_LINE_THRESHOLD ||
-  //                    sensorValues[R_2] > PROBABLY_READING_LINE_THRESHOLD;
-
-  //   bool readLeft = sensorValues[L_1] > PROBABLY_READING_LINE_THRESHOLD ||
-  //                   sensorValues[L_2] > PROBABLY_READING_LINE_THRESHOLD;
 
   bool readingLeft = QTRSensorDriver::sensorValues[QTRSensorDriver::L_1] <
                          READING_LINE_THRESHOLD ||
@@ -88,8 +76,12 @@ void Mapper::readLateral() {
   }
   // Reading a right mark for the second time
   else if(notReadingLeft && readingRight && !readRightBefore &&
-          firstTimeRight) {
+          !firstTimeRight) {
     logger->info("End of the track");
+
+    // TODO
+    // MotorDriver::stop();
+    // VacuumDriver::stopAfter(700);
   }
   // Reading an intersection
   else if(readingLeft && readingRight && !readIntersecBefore) {
@@ -123,7 +115,7 @@ void Mapper::map() {
   Timer::delayMiliseconds(2000);
   EncoderDriver::reset();
 
-  // TODO just for tests
+  // TODO: local loop just for tests
   bool triggered = false;
   while(1) {
     if(run) {
