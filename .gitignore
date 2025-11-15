@@ -9,6 +9,7 @@
 .idea
 
 .cache
+.metadata
 
 # This file has paths specific to the develper's system,
 # not realitve to the projet
