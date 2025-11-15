@@ -13,6 +13,10 @@
 
 static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
 
+int32_t EncoderDriver::getAverage() {
+  return ((getCounter(Left) + getCounter(Right)) / 2);
+}
+
 int32_t EncoderDriver::getCounter(Encoder index) {
   if(index >= _N_ENCODERS) {
     logger->error("Invalid encoder");

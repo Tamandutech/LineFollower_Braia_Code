@@ -10,11 +10,13 @@
 
 #include "encoders.h"
 #include "stm32g4xx_hal.h"
+#include <cstdint>
 
 class EncoderDriver {
 public:
   typedef _Encoder Encoder;
 
+  static int32_t getAverage();
   static int32_t getCounter(Encoder encoder);
   static void    setCounter(Encoder encoder, uint32_t value);
   static void    reset();
