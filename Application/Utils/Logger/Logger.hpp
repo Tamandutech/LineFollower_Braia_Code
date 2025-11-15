@@ -8,7 +8,7 @@
 #ifndef UTILS_LOGGER_HPP_
 #define UTILS_LOGGER_HPP_
 
-#include "Timestamp.hpp"
+#include "../Timestamp/Timestamp.hpp"
 #include <cstdarg>
 #include <cstdint>
 

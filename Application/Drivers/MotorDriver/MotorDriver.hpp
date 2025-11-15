@@ -9,7 +9,7 @@
 #ifndef DRIVERS_MOTORDRIVER_MOTORDRIVER_HPP_
 #define DRIVERS_MOTORDRIVER_MOTORDRIVER_HPP_
 
-#include "../../Utils/Logger.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 
 #include "stm32g4xx_hal.h"
 #include <cstdint>

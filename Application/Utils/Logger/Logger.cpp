@@ -7,7 +7,6 @@
 
 #include "Logger.hpp"
 
-#include "Timestamp.hpp"
 #include "stm32g4xx_hal.h"
 
 #include <cstdint>

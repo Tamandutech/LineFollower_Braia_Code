@@ -9,7 +9,7 @@
 #include "../../Drivers/EncoderDriver/EncoderDriver.hpp"
 #include "../../Drivers/MotorDriver/MotorDriver.hpp"
 #include "../../Drivers/VacuumDriver/VacuumDriver.hpp"
-#include "../../Utils/Timer.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 
 // TODO
 #include "../BLEListener/ble_listener.h"

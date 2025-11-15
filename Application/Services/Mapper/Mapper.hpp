@@ -11,7 +11,7 @@
 #include <cstdint>
 
 #include "../../Drivers/QTRSensorDriver/QTRSensorDriver.hpp"
-#include "../../Utils/Logger.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 
 
 class Mapper {

@@ -8,7 +8,7 @@
 #ifndef DRIVERS_QTRSENSORDRIVER_QTRSENSORDRIVER_HPP_
 #define DRIVERS_QTRSENSORDRIVER_QTRSENSORDRIVER_HPP_
 
-#include "../../Utils/Logger.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 
 #include <cstdint>
 

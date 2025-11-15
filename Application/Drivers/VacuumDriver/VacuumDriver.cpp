@@ -7,7 +7,7 @@
 
 #include "VacuumDriver.hpp"
 #include "../../Context/RobotEnv.hpp"
-#include "../../Utils/Timer.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 #include "tim.h"
 
 #include <algorithm>
@@ -47,7 +47,7 @@ void VacuumDriver::pwmAcceleratedOutput(uint16_t target) {
 }
 
 void VacuumDriver::stopAfter(uint32_t miliseconds) {
-  if (lastPWM != 0) {
+  if(lastPWM != 0) {
     Timer::delayMiliseconds(miliseconds);
     pwmOutput(0);
   }

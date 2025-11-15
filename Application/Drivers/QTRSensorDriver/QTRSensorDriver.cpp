@@ -6,7 +6,7 @@
  */
 
 #include "QTRSensorDriver.hpp"
-#include "../../Utils/Timer.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 #include "../LedDriver/LedDriver.hpp"
 
 #include "adc.h"

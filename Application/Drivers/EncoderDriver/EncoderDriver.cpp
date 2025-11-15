@@ -6,7 +6,7 @@
  */
 
 #include "EncoderDriver.hpp"
-#include "../../Utils/Logger.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 #include "encoders.h"
 
 #include <cstdint>
