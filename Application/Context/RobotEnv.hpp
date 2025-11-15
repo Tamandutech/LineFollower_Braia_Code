@@ -17,7 +17,6 @@ const int32_t WHEEL_RADIUS        = 11;
 const int32_t WHEEL_CIRCUMFERENCE = 70;
 
 // const int32_t BASE_MOTOR_PWM  = 10;
-const int32_t BASE_VACUUM_PWM = 100;
 
 const int16_t MAX_MOTOR_PWM = 1000;
 
@@ -30,8 +29,8 @@ constexpr float INTEGRAL_MIN = -1000.0F; // Minimum value for the full term
 
 namespace PID {
 const float kp = 0.1;
-const float kd = 1.9; 
-}
+const float kd = 1.9;
+} // namespace PID
 
 namespace MotorDriver {
 // TODO set unit (prefer SI [m/s])
@@ -39,6 +38,11 @@ const float   MAX_SPEED          = 1000; // TODO this is a PWM value by now
 const int32_t MAX_DECELERATION   = 4;
 const int32_t MAX_ROTATION_SPEED = 4;
 } // namespace MotorDriver
+
+namespace VacuumDriver {
+const uint16_t BASE_VACUUM_PWM             = 170;
+const uint8_t  INTERVAL_BETWEEN_INCREMENTS = 2; // ms
+} // namespace VacuumDriver
 
 } // namespace RobotEnv
 
