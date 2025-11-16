@@ -6,6 +6,7 @@
  */
 
 #include "Mapper.hpp"
+#include "../../Context/GlobalData.hpp"
 #include "../../Drivers/EncoderDriver/EncoderDriver.hpp"
 #include "../../Drivers/MotorDriver/MotorDriver.hpp"
 #include "../../Drivers/VacuumDriver/VacuumDriver.hpp"
@@ -27,51 +28,47 @@ bool    Mapper::readRightBefore    = false;
 bool    Mapper::readLeftBefore     = false;
 bool    Mapper::readIntersecBefore = false;
 bool    Mapper::firstTimeRight     = true;
-uint8_t Mapper::n_marks            = 0;
 Logger *Mapper::logger = new Logger("Mapper", true, Logger::Level::Info);
 
 void Mapper::readLateral() {
-  QTRSensorDriver::readCalibrated();
+  readCalibrated();
 
-  bool readingLeft = QTRSensorDriver::sensorValues[QTRSensorDriver::L_1] <
-                         READING_LINE_THRESHOLD ||
-                     QTRSensorDriver::sensorValues[QTRSensorDriver::L_2] <
-                         READING_LINE_THRESHOLD;
+  bool readingLeft = sensorValues[L_1] < READING_LINE_THRESHOLD ||
+                     sensorValues[L_2] < READING_LINE_THRESHOLD;
 
-  bool readingRight = QTRSensorDriver::sensorValues[QTRSensorDriver::R_1] <
-                          READING_LINE_THRESHOLD ||
-                      QTRSensorDriver::sensorValues[QTRSensorDriver::R_2] <
-                          READING_LINE_THRESHOLD;
+  bool readingRight = sensorValues[R_1] < READING_LINE_THRESHOLD ||
+                      sensorValues[R_2] < READING_LINE_THRESHOLD;
 
-  bool notReadingLeft = QTRSensorDriver::sensorValues[QTRSensorDriver::L_1] >
-                            NOT_READING_LINE_THRESHOLD &&
-                        QTRSensorDriver::sensorValues[QTRSensorDriver::L_2] >
-                            NOT_READING_LINE_THRESHOLD;
+  bool notReadingLeft = sensorValues[L_1] > NOT_READING_LINE_THRESHOLD &&
+                        sensorValues[L_2] > NOT_READING_LINE_THRESHOLD;
 
-  bool notReadingRight = QTRSensorDriver::sensorValues[QTRSensorDriver::R_1] >
-                             NOT_READING_LINE_THRESHOLD &&
-                         QTRSensorDriver::sensorValues[QTRSensorDriver::R_2] >
-                             NOT_READING_LINE_THRESHOLD;
+  bool notReadingRight = sensorValues[R_1] > NOT_READING_LINE_THRESHOLD &&
+                         sensorValues[R_2] > NOT_READING_LINE_THRESHOLD;
 
-  logger->debug("[%03d %03d] [%03d %03d]",
-                QTRSensorDriver::sensorValues[QTRSensorDriver::L_1],
-                QTRSensorDriver::sensorValues[QTRSensorDriver::L_2],
-                QTRSensorDriver::sensorValues[QTRSensorDriver::R_1],
-                QTRSensorDriver::sensorValues[QTRSensorDriver::R_2]);
+  logger->debug("[%03d %03d] [%03d %03d]", sensorValues[L_1], sensorValues[L_2],
+                sensorValues[R_1], sensorValues[R_2]);
 
   // Reading a left mark
   if(readingLeft && notReadingRight && !readLeftBefore) {
+    globalData.markCount++;
     qtdLeftMark++;
     readLeftBefore = true;
-    logger->info("#%02d Encoders: %d", n_marks++, EncoderDriver::getAverage());
+
+    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
+
+    logger->info("#%02d Encoders: %d", globalData.markCount.load(),
+                 EncoderDriver::getAverage());
   }
   // Reading a right mark for the first time
   else if(notReadingLeft && readingRight && !readRightBefore &&
           firstTimeRight) {
-    EncoderDriver::reset();
     qtdRightMark++;
     readRightBefore = true;
     firstTimeRight  = false;
+    EncoderDriver::reset();
+
+    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
+
     logger->info("Start of the track");
   }
   // Reading a right mark for the second time
@@ -79,9 +76,9 @@ void Mapper::readLateral() {
           !firstTimeRight) {
     logger->info("End of the track");
 
-    // TODO
-    // MotorDriver::stop();
-    // VacuumDriver::stopAfter(700);
+    // TODO testing
+    MotorDriver::stop();
+    VacuumDriver::stopAfter(700);
   }
   // Reading an intersection
   else if(readingLeft && readingRight && !readIntersecBefore) {
@@ -99,17 +96,20 @@ void Mapper::readLateral() {
   }
 }
 
+// TODO
+float Mapper::calculatePWM() { return 100; }
+
 void Mapper::map() {
   uint32_t lastTime = 0;
 
   // Reset variables
-  qtdLeftMark        = 0;
-  qtdRightMark       = 0;
-  readRightBefore    = false;
-  readLeftBefore     = false;
-  readIntersecBefore = false;
-  firstTimeRight     = true;
-  n_marks            = 0;
+  qtdLeftMark          = 0;
+  qtdRightMark         = 0;
+  readRightBefore      = false;
+  readLeftBefore       = false;
+  readIntersecBefore   = false;
+  firstTimeRight       = true;
+  globalData.markCount = 0;
 
   logger->info("Waiting to map...");
   Timer::delayMiliseconds(2000);

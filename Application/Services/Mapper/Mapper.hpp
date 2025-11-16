@@ -14,8 +14,9 @@
 #include "../../Utils/Logger/Logger.hpp"
 
 
-class Mapper {
+class Mapper : private QTRSensorDriver {
 public:
+  // Maps the path to GlobalData
   static void map();
 
 private:
@@ -25,10 +26,12 @@ private:
   static bool    readLeftBefore;
   static bool    readIntersecBefore;
   static bool    firstTimeRight;
-  static uint8_t n_marks;
   static Logger *logger;
 
-  static void readLateral();
+  static void  readLateral();
+  static float calculatePWM();
 };
 
 #endif /* SERVICES_MAPPER_MAPPER_HPP_ */
+
+// Niccolò Paganini: Caprice No. 24
