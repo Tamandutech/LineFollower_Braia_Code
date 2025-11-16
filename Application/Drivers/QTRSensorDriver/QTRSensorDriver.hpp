@@ -46,7 +46,7 @@ public:
   static int16_t  getError();
   static void     setArraySensorCenter(uint16_t center);
 
-  // TODO
+protected:
   static uint16_t sensorValues[_N_SENSORS];
   static void     readCalibrated();
 
@@ -63,3 +63,5 @@ private:
 };
 
 #endif /* DRIVERS_QTRSENSORDRIVER_QTRSENSORDRIVER_HPP_ */
+
+// Erik Satie: Gymnopédies

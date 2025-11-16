@@ -143,8 +143,8 @@ void QTRSensorDriver::calibrateSensors() {
 }
 
 void QTRSensorDriver::readCalibrated() {
+  // FIXME always emiting a warning
   // Emit a warning once, if sensors aren't calibrated
-  // TODO
   // if(!calibrated) {
   //   logger->warning("Sensors not calibrated!");
   //   calibrated = true;
