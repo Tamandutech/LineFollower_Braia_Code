@@ -15,7 +15,11 @@
 // TODO
 #include "../BLEListener/ble_listener.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 // Returns ~1000 if reading BLACK
 // Returns ~0    if reading WHITE
@@ -56,7 +60,7 @@ void Mapper::readLateral() {
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
 
-    logger->info("#%02d Encoders: %d", globalData.markCount.load(),
+    logger->info("#%03d Encoders: %07d", globalData.markCount.load(),
                  EncoderDriver::getAverage());
   }
   // Reading a right mark for the first time
@@ -69,16 +73,7 @@ void Mapper::readLateral() {
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
 
-    logger->info("Start of the track");
-  }
-  // Reading a right mark for the second time
-  else if(notReadingLeft && readingRight && !readRightBefore &&
-          !firstTimeRight) {
-    logger->info("End of the track");
-
-    // TODO testing
-    MotorDriver::stop();
-    VacuumDriver::stopAfter(700);
+    logger->info("#%03d Start of the track", globalData.markCount.load());
   }
   // Reading an intersection
   else if(readingLeft && readingRight && !readIntersecBefore) {
@@ -87,6 +82,20 @@ void Mapper::readLateral() {
     readLeftBefore     = true;
 
     logger->info("Passed through an intersection");
+  }
+  // Reading a right mark for the second time
+  else if(notReadingLeft && readingRight && !readRightBefore &&
+          !firstTimeRight) {
+    qtdRightMark++;
+    globalData.markCount++;
+
+    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
+
+    // TODO testing
+    MotorDriver::stop();
+    VacuumDriver::stopAfter(700);
+
+    logger->info("#%03d End of the track", globalData.markCount.load());
   }
   // Reading no marks
   else if(notReadingLeft && notReadingRight) {
@@ -112,8 +121,6 @@ void Mapper::map() {
   globalData.markCount = 0;
 
   logger->info("Waiting to map...");
-  Timer::delayMiliseconds(2000);
-  EncoderDriver::reset();
 
   // TODO: local loop just for tests
   bool triggered = false;
@@ -123,6 +130,8 @@ void Mapper::map() {
         MotorDriver::speedOutput(75);
         VacuumDriver::pwmOutput(150);
         readLateral();
+
+        if(qtdRightMark >= 2) break;
 
         lastTime  = Timer::getMicroseconds();
         triggered = true;
@@ -134,4 +143,35 @@ void Mapper::map() {
       if(triggered) break;
     }
   }
+
+  logMap();
+}
+
+void Mapper::logMap() {
+  // #mmm eeeeeee ssss'\n''\0' == 19 characters per line
+  const size_t lineLength = 19;
+  const char  *header     = "\nMARK ENCODER PWM\n";
+  size_t logSize = globalData.markCount.load() * lineLength + strlen(header);
+  char   formattingLine[lineLength];
+  char  *logMessage = (char *)malloc(logSize);
+
+  // Add the header to the log string
+  snprintf(logMessage, logSize, header);
+
+  // Concatenate each line of the mapping
+  for(uint8_t m = 0; m <= globalData.markCount.load(); m++) {
+    snprintf(formattingLine, lineLength, "#%03d %07d %04.0f\n", m,
+             globalData.mapData[m].encoderAverage,
+             globalData.mapData[m].baseMotorPWM);
+
+    strncat(logMessage, formattingLine, logSize);
+  }
+
+  // TODO remove these delays after implementing a communication task
+  Timer::delayMiliseconds(30);
+  logger->info("%s", logMessage);
+  Timer::delayMiliseconds(500);
+
+  free(logMessage);
+  logMessage = NULL;
 }

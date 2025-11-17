@@ -18,6 +18,7 @@ class Mapper : private QTRSensorDriver {
 public:
   // Maps the path to GlobalData
   static void map();
+  static void logMap();
 
 private:
   static uint8_t qtdLeftMark;
