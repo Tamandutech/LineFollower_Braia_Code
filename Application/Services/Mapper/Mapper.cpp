@@ -10,10 +10,8 @@
 #include "../../Drivers/EncoderDriver/EncoderDriver.hpp"
 #include "../../Drivers/MotorDriver/MotorDriver.hpp"
 #include "../../Drivers/VacuumDriver/VacuumDriver.hpp"
+#include "../../Services/BLEListener/BLEListener.hpp"
 #include "../../Utils/Timer/Timer.hpp"
-
-// TODO
-#include "../BLEListener/ble_listener.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -91,11 +89,16 @@ void Mapper::readLateral() {
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
 
-    // TODO testing
-    MotorDriver::stop();
-    VacuumDriver::stopAfter(700);
+    /*
+     * TODO
+     * Problem: Robot is identifing right marks on intersections, we probably
+     * can skip these steps and stop manually
+     */
+    // MotorDriver::stop();
+    // VacuumDriver::stopAfter(700);
 
-    logger->info("#%03d End of the track", globalData.markCount.load());
+    logger->info("#%03d Encoders: %07d [Right]", globalData.markCount.load(),
+                 EncoderDriver::getAverage());
   }
   // Reading no marks
   else if(notReadingLeft && notReadingRight) {
@@ -105,7 +108,11 @@ void Mapper::readLateral() {
   }
 }
 
-// TODO
+/*
+ * TODO
+ * This function should calculate the PWM accordingly to the left and right
+ * encoders (less speed on short curves, and high speed on straights)...
+ */
 float Mapper::calculatePWM() { return 100; }
 
 void Mapper::map() {
@@ -120,29 +127,24 @@ void Mapper::map() {
   firstTimeRight       = true;
   globalData.markCount = 0;
 
-  logger->info("Waiting to map...");
+  logger->info("Mapping...");
+  lastTime = Timer::getMicroseconds();
 
-  // TODO: local loop just for tests
-  bool triggered = false;
-  while(1) {
-    if(run) {
-      if(Timer::getMicroseconds() - lastTime >= 1000) {
-        MotorDriver::speedOutput(75);
-        VacuumDriver::pwmOutput(150);
-        readLateral();
+  while(BLEListener::action == BLEListener::Map) {
+    if(Timer::getMicroseconds() - lastTime >= 1000) {
+      MotorDriver::pwmOutput(150);
+      VacuumDriver::pwmOutput(350);
+      readLateral();
 
-        if(qtdRightMark >= 2) break;
+      // Problem: Robot is identifing right marks on intersections
+      // if(qtdRightMark >= 2) break;
 
-        lastTime  = Timer::getMicroseconds();
-        triggered = true;
-      }
-    } else {
-      MotorDriver::stop();
-      VacuumDriver::pwmOutput(0);
-
-      if(triggered) break;
+      lastTime = Timer::getMicroseconds();
     }
   }
+
+  MotorDriver::stop();
+  VacuumDriver::stopAfter(500);
 
   logMap();
 }
@@ -156,7 +158,7 @@ void Mapper::logMap() {
   char  *logMessage = (char *)malloc(logSize);
 
   // Add the header to the log string
-  snprintf(logMessage, logSize, header);
+  snprintf(logMessage, logSize, "%s", header);
 
   // Concatenate each line of the mapping
   for(uint8_t m = 0; m <= globalData.markCount.load(); m++) {
@@ -168,9 +170,9 @@ void Mapper::logMap() {
   }
 
   // TODO remove these delays after implementing a communication task
-  Timer::delayMiliseconds(30);
+  Timer::delayMiliseconds(200);
   logger->info("%s", logMessage);
-  Timer::delayMiliseconds(500);
+  Timer::delayMiliseconds(1500);
 
   free(logMessage);
   logMessage = NULL;
