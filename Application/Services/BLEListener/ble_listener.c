@@ -5,9 +5,10 @@
  *      Author: Kelvin Novais
  */
 
+#if 0
+#include "ble_listener.h"
 #include "stm32g4xx_hal.h"
 #include "usart.h"
-#include "ble_listener.h"
 
 #define BLE_BUS huart1
 
@@ -33,3 +34,4 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     start_ble_listening();
   }
 }
+#endif

@@ -8,14 +8,18 @@
 #ifndef SERVICES_BLELISTENER_BLELISTENER_HPP_
 #define SERVICES_BLELISTENER_BLELISTENER_HPP_
 
-#if 0
+#include <cstdint>
+
 class BLEListener {
 public:
-  static volatile bool run;
+  typedef enum _Action : uint8_t { None = 0, Run, Map, CustomAction } Action;
+
+  static volatile Action action;
 
   static void start();
   static void restart();
 };
-#endif
 
 #endif /* SERVICES_BLELISTENER_BLELISTENER_HPP_ */
+
+// Boccherin: Minuet for string quintet - Op. 11, No. 5 (G 275)
