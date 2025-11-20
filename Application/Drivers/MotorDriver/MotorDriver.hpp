@@ -23,8 +23,8 @@ public:
     _N_MOTORS
   };
 
-  static void speedOutput(float speed);
-  static void pwmOutput(Motors motor, int16_t duty);
+  static void pwmOutput(float duty);
+  static void pwmOutputFor(Motors motor, int16_t duty);
   static void stop();
 
 private:

@@ -24,7 +24,7 @@ const MotorDriver::Pin MotorDriver::motorPins[_N_MOTORS] = {
 float   MotorDriver::motorSpeed[_N_MOTORS];
 int16_t MotorDriver::motorPWM[_N_MOTORS];
 
-void MotorDriver::pwmOutput(Motors motor, int16_t duty) {
+void MotorDriver::pwmOutputFor(Motors motor, int16_t duty) {
   if(duty >= 0) {
     // Defines the direction
     HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin,
@@ -45,7 +45,7 @@ void MotorDriver::pwmOutput(Motors motor, int16_t duty) {
 }
 
 // TODO desiredSpeed should be in m/s (?), but currently its a PWM value
-void MotorDriver::speedOutput(float desiredSpeed) {
+void MotorDriver::pwmOutput(float desiredSpeed) {
   // TODO
   // caso o valor desejado seja maior que a tensão da bateria, o valor
   // desejado é a tensão da bateria
@@ -64,11 +64,11 @@ void MotorDriver::speedOutput(float desiredSpeed) {
   motorSpeed[Left]  = desiredSpeed + PID;
   motorSpeed[Right] = desiredSpeed - PID;
 
-  pwmOutput(Right, motorSpeed[Right]);
-  pwmOutput(Left, motorSpeed[Left]);
+  pwmOutputFor(Right, motorSpeed[Right]);
+  pwmOutputFor(Left, motorSpeed[Left]);
 }
 
 void MotorDriver::stop() {
-  pwmOutput(Left, 0);
-  pwmOutput(Right, 0);
+  pwmOutputFor(Left, 0);
+  pwmOutputFor(Right, 0);
 }
