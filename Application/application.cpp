@@ -10,7 +10,9 @@
 #include "adc.h"
 #include "tim.h"
 
-#include "Services/BLEListener/ble_listener.h"
+#include "Context/GlobalData.hpp"
+
+#include "Services/BLEListener/BLEListener.hpp"
 #include "Services/Mapper/Mapper.hpp"
 
 #include "Utils/Battery/Battery.hpp"
@@ -28,8 +30,67 @@
  * Here we declare private (aka static) variables to this file, but they are
  * still sharede between functions
  */
-static Logger  *logger   = new Logger("Main", true, Logger::Level::All);
-static uint32_t lastTime = 0;
+static Logger *logger = new Logger("Main", true, Logger::Level::All);
+
+/*
+ * Here we have private (aka static) functions to this file
+ */
+static void stopRunning() {
+  MotorDriver::stop();
+  VacuumDriver::stopAfter(700);
+  LedDriver::setColorForAll(LedDriver::Colors.white);
+}
+
+static void startRunning() {
+  const uint16_t vacuumPWM     = 350;
+  uint8_t        mapPointIndex = 0;
+  uint32_t       lastTime      = 0;
+
+  // Prepare
+  LedDriver::setColorForAll(LedDriver::Colors.magenta);
+  VacuumDriver::pwmAcceleratedOutput(vacuumPWM);
+  EncoderDriver::reset();
+  lastTime = Timer::getMicroseconds();
+
+  // Start
+  while(BLEListener::action == BLEListener::Run) {
+    if(Timer::getMicroseconds() - lastTime >= 1000) {
+      VacuumDriver::pwmOutput(vacuumPWM);
+      LedDriver::setColorForAll(LedDriver::Colors.red);
+
+      MotorDriver::pwmOutput(150);
+      /*
+       * Remova a linha anterior e descomente o bloco a seguir para usar a
+       * velocidade definida para cada trecho no mapeamento. Você deve assinar o
+       * mapeamento para a variavél manualmente. O código a seguir não foi
+       * testado
+       */
+      /************************************************************************/
+      // if(globalData.mapData[mapPointIndex].encoderAverage >
+      //        EncoderDriver::getAverage() &&
+      //    (mapPointIndex + 1) < globalData.mapData.size()) {
+      //   mapPointIndex++;
+      // }
+      // MotorDriver::pwmOutput(globalData.mapData[mapPointIndex].baseMotorPWM);
+      /************************************************************************/
+
+      lastTime = Timer::getMicroseconds();
+    }
+  }
+
+  // Stop graceffuly
+  // This action will be performed only if the stop command wasn't sent
+  if(BLEListener::action == BLEListener::Run) {
+    MotorDriver::stop();
+    VacuumDriver::stopAfter(700);
+  }
+}
+
+static void customAction() {
+  /*
+   * Implement here a custom action
+   */
+}
 
 void setup(void) {
   logger->info("Robot is starting...");
@@ -61,7 +122,7 @@ void setup(void) {
   HAL_Delay(50);
 
   // Start DMA reception
-  start_ble_listening();
+  BLEListener::start();
 
   // Print battery information
   Timer::delayMiliseconds(25);
@@ -79,40 +140,40 @@ void setup(void) {
 
   // Logger
   Logger::setShowTimestamp(false);
+  Logger::setShowLogLevel(true);
+  Logger::setUseDoubleBreak(false);
 
+  // Reset LEDs
+  LedDriver::setColorForAll(LedDriver::Colors.black);
+
+  // Calibrate sensors
   Timer::delayMiliseconds(1000);
   QTRSensorDriver::calibrateSensors();
 
+  // Reset encoders
   EncoderDriver::reset();
 
   Timer::delayMiliseconds(25);
-  // logger->info("Waiting for run command...");
-
-  Mapper::map();
+  logger->info("Waiting for run command...");
 }
 
 void loop(void) {
-  // QTRSensorDriver::readCalibrated();
-  // Timer::delayMiliseconds(500);  
-  // logger->debug("[%03d %03d] %03d [%03d %03d]",
-  //               QTRSensorDriver::sensorValues[QTRSensorDriver::L_1],
-  //               QTRSensorDriver::sensorValues[QTRSensorDriver::L_2],
-  //               QTRSensorDriver::sensorValues[QTRSensorDriver::C_6],
-  //               QTRSensorDriver::sensorValues[QTRSensorDriver::R_1],
-  //               QTRSensorDriver::sensorValues[QTRSensorDriver::R_2]);
-  // Timer::delayMiliseconds(500);
+  switch(BLEListener::action) {
+  case BLEListener::Run: startRunning(); break;
 
-  // if(run) {
-  //   if(Timer::getMicroseconds() - lastTime >= 1000) {
-  //     VacuumDriver::pwmOutput(350);
-  //     MotorDriver::speedOutput(150);
-  //     LedDriver::setColorForAll(LedDriver::Colors.red);
+  case BLEListener::Map: Mapper::map(); break;
 
-  //     lastTime = Timer::getMicroseconds();
-  //   }
-  // } else {
-  //   MotorDriver::stop();
-  //   VacuumDriver::pwmOutput(0);
-  //   LedDriver::setColorForAll(LedDriver::Colors.green);
-  // }
+  case BLEListener::CustomAction: customAction(); break;
+
+  case BLEListener::None:
+  default: stopRunning();
+  }
+
+  // Being pedantic to avoid that the robot runs when it shouldn't
+  stopRunning();
+
+  // Reset the action variable after the command was performed
+  BLEListener::action = BLEListener::None;
+
+  Timer::delayMiliseconds(100);
 }
