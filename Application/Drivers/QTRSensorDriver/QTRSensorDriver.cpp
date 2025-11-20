@@ -90,7 +90,7 @@ void QTRSensorDriver::calibrateSensors() {
 
   logger->info("Calibrating sensors...");
 
-  LedDriver::setColorForAll(LedDriver::Colors.red);
+  LedDriver::setColorForAll(LedDriver::Colors.blue);
 
   for(uint16_t s = 0; s < SAMPLES; s++) {
     // Get the min and max values
