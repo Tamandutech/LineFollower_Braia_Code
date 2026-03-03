@@ -28,7 +28,7 @@
 
 /*
  * Here we declare private (aka static) variables to this file, but they are
- * still sharede between functions
+ * still shared between functions
  */
 static Logger *logger = new Logger("Main", true, Logger::Level::All);
 
@@ -38,7 +38,6 @@ static Logger *logger = new Logger("Main", true, Logger::Level::All);
 static void stopRunning() {
   MotorDriver::stop();
   VacuumDriver::stopAfter(700);
-  LedDriver::setColorForAll(LedDriver::Colors.white);
 }
 
 static void startRunning() {
@@ -158,6 +157,8 @@ void setup(void) {
 }
 
 void loop(void) {
+  static Timer inactivityTimer(Timer::Miliseconds);
+
   switch(BLEListener::action) {
   case BLEListener::Run: startRunning(); break;
 
@@ -174,6 +175,14 @@ void loop(void) {
 
   // Reset the action variable after the command was performed
   BLEListener::action = BLEListener::None;
+
+  // Blink LEDs to show inactivity
+  if(inactivityTimer.getElapsedTime() > 2000) {
+    LedDriver::setColorForAll(LedDriver::Colors.white);
+    inactivityTimer.reset();
+  } else if(inactivityTimer.getElapsedTime() > 1000) {
+    LedDriver::setColorForAll(LedDriver::Colors.green);
+  }
 
   Timer::delayMiliseconds(100);
 }
