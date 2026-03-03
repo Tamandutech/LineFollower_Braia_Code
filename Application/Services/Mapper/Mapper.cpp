@@ -8,6 +8,7 @@
 #include "Mapper.hpp"
 #include "../../Context/GlobalData.hpp"
 #include "../../Drivers/EncoderDriver/EncoderDriver.hpp"
+#include "../../Drivers/LedDriver/LedDriver.hpp"
 #include "../../Drivers/MotorDriver/MotorDriver.hpp"
 #include "../../Drivers/VacuumDriver/VacuumDriver.hpp"
 #include "../../Services/BLEListener/BLEListener.hpp"
@@ -67,7 +68,6 @@ void Mapper::readLateral() {
     qtdRightMark++;
     readRightBefore = true;
     firstTimeRight  = false;
-    EncoderDriver::reset();
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
 
@@ -79,23 +79,16 @@ void Mapper::readLateral() {
     readRightBefore    = true;
     readLeftBefore     = true;
 
-    logger->info("Passed through an intersection");
+    logger->info("Intersection");
   }
   // Reading a right mark for the second time
   else if(notReadingLeft && readingRight && !readRightBefore &&
           !firstTimeRight) {
+    readRightBefore = true;
     qtdRightMark++;
     globalData.markCount++;
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
-
-    /*
-     * TODO
-     * Problem: Robot is identifing right marks on intersections, we probably
-     * can skip these steps and stop manually
-     */
-    // MotorDriver::stop();
-    // VacuumDriver::stopAfter(700);
 
     logger->info("#%03d Encoders: %07d [Right]", globalData.markCount.load(),
                  EncoderDriver::getAverage());
@@ -119,25 +112,27 @@ void Mapper::map() {
   uint32_t lastTime = 0;
 
   // Reset variables
-  qtdLeftMark          = 0;
-  qtdRightMark         = 0;
-  readRightBefore      = false;
-  readLeftBefore       = false;
-  readIntersecBefore   = false;
-  firstTimeRight       = true;
+  qtdLeftMark        = 0;
+  qtdRightMark       = 0;
+  readRightBefore    = false;
+  readLeftBefore     = false;
+  readIntersecBefore = false;
+  firstTimeRight     = true;
+
+  globalData.mapData.clear();
   globalData.markCount = 0;
 
+  EncoderDriver::reset();
+
+  LedDriver::setColorForAll(LedDriver::Colors.magenta);
   logger->info("Mapping...");
   lastTime = Timer::getMicroseconds();
 
   while(BLEListener::action == BLEListener::Map) {
     if(Timer::getMicroseconds() - lastTime >= 1000) {
-      MotorDriver::pwmOutput(150);
+      MotorDriver::pwmOutput(120);
       VacuumDriver::pwmOutput(350);
       readLateral();
-
-      // Problem: Robot is identifing right marks on intersections
-      // if(qtdRightMark >= 2) break;
 
       lastTime = Timer::getMicroseconds();
     }
@@ -152,28 +147,25 @@ void Mapper::map() {
 void Mapper::logMap() {
   // #mmm eeeeeee ssss'\n''\0' == 19 characters per line
   const size_t lineLength = 19;
-  const char  *header     = "\nMARK ENCODER PWM\n";
-  size_t logSize = globalData.markCount.load() * lineLength + strlen(header);
-  char   formattingLine[lineLength];
-  char  *logMessage = (char *)malloc(logSize);
+  char         line[lineLength];
 
-  // Add the header to the log string
-  snprintf(logMessage, logSize, "%s", header);
+  logger->info("\nMARK ENCODER PWM\n");
+  Timer::delayMiliseconds(20);
 
-  // Concatenate each line of the mapping
-  for(uint8_t m = 0; m <= globalData.markCount.load(); m++) {
-    snprintf(formattingLine, lineLength, "#%03d %07d %04.0f\n", m,
-             globalData.mapData[m].encoderAverage,
-             globalData.mapData[m].baseMotorPWM);
+  // Send each line of the mapping
+  for(size_t m = 0; m < globalData.mapData.size(); m++) {
+    int ret;
+    ret = snprintf(static_cast<char *>(line), lineLength, "#%03d %07d %04.0f",
+                   m, globalData.mapData.at(m).encoderAverage,
+                   globalData.mapData.at(m).baseMotorPWM);
 
-    strncat(logMessage, formattingLine, logSize);
+    if(ret < 0) continue;
+
+    Logger::log("%s", static_cast<const char *>(line));
+    // TODO remove these delays after implementing a communication task
+    Timer::delayMiliseconds(20);
   }
 
-  // TODO remove these delays after implementing a communication task
-  Timer::delayMiliseconds(200);
-  logger->info("%s", logMessage);
-  Timer::delayMiliseconds(1500);
-
-  free(logMessage);
-  logMessage = NULL;
+  logger->info("Done!\n");
+  Timer::delayMiliseconds(20);
 }
