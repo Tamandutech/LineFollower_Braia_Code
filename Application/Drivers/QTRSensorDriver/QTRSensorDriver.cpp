@@ -89,6 +89,7 @@ void QTRSensorDriver::calibrateSensors() {
   }
 
   logger->info("Calibrating sensors...");
+  calibrated = true;
 
   LedDriver::setColorForAll(LedDriver::Colors.blue);
 
@@ -110,7 +111,30 @@ void QTRSensorDriver::calibrateSensors() {
     }
   }
 
-  logger->info("Sensors calibrated");
+  /*
+   * From the empirical values:
+   *    Max value average: 3425
+   *    Min value average: 200
+   *    Difference is:     3225 (we're going to consider 2300)
+   *
+   * If the difference between the values for calibration is less than
+   * difference, we can consider it unsuccessful
+   */
+  for(uint8_t i = 0; i < _N_SENSORS; i++) {
+    if(maxValues[i] - minValues[i] < 2300) {
+      calibrated = false;
+      logger->warning(
+          "Bad calibration for sensor #%02d\n    ↳ Max/Min: [%04d, %04d]", i,
+          maxValues[i], minValues[i]);
+      Timer::delayMiliseconds(25);
+    }
+  }
+
+  if(calibrated)
+    logger->info("Sensors calibrated");
+  else
+    logger->error("SENSORS NOT CALIBRATED, REDO IT!");
+  Timer::delayMiliseconds(25);
 
   logger->debug("Max/Min:\n"
                 "[%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%"
@@ -136,10 +160,6 @@ void QTRSensorDriver::calibrateSensors() {
                 minValues[10], minValues[11], minValues[12], minValues[13],
                 // Right
                 minValues[14], minValues[15]);
-
-  calibrated = true;
-
-  LedDriver::setColorForAll(LedDriver::Colors.black);
 }
 
 void QTRSensorDriver::readCalibrated() {
