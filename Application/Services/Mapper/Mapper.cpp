@@ -7,6 +7,7 @@
 
 #include "Mapper.hpp"
 #include "../../Context/GlobalData.hpp"
+#include "../../Context/RobotEnv.hpp"
 #include "../../Drivers/EncoderDriver/EncoderDriver.hpp"
 #include "../../Drivers/LedDriver/LedDriver.hpp"
 #include "../../Drivers/MotorDriver/MotorDriver.hpp"
@@ -57,7 +58,9 @@ void Mapper::readLateral() {
     qtdLeftMark++;
     readLeftBefore = true;
 
-    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
+    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM(),
+                                  RobotEnv::BASE_VACUUM_PWM,
+                                  LedDriver::Colors.white});
 
     logger->info("#%03d Encoders: %07d", globalData.markCount.load(),
                  EncoderDriver::getAverage());
@@ -69,7 +72,9 @@ void Mapper::readLateral() {
     readRightBefore = true;
     firstTimeRight  = false;
 
-    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
+    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM(),
+                                  RobotEnv::BASE_VACUUM_PWM,
+                                  LedDriver::Colors.white});
 
     logger->info("#%03d Start of the track", globalData.markCount.load());
   }
@@ -88,7 +93,9 @@ void Mapper::readLateral() {
     qtdRightMark++;
     globalData.markCount++;
 
-    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM()});
+    globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM(),
+                                  RobotEnv::BASE_VACUUM_PWM,
+                                  LedDriver::Colors.white});
 
     logger->info("#%03d Encoders: %07d [Right]", globalData.markCount.load(),
                  EncoderDriver::getAverage());
@@ -130,8 +137,8 @@ void Mapper::map() {
 
   while(BLEListener::action == BLEListener::Map) {
     if(Timer::getMicroseconds() - lastTime >= 1000) {
-      MotorDriver::pwmOutput(120);
-      VacuumDriver::pwmOutput(350);
+      MotorDriver::pwmOutput(RobotEnv::BASE_MOTOR_PWM);
+      VacuumDriver::pwmOutput(RobotEnv::BASE_VACUUM_PWM);
       readLateral();
 
       lastTime = Timer::getMicroseconds();
@@ -145,8 +152,8 @@ void Mapper::map() {
 }
 
 void Mapper::logMap() {
-  // #mmm eeeeeee ssss'\n''\0' == 19 characters per line
-  const size_t lineLength = 19;
+  // #mmm eeeeeee ssss'\0' == 18 characters per line
+  const size_t lineLength = 18;
   char         line[lineLength];
 
   logger->info("\nMARK ENCODER PWM\n");

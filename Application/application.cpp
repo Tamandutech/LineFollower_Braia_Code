@@ -41,9 +41,15 @@ static void stopRunning() {
 }
 
 static void startRunning() {
-  const uint16_t vacuumPWM     = 350;
-  uint8_t        mapPointIndex = 0;
-  uint32_t       lastTime      = 0;
+  const uint16_t vacuumPWM = 350;
+  uint8_t        i         = 1;
+  uint32_t       lastTime  = 0;
+
+  // Assert
+  if(globalData.mapData.size() < 10) {
+    logger->error("Map is too small: %d points", globalData.mapData.size());
+    return;
+  }
 
   // Prepare
   LedDriver::setColorForAll(LedDriver::Colors.magenta);
@@ -52,26 +58,24 @@ static void startRunning() {
   lastTime = Timer::getMicroseconds();
 
   // Start
-  while(BLEListener::action == BLEListener::Run) {
+  while(BLEListener::action == BLEListener::Run &&
+        i < globalData.mapData.size()) {
     if(Timer::getMicroseconds() - lastTime >= 1000) {
-      VacuumDriver::pwmOutput(vacuumPWM);
-      LedDriver::setColorForAll(LedDriver::Colors.red);
+      int32_t avg = EncoderDriver::getAverage();
 
-      MotorDriver::pwmOutput(150);
-      /*
-       * Remova a linha anterior e descomente o bloco a seguir para usar a
-       * velocidade definida para cada trecho no mapeamento. Você deve assinar o
-       * mapeamento para a variavél manualmente. O código a seguir não foi
-       * testado
-       */
-      /************************************************************************/
-      // if(globalData.mapData[mapPointIndex].encoderAverage >
-      //        EncoderDriver::getAverage() &&
-      //    (mapPointIndex + 1) < globalData.mapData.size()) {
-      //   mapPointIndex++;
-      // }
-      // MotorDriver::pwmOutput(globalData.mapData[mapPointIndex].baseMotorPWM);
-      /************************************************************************/
+      if(avg >= globalData.mapData[i - 1].encoderAverage &&
+         avg < globalData.mapData[i].encoderAverage) {
+        // At index i-1
+        VacuumDriver::pwmOutput(globalData.mapData[i - 1].baseMotorPWM);
+        MotorDriver::pwmOutput(globalData.mapData[i - 1].baseVacuumPWM);
+        LedDriver::setColorForAll(globalData.mapData[i - 1].color);
+      } else {
+        // At index i
+        VacuumDriver::pwmOutput(globalData.mapData[i].baseMotorPWM);
+        MotorDriver::pwmOutput(globalData.mapData[i].baseVacuumPWM);
+        LedDriver::setColorForAll(globalData.mapData[i].color);
+        i++;
+      }
 
       lastTime = Timer::getMicroseconds();
     }
@@ -154,6 +158,20 @@ void setup(void) {
 
   Timer::delayMiliseconds(25);
   logger->info("Waiting for run command...");
+
+  ///////////////////////////// Manual mapping  ////////////////////////////////
+  // Reset variables
+  globalData.mapData.clear();
+  globalData.markCount = 0;
+
+  // Assign data
+  /*
+  globalData.mapData = {
+      {0, 100, 300, LedDriver::Colors.magenta},
+      {0, 100, 300, LedDriver::Colors.magenta}
+  };
+  */
+  /****************************************************************************/
 }
 
 void loop(void) {

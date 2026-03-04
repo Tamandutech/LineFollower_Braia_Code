@@ -12,17 +12,21 @@
 #include <cstdint>
 #include <vector>
 
+#include "../Drivers/LedDriver/LedDriver.hpp"
+
 typedef struct _MapPoint {
-  int32_t encoderAverage;
-  float   baseMotorPWM;
+  int32_t                    encoderAverage;
+  float                      baseMotorPWM;
+  float                      baseVacuumPWM;
+  const LedDriver::RgbColor &color;
 } MapPoint;
 
 
 typedef struct _GlobalData {
-  std::atomic<bool> isReadyToRun;
-  std::atomic<int32_t> finishLineCount;
-  std::vector<MapPoint> mapData;
-  std::atomic<int32_t> markCount;
+  std::atomic<bool>        isReadyToRun;
+  std::atomic<int32_t>     finishLineCount;
+  std::vector<MapPoint>    mapData;
+  std::atomic<std::size_t> markCount;
 } GlobalData;
 
 extern GlobalData globalData;
