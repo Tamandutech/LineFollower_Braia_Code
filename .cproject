@@ -259,7 +259,7 @@
 		<buildTargets>
 			<target name="Generate compile_commands.json" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>bear</buildCommand>
-				<buildArguments>--output ../compile_commands.json -- make all</buildArguments>
+				<buildArguments>--output ../compile_commands.json -- make -j6 all</buildArguments>
 				<buildTarget/>
 				<stopOnError>false</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
