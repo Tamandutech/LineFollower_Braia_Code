@@ -15,10 +15,10 @@
 #include "../Drivers/LedDriver/LedDriver.hpp"
 
 typedef struct _MapPoint {
-  int32_t                    encoderAverage;
-  float                      baseMotorPWM;
-  float                      baseVacuumPWM;
-  const LedDriver::RgbColor &color;
+  int32_t             encoderAverage;
+  float               baseMotorPWM;
+  float               baseVacuumPWM;
+  LedDriver::RgbColor color;
 } MapPoint;
 
 

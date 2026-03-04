@@ -7,6 +7,7 @@
 
 #include "application.h"
 
+#include "Context/RobotEnv.hpp"
 #include "adc.h"
 #include "tim.h"
 
@@ -41,19 +42,18 @@ static void stopRunning() {
 }
 
 static void startRunning() {
-  const uint16_t vacuumPWM = 350;
-  uint8_t        i         = 1;
-  uint32_t       lastTime  = 0;
+  uint8_t  i        = 1;
+  uint32_t lastTime = 0;
 
   // Assert
-  if(globalData.mapData.size() < 10) {
+  if(globalData.mapData.size() < 3) {
     logger->error("Map is too small: %d points", globalData.mapData.size());
     return;
   }
 
   // Prepare
   LedDriver::setColorForAll(LedDriver::Colors.magenta);
-  VacuumDriver::pwmAcceleratedOutput(vacuumPWM);
+  VacuumDriver::pwmAcceleratedOutput(RobotEnv::BASE_VACUUM_PWM);
   EncoderDriver::reset();
   lastTime = Timer::getMicroseconds();
 
@@ -66,14 +66,19 @@ static void startRunning() {
       if(avg >= globalData.mapData[i - 1].encoderAverage &&
          avg < globalData.mapData[i].encoderAverage) {
         // At index i-1
-        VacuumDriver::pwmOutput(globalData.mapData[i - 1].baseMotorPWM);
         MotorDriver::pwmOutput(globalData.mapData[i - 1].baseVacuumPWM);
+        VacuumDriver::pwmOutput(globalData.mapData[i - 1].baseMotorPWM);
         LedDriver::setColorForAll(globalData.mapData[i - 1].color);
-      } else {
+      } else if(avg >= globalData.mapData[i].encoderAverage) {
         // At index i
-        VacuumDriver::pwmOutput(globalData.mapData[i].baseMotorPWM);
         MotorDriver::pwmOutput(globalData.mapData[i].baseVacuumPWM);
+        VacuumDriver::pwmOutput(globalData.mapData[i].baseMotorPWM);
         LedDriver::setColorForAll(globalData.mapData[i].color);
+
+        logger->info("[%02d] Encoder: %04d, motor: %03.0f, vacuum: %03.0f", i,
+                     avg, globalData.mapData[i].baseMotorPWM,
+                     globalData.mapData[i].baseVacuumPWM);
+
         i++;
       }
 
@@ -85,6 +90,7 @@ static void startRunning() {
   // This action will be performed only if the stop command wasn't sent
   if(BLEListener::action == BLEListener::Run) {
     MotorDriver::stop();
+    logger->info("Stopping at encoder %04d", EncoderDriver::getAverage());
     VacuumDriver::stopAfter(700);
   }
 }
@@ -165,12 +171,16 @@ void setup(void) {
   globalData.markCount = 0;
 
   // Assign data
-  /*
   globalData.mapData = {
-      {0, 100, 300, LedDriver::Colors.magenta},
-      {0, 100, 300, LedDriver::Colors.magenta}
+      {0,     110, 200, LedDriver::Colors.red   },
+      {10000, 120, 210, LedDriver::Colors.blue  },
+      {20000, 130, 200, LedDriver::Colors.yellow},
+      {30000, 140, 190, LedDriver::Colors.cyan  },
+      {40000, 150, 220, LedDriver::Colors.red   },
+
+      // Last point should be the end of the track
+      {60000, 0,   270, LedDriver::Colors.orange},
   };
-  */
   /****************************************************************************/
 }
 
