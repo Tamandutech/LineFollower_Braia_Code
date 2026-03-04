@@ -16,7 +16,7 @@ float PID::getPID() {
 
   float P   = arrayError;
   float D   = arrayError - lastError;
-  float PID = (RobotEnv::PID::kp * P) + (RobotEnv::PID::kd * D);
+  float PID = (RobotEnv::kp * P) + (RobotEnv::kd * D);
 
   lastError = arrayError;
 

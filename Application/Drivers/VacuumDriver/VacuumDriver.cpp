@@ -27,19 +27,16 @@ void VacuumDriver::pwmOutput(uint16_t target) {
 void VacuumDriver::pwmAcceleratedOutput(uint16_t target) {
   uint16_t currentValue = lastPWM;
 
-  target = std::max(
-      target, static_cast<uint16_t>(RobotEnv::VacuumDriver::BASE_VACUUM_PWM));
+  target = std::max(target, static_cast<uint16_t>(RobotEnv::BASE_VACUUM_PWM));
   target = std::min(target, static_cast<uint16_t>(RobotEnv::MAX_MOTOR_PWM));
 
   while(currentValue != target) {
     if(currentValue < target) {
       __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, ++currentValue);
-      Timer::delayMiliseconds(
-          RobotEnv::VacuumDriver::INTERVAL_BETWEEN_INCREMENTS);
+      Timer::delayMiliseconds(RobotEnv::VACUUM_INTERVAL_BETWEEN_INCREMENTS);
     } else if(currentValue > target) {
       __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, --currentValue);
-      Timer::delayMiliseconds(
-          RobotEnv::VacuumDriver::INTERVAL_BETWEEN_INCREMENTS);
+      Timer::delayMiliseconds(RobotEnv::VACUUM_INTERVAL_BETWEEN_INCREMENTS);
     }
   }
 
