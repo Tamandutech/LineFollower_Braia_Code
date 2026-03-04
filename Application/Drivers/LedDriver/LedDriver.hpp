@@ -6,7 +6,7 @@
  *      Author: Samuel Oliveira
  */
 
- /*******************************************************************************
+/*******************************************************************************
  * @file  WS2812Driver.h
  * @brief  Driver for addressable WS2812B LEDs, using TIM PWM and DMA.
  * @note  This driver was developed for the Celeris Core S1
@@ -56,6 +56,8 @@ public:
     RgbColor magenta;
     RgbColor white;
     RgbColor yellow;
+    RgbColor orange;
+    RgbColor indigo;
     RgbColor cyan;
     RgbColor black;
   } PredefinedColors;
@@ -83,12 +85,12 @@ private:
   static RgbColor ledsColors[_N_LEDS];
   /*
    * DMA Static buffer for DMA:
-   * Main buffer. Declared as 'static' to avoid stack overflow. 
-   * The size is calculated based on the maximum LEDs and the reset pulse. 
+   * Main buffer. Declared as 'static' to avoid stack overflow.
+   * The size is calculated based on the maximum LEDs and the reset pulse.
    * We use uint32_t to match the size of the timer register (CCR).
    */
-  static uint32_t pwmBuffer[RESET_CYCLES + RESET_CYCLES
-                            + _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT];
+  static uint32_t pwmBuffer[RESET_CYCLES + RESET_CYCLES +
+                            _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT];
 
   static void outputColors();
 };
