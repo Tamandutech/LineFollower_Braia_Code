@@ -10,6 +10,7 @@
 
 Timer::Timer(Type newType) {
   type = newType;
+  tickStart = 0;
 }
 
 uint32_t Timer::getTickByType() {

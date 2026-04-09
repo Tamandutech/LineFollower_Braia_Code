@@ -7,10 +7,12 @@
 
 #include "application.h"
 
-#include "Context/RobotEnv.hpp"
+// Headers from STM HAL
 #include "adc.h"
 #include "tim.h"
 
+// Headers from our code base
+#include "Context/RobotEnv.hpp"
 #include "Context/GlobalData.hpp"
 
 #include "Services/BLEListener/BLEListener.hpp"
@@ -25,6 +27,8 @@
 #include "Drivers/MotorDriver/MotorDriver.hpp"
 #include "Drivers/QTRSensorDriver/QTRSensorDriver.hpp"
 #include "Drivers/VacuumDriver/VacuumDriver.hpp"
+
+// Standard headers
 #include <cstdint>
 
 /*

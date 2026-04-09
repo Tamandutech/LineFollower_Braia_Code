@@ -9,8 +9,6 @@
 #ifndef DRIVERS_MOTORDRIVER_MOTORDRIVER_HPP_
 #define DRIVERS_MOTORDRIVER_MOTORDRIVER_HPP_
 
-#include "../../Utils/Logger/Logger.hpp"
-
 #include "stm32g4xx_hal.h"
 #include <cstdint>
 
@@ -28,7 +26,7 @@ public:
   static void stop();
 
 private:
-  typedef struct _Pin {
+  struct Pin {
     // Motor direction pin
     GPIO_TypeDef *dirPort;
     uint16_t      dirPin;
@@ -36,9 +34,7 @@ private:
     TIM_HandleTypeDef *pwmhtim;
     // PWM channel
     uint32_t pwmChannel;
-  } Pin;
-
-  // Motors motor;
+  };
 
   const static Pin motorPins[_N_MOTORS];
   static float     motorSpeed[_N_MOTORS];

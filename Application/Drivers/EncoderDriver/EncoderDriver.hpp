@@ -9,7 +9,6 @@
 #define DRIVERS_ENCODERDRIVER_ENCODERDRIVER_HPP_
 
 #include "encoders.h"
-#include "stm32g4xx_hal.h"
 #include <cstdint>
 
 class EncoderDriver {

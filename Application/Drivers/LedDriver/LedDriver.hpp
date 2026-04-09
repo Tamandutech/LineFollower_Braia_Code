@@ -42,14 +42,14 @@
 class LedDriver {
 public:
   // Defining a color type
-  typedef struct _RgbColor {
+  struct RgbColor {
     uint8_t r;
     uint8_t g;
     uint8_t b;
-  } RgbColor;
+  };
 
   // Defining and declaring a set of predefined colors
-  typedef struct _PredefinedColors {
+  struct PredefinedColors {
     RgbColor red;
     RgbColor green;
     RgbColor blue;
@@ -60,7 +60,7 @@ public:
     RgbColor indigo;
     RgbColor cyan;
     RgbColor black;
-  } PredefinedColors;
+  };
   const static PredefinedColors Colors;
 
   /*

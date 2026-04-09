@@ -24,6 +24,4 @@ public:
 
 #endif /* UTILS_TIMESTAMP_HPP_ */
 
-/*
-  Dvořák: 9. Sinfonie
-*/
+// Dvořák: 9. Sinfonie

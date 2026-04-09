@@ -9,12 +9,12 @@
 #define APPLICATION_H_
 
 #ifdef __cplusplus
-#define EXTERNC extern "C"
+#define EXTERN_C extern "C"
 #else
-#define EXTERNC
+#define EXTERN_C
 #endif
 
-EXTERNC void setup(void);
-EXTERNC void loop(void);
+EXTERN_C void setup(void);
+EXTERN_C void loop(void);
 
 #endif /* APPLICATION_H_ */

@@ -19,12 +19,12 @@ public:
   static void stopAfter(uint32_t miliseconds);
 
 private:
-  typedef struct _Pin {
+  struct Pin {
     // Motor PWM pin
     TIM_HandleTypeDef *pwmhtim;
     // PWM channel
     uint32_t pwmChannel;
-  } Pin;
+  };
 
   static Pin      pin;
   static uint16_t lastPWM;
