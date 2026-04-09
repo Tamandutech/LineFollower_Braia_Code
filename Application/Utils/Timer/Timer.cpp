@@ -52,11 +52,11 @@ uint32_t Timer::getMiliseconds() {
 }
 
 uint32_t Timer::getMicroseconds() {
-  return (uint32_t)((TIM2->CNT) / (uint32_t)10);
+  return (uint32_t)((TIM2->CNT) / (uint32_t)10); // NOLINT
 }
 
 uint32_t Timer::getNanoseconds() {
-  return (uint32_t)((TIM2->CNT) * 100U);
+  return (uint32_t)((TIM2->CNT) * 100U); // NOLINT
 }
 
 void Timer::delayMiliseconds(uint32_t miliseconds) {

@@ -17,7 +17,7 @@ volatile BLEListener::Action BLEListener::action = BLEListener::None;
 
 void BLEListener::start() {
   // Init DMA reception
-  HAL_UART_Receive_DMA(&BLE_BUS, rx_buffer, 1);
+  HAL_UART_Receive_DMA(&BLE_BUS, static_cast<uint8_t *>(rx_buffer), 1);
 }
 
 void BLEListener::restart() {
@@ -41,7 +41,7 @@ static void updateAction() {
 
 extern "C" {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  if(huart->Instance == USART1) {
+  if(huart->Instance == USART1) { // NOLINT
     // A C-compatible function to interpret the received character
     updateAction();
 

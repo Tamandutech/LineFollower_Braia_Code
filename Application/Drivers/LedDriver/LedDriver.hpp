@@ -97,6 +97,4 @@ private:
 
 #endif /* DRIVERS_LEDDRIVER_LEDDRIVER_HPP_ */
 
-/*
-  Satie: Gymnopedies 1 & 3 (Orchestration: Debussy)
-*/
+// Satie: Gymnopedies 1 & 3 (Orchestration: Debussy)

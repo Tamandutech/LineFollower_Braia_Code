@@ -39,7 +39,7 @@ uint32_t            LedDriver::pwmBuffer[RESET_CYCLES + RESET_CYCLES +
 
 void LedDriver::outputColors() {
   // Pointer to the start of our DMA buffer
-  uint32_t *buffer_ptr = pwmBuffer;
+  uint32_t *buffer_ptr = static_cast<uint32_t *>(pwmBuffer);
 
   // Add RESET pulse at the beginning
   for(int i = 0; i < RESET_CYCLES; i++) {
@@ -101,7 +101,8 @@ void LedDriver::outputColors() {
 
   // Starts DMA transfer
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, pwmBuffer, total_buffer_size);
+  HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1,
+                        static_cast<uint32_t *>(pwmBuffer), total_buffer_size);
 }
 
 void LedDriver::setColorForAll(RgbColor color) {
