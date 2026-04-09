@@ -51,6 +51,7 @@ protected:
   static void     readCalibrated();
 
 private:
+  // TODO test with volatile
   static uint32_t *const rawSensorValues[_N_SENSORS];
   static uint32_t        maxValues[_N_SENSORS];
   static uint32_t        minValues[_N_SENSORS];

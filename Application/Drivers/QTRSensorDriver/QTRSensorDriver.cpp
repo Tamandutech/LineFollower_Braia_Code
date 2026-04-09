@@ -174,6 +174,7 @@ void QTRSensorDriver::readCalibrated() {
   //   calibrated = true;
   // }
 
+  // TODO <= may be wrong and reseting the calibrated variable
   for(uint8_t i = 0; i <= _N_SENSORS; i++) {
     uint16_t calmin, calmax;
 

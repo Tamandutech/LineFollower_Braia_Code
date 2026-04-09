@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "MotorDriver.hpp"
 #include "../../Context/RobotEnv.hpp"
 #include "../../Services/PID/PID.hpp"
+#include "MotorDriver.hpp"
 #include "tim.h"
 
 const MotorDriver::Pin MotorDriver::motorPins[_N_MOTORS] = {
@@ -44,25 +44,13 @@ void MotorDriver::pwmOutputFor(Motors motor, int16_t duty) {
                         duty);
 }
 
-// TODO desiredSpeed should be in m/s (?), but currently its a PWM value
 void MotorDriver::pwmOutput(float desiredSpeed) {
-  // TODO
-  // caso o valor desejado seja maior que a tensão da bateria, o valor
-  // desejado é a tensão da bateria
-  //    float targetVoltage = desiredVoltage;
-  //    if (targetVoltage > get_battery_voltage(adc_buffer)) {
-  //        targetVoltage = get_battery_voltage(adc_buffer);
-  //    }
+  int u = PID::getPID();
 
-  // map a value from 0v to vBat to 0 to 1000
-  // float desiredSpeed = (targetVoltage * 1000.0f) /
-  // get_battery_voltage(adc_buffer);
-
-  int PID = PID::getPID();
-
-  // TODO why (+ PID) and (- PID)?
-  motorSpeed[Left]  = desiredSpeed + PID;
-  motorSpeed[Right] = desiredSpeed - PID;
+  // The "u" refers to a rotational PID that corrects robot position, so we add
+  // an subtract from left and right motors, respectively
+  motorSpeed[Left]  = desiredSpeed + u;
+  motorSpeed[Right] = desiredSpeed - u;
 
   pwmOutputFor(Right, motorSpeed[Right]);
   pwmOutputFor(Left, motorSpeed[Left]);
