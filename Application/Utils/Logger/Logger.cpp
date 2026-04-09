@@ -55,7 +55,7 @@ void Logger::formatLog(const char *logLevelStamp) {
   uint32_t milliseconds = 0;
 
   timestamp.getTimestamp(&minutes, &seconds, &milliseconds);
-  snprintf(timestampStr, LOGGER_TIMESTAMP_LENGTH, "%02d:%02d.%03d ", minutes,
+  snprintf(timestampStr, LOGGER_TIMESTAMP_LENGTH, "%02d:%02d.%03lu ", minutes,
            seconds, milliseconds);
 
   // Timestamp [logLevelStamp] tag: buffer useDoubleBreak

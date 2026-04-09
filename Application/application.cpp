@@ -75,8 +75,9 @@ static void startRunning() {
         VacuumDriver::pwmOutput(globalData.mapData[i].baseMotorPWM);
         LedDriver::setColorForAll(globalData.mapData[i].color);
 
-        logger->info("[%02d] Encoder: %04d, motor: %03.0f, vacuum: %03.0f", i,
-                     avg, globalData.mapData[i].baseMotorPWM,
+        logger->info("[%02d] Encoder: %04ld, motor: %03.0f, vacuum: %03.0f", i,
+                     avg, // NOLINT
+                     globalData.mapData[i].baseMotorPWM,
                      globalData.mapData[i].baseVacuumPWM);
 
         i++;
@@ -90,7 +91,8 @@ static void startRunning() {
   // This action will be performed only if the stop command wasn't sent
   if(BLEListener::action == BLEListener::Run) {
     MotorDriver::stop();
-    logger->info("Stopping at encoder %04d", EncoderDriver::getAverage());
+    logger->info("Stopping at encoder %04ld",
+                 EncoderDriver::getAverage()); // NOLINT
     VacuumDriver::stopAfter(700);
   }
 }

@@ -124,7 +124,7 @@ void QTRSensorDriver::calibrateSensors() {
     if(maxValues[i] - minValues[i] < 2300) {
       calibrated = false;
       logger->warning(
-          "Bad calibration for sensor #%02d\n    ↳ Max/Min: [%04d, %04d]", i,
+          "Bad calibration for sensor #%02d\n    ↳ Max/Min: [%04lu, %04lu]", i,
           maxValues[i], minValues[i]);
       Timer::delayMiliseconds(25);
     }
@@ -136,11 +136,14 @@ void QTRSensorDriver::calibrateSensors() {
     logger->error("SENSORS NOT CALIBRATED, REDO IT!");
   Timer::delayMiliseconds(25);
 
+  // NOLINTBEGIN
   logger->debug("Max/Min:\n"
-                "[%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%"
-                "04d,%04d,%04d,%04d]\n"
-                "[%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%04d,%"
-                "04d,%04d,%04d,%04d]",
+                "[%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%"
+                "04lu,%04lu,%"
+                "04lu,%04lu,%04lu,%04lu]\n"
+                "[%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%04lu,%"
+                "04lu,%04lu,%"
+                "04lu,%04lu,%04lu,%04lu]",
                 // MAX
                 //  Left
                 maxValues[0], maxValues[1],
@@ -160,6 +163,7 @@ void QTRSensorDriver::calibrateSensors() {
                 minValues[10], minValues[11], minValues[12], minValues[13],
                 // Right
                 minValues[14], minValues[15]);
+  // NOLINTEND
 }
 
 void QTRSensorDriver::readCalibrated() {

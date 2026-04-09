@@ -16,7 +16,7 @@
 #define LOGGER_FORMATTED_BUFFER (LOGGER_BUFFER_SIZE + 32)
 
 // MM:SS.mmm (+ space and null terminator)
-#define LOGGER_TIMESTAMP_LENGTH 11
+#define LOGGER_TIMESTAMP_LENGTH 16
 
 class Logger {
 public:

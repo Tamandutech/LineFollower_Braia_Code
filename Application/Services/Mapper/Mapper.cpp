@@ -62,8 +62,8 @@ void Mapper::readLateral() {
                                   RobotEnv::BASE_VACUUM_PWM,
                                   LedDriver::Colors.white});
 
-    logger->info("#%03d Encoders: %07d", globalData.markCount.load(),
-                 EncoderDriver::getAverage());
+    logger->info("#%03d Encoders: %07ld", globalData.markCount.load(),
+                 EncoderDriver::getAverage()); // NOLINT
   }
   // Reading a right mark for the first time
   else if(notReadingLeft && readingRight && !readRightBefore &&
@@ -97,8 +97,8 @@ void Mapper::readLateral() {
                                   RobotEnv::BASE_VACUUM_PWM,
                                   LedDriver::Colors.white});
 
-    logger->info("#%03d Encoders: %07d [Right]", globalData.markCount.load(),
-                 EncoderDriver::getAverage());
+    logger->info("#%03d Encoders: %07ld [Right]", globalData.markCount.load(),
+                 EncoderDriver::getAverage()); // NOLINT
   }
   // Reading no marks
   else if(notReadingLeft && notReadingRight) {
@@ -162,8 +162,8 @@ void Mapper::logMap() {
   // Send each line of the mapping
   for(size_t m = 0; m < globalData.mapData.size(); m++) {
     int ret;
-    ret = snprintf(static_cast<char *>(line), lineLength, "#%03d %07d %04.0f",
-                   m, globalData.mapData.at(m).encoderAverage,
+    ret = snprintf(static_cast<char *>(line), lineLength, "#%03d %07ld %04.0f",
+                   m, globalData.mapData.at(m).encoderAverage, // NOLINT
                    globalData.mapData.at(m).baseMotorPWM);
 
     if(ret < 0) continue;
