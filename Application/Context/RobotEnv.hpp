@@ -28,14 +28,14 @@ constexpr float INTEGRAL_MIN = -1000.0F; // Minimum value for the full term
 const float kp = 0.1;
 const float kd = 1.9;
 
-const int32_t BASE_MOTOR_PWM = 140;
+const int32_t BASE_MOTOR_PWM = 85;
 const int16_t MAX_MOTOR_PWM  = 1000;
 // TODO set unit (prefer SI [m/s])
 const float   MOTOR_MAX_SPEED        = 1000; // TODO this is a PWM value by now
 const int32_t MOTOR_MAX_DECELERATION = 4;
 const int32_t MOTOR_MAX_ROTATION_SPEED = 4;
 
-const uint16_t BASE_VACUUM_PWM                    = 270;
+const uint16_t BASE_VACUUM_PWM                    = 250;
 const uint8_t  VACUUM_INTERVAL_BETWEEN_INCREMENTS = 2; // ms
 
 } // namespace RobotEnv

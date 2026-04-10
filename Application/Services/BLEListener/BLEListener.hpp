@@ -12,7 +12,7 @@
 
 class BLEListener {
 public:
-  typedef enum _Action : uint8_t { None = 0, Run, Map, CustomAction } Action;
+  typedef enum : uint8_t { None = 0, Run, Map, CustomAction } Action;
 
   static volatile Action action;
 

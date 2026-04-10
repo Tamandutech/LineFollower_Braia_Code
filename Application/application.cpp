@@ -12,8 +12,8 @@
 #include "tim.h"
 
 // Headers from our code base
-#include "Context/RobotEnv.hpp"
 #include "Context/GlobalData.hpp"
+#include "Context/RobotEnv.hpp"
 
 #include "Services/BLEListener/BLEListener.hpp"
 #include "Services/Mapper/Mapper.hpp"
@@ -70,13 +70,13 @@ static void startRunning() {
       if(avg >= globalData.mapData[i - 1].encoderAverage &&
          avg < globalData.mapData[i].encoderAverage) {
         // At index i-1
-        MotorDriver::pwmOutput(globalData.mapData[i - 1].baseVacuumPWM);
-        VacuumDriver::pwmOutput(globalData.mapData[i - 1].baseMotorPWM);
+        MotorDriver::pwmOutput(globalData.mapData[i - 1].baseMotorPWM);
+        VacuumDriver::pwmOutput(globalData.mapData[i - 1].baseVacuumPWM);
         LedDriver::setColorForAll(globalData.mapData[i - 1].color);
       } else if(avg >= globalData.mapData[i].encoderAverage) {
         // At index i
-        MotorDriver::pwmOutput(globalData.mapData[i].baseVacuumPWM);
-        VacuumDriver::pwmOutput(globalData.mapData[i].baseMotorPWM);
+        MotorDriver::pwmOutput(globalData.mapData[i].baseMotorPWM);
+        VacuumDriver::pwmOutput(globalData.mapData[i].baseVacuumPWM);
         LedDriver::setColorForAll(globalData.mapData[i].color);
 
         logger->info("[%02d] Encoder: %04ld, motor: %03.0f, vacuum: %03.0f", i,
@@ -97,7 +97,7 @@ static void startRunning() {
     MotorDriver::stop();
     logger->info("Stopping at encoder %04ld",
                  EncoderDriver::getAverage()); // NOLINT
-    VacuumDriver::stopAfter(700);
+    VacuumDriver::stopAfter(1000);
   }
 }
 
@@ -140,8 +140,8 @@ void setup(void) {
   BLEListener::start();
 
   // Print battery information
-  Timer::delayMiliseconds(25);
-  if(Battery::getBatteryVoltage() < 7.0F) {
+  Timer::delayMiliseconds(75);
+  if(Battery::getBatteryVoltage() < 7.8F) {
     logger->warning("Low battery: %.2f V", Battery::getBatteryVoltage());
   } else {
     logger->info("Battery voltage: %.2f V", Battery::getBatteryVoltage());
@@ -150,7 +150,7 @@ void setup(void) {
   // TODO
   // imu_init(&imu_ctx, &int1_route);
 
-  Timer::delayMiliseconds(25);
+  Timer::delayMiliseconds(75);
   logger->info("Robot started!");
 
   // Logger
@@ -163,7 +163,7 @@ void setup(void) {
 
   // Calibrate sensors
   Timer::delayMiliseconds(1000);
-  QTRSensorDriver::calibrateSensors();
+  // QTRSensorDriver::calibrateSensors();
 
   // Reset encoders
   EncoderDriver::reset();
@@ -178,14 +178,31 @@ void setup(void) {
 
   // Assign data
   globalData.mapData = {
-      {0,     110, 200, LedDriver::Colors.red   },
-      {10000, 120, 210, LedDriver::Colors.blue  },
-      {20000, 130, 200, LedDriver::Colors.yellow},
-      {30000, 140, 190, LedDriver::Colors.cyan  },
-      {40000, 150, 220, LedDriver::Colors.red   },
+      {0,      85, 250, LedDriver::Colors.red   },
+
+      // Zig zag
+      {15000,  85, 250, LedDriver::Colors.blue  },
+
+      // Trombone
+      {85000,  85, 270, LedDriver::Colors.green },
+
+      // Straight
+      {170000, 80, 270, LedDriver::Colors.red   },
+
+      // Snail
+      {300000, 85, 270, LedDriver::Colors.cyan  },
+
+      // Short straight
+      {505000, 85, 270, LedDriver::Colors.orange},
+
+      // Squares
+      {570000, 85, 270, LedDriver::Colors.indigo},
+
+      // Infinite
+      {750000, 85, 270, LedDriver::Colors.blue  },
 
       // Last point should be the end of the track
-      {60000, 0,   270, LedDriver::Colors.orange},
+      {940000, 0,  270, LedDriver::Colors.white }
   };
   /****************************************************************************/
 }
