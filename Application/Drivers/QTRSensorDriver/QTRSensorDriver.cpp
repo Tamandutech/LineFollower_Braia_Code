@@ -167,15 +167,13 @@ void QTRSensorDriver::calibrateSensors() {
 }
 
 void QTRSensorDriver::readCalibrated() {
-  // FIXME always emiting a warning
   // Emit a warning once, if sensors aren't calibrated
-  // if(!calibrated) {
-  //   logger->warning("Sensors not calibrated!");
-  //   calibrated = true;
-  // }
+  if(!calibrated) {
+    logger->warning("Sensors not calibrated!");
+    calibrated = true;
+  }
 
-  // TODO <= may be wrong and reseting the calibrated variable
-  for(uint8_t i = 0; i <= _N_SENSORS; i++) {
+  for(uint8_t i = 0; i < _N_SENSORS; i++) {
     uint16_t calmin, calmax;
 
     calmax = maxValues[i];
