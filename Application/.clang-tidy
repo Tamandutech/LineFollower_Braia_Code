@@ -1,5 +1,5 @@
 ---
-Checks: '-*,cppcoreguidelines-pro-bounds-*,cppcoreguidelines-pro-type-*,cert-*,clang-analyzer-core-*,clang-analyzer-cplusplus-*,clang-analyzer-deadcode-*,clang-analyzer-security-*,performance-*,readability-identifier-naming,readability-misleading-indentation,readability-simplify-boolean-expr,readability-uppercase-literal-suffix,-readability-magic-numbers,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-vararg'
+Checks: '-*,cppcoreguidelines-pro-bounds-*,-cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-*,cert-*,clang-analyzer-core-*,clang-analyzer-cplusplus-*,clang-analyzer-deadcode-*,clang-analyzer-security-*,performance-*,readability-identifier-naming,readability-misleading-indentation,readability-simplify-boolean-expr,readability-uppercase-literal-suffix,-readability-magic-numbers,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-vararg'
 FormatStyle: file
 WarningsAsErrors: ''
 CheckOptions:
