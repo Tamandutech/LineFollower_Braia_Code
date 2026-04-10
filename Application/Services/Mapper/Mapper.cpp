@@ -129,10 +129,11 @@ void Mapper::map() {
   globalData.mapData.clear();
   globalData.markCount = 0;
 
-  EncoderDriver::reset();
-
   LedDriver::setColorForAll(LedDriver::Colors.magenta);
   logger->info("Mapping...");
+  EncoderDriver::reset();
+
+  VacuumDriver::pwmAcceleratedOutput(RobotEnv::BASE_MOTOR_PWM);
   lastTime = Timer::getMicroseconds();
 
   while(BLEListener::action == BLEListener::Map) {

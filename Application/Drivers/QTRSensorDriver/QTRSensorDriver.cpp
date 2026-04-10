@@ -125,8 +125,8 @@ void QTRSensorDriver::calibrateSensors() {
       calibrated = false;
       logger->warning(
           "Bad calibration for sensor #%02d\n    ↳ Max/Min: [%04lu, %04lu]", i,
-          maxValues[i], minValues[i]);
-      Timer::delayMiliseconds(25);
+          maxValues[i], minValues[i]); // NOLINT
+      Timer::delayMiliseconds(75);
     }
   }
 
