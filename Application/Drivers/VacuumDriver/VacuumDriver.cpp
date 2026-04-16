@@ -40,7 +40,7 @@ void VacuumDriver::pwmAcceleratedOutput(uint16_t target) {
     }
   }
 
-  Timer::delayMiliseconds(500);
+  Timer::delayMiliseconds(1500);
 
   lastPWM = target;
 }

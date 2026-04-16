@@ -31,6 +31,10 @@ float Battery::getBatteryVoltage() {
     BATTERY 2:
       REAL      8.33 V
       MEASURING 8.82 V
+
+    BATTERY 3:
+      REAL      8.09 V
+      MEASURING 8.57 V
   */
 
   // 5.6875 is the voltage divider constant

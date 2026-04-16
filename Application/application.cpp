@@ -60,6 +60,7 @@ static void startRunning() {
   VacuumDriver::pwmAcceleratedOutput(RobotEnv::BASE_VACUUM_PWM);
   EncoderDriver::reset();
   lastTime = Timer::getMicroseconds();
+  logger->info("Running...");
 
   // Start
   while(BLEListener::action == BLEListener::Run &&
@@ -97,7 +98,7 @@ static void startRunning() {
     MotorDriver::stop();
     logger->info("Stopping at encoder %04ld",
                  EncoderDriver::getAverage()); // NOLINT
-    VacuumDriver::stopAfter(1000);
+    VacuumDriver::stopAfter(2000);
   }
 }
 
@@ -108,7 +109,15 @@ static void customAction() {
 }
 
 void setup(void) {
-  logger->info("Robot is starting...");
+  // Logger
+  Logger::setShowTimestamp(false);
+  Logger::setShowLogLevel(true);
+  Logger::setUseDoubleBreak(false);
+
+  Logger::log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+              "\nLast build: %s @ %s\n"
+              "Robot is starting...\n",
+              __DATE__, __TIME__);
 
   // Init timer
   HAL_TIM_Base_Start(&htim2);
@@ -153,11 +162,6 @@ void setup(void) {
   Timer::delayMiliseconds(75);
   logger->info("Robot started!");
 
-  // Logger
-  Logger::setShowTimestamp(false);
-  Logger::setShowLogLevel(true);
-  Logger::setUseDoubleBreak(false);
-
   // Reset LEDs
   LedDriver::setColorForAll(LedDriver::Colors.black);
 
@@ -178,31 +182,31 @@ void setup(void) {
 
   // Assign data
   globalData.mapData = {
-      {0,      85, 250, LedDriver::Colors.red   },
+      {0,      85, 270, LedDriver::Colors.red   },
 
       // Zig zag
-      {15000,  85, 250, LedDriver::Colors.blue  },
+      {15000,  85, 270, LedDriver::Colors.blue  },
 
       // Trombone
-      {85000,  85, 270, LedDriver::Colors.green },
+      {100000, 85, 270, LedDriver::Colors.green },
 
       // Straight
-      {170000, 80, 270, LedDriver::Colors.red   },
+      {170000, 85, 270, LedDriver::Colors.red   },
 
       // Snail
-      {300000, 85, 270, LedDriver::Colors.cyan  },
+      {350000, 85, 270, LedDriver::Colors.cyan  },
 
       // Short straight
-      {505000, 85, 270, LedDriver::Colors.orange},
+      {620000, 85, 270, LedDriver::Colors.orange},
 
       // Squares
-      {570000, 85, 270, LedDriver::Colors.indigo},
+      {700000, 85, 270, LedDriver::Colors.indigo},
 
       // Infinite
-      {750000, 85, 270, LedDriver::Colors.blue  },
+      {800000, 85, 270, LedDriver::Colors.blue  },
 
       // Last point should be the end of the track
-      {940000, 0,  270, LedDriver::Colors.white }
+      {920000, 0,  500, LedDriver::Colors.magenta }
   };
   /****************************************************************************/
 }

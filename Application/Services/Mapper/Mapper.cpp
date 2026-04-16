@@ -147,7 +147,7 @@ void Mapper::map() {
   }
 
   MotorDriver::stop();
-  VacuumDriver::stopAfter(500);
+  VacuumDriver::stopAfter(1500);
 
   logMap();
 }
