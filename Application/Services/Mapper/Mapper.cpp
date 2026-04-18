@@ -32,9 +32,21 @@ bool    Mapper::readRightBefore    = false;
 bool    Mapper::readLeftBefore     = false;
 bool    Mapper::readIntersecBefore = false;
 bool    Mapper::firstTimeRight     = true;
-Logger *Mapper::logger = new Logger("Mapper", true, Logger::Level::Info);
+Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
+
+static const int           N_COLORS        = 8;
+static LedDriver::RgbColor color[N_COLORS] = {
+    LedDriver::Colors.red,    LedDriver::Colors.blue,
+    LedDriver::Colors.green,  LedDriver::Colors.magenta,
+    LedDriver::Colors.yellow, LedDriver::Colors.indigo,
+    LedDriver::Colors.orange, LedDriver::Colors.cyan};
+
+static const char *colorName[N_COLORS] = {
+    "red", "blue", "green", "magenta", "yellow", "indigo", "orange", "cyan"};
 
 void Mapper::readLateral() {
+  static int colorIndex = 0;
+
   readCalibrated();
 
   bool readingLeft = sensorValues[L_1] < READING_LINE_THRESHOLD ||
@@ -59,11 +71,14 @@ void Mapper::readLateral() {
     readLeftBefore = true;
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM(),
-                                  RobotEnv::BASE_VACUUM_PWM,
+                                  RobotEnv::VACUUM_BASE_PWM,
                                   LedDriver::Colors.white});
 
-    logger->info("#%03d Encoders: %07ld", globalData.markCount.load(),
-                 EncoderDriver::getAverage()); // NOLINT
+    colorIndex = (colorIndex + 1) % N_COLORS;
+    LedDriver::setColorForAll(color[colorIndex]);
+
+    logger->info("#%03d Encoders: %07ld %s", globalData.markCount.load(),
+                 EncoderDriver::getAverage(), colorName[colorIndex]); // NOLINT
   }
   // Reading a right mark for the first time
   else if(notReadingLeft && readingRight && !readRightBefore &&
@@ -73,7 +88,7 @@ void Mapper::readLateral() {
     firstTimeRight  = false;
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM(),
-                                  RobotEnv::BASE_VACUUM_PWM,
+                                  RobotEnv::VACUUM_BASE_PWM,
                                   LedDriver::Colors.white});
 
     logger->info("#%03d Start of the track", globalData.markCount.load());
@@ -94,7 +109,7 @@ void Mapper::readLateral() {
     globalData.markCount++;
 
     globalData.mapData.push_back({EncoderDriver::getAverage(), calculatePWM(),
-                                  RobotEnv::BASE_VACUUM_PWM,
+                                  RobotEnv::VACUUM_BASE_PWM,
                                   LedDriver::Colors.white});
 
     logger->info("#%03d Encoders: %07ld [Right]", globalData.markCount.load(),
@@ -133,13 +148,13 @@ void Mapper::map() {
   logger->info("Mapping...");
   EncoderDriver::reset();
 
-  VacuumDriver::pwmAcceleratedOutput(RobotEnv::BASE_MOTOR_PWM);
+  VacuumDriver::pwmAcceleratedOutput(RobotEnv::MOTOR_BASE_PWM);
   lastTime = Timer::getMicroseconds();
 
   while(BLEListener::action == BLEListener::Map) {
     if(Timer::getMicroseconds() - lastTime >= 1000) {
-      MotorDriver::pwmOutput(RobotEnv::BASE_MOTOR_PWM);
-      VacuumDriver::pwmOutput(RobotEnv::BASE_VACUUM_PWM);
+      MotorDriver::pwmOutput(RobotEnv::MOTOR_BASE_PWM);
+      VacuumDriver::pwmOutput(RobotEnv::VACUUM_BASE_PWM);
       readLateral();
 
       lastTime = Timer::getMicroseconds();
