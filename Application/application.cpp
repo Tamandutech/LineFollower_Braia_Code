@@ -57,7 +57,7 @@ static void startRunning() {
 
   // Prepare
   LedDriver::setColorForAll(LedDriver::Colors.magenta);
-  VacuumDriver::pwmAcceleratedOutput(RobotEnv::BASE_VACUUM_PWM);
+  VacuumDriver::pwmAcceleratedOutput(RobotEnv::VACUUM_BASE_PWM);
   EncoderDriver::reset();
   lastTime = Timer::getMicroseconds();
   logger->info("Running...");
@@ -180,33 +180,26 @@ void setup(void) {
   globalData.mapData.clear();
   globalData.markCount = 0;
 
+  const int32_t vacuumPWM = RobotEnv::VACUUM_BASE_PWM;
+  const int32_t motorPWM  = RobotEnv::MOTOR_BASE_PWM;
+
   // Assign data
   globalData.mapData = {
-      {0,      85, 270, LedDriver::Colors.red   },
+      // Reta 1
+      {0,       motorPWM, vacuumPWM, LedDriver::Colors.red    },
 
-      // Zig zag
-      {15000,  85, 270, LedDriver::Colors.blue  },
+      // Reta pré caracol
+      {30000,   motorPWM, vacuumPWM, LedDriver::Colors.green  },
 
-      // Trombone
-      {100000, 85, 270, LedDriver::Colors.green },
+      // Caracol
+      {60000,   motorPWM, vacuumPWM, LedDriver::Colors.magenta},
 
-      // Straight
-      {170000, 85, 270, LedDriver::Colors.red   },
+      // L 1
+      {220000,  motorPWM, vacuumPWM, LedDriver::Colors.orange },
 
-      // Snail
-      {350000, 85, 270, LedDriver::Colors.cyan  },
-
-      // Short straight
-      {620000, 85, 270, LedDriver::Colors.orange},
-
-      // Squares
-      {700000, 85, 270, LedDriver::Colors.indigo},
-
-      // Infinite
-      {800000, 85, 270, LedDriver::Colors.blue  },
 
       // Last point should be the end of the track
-      {920000, 0,  500, LedDriver::Colors.magenta }
+      {1600000, 0,        250,       LedDriver::Colors.magenta}
   };
   /****************************************************************************/
 }

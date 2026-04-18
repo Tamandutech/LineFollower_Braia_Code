@@ -38,7 +38,7 @@ void MotorDriver::pwmOutputFor(Motors motor, int16_t duty) {
   }
 
   // Make sure the duty is within the allowed interval
-  duty            = std::min(duty, RobotEnv::MAX_MOTOR_PWM);
+  duty            = std::min(duty, RobotEnv::MOTOR_MAX_PWM);
   motorPWM[motor] = duty;
   __HAL_TIM_SET_COMPARE(motorPins[motor].pwmhtim, motorPins[motor].pwmChannel,
                         duty);

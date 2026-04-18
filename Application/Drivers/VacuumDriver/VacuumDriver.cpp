@@ -17,7 +17,7 @@ VacuumDriver::Pin VacuumDriver::pin = {&htim5, TIM_CHANNEL_2};
 uint16_t VacuumDriver::lastPWM = 0;
 
 void VacuumDriver::pwmOutput(uint16_t target) {
-  target = std::min(target, static_cast<uint16_t>(RobotEnv::MAX_MOTOR_PWM));
+  target = std::min(target, static_cast<uint16_t>(RobotEnv::MOTOR_MAX_PWM));
 
   __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, target);
 
@@ -27,8 +27,8 @@ void VacuumDriver::pwmOutput(uint16_t target) {
 void VacuumDriver::pwmAcceleratedOutput(uint16_t target) {
   uint16_t currentValue = lastPWM;
 
-  target = std::max(target, static_cast<uint16_t>(RobotEnv::BASE_VACUUM_PWM));
-  target = std::min(target, static_cast<uint16_t>(RobotEnv::MAX_MOTOR_PWM));
+  target = std::max(target, static_cast<uint16_t>(RobotEnv::VACUUM_BASE_PWM));
+  target = std::min(target, static_cast<uint16_t>(RobotEnv::MOTOR_MAX_PWM));
 
   while(currentValue != target) {
     if(currentValue < target) {
