@@ -180,23 +180,85 @@ void setup(void) {
   globalData.mapData.clear();
   globalData.markCount = 0;
 
-  const int32_t vacuumPWM = RobotEnv::VACUUM_BASE_PWM;
-  const int32_t motorPWM  = RobotEnv::MOTOR_BASE_PWM;
+  const int32_t defVacuumPWM = RobotEnv::VACUUM_BASE_PWM;
+  const int32_t defMotorPWM  = RobotEnv::MOTOR_BASE_PWM;
+
+  const int32_t slowVacuumPWM = 300;
+  const int32_t slowMotorPWM  = 200;
+
+  const int32_t fastVacuumPWM = 250;
+  const int32_t fastMotorPWM  = 300;
+
+  const int32_t fastIshVacuumPWM = 250;
+  const int32_t fastIshMotorPWM  = 270;
+
+  const int32_t slowIshVacuumPWM = 300;
+  const int32_t slowIshMotorPWM  = 220;
 
   // Assign data
   globalData.mapData = {
       // Reta 1
-      {0,       motorPWM, vacuumPWM, LedDriver::Colors.red    },
+      {0,       defMotorPWM, defVacuumPWM, LedDriver::Colors.red    },
 
       // Reta pré caracol
-      {30000,   motorPWM, vacuumPWM, LedDriver::Colors.green  },
+      {300000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.green  },
+      
+      {350000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.magenta},//fast
+      
+      {360000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.red},//slow
+      
+      {400000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.green},
 
-      // Caracol
-      {60000,   motorPWM, vacuumPWM, LedDriver::Colors.magenta},
+      {410000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.magenta},//fast
+      
+      {415000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.blue},
+      
+      {487000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.magenta},//fast
+      
+      {510000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.white},//slow
+
+      {570000,   fastIshMotorPWM, fastIshVacuumPWM, LedDriver::Colors.yellow},//fast-ish
+
+      {600000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.green},//fast
+
+      {656000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.indigo},//slow-ish
+
+      {700000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.blue},
+
+      {777000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.orange}, //fast
+
+      {832000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.cyan}, //slow
+
+      {884000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.red}, 
+
+      {891000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.green}, //slow 
+
+      {948000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.blue}, //
+
+      {967000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.magenta}, // slow
+
+      {1010000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.white}, // fast
+
+      {1060000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.white}, // slow
+
+      {1100000,   fastMotorPWM, fastVacuumPWM, LedDriver::Colors.orange}, // fast
+
+      {1210000,   defMotorPWM, defVacuumPWM, LedDriver::Colors.cyan}, //slow
 
       // L 1
-      {220000,  motorPWM, vacuumPWM, LedDriver::Colors.orange },
+      {1220000,  defMotorPWM, defVacuumPWM, LedDriver::Colors.orange }, // slow
 
+      {1249000,  defMotorPWM, defVacuumPWM, LedDriver::Colors.blue }, // 
+
+      {1323000,  defMotorPWM, defVacuumPWM, LedDriver::Colors.green }, // slow
+
+      {1326000,  defMotorPWM, defVacuumPWM, LedDriver::Colors.orange }, // slow
+      
+      {1326000,  fastMotorPWM, fastVacuumPWM, LedDriver::Colors.white }, //fast
+
+      {1445000,  defMotorPWM, defVacuumPWM, LedDriver::Colors.red }, // slow
+
+      {1489000,  fastMotorPWM, fastVacuumPWM, LedDriver::Colors.orange }, // fast
 
       // Last point should be the end of the track
       {1600000, 0,        250,       LedDriver::Colors.magenta}

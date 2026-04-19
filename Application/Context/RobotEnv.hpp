@@ -49,7 +49,7 @@ const float   MOTOR_MAX_SPEED          = 4;              // m/s
 const int32_t MOTOR_MAX_DECELERATION   = 4;              // m/s
 const int32_t MOTOR_MAX_ROTATION_SPEED = 4;              // m/s
 
-const uint16_t VACUUM_BASE_PWM                    = 230; // ‰
+const uint16_t VACUUM_BASE_PWM                    = 250; // ‰
 const uint8_t  VACUUM_INTERVAL_BETWEEN_INCREMENTS = 2;   // ms
 
 } // namespace RobotEnv

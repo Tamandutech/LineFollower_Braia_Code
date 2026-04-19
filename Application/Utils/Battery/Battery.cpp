@@ -38,7 +38,7 @@ float Battery::getBatteryVoltage() {
   */
 
   // 5.6875 is the voltage divider constant
-  float vbat = (*rawBatteryVoltage * vref / 4095.0F) * 6.015F;
+  float vbat = (*rawBatteryVoltage * vref / 4095.0F) * 5.6875F;
 
   return vbat;
 }
