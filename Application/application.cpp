@@ -181,18 +181,18 @@ void setup(void) {
   globalData.markCount = 0;
 
   const int32_t slowMotorPWM  = 180;
-  const int32_t slowVacuumPWM = 210;
+  const int32_t slowVacuumPWM = 220;
 
   const int32_t slowIshMotorPWM  = 190;
-  const int32_t slowIshVacuumPWM = 200;
+  const int32_t slowIshVacuumPWM = 230;
 
-  const int32_t defMotorPWM  = 220;
+  const int32_t defMotorPWM  = 210;
   const int32_t defVacuumPWM = 250;
 
-  const int32_t fastIshMotorPWM  = 235;
+  const int32_t fastIshMotorPWM  = 220;
   const int32_t fastIshVacuumPWM = 250;
 
-  const int32_t fastMotorPWM  = 270;
+  const int32_t fastMotorPWM  = 230;
   const int32_t fastVacuumPWM = 260;
 
   // Assign data
@@ -213,9 +213,7 @@ void setup(void) {
 
       {415000,  defMotorPWM,     defVacuumPWM,     LedDriver::Colors.blue   },
 
-      {487000,  defMotorPWM,     defVacuumPWM,     LedDriver::Colors.orange },
-
-      {510000,  150,             slowVacuumPWM,    LedDriver::Colors.indigo }, // slow
+      {487000,  150,             240,              LedDriver::Colors.orange },
 
       {570000,  defMotorPWM,     defVacuumPWM,     LedDriver::Colors.white  },
 
@@ -246,9 +244,9 @@ void setup(void) {
 
       {1100000, defMotorPWM,     240,              LedDriver::Colors.orange },
 
-      {1210000, defMotorPWM,     240,              LedDriver::Colors.blue   }, //  slow
+      {1210000, 180,             240,              LedDriver::Colors.blue   }, //  90 graus
 
-      {1220000, defMotorPWM,     240,              LedDriver::Colors.red    }, // slow
+      {1225000, defMotorPWM,     240,              LedDriver::Colors.red    }, // slow
 
       {1249000, defMotorPWM,     240,              LedDriver::Colors.blue   }, //
 
@@ -256,11 +254,11 @@ void setup(void) {
 
       {1326000, slowMotorPWM,    220,              LedDriver::Colors.orange }, // slow
 
-      {1326000, 235,     260,              LedDriver::Colors.white  }, //  fast
+      {1326000, 235,             260,              LedDriver::Colors.white  }, //  fast
 
       {1445000, slowMotorPWM,    240,              LedDriver::Colors.red    }, // slow
 
-      {1489000, 235,     260,              LedDriver::Colors.orange }, // fast
+      {1489000, 235,             260,              LedDriver::Colors.orange }, // fast
 
       // Last point should be the end of the track
       {1600000, 0,               270,              LedDriver::Colors.magenta}
