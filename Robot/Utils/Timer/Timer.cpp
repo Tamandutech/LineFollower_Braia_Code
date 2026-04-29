@@ -5,7 +5,7 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../../Robot/Utils/Timer/Timer.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 
 #include "stm32g4xx_hal.h"
 

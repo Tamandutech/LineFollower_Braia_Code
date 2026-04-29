@@ -5,12 +5,14 @@
  *      Author: Kelvin Novais
  */
 
-#include "tim.h"
+#include "Vacuum.hpp"
 
 #include <algorithm>
-#include "../../../Robot/Context/RobotEnv.hpp"
-#include "../../../Robot/Utils/Timer/Timer.hpp"
-#include "Vacuum.hpp"
+
+#include "tim.h"
+
+#include "../../Context/RobotEnv.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 
 Vacuum::Pin Vacuum::pin = {&htim5, TIM_CHANNEL_2};
 

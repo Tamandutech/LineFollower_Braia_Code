@@ -5,7 +5,7 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../Robot/Context/GlobalData.hpp"
+#include "GlobalData.hpp"
 
 GlobalData globalData = {
     .isReadyToRun{false}, .finishLineCount{0}, .mapData{}, .markCount{0}};

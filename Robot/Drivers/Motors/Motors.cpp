@@ -12,8 +12,9 @@
 #include <cstdint>
 
 #include "tim.h"
-#include "../../../Robot/Context/RobotEnv.hpp"
-#include "../../../Robot/Services/PID/PID.hpp"
+
+#include "../../Context/RobotEnv.hpp"
+#include "../../Services/PID/PID.hpp"
 
 const Motors::Pin Motors::motorPins[_N_MOTORS] = {
     // Left

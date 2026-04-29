@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-class BLEListener {
+class BLE {
 public:
   typedef enum : uint8_t { None = 0, Run, Map, CustomAction } Action;
 
@@ -22,4 +22,4 @@ public:
 
 #endif /* SERVICES_BLE_BLE_HPP_ */
 
-// Boccherin: Minuet for string quintet - Op. 11, No. 5 (G 275)
+// Boccherini: Minuet for string quintet - Op. 11, No. 5 (G 275)

@@ -5,7 +5,7 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../../Robot/Utils/Timestamp/Timestamp.hpp"
+#include "../../Utils/Timestamp/Timestamp.hpp"
 
 #include <cstdint>
 

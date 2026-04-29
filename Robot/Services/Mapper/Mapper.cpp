@@ -5,21 +5,23 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../../Robot/Services/Mapper/Mapper.hpp"
+#include "Mapper.hpp"
 
-#include "../../Utils/Timer/Timer.hpp"
-
+// Standard headers
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "../../../Robot/Context/GlobalData.hpp"
-#include "../../../Robot/Context/RobotEnv.hpp"
+
+// Headers from our code base
+#include "../../Context/GlobalData.hpp"
+#include "../../Context/RobotEnv.hpp"
 #include "../../Drivers/Encoders/Encoders.hpp"
 #include "../../Drivers/Leds/Leds.hpp"
 #include "../../Drivers/Motors/Motors.hpp"
 #include "../../Drivers/Vacuum/Vacuum.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 #include "../BLE/BLE.hpp"
 
 // Returns ~1000 if reading BLACK
@@ -35,12 +37,11 @@ bool    Mapper::readIntersecBefore = false;
 bool    Mapper::firstTimeRight     = true;
 Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
 
-static const int           N_COLORS        = 8;
+static const int      N_COLORS        = 8;
 static Leds::RgbColor color[N_COLORS] = {
-    Leds::Colors.red,    Leds::Colors.blue,
-    Leds::Colors.green,  Leds::Colors.magenta,
-    Leds::Colors.yellow, Leds::Colors.indigo,
-    Leds::Colors.orange, Leds::Colors.cyan};
+    Leds::Colors.red,     Leds::Colors.blue,   Leds::Colors.green,
+    Leds::Colors.magenta, Leds::Colors.yellow, Leds::Colors.indigo,
+    Leds::Colors.orange,  Leds::Colors.cyan};
 
 static const char *colorName[N_COLORS] = {
     "red", "blue", "green", "magenta", "yellow", "indigo", "orange", "cyan"};
@@ -152,8 +153,8 @@ void Mapper::map() {
   Vacuum::pwmAcceleratedOutput(RobotEnv::MOTOR_BASE_PWM);
   lastTime = Timer::getMicroseconds();
 
-  while(BLEListener::action == BLEListener::Map) {
-    if(Timer::getMicroseconds() - lastTime >= 1000) {
+  while(BLE::action == BLE::Map) {
+    if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
       Motors::pwmOutput(RobotEnv::MOTOR_BASE_PWM);
       Vacuum::pwmOutput(RobotEnv::VACUUM_BASE_PWM);
       readLateral();

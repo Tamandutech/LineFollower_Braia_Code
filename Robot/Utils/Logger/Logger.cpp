@@ -5,7 +5,7 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../../Robot/Utils/Logger/Logger.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 
 #include "stm32g4xx_hal.h"
 

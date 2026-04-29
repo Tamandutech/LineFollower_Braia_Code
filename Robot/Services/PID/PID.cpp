@@ -5,9 +5,9 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../../Robot/Services/PID/PID.hpp"
+#include "../../Services/PID/PID.hpp"
 
-#include "../../../Robot/Context/RobotEnv.hpp"
+#include "../../Context/RobotEnv.hpp"
 #include "../../Drivers/IRSensors/IRSensors.hpp"
 
 float PID::lastError = 0;

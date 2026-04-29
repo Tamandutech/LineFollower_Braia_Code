@@ -26,7 +26,6 @@
 #include "Utils/Timer/Timer.hpp"
 
 #include "Drivers/Encoders/Encoders.hpp"
-#include "Drivers/IRSensors/IRSensors.hpp"
 #include "Drivers/Leds/Leds.hpp"
 #include "Drivers/Motors/Motors.hpp"
 #include "Drivers/Vacuum/Vacuum.hpp"
@@ -64,9 +63,9 @@ static void startRunning() {
   logger->info("Running...");
 
   // Start
-  while(BLEListener::action == BLEListener::Run &&
+  while(BLE::action == BLE::Run &&
         i < globalData.mapData.size()) {
-    if(Timer::getMicroseconds() - lastTime >= 1000) {
+    if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
       int32_t avg = Encoders::getAverage();
 
       if(avg >= globalData.mapData[i - 1].encoderAverage &&
@@ -95,7 +94,7 @@ static void startRunning() {
 
   // Stop graceffuly
   // This action will be performed only if the stop command wasn't sent
-  if(BLEListener::action == BLEListener::Run) {
+  if(BLE::action == BLE::Run) {
     Motors::stop();
     logger->info("Stopping at encoder %04ld",
                  Encoders::getAverage()); // NOLINT
@@ -147,7 +146,7 @@ void setup(void) {
   HAL_Delay(50);
 
   // Start DMA reception
-  BLEListener::start();
+  BLE::start();
 
   // Print battery information
   Timer::delayMiliseconds(75);
@@ -199,14 +198,14 @@ void setup(void) {
 void loop(void) {
   static Timer inactivityTimer(Timer::Miliseconds);
 
-  switch(BLEListener::action) {
-  case BLEListener::Run: startRunning(); break;
+  switch(BLE::action) {
+  case BLE::Run: startRunning(); break;
 
-  case BLEListener::Map: Mapper::map(); break;
+  case BLE::Map: Mapper::map(); break;
 
-  case BLEListener::CustomAction: customAction(); break;
+  case BLE::CustomAction: customAction(); break;
 
-  case BLEListener::None:
+  case BLE::None:
   default: stopRunning();
   }
 
@@ -214,7 +213,7 @@ void loop(void) {
   stopRunning();
 
   // Reset the action variable after the command was performed
-  BLEListener::action = BLEListener::None;
+  BLE::action = BLE::None;
 
   // Blink LEDs to show inactivity
   if(inactivityTimer.getElapsedTime() > 2000) {

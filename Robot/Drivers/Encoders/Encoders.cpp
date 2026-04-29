@@ -6,9 +6,9 @@
  */
 
 #include <cstdint>
-#include "../../../Robot/Drivers/Encoders/encoders.h"
-#include "../../../Robot/Utils/Logger/Logger.hpp"
+
 #include "Encoders.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 
 static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
 

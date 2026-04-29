@@ -5,13 +5,14 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../Utils/Timer/Timer.hpp"
-#include "adc.h"
+#include "IRSensors.hpp"
 
 #include <algorithm>
 #include <cstdint>
 
-#include "IRSensors.hpp"
+#include "adc.h"
+
+#include "../../Utils/Timer/Timer.hpp"
 #include "../Leds/Leds.hpp"
 
 // The delay between two sensors readings while calibrating
@@ -72,13 +73,13 @@ uint32_t IRSensors::maxValues[_N_SENSORS] = {
     // Right
     3645, 3645};
 
-uint16_t                      IRSensors::sensorValues[_N_SENSORS] = {0};
-bool                          IRSensors::calibrated               = false;
-uint16_t                      IRSensors::lastPosition             = 0;
-uint16_t                      IRSensors::arraySensorCenter        = 5500;
+uint16_t                IRSensors::sensorValues[_N_SENSORS] = {0};
+bool                    IRSensors::calibrated               = false;
+uint16_t                IRSensors::lastPosition             = 0;
+uint16_t                IRSensors::arraySensorCenter        = 5500;
 const IRSensors::Sensor IRSensors::firstCentralSensor       = C_1;
 const IRSensors::Sensor IRSensors::lastCentralSensor        = C_12;
-Logger                       *IRSensors::logger =
+Logger                 *IRSensors::logger =
     new Logger("QTRSensorDriver", false, Logger::Level::Info);
 
 void IRSensors::calibrateSensors() {

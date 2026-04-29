@@ -10,7 +10,7 @@
 
 #include <cstdarg>
 #include <cstdint>
-#include "../../../Robot/Utils/Timestamp/Timestamp.hpp"
+#include "../../Utils/Timestamp/Timestamp.hpp"
 
 #define LOGGER_BUFFER_SIZE      ((unsigned int)512)
 #define LOGGER_FORMATTED_BUFFER (LOGGER_BUFFER_SIZE + 32)

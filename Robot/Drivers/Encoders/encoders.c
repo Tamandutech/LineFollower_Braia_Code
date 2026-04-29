@@ -6,7 +6,7 @@
  *      Author: Samuel Oliveira
  */
 
-#include "../Encoders/encoders.h"
+#include "encoders.h"
 
 #include "tim.h"
 

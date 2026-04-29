@@ -5,7 +5,7 @@
  *      Author: Kelvin Novais
  */
 
-#include "../../../Robot/Utils/Battery/Battery.hpp"
+#include "../../Utils/Battery/Battery.hpp"
 
 #include "adc.h"
 

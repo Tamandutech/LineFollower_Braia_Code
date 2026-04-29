@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-#include "../Encoders/encoders.h"
+#include "encoders.h"
 
 class Encoders {
 public:

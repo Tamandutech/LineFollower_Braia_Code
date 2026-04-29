@@ -12,14 +12,14 @@
 #define BLE_BUS huart1
 
 static uint8_t               rx_buffer[32]       = {0};
-volatile BLEListener::Action BLEListener::action = BLEListener::None;
+volatile BLE::Action BLE::action = BLE::None;
 
-void BLEListener::start() {
+void BLE::start() {
   // Init DMA reception
   HAL_UART_Receive_DMA(&BLE_BUS, static_cast<uint8_t *>(rx_buffer), 1);
 }
 
-void BLEListener::restart() {
+void BLE::restart() {
   // Restart DMA reception
   start();
 }
@@ -27,14 +27,14 @@ void BLEListener::restart() {
 static void updateAction() {
   if(rx_buffer[0] == '1') {
     // If the buffer contains '1', it should do nothing
-    BLEListener::action = BLEListener::None;
+    BLE::action = BLE::None;
   } else if(rx_buffer[0] == '2') {
     // If contains '2', it should run
-    BLEListener::action = BLEListener::Run;
+    BLE::action = BLE::Run;
   } else if(rx_buffer[0] == '3') {
-    BLEListener::action = BLEListener::Map;
+    BLE::action = BLE::Map;
   } else if(rx_buffer[0] == '4') {
-    BLEListener::action = BLEListener::CustomAction;
+    BLE::action = BLE::CustomAction;
   }
 }
 
@@ -45,7 +45,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     updateAction();
 
     // Resets DMA reception
-    BLEListener::restart();
+    BLE::restart();
   }
 }
 }

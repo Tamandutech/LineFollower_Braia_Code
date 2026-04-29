@@ -9,7 +9,7 @@
 #define DRIVERS_IRSENSORS_IRSENSORS_HPP_
 
 #include <cstdint>
-#include "../../../Robot/Utils/Logger/Logger.hpp"
+#include "../../Utils/Logger/Logger.hpp"
 
 class IRSensors {
 public:

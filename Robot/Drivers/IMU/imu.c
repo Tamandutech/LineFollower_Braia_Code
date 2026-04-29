@@ -5,7 +5,7 @@
  *      Author: Kelvin Novais
  */
 
-#include "../IMU/imu.h"
+#include "imu.h"
 
 #include "lsm6dsr_reg.h"
 #include "stm32g4xx_hal.h"

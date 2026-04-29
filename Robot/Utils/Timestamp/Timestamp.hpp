@@ -9,7 +9,7 @@
 #define UTILS_TIMESTAMP_HPP_
 
 #include <cstdint>
-#include "../../../Robot/Utils/Timer/Timer.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 
 class Timestamp : private Timer {
 public:
