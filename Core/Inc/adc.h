@@ -46,8 +46,8 @@ void MX_ADC2_Init(void);
 /* USER CODE BEGIN Prototypes */
 // Buffers for the ADC values
 #define ADC_BUFFER_SIZE 9
-extern uint32_t adc1_buffer[ADC_BUFFER_SIZE];
-extern uint32_t adc2_buffer[ADC_BUFFER_SIZE];
+extern volatile uint32_t adc1_buffer[ADC_BUFFER_SIZE];
+extern volatile uint32_t adc2_buffer[ADC_BUFFER_SIZE];
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -15,8 +15,8 @@ public:
   static float getBatteryVoltage();
 
 private:
-  static uint32_t *const rawBatteryVoltage;
-  static uint32_t *const rawReferenceVoltage;
+  static const volatile uint32_t *const rawBatteryVoltage;
+  static const volatile uint32_t *const rawReferenceVoltage;
 };
 
 #endif /* UTILS_BATTERY_HPP_ */

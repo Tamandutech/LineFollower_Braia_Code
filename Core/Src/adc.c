@@ -26,8 +26,8 @@
 
 /* USER CODE BEGIN 0 */
 // BUFFERS
-uint32_t adc1_buffer[ADC_BUFFER_SIZE];
-uint32_t adc2_buffer[ADC_BUFFER_SIZE];
+uint32_t volatile adc1_buffer[ADC_BUFFER_SIZE] = {0};
+uint32_t volatile adc2_buffer[ADC_BUFFER_SIZE] = {0};
 
 #ifdef ADC_UPDATE_TIME_TEST
 volatile uint32_t last_adc1_time = 0;

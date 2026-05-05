@@ -141,8 +141,8 @@ void setup(void) {
   HAL_Delay(100);
 
   // Initialize DMA
-  HAL_ADC_Start_DMA(&hadc1, static_cast<uint32_t *>(adc1_buffer), 9);
-  HAL_ADC_Start_DMA(&hadc2, static_cast<uint32_t *>(adc2_buffer), 9);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc1_buffer, 9);
+  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc2_buffer, 9);
   HAL_Delay(50);
 
   // Start DMA reception

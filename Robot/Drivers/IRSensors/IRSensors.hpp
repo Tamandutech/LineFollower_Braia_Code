@@ -9,6 +9,7 @@
 #define DRIVERS_IRSENSORS_IRSENSORS_HPP_
 
 #include <cstdint>
+
 #include "../../Utils/Logger/Logger.hpp"
 
 class IRSensors {
@@ -50,16 +51,15 @@ protected:
   static void     readCalibrated();
 
 private:
-  // TODO test with volatile
-  static uint32_t *const rawSensorValues[_N_SENSORS];
-  static uint32_t        maxValues[_N_SENSORS];
-  static uint32_t        minValues[_N_SENSORS];
-  static bool            calibrated;
-  static uint16_t        lastPosition;
-  static uint16_t        arraySensorCenter;
-  static Logger         *logger;
-  const static Sensor    firstCentralSensor;
-  const static Sensor    lastCentralSensor;
+  static const volatile uint32_t *const rawSensorValues[_N_SENSORS];
+  static uint32_t                       maxValues[_N_SENSORS];
+  static uint32_t                       minValues[_N_SENSORS];
+  static bool                           calibrated;
+  static uint16_t                       lastPosition;
+  static uint16_t                       arraySensorCenter;
+  static Logger                        *logger;
+  const static Sensor                   firstCentralSensor;
+  const static Sensor                   lastCentralSensor;
 };
 
 #endif /* DRIVERS_IRSENSORS_IRSENSORS_HPP_ */

@@ -28,7 +28,7 @@
  *
  * For example, to access the right encoder: *sensorValues[R_1]
  */
-uint32_t *const IRSensors::rawSensorValues[_N_SENSORS] = {
+const volatile uint32_t *const IRSensors::rawSensorValues[_N_SENSORS] = {
     // Left
     [L_1] = &adc2_buffer[5],
     [L_2] = &adc1_buffer[6],
@@ -97,8 +97,10 @@ void IRSensors::calibrateSensors() {
   for(uint16_t s = 0; s < SAMPLES; s++) {
     // Get the min and max values
     for(uint8_t i = 0; i < _N_SENSORS; i++) {
-      minValues[i] = std::min(minValues[i], *rawSensorValues[i]);
-      maxValues[i] = std::max(minValues[i], *rawSensorValues[i]);
+      uint32_t rawValue = *rawSensorValues[i];
+      
+      minValues[i]      = std::min(minValues[i], rawValue);
+      maxValues[i]      = std::max(minValues[i], rawValue);
     }
 
     // Every 10 samples, ensure that (max > min) and (min < max)
