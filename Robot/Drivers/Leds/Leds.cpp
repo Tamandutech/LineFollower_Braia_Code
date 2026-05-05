@@ -1,14 +1,15 @@
 /*
- * LedDriver.cpp
+ * Leds.cpp
  *
  *  Created on: Oct 27, 2025
  *      Author: Kelvin Novais
  *      Author: Samuel Oliveira
  */
 
+#include "Leds.hpp"
+
 #include "tim.h"
 #include <cstdint>
-#include "Leds.hpp"
 
 /*
  * CCR register values ​​to generate logic levels on channel N (inverted)
@@ -19,22 +20,22 @@
 // (ARR=4, CCR=5)
 #define PWM_LOW  5
 
-const Leds::PredefinedColors Leds::Colors = {
-    .red     = {128, 0,   0  },
-    .green   = {0,   128, 0  },
-    .blue    = {0,   0,   128},
-    .magenta = {128, 0,   128},
-    .white   = {128, 128, 128},
-    .yellow  = {128, 64,  0  },
-    .orange  = {128, 24,  0  },
-    .indigo  = {64,  0,   128},
-    .cyan    = {0,   128, 128},
-    .black   = {0,   0,   0  },
+const Leds::PredefinedColors Leds::color[Leds::_N_COLORS] = {
+    [Leds::Red]     = {{128, 0, 0},     "red"    },
+    [Leds::Blue]    = {{0, 0, 128},     "blue"   },
+    [Leds::Green]   = {{0, 128, 0},     "green"  },
+    [Leds::Magenta] = {{128, 0, 128},   "magenta"},
+    [Leds::Indigo]  = {{64, 0, 128},    "indigo" },
+    [Leds::Orange]  = {{128, 24, 0},    "orange" },
+    [Leds::White]   = {{128, 128, 128}, "white"  },
+    [Leds::Cyan]    = {{0, 128, 128},   "cyan"   },
+    [Leds::Yellow]  = {{128, 64, 0},    "yellow" },
+    [Leds::Black]   = {{0, 0, 0},       "black"  }
 };
 
-Leds::RgbColor Leds::ledsColors[_N_LEDS] = {{0}};
-uint32_t            Leds::pwmBuffer[RESET_CYCLES + RESET_CYCLES +
-                              _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT] = {0};
+Leds::RGB Leds::ledsColors[_N_LEDS]                                = {{0}};
+uint32_t  Leds::pwmBuffer[RESET_CYCLES + RESET_CYCLES +
+                         _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT] = {0};
 
 void Leds::outputColors() {
   // Pointer to the start of our DMA buffer
@@ -55,11 +56,11 @@ void Leds::outputColors() {
 
 
     // GRB format is the standard for most WS2812 chips
-    uint32_t color = (g << 16) | (r << 8) | b;
+    uint32_t newColor = (g << 16) | (r << 8) | b;
 
     // 2. Loop through the 24 color bits of each LED (G7..G0, R7..R0, B7..B0)
     for(int j = 23; j >= 0; j--) {
-      if((color >> j) & 1) {
+      if((newColor >> j) & 1) {
         // Bit pattern '1': HIGH for ~780ns, LOW for ~470ns
         // For the N channel, this means:
         // 5 cycles LOW and 3 cycles HIGH, on the main channel.
@@ -103,17 +104,24 @@ void Leds::outputColors() {
   HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1,
                         static_cast<uint32_t *>(pwmBuffer), total_buffer_size);
 }
-
-void Leds::setColorForAll(RgbColor color) {
+void Leds::setColorForAll(ColorIndex idx) {
   for(uint8_t i = 0; i < _N_LEDS; i++) {
-    ledsColors[i] = color;
+    ledsColors[i] = color[idx].rgb;
   }
 
   outputColors();
 }
 
-void Leds::setColorFor(RgbColor color, Led led) {
-  ledsColors[led] = color;
+void Leds::setColorForAll(RGB rgb) {
+  for(uint8_t i = 0; i < _N_LEDS; i++) {
+    ledsColors[i] = rgb;
+  }
+
+  outputColors();
+}
+
+void Leds::setColorFor(RGB rgb, Led led) {
+  ledsColors[led] = rgb;
 
   outputColors();
 }

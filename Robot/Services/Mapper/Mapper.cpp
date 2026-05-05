@@ -37,17 +37,8 @@ bool    Mapper::readIntersecBefore = false;
 bool    Mapper::firstTimeRight     = true;
 Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
 
-static const int      N_COLORS        = 8;
-static Leds::RgbColor color[N_COLORS] = {
-    Leds::Colors.red,     Leds::Colors.blue,   Leds::Colors.green,
-    Leds::Colors.magenta, Leds::Colors.yellow, Leds::Colors.indigo,
-    Leds::Colors.orange,  Leds::Colors.cyan};
-
-static const char *colorName[N_COLORS] = {
-    "red", "blue", "green", "magenta", "yellow", "indigo", "orange", "cyan"};
-
 void Mapper::readLateral() {
-  static int colorIndex = 0;
+  static Leds::ColorIndex colorIndex = Leds::ColorIndex::First;
 
   readCalibrated();
 
@@ -72,15 +63,16 @@ void Mapper::readLateral() {
     qtdLeftMark++;
     readLeftBefore = true;
 
-    globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
-                                  RobotEnv::VACUUM_BASE_PWM,
-                                  Leds::Colors.white});
+    colorIndex = Leds::ColorIndex((colorIndex + 1) % Leds::LastRotatable);
 
-    colorIndex = (colorIndex + 1) % N_COLORS;
-    Leds::setColorForAll(color[colorIndex]);
+    globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
+                                  RobotEnv::VACUUM_BASE_PWM, colorIndex});
+
+    Leds::setColorForAll(colorIndex);
 
     logger->info("#%03d Encoders: %07ld %s", globalData.markCount.load(),
-                 Encoders::getAverage(), colorName[colorIndex]); // NOLINT
+                 Encoders::getAverage(), // NOLINT
+                 Leds::color[colorIndex].name);
   }
   // Reading a right mark for the first time
   else if(notReadingLeft && readingRight && !readRightBefore &&
@@ -91,7 +83,7 @@ void Mapper::readLateral() {
 
     globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
                                   RobotEnv::VACUUM_BASE_PWM,
-                                  Leds::Colors.white});
+                                  Leds::White});
 
     logger->info("#%03d Start of the track", globalData.markCount.load());
   }
@@ -112,7 +104,7 @@ void Mapper::readLateral() {
 
     globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
                                   RobotEnv::VACUUM_BASE_PWM,
-                                  Leds::Colors.white});
+                                  Leds::White});
 
     logger->info("#%03d Encoders: %07ld [Right]", globalData.markCount.load(),
                  Encoders::getAverage()); // NOLINT
@@ -146,7 +138,7 @@ void Mapper::map() {
   globalData.mapData.clear();
   globalData.markCount = 0;
 
-  Leds::setColorForAll(Leds::Colors.magenta);
+  Leds::setColorForAll(Leds::Magenta);
   logger->info("Mapping...");
   Encoders::reset();
 

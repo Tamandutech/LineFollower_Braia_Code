@@ -92,7 +92,7 @@ void IRSensors::calibrateSensors() {
   logger->info("Calibrating sensors...");
   calibrated = true;
 
-  Leds::setColorForAll(Leds::Colors.blue);
+  Leds::setColorForAll(Leds::Blue);
 
   for(uint16_t s = 0; s < SAMPLES; s++) {
     // Get the min and max values

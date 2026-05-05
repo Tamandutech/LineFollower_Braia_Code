@@ -56,15 +56,14 @@ static void startRunning() {
   }
 
   // Prepare
-  Leds::setColorForAll(Leds::Colors.magenta);
+  Leds::setColorForAll(Leds::Magenta);
   Vacuum::pwmAcceleratedOutput(RobotEnv::VACUUM_BASE_PWM);
   Encoders::reset();
   lastTime = Timer::getMicroseconds();
   logger->info("Running...");
 
   // Start
-  while(BLE::action == BLE::Run &&
-        i < globalData.mapData.size()) {
+  while(BLE::action == BLE::Run && i < globalData.mapData.size()) {
     if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
       int32_t avg = Encoders::getAverage();
 
@@ -163,7 +162,7 @@ void setup(void) {
   logger->info("Robot started!");
 
   // Reset LEDs
-  Leds::setColorForAll(Leds::Colors.black);
+  Leds::setColorForAll(Leds::Black);
 
   // Calibrate sensors
   Timer::delayMiliseconds(1000);
@@ -180,17 +179,15 @@ void setup(void) {
   globalData.mapData.clear();
   globalData.markCount = 0;
 
-  const int32_t defMotorPWM  = 210;
-  const int32_t defVacuumPWM = 250;
-
   // Assign data
   globalData.mapData = {
-      {0,       defMotorPWM - 5, defVacuumPWM, Leds::Colors.white  },
+      {0,       RobotEnv::MOTOR_BASE_PWM, RobotEnv::VACUUM_BASE_PWM, Leds::White  },
 
-      {300000,  150,             defVacuumPWM, Leds::Colors.green  },
+      {300000,  RobotEnv::MOTOR_BASE_PWM, RobotEnv::VACUUM_BASE_PWM,
+       Leds::Green                                                                },
 
       // Last point should be the end of the track
-      {1600000, 0,               270,          Leds::Colors.magenta}
+      {1600000, 0,                        270,                       Leds::Magenta}
   };
   /****************************************************************************/
 }
@@ -217,10 +214,10 @@ void loop(void) {
 
   // Blink LEDs to show inactivity
   if(inactivityTimer.getElapsedTime() > 2000) {
-    Leds::setColorForAll(Leds::Colors.white);
+    Leds::setColorForAll(Leds::White);
     inactivityTimer.reset();
   } else if(inactivityTimer.getElapsedTime() > 1000) {
-    Leds::setColorForAll(Leds::Colors.green);
+    Leds::setColorForAll(Leds::Green);
   }
 
   Timer::delayMiliseconds(100);

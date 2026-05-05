@@ -1,5 +1,5 @@
 /*
- * LedDriver.hpp
+ * Leds.hpp
  *
  *  Created on: Oct 27, 2025
  *      Author: Kelvin Novais
@@ -7,7 +7,7 @@
  */
 
 /*******************************************************************************
- * @file  WS2812Driver.h
+ * @file  Leds.hpp
  * @brief  Driver for addressable WS2812B LEDs, using TIM PWM and DMA.
  * @note  This driver was developed for the Celeris Core S1
  * @note  and depends on the configuration of timer TIM1 in CubeMX.
@@ -42,26 +42,38 @@
 class Leds {
 public:
   // Defining a color type
-  struct RgbColor {
+  struct RGB {
     uint8_t r;
     uint8_t g;
     uint8_t b;
   };
 
-  // Defining and declaring a set of predefined colors
-  struct PredefinedColors {
-    RgbColor red;
-    RgbColor green;
-    RgbColor blue;
-    RgbColor magenta;
-    RgbColor white;
-    RgbColor yellow;
-    RgbColor orange;
-    RgbColor indigo;
-    RgbColor cyan;
-    RgbColor black;
+  enum ColorIndex : uint8_t {
+    // Rotatable colors
+    First = 0,
+    Red   = First,
+    Blue,
+    Green,
+    Magenta,
+    Indigo,
+    Orange,
+    White,
+    Cyan,
+    Yellow,
+    LastRotatable = Yellow,
+
+    // Not rotatable colors
+    Black,
+
+    _N_COLORS
   };
-  const static PredefinedColors Colors;
+
+  struct PredefinedColors {
+    RGB         rgb;
+    const char *name;
+  };
+
+  static const PredefinedColors color[_N_COLORS];
 
   /*
    * Driver configuration:
@@ -78,11 +90,12 @@ public:
     _N_LEDS
   };
 
-  static void setColorForAll(RgbColor color);
-  static void setColorFor(RgbColor color, Led led);
+  static void setColorForAll(RGB rgb);
+  static void setColorForAll(ColorIndex name);
+  static void setColorFor(RGB rgb, Led led);
 
 private:
-  static RgbColor ledsColors[_N_LEDS];
+  static RGB ledsColors[_N_LEDS];
   /*
    * DMA Static buffer for DMA:
    * Main buffer. Declared as 'static' to avoid stack overflow.
