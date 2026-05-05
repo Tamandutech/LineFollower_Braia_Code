@@ -10,11 +10,14 @@
 
 #include <cstdint>
 
-#include "encoders.h"
-
 class Encoders {
 public:
-  typedef _Encoder Encoder;
+  enum Encoder : uint8_t {
+    Left = 0,
+    Right,
+
+    _N_ENCODERS
+  };
 
   static int32_t getAverage();
   static int32_t getCounter(Encoder encoder);
