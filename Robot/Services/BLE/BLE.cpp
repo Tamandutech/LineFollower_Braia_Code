@@ -27,14 +27,14 @@ void BLE::restart() {
 static void updateAction() {
   if(rx_buffer[0] == '1') {
     // If the buffer contains '1', it should do nothing
-    BLE::action = BLE::None;
+    globalData.action = Action::None;
   } else if(rx_buffer[0] == '2') {
     // If contains '2', it should run
-    BLE::action = BLE::Run;
+    globalData.action = Action::Run;
   } else if(rx_buffer[0] == '3') {
-    BLE::action = BLE::Map;
+    globalData.action = Action::Map;
   } else if(rx_buffer[0] == '4') {
-    BLE::action = BLE::CustomAction;
+    globalData.action = Action::CustomAction;
   }
 }
 

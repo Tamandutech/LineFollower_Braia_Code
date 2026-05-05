@@ -22,7 +22,6 @@
 #include "../../Drivers/Motors/Motors.hpp"
 #include "../../Drivers/Vacuum/Vacuum.hpp"
 #include "../../Utils/Timer/Timer.hpp"
-#include "../BLE/BLE.hpp"
 
 // Returns ~1000 if reading BLACK
 // Returns ~0    if reading WHITE
@@ -145,7 +144,7 @@ void Mapper::map() {
   Vacuum::pwmAcceleratedOutput(RobotEnv::MOTOR_BASE_PWM);
   lastTime = Timer::getMicroseconds();
 
-  while(BLE::action == BLE::Map) {
+  while(globalData.action == Action::Map) {
     if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
       Motors::pwmOutput(RobotEnv::MOTOR_BASE_PWM);
       Vacuum::pwmOutput(RobotEnv::VACUUM_BASE_PWM);

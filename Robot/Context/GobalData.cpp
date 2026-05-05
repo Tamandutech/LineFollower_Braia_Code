@@ -7,5 +7,8 @@
 
 #include "GlobalData.hpp"
 
-GlobalData globalData = {
-    .isReadyToRun{false}, .finishLineCount{0}, .mapData{}, .markCount{0}};
+GlobalData globalData = {.action = None,
+                         .isReadyToRun{false},
+                         .finishLineCount{0},
+                         .mapData{},
+                         .markCount{0}};

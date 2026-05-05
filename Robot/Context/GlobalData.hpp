@@ -14,20 +14,22 @@
 
 #include "../Drivers/Leds/Leds.hpp"
 
-typedef struct _MapPoint {
+enum Action : uint8_t { None = 0, Run, Map, CustomAction };
+
+struct MapPoint {
   int32_t          encoderAverage;
   float            baseMotorPWM;
   float            baseVacuumPWM;
-  Leds::ColorIndex color;
-} MapPoint;
+  Leds::ColorIndex colorIndex;
+};
 
-
-typedef struct _GlobalData {
+struct GlobalData {
+  volatile Action          action;
   std::atomic<bool>        isReadyToRun;
   std::atomic<int32_t>     finishLineCount;
   std::vector<MapPoint>    mapData;
   std::atomic<std::size_t> markCount;
-} GlobalData;
+};
 
 extern GlobalData globalData;
 

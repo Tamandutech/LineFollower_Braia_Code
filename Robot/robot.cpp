@@ -63,7 +63,7 @@ static void startRunning() {
   logger->info("Running...");
 
   // Start
-  while(BLE::action == BLE::Run && i < globalData.mapData.size()) {
+  while(globalData.action == Action::Run && i < globalData.mapData.size()) {
     if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
       int32_t avg = Encoders::getAverage();
 
@@ -72,12 +72,12 @@ static void startRunning() {
         // At index i-1
         Motors::pwmOutput(globalData.mapData[i - 1].baseMotorPWM);
         Vacuum::pwmOutput(globalData.mapData[i - 1].baseVacuumPWM);
-        Leds::setColorForAll(globalData.mapData[i - 1].color);
+        Leds::setColorForAll(globalData.mapData[i - 1].colorIndex);
       } else if(avg >= globalData.mapData[i].encoderAverage) {
         // At index i
         Motors::pwmOutput(globalData.mapData[i].baseMotorPWM);
         Vacuum::pwmOutput(globalData.mapData[i].baseVacuumPWM);
-        Leds::setColorForAll(globalData.mapData[i].color);
+        Leds::setColorForAll(globalData.mapData[i].colorIndex);
 
         logger->info("[%02d] Encoder: %04ld, motor: %03.0f, vacuum: %03.0f", i,
                      avg, // NOLINT
@@ -93,7 +93,7 @@ static void startRunning() {
 
   // Stop graceffuly
   // This action will be performed only if the stop command wasn't sent
-  if(BLE::action == BLE::Run) {
+  if(globalData.action == Action::Run) {
     Motors::stop();
     logger->info("Stopping at encoder %04ld",
                  Encoders::getAverage()); // NOLINT
@@ -195,14 +195,14 @@ void setup(void) {
 void loop(void) {
   static Timer inactivityTimer(Timer::Miliseconds);
 
-  switch(BLE::action) {
-  case BLE::Run: startRunning(); break;
+  switch(globalData.action) {
+  case Action::Run: startRunning(); break;
 
-  case BLE::Map: Mapper::map(); break;
+  case Action::Map: Mapper::map(); break;
 
-  case BLE::CustomAction: customAction(); break;
+  case Action::CustomAction: customAction(); break;
 
-  case BLE::None:
+  case Action::None:
   default: stopRunning();
   }
 
@@ -210,7 +210,7 @@ void loop(void) {
   stopRunning();
 
   // Reset the action variable after the command was performed
-  BLE::action = BLE::None;
+  globalData.action = Action::None;
 
   // Blink LEDs to show inactivity
   if(inactivityTimer.getElapsedTime() > 2000) {
