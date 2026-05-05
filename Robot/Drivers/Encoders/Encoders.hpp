@@ -1,5 +1,5 @@
 /*
- * EncoderDriver.hpp
+ * Encoders.hpp
  *
  *  Created on: Oct 25, 2025
  *      Author: Kelvin Novais
@@ -16,7 +16,7 @@ public:
     Left = 0,
     Right,
 
-    _N_ENCODERS
+    N_ENCODERS_
   };
 
   static int32_t getAverage();

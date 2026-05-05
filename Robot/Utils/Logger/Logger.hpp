@@ -8,9 +8,9 @@
 #ifndef UTILS_LOGGER_HPP_
 #define UTILS_LOGGER_HPP_
 
+#include "../../Utils/Timestamp/Timestamp.hpp"
 #include <cstdarg>
 #include <cstdint>
-#include "../../Utils/Timestamp/Timestamp.hpp"
 
 #define LOGGER_BUFFER_SIZE      ((unsigned int)512)
 #define LOGGER_FORMATTED_BUFFER (LOGGER_BUFFER_SIZE + 32)
@@ -61,9 +61,9 @@ private:
   static void sendLog();
 
   // Per instance variables and methods
-  int   level;
-  bool  showTag;
-  char *tag;
+  int   level_;
+  bool  showTag_;
+  char *tag_;
 
   void formatLog(const char *logLevelStamp);
 };

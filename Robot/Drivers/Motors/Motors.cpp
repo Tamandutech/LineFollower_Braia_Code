@@ -1,5 +1,5 @@
 /*
- * MotorDriver.cpp
+ * Motors.cpp
  *
  *  Created on: Oct 25, 2025
  *      Author: Samuel Oliveira
@@ -16,7 +16,7 @@
 #include "../../Context/RobotEnv.hpp"
 #include "../../Services/PID/PID.hpp"
 
-const Motors::Pin Motors::motorPins[_N_MOTORS] = {
+const Motors::Pin Motors::motorPins[N_MOTORS_] = {
     // Left
     {motor2dir_GPIO_Port, motor2dir_Pin, &htim8, TIM_CHANNEL_1},
 
@@ -27,6 +27,11 @@ float   Motors::motorSpeed[_N_MOTORS];
 int16_t Motors::motorPWM[_N_MOTORS];
 
 void Motors::pwmOutputFor(Motor motor, int16_t duty) {
+  if(motor == N_MOTORS_) {
+    // TODO warning
+    return;
+  }
+
   if(duty >= 0) {
     // Defines the direction
     HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin,

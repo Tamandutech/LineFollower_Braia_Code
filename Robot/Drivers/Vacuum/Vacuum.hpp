@@ -1,5 +1,5 @@
 /*
- * VacuumDriver.hpp
+ * Vacuum.hpp
  *
  *  Created on: Oct 28, 2025
  *      Author: Kelvin Novais
@@ -20,7 +20,7 @@ public:
 
 private:
   struct Pin {
-    // Motor PWM pin
+    // PWM timer
     TIM_HandleTypeDef *pwmhtim;
     // PWM channel
     uint32_t pwmChannel;

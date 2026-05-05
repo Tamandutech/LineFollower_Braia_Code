@@ -27,27 +27,27 @@ extern UART_HandleTypeDef huart1;
 }
 
 Logger::Logger(const char *newTag, bool newShowTag, Level newLevel)
-    : tag(nullptr) {
-  level   = Error | Warning | newLevel;
-  showTag = newShowTag;
+    : tag_(nullptr) {
+  level_   = Error | Warning | newLevel;
+  showTag_ = newShowTag;
 
   if(newTag) {
     // Allocate memory for the tag
     // (+3 for the space, colon, and null terminator)
     const int size = strlen(newTag) + 3;
-    tag            = new char[size];
+    tag_           = new char[size];
 
     // Format the incoming string to the instance tag
-    snprintf(tag, size, "%s: ", newTag);
+    snprintf(tag_, size, "%s: ", newTag);
   } else {
     const char *noTag = "";
 
-    tag = new char[strlen(noTag)];
-    strcpy(tag, noTag);
+    tag_ = new char[strlen(noTag)];
+    strcpy(tag_, noTag);
   }
 }
 
-Logger::~Logger() { delete[] tag; }
+Logger::~Logger() { delete[] tag_; }
 
 void Logger::formatLog(const char *logLevelStamp) {
   // MM:SS.mmm
@@ -62,7 +62,7 @@ void Logger::formatLog(const char *logLevelStamp) {
   snprintf(formatted, LOGGER_FORMATTED_BUFFER, "%s%s%s%s%s",
            (showTimestamp) ? timestampStr : "",
            (showLogLevel && logLevelStamp) ? logLevelStamp : "",
-           (showTag) ? tag : "", buffer, (useDoubleBreak) ? "\n\n" : "\n");
+           (showTag_) ? tag_ : "", buffer, (useDoubleBreak) ? "\n\n" : "\n");
 }
 
 void Logger::sendLog() {
@@ -97,7 +97,7 @@ void Logger::warning(const char *format, ...) {
 void Logger::info(const char *format, ...) {
   va_list args;
 
-  if((level & Info) == 0) return;
+  if((level_ & Info) == 0) return;
 
   va_start(args, format);
   vsnprintf(buffer, LOGGER_BUFFER_SIZE, format, args);
@@ -111,7 +111,7 @@ void Logger::info(const char *format, ...) {
 void Logger::debug(const char *format, ...) {
   va_list args;
 
-  if((level & Debug) == 0) return;
+  if((level_ & Debug) == 0) return;
 
   va_start(args, format);
   vsnprintf(buffer, LOGGER_BUFFER_SIZE, format, args);

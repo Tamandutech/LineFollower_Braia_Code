@@ -1,5 +1,5 @@
 /*
- * MotorDriver.hpp
+ * Motors.hpp
  *
  *  Created on: Oct 25, 2025
  *      Author: Samuel Oliveira
@@ -18,7 +18,7 @@ public:
     Left = 0,
     Right,
 
-    _N_MOTORS
+    N_MOTORS_
   };
 
   static void pwmOutput(float duty);
@@ -27,18 +27,18 @@ public:
 
 private:
   struct Pin {
-    // Motor direction pin
+    // Direction port/pin
     GPIO_TypeDef *dirPort;
     uint16_t      dirPin;
-    // Motor PWM pin
+    // PWM timer
     TIM_HandleTypeDef *pwmhtim;
     // PWM channel
     uint32_t pwmChannel;
   };
 
-  const static Pin motorPins[_N_MOTORS];
-  static float     motorSpeed[_N_MOTORS];
-  static int16_t   motorPWM[_N_MOTORS];
+  const static Pin motorPins[N_MOTORS_];
+  static float     motorSpeed[N_MOTORS_];
+  static int16_t   motorPWM[N_MOTORS_];
 };
 
 #endif /* DRIVERS_MOTORS_MOTORS_HPP_ */

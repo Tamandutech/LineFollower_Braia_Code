@@ -1,5 +1,5 @@
 /*
- * QTRSensorDriver.cpp
+ * IRSensors.cpp
  *
  *  Created on: Oct 31, 2025
  *      Author: Kelvin Novais
@@ -28,7 +28,7 @@
  *
  * For example, to access the right encoder: *sensorValues[R_1]
  */
-const volatile uint32_t *const IRSensors::rawSensorValues[_N_SENSORS] = {
+const volatile uint32_t *const IRSensors::rawSensorValues[N_SENSORS_] = {
     // Left
     [L_1] = &adc2_buffer[5],
     [L_2] = &adc1_buffer[6],
@@ -52,7 +52,7 @@ const volatile uint32_t *const IRSensors::rawSensorValues[_N_SENSORS] = {
     [R_2] = &adc1_buffer[4]};
 
 // Minimum values ​​measured in practice
-uint32_t IRSensors::minValues[_N_SENSORS] = {
+uint32_t IRSensors::minValues[N_SENSORS_] = {
     // Left
     208, 208,
 
@@ -63,7 +63,7 @@ uint32_t IRSensors::minValues[_N_SENSORS] = {
     207, 207};
 
 // Maximum values ​​measured in practice
-uint32_t IRSensors::maxValues[_N_SENSORS] = {
+uint32_t IRSensors::maxValues[N_SENSORS_] = {
     // Left
     3650, 3650,
 
@@ -73,18 +73,16 @@ uint32_t IRSensors::maxValues[_N_SENSORS] = {
     // Right
     3645, 3645};
 
-uint16_t                IRSensors::sensorValues[_N_SENSORS] = {0};
+uint16_t                IRSensors::sensorValues[N_SENSORS_] = {0};
 bool                    IRSensors::calibrated               = false;
 uint16_t                IRSensors::lastPosition             = 0;
 uint16_t                IRSensors::arraySensorCenter        = 5500;
-const IRSensors::Sensor IRSensors::firstCentralSensor       = C_1;
-const IRSensors::Sensor IRSensors::lastCentralSensor        = C_12;
 Logger                 *IRSensors::logger =
     new Logger("QTRSensorDriver", false, Logger::Level::Info);
 
 void IRSensors::calibrateSensors() {
   // Reset the values
-  for(uint8_t i = 0; i < _N_SENSORS; i++) {
+  for(uint8_t i = 0; i < N_SENSORS_; i++) {
     minValues[i] = 4095;
     maxValues[i] = 0;
   }
@@ -96,7 +94,7 @@ void IRSensors::calibrateSensors() {
 
   for(uint16_t s = 0; s < SAMPLES; s++) {
     // Get the min and max values
-    for(uint8_t i = 0; i < _N_SENSORS; i++) {
+    for(uint8_t i = 0; i < N_SENSORS_; i++) {
       uint32_t rawValue = *rawSensorValues[i];
       
       minValues[i]      = std::min(minValues[i], rawValue);
@@ -105,7 +103,7 @@ void IRSensors::calibrateSensors() {
 
     // Every 10 samples, ensure that (max > min) and (min < max)
     if((s % 10) == 0) {
-      for(uint8_t j = 0; j < _N_SENSORS; j++) {
+      for(uint8_t j = 0; j < N_SENSORS_; j++) {
         maxValues[j] = std::max(minValues[j], maxValues[j]);
         minValues[j] = std::min(maxValues[j], minValues[j]);
       }
@@ -123,7 +121,7 @@ void IRSensors::calibrateSensors() {
    * If the difference between the values for calibration is less than
    * difference, we can consider it unsuccessful
    */
-  for(uint8_t i = 0; i < _N_SENSORS; i++) {
+  for(uint8_t i = 0; i < N_SENSORS_; i++) {
     if(maxValues[i] - minValues[i] < 2300) {
       calibrated = false;
       logger->warning(
@@ -176,7 +174,7 @@ void IRSensors::readCalibrated() {
     calibrated = true;
   }
 
-  for(uint8_t i = 0; i < _N_SENSORS; i++) {
+  for(uint8_t i = 0; i < N_SENSORS_; i++) {
     uint16_t calmin, calmax;
 
     calmax = maxValues[i];
@@ -204,7 +202,7 @@ uint16_t IRSensors::readLine() {
 
   readCalibrated();
 
-  for(uint8_t i = firstCentralSensor; i <= lastCentralSensor; i++) {
+  for(uint8_t i = FirstCentral; i <= LastCentral; i++) {
     uint16_t value = sensorValues[i];
 
     value = 1000 - value;
@@ -216,19 +214,19 @@ uint16_t IRSensors::readLine() {
 
     // Only average in values that are above a noise threshold
     if(value > 50) {
-      avg += (uint32_t)value * ((i - firstCentralSensor) * 1000);
+      avg += (uint32_t)value * ((i - FirstCentral) * 1000);
       sum += value;
     }
   }
 
   if(!onLine) {
     // If it last read to the left of center, return 0.
-    if(lastPosition < (lastCentralSensor - firstCentralSensor) * 1000 / 2) {
+    if(lastPosition < (LastCentral - FirstCentral) * 1000 / 2) {
       return 0;
     }
     // If it last read to the right of center, return the max.
     else {
-      return (lastCentralSensor - firstCentralSensor) * 1000;
+      return (LastCentral - FirstCentral) * 1000;
     }
   }
 

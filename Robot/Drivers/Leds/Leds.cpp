@@ -20,7 +20,7 @@
 // (ARR=4, CCR=5)
 #define PWM_LOW  5
 
-const Leds::PredefinedColors Leds::color[Leds::_N_COLORS] = {
+const Leds::PredefinedColors Leds::color[Leds::N_COLORS_] = {
     [Leds::Red]     = {{128, 0, 0},     "red"    },
     [Leds::Blue]    = {{0, 0, 128},     "blue"   },
     [Leds::Green]   = {{0, 128, 0},     "green"  },
@@ -33,9 +33,9 @@ const Leds::PredefinedColors Leds::color[Leds::_N_COLORS] = {
     [Leds::Black]   = {{0, 0, 0},       "black"  }
 };
 
-Leds::RGB Leds::ledsColors[_N_LEDS]                                = {{0}};
+Leds::RGB Leds::ledsColors[N_LEDS_]                                = {{0}};
 uint32_t  Leds::pwmBuffer[RESET_CYCLES + RESET_CYCLES +
-                         _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT] = {0};
+                         N_LEDS_ * LED_BITS * PWM_CYCLES_PER_BIT] = {0};
 
 void Leds::outputColors() {
   // Pointer to the start of our DMA buffer
@@ -47,7 +47,7 @@ void Leds::outputColors() {
   }
 
   // 1. Loop through each LED
-  for(uint16_t i = 0; i < Leds::_N_LEDS; i++) {
+  for(uint16_t i = 0; i < Leds::N_LEDS_; i++) {
     // Garante que os valores sejam pares pois por algum motivo valores ímpares
     // causam problemas
     uint8_t r = ledsColors[i].r % 2 ? ledsColors[i].r - 1 : ledsColors[i].r;
@@ -96,7 +96,7 @@ void Leds::outputColors() {
   // 4. Send data via DMA
   // The total size of data to be sent is the initial reset, the LEDs, and the
   // final reset.
-  uint32_t data_len          = Leds::_N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT;
+  uint32_t data_len          = Leds::N_LEDS_ * LED_BITS * PWM_CYCLES_PER_BIT;
   uint32_t total_buffer_size = RESET_CYCLES + data_len + RESET_CYCLES;
 
   // Starts DMA transfer
@@ -105,7 +105,7 @@ void Leds::outputColors() {
                         static_cast<uint32_t *>(pwmBuffer), total_buffer_size);
 }
 void Leds::setColorForAll(ColorIndex idx) {
-  for(uint8_t i = 0; i < _N_LEDS; i++) {
+  for(uint8_t i = 0; i < N_LEDS_; i++) {
     ledsColors[i] = color[idx].rgb;
   }
 
@@ -113,7 +113,7 @@ void Leds::setColorForAll(ColorIndex idx) {
 }
 
 void Leds::setColorForAll(RGB rgb) {
-  for(uint8_t i = 0; i < _N_LEDS; i++) {
+  for(uint8_t i = 0; i < N_LEDS_; i++) {
     ledsColors[i] = rgb;
   }
 
@@ -121,6 +121,11 @@ void Leds::setColorForAll(RGB rgb) {
 }
 
 void Leds::setColorFor(RGB rgb, Led led) {
+  if(led == N_LEDS_) {
+    // TODO warning
+    return;
+  }
+  
   ledsColors[led] = rgb;
 
   outputColors();

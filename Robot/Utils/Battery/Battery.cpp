@@ -10,7 +10,7 @@
 #include "adc.h"
 
 /*
- * TSince the ADC buffers are in a messy order, we are going to expose a pointer
+ * Since the ADC buffers are in a messy order, we are going to expose a pointer
  * to the desired variable, matching the correct ADC address.
  */
 const volatile uint32_t *const Battery::rawBatteryVoltage = &adc2_buffer[8];

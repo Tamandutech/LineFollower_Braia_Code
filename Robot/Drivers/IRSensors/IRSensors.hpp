@@ -1,5 +1,5 @@
 /*
- * QTRSensorDriver.hpp
+ * IRSensors.hpp
  *
  *  Created on: Oct 31, 2025
  *      Author: Kelvin Novais
@@ -20,7 +20,8 @@ public:
     L_2,
 
     // Center
-    C_1,
+    FirstCentral,
+    C_1 = FirstCentral,
     C_2,
     C_3,
     C_4,
@@ -32,12 +33,13 @@ public:
     C_10,
     C_11,
     C_12,
+    LastCentral = C_12,
 
     // Right
     R_1,
     R_2,
 
-    _N_SENSORS
+    N_SENSORS_
   };
 
 
@@ -47,13 +49,13 @@ public:
   static void     setArraySensorCenter(uint16_t center);
 
 protected:
-  static uint16_t sensorValues[_N_SENSORS];
+  static uint16_t sensorValues[N_SENSORS_];
   static void     readCalibrated();
 
 private:
-  static const volatile uint32_t *const rawSensorValues[_N_SENSORS];
-  static uint32_t                       maxValues[_N_SENSORS];
-  static uint32_t                       minValues[_N_SENSORS];
+  static const volatile uint32_t *const rawSensorValues[N_SENSORS_];
+  static uint32_t                       maxValues[N_SENSORS_];
+  static uint32_t                       minValues[N_SENSORS_];
   static bool                           calibrated;
   static uint16_t                       lastPosition;
   static uint16_t                       arraySensorCenter;

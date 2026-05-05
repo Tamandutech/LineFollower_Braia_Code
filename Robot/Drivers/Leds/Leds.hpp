@@ -65,7 +65,7 @@ public:
     // Not rotatable colors
     Black,
 
-    _N_COLORS
+    N_COLORS_
   };
 
   struct PredefinedColors {
@@ -73,7 +73,7 @@ public:
     const char *name;
   };
 
-  static const PredefinedColors color[_N_COLORS];
+  static const PredefinedColors color[N_COLORS_];
 
   /*
    * Driver configuration:
@@ -87,7 +87,7 @@ public:
     Right,
     Left,
 
-    _N_LEDS
+    N_LEDS_
   };
 
   static void setColorForAll(RGB rgb);
@@ -95,7 +95,7 @@ public:
   static void setColorFor(RGB rgb, Led led);
 
 private:
-  static RGB ledsColors[_N_LEDS];
+  static RGB ledsColors[N_LEDS_];
   /*
    * DMA Static buffer for DMA:
    * Main buffer. Declared as 'static' to avoid stack overflow.
@@ -103,7 +103,7 @@ private:
    * We use uint32_t to match the size of the timer register (CCR).
    */
   static uint32_t pwmBuffer[RESET_CYCLES + RESET_CYCLES +
-                            _N_LEDS * LED_BITS * PWM_CYCLES_PER_BIT];
+                            N_LEDS_ * LED_BITS * PWM_CYCLES_PER_BIT];
 
   static void outputColors();
 };

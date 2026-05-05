@@ -11,8 +11,10 @@
 #include <cmath>
 #include <cstdint>
 
-// TODO set all pins here (?)
-
+/*
+ * Note: If using C++17 or later, prefer using "inline constexpr" for constants,
+ * in order to avoid it being copied on every file this header is included.
+ */
 namespace RobotEnv {
 const int32_t  ROBOT_WIDTH           = 4;
 const double   WHEEL_DIAMETER        = 0.0222;                // m
@@ -25,8 +27,8 @@ const double   MM_PER_PULSE = WHEEL_CIRCUMFERENCE / PULSES_PER_REVOLUTION; // mm
 constexpr float EPSILON_TOLERANCE = 1e-6F;
 
 // Constants for preventing integral windup in PID
-constexpr float INTEGRAL_MAX = 1000.0F;  // Maximum value for the full term
-constexpr float INTEGRAL_MIN = -1000.0F; // Minimum value for the full term
+const float INTEGRAL_MAX = 1000.0F;  // Maximum value for the full term
+const float INTEGRAL_MIN = -1000.0F; // Minimum value for the full term
 
 const float kp = 0.1;
 const float kd = 1.9;
@@ -40,14 +42,14 @@ const float kd = 1.9;
 // const PIDParameter Kd = {.base = 1.900, .translational = 20.000}; // NOLINT
 // const PIDParameter Ki = {.base = 0.000, .translational = 04.600}; // NOLINT
 
-const uint16_t BASE_LOOP_TIME_US = 1000;                 // µs
+const uint16_t BASE_LOOP_TIME_US = 1000;                  // µs
 
-const int32_t MOTOR_BASE_PWM           = 200;            // ‰
-const float   MOTOR_BASE_SPEED         = 0.75F;          // m/s
-const int16_t MOTOR_MAX_PWM            = 1000;           // ‰
-const float   MOTOR_MAX_SPEED          = 4;              // m/s
-const int32_t MOTOR_MAX_DECELERATION   = 4;              // m/s
-const int32_t MOTOR_MAX_ROTATION_SPEED = 4;              // m/s
+const int32_t MOTOR_BASE_PWM           = 100;             // ‰
+const float   MOTOR_BASE_SPEED         = 0.75F;           // m/s
+const int16_t MOTOR_MAX_PWM            = 1000;            // ‰
+const float   MOTOR_MAX_SPEED          = 4;               // m/s
+const int32_t MOTOR_MAX_DECELERATION   = 4;               // m/s
+const int32_t MOTOR_MAX_ROTATION_SPEED = 4;               // m/s
 
 const uint16_t VACUUM_BASE_PWM                    = 250; // ‰
 const uint8_t  VACUUM_INTERVAL_BETWEEN_INCREMENTS = 2;   // ms
