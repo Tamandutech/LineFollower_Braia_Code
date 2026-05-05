@@ -11,12 +11,10 @@
 // Standard headers
 #include <cstdint>
 
-// STM32 HAL headers
-#include "adc.h"
-#include "tim.h"
-
 // Headers from our code base
 #include "Context/GlobalData.hpp"
+#define EXPOSE_GLOBAL_PERIPHERALS
+#include "Context/PeripheralsEnv.hpp"
 #include "Context/RobotEnv.hpp"
 
 #include "Services/Mapper/Mapper.hpp"
@@ -118,34 +116,30 @@ void setup(void) {
               "Robot is starting...\n",
               __DATE__, __TIME__);
 
-  // Initialize timer
-  HAL_TIM_Base_Start(&htim2);
+  // Initialize base timer
+  HAL_TIM_Base_Start(PeripheralsEnv::BASE_TIMER);
 
-  // Initialize PWM
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
-
-  // Initialize encoders
-  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
-
-  // Enables overflow/underflow interrupt for encoders
-  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
-  __HAL_TIM_ENABLE_IT(&htim4, TIM_IT_UPDATE);
+  // Initialize drivers
+  Motors::initialize();
+  Vacuum::initialize();
+  Encoders::initialize();
 
   // Initialize ADC
-  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-  HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+  // Needed for IRSensors and Battery
+  HAL_ADCEx_Calibration_Start(PeripheralsEnv::ADC_1, ADC_SINGLE_ENDED);
+  HAL_ADCEx_Calibration_Start(PeripheralsEnv::ADC_2, ADC_SINGLE_ENDED);
   HAL_Delay(100);
 
   // Initialize DMA
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc1_buffer, 9);
-  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc2_buffer, 9);
+  // Needed for IRSensors and Battery
+  HAL_ADC_Start_DMA(PeripheralsEnv::ADC_1, (uint32_t *)adc1_buffer,
+                    ADC_BUFFER_SIZE);
+  HAL_ADC_Start_DMA(PeripheralsEnv::ADC_2, (uint32_t *)adc2_buffer,
+                    ADC_BUFFER_SIZE);
   HAL_Delay(50);
 
   // Start DMA reception
-  BLE::start();
+  BLE::initialize();
 
   // Print battery information
   Timer::delayMiliseconds(75);
@@ -166,7 +160,7 @@ void setup(void) {
 
   // Calibrate sensors
   Timer::delayMiliseconds(1000);
-  // QTRSensorDriver::calibrateSensors();
+  // IRSensors::calibrateSensors();
 
   // Reset encoders
   Encoders::reset();

@@ -8,9 +8,8 @@
 #ifndef DRIVERS_IRSENSORS_IRSENSORS_HPP_
 #define DRIVERS_IRSENSORS_IRSENSORS_HPP_
 
-#include <cstdint>
-
 #include "../../Utils/Logger/Logger.hpp"
+#include <cstdint>
 
 class IRSensors {
 public:

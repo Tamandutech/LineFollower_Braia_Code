@@ -9,17 +9,30 @@
 
 #include <algorithm>
 
-#include "tim.h"
-
+#define EXPOSE_VACUUM_PERIPHERAL
+#include "../../Context/PeripheralsEnv.hpp"
 #include "../../Context/RobotEnv.hpp"
 #include "../../Utils/Timer/Timer.hpp"
 
-Vacuum::Pin Vacuum::pin = {&htim5, TIM_CHANNEL_2};
+Vacuum::Pin Vacuum::pin     = {PeripheralsEnv::VACUUM_TIMER,
+                               PeripheralsEnv::VACUUM_CHANNEL};
+uint16_t    Vacuum::lastPWM = 0;
 
-uint16_t Vacuum::lastPWM = 0;
+void Vacuum::initialize() {
+  static bool initialized = false;
+
+  if(initialized) {
+    // TODO error
+  }
+
+  HAL_TIM_PWM_Start(PeripheralsEnv::VACUUM_TIMER,
+                    PeripheralsEnv::VACUUM_CHANNEL);
+
+  initialized = true;
+}
 
 void Vacuum::pwmOutput(uint16_t target) {
-  target = std::min(target, static_cast<uint16_t>(RobotEnv::MOTOR_MAX_PWM));
+  target = std::min(target, static_cast<uint16_t>(RobotEnv::VACUUM_MAX_PWM));
 
   __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, target);
 
@@ -29,8 +42,8 @@ void Vacuum::pwmOutput(uint16_t target) {
 void Vacuum::pwmAcceleratedOutput(uint16_t target) {
   uint16_t currentValue = lastPWM;
 
-  target = std::max(target, static_cast<uint16_t>(RobotEnv::VACUUM_BASE_PWM));
-  target = std::min(target, static_cast<uint16_t>(RobotEnv::MOTOR_MAX_PWM));
+  target = std::max(target, static_cast<uint16_t>(RobotEnv::VACUUM_MIN_PWM));
+  target = std::min(target, static_cast<uint16_t>(RobotEnv::VACUUM_MAX_PWM));
 
   while(currentValue != target) {
     if(currentValue < target) {

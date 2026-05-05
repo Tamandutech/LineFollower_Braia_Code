@@ -19,6 +19,7 @@ public:
     N_ENCODERS_
   };
 
+  static void    initialize();
   static int32_t getAverage();
   static int32_t getCounter(Encoder encoder);
   static void    setCounter(Encoder encoder, uint32_t value);

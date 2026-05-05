@@ -7,7 +7,8 @@
 
 #include "../../Utils/Logger/Logger.hpp"
 
-#include "stm32g4xx_hal.h"
+#define EXPOSE_BLE_PERIPHERAL
+#include "../../Context/PeripheralsEnv.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -21,10 +22,6 @@ bool      Logger::useDoubleBreak                        = false;
 bool      Logger::showLogLevel                          = true;
 bool      Logger::showTimestamp                         = true;
 Timestamp Logger::timestamp;
-
-extern "C" {
-extern UART_HandleTypeDef huart1;
-}
 
 Logger::Logger(const char *newTag, bool newShowTag, Level newLevel)
     : tag_(nullptr) {
@@ -67,7 +64,8 @@ void Logger::formatLog(const char *logLevelStamp) {
 
 void Logger::sendLog() {
   // TODO treat the return of the function to avoid messing the messages
-  HAL_UART_Transmit_DMA(&huart1, (const uint8_t *)formatted, strlen(formatted));
+  HAL_UART_Transmit_DMA(PeripheralsEnv::BLE_BUS, (const uint8_t *)formatted,
+                        strlen(formatted));
 }
 
 void Logger::error(const char *format, ...) {

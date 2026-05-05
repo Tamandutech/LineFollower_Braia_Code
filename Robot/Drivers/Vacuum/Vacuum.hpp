@@ -14,6 +14,7 @@
 
 class Vacuum {
 public:
+  static void initialize();
   static void pwmOutput(uint16_t duty);
   static void pwmAcceleratedOutput(uint16_t duty);
   static void stopAfter(uint32_t miliseconds);

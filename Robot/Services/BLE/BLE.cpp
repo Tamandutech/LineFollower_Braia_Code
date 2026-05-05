@@ -5,18 +5,35 @@
  *      Author: Kelvin Novais
  */
 
-#include "stm32g4xx_hal.h"
-#include "usart.h"
+
 #include "BLE.hpp"
 
-#define BLE_BUS huart1
+#define EXPOSE_BLE_PERIPHERAL
+#include "../../Context/PeripheralsEnv.hpp"
 
-static uint8_t               rx_buffer[32]       = {0};
-volatile BLE::Action BLE::action = BLE::None;
+#include "../../Context/GlobalData.hpp"
+
+
+static uint8_t rx_buffer[32] = {0};
+
+void BLE::initialize() {
+  static bool initilized = false;
+
+  if(initilized) {
+    // TODO error
+  }
+
+  // Initialize DMA reception
+  HAL_UART_Receive_DMA(PeripheralsEnv::BLE_BUS,
+                       static_cast<uint8_t *>(rx_buffer), 1);
+
+  initilized = true;
+}
 
 void BLE::start() {
-  // Init DMA reception
-  HAL_UART_Receive_DMA(&BLE_BUS, static_cast<uint8_t *>(rx_buffer), 1);
+  // Call DMA reception function again
+  HAL_UART_Receive_DMA(PeripheralsEnv::BLE_BUS,
+                       static_cast<uint8_t *>(rx_buffer), 1);
 }
 
 void BLE::restart() {

@@ -8,8 +8,10 @@
 
 #include "Leds.hpp"
 
-#include "tim.h"
 #include <cstdint>
+
+#define EXPOSE_LEDS_PERIPHERAL
+#include "../../Context/PeripheralsEnv.hpp"
 
 /*
  * CCR register values ​​to generate logic levels on channel N (inverted)
@@ -100,8 +102,10 @@ void Leds::outputColors() {
   uint32_t total_buffer_size = RESET_CYCLES + data_len + RESET_CYCLES;
 
   // Starts DMA transfer
-  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1,
+  HAL_TIMEx_PWMN_Start(PeripheralsEnv::LEDS_TIMER,
+                       PeripheralsEnv::LEDS_CHANNEL);
+  HAL_TIM_PWM_Start_DMA(PeripheralsEnv::LEDS_TIMER,
+                        PeripheralsEnv::LEDS_CHANNEL,
                         static_cast<uint32_t *>(pwmBuffer), total_buffer_size);
 }
 void Leds::setColorForAll(ColorIndex idx) {

@@ -21,6 +21,7 @@ public:
     N_MOTORS_
   };
 
+  static void initialize();
   static void pwmOutput(float duty);
   static void pwmOutputFor(Motor motor, int16_t duty);
   static void stop();

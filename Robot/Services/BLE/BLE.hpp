@@ -8,14 +8,9 @@
 #ifndef SERVICES_BLE_BLE_HPP_
 #define SERVICES_BLE_BLE_HPP_
 
-#include <cstdint>
-
 class BLE {
 public:
-  typedef enum : uint8_t { None = 0, Run, Map, CustomAction } Action;
-
-  static volatile Action action;
-
+  static void initialize();
   static void start();
   static void restart();
 };

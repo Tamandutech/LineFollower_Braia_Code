@@ -11,20 +11,41 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "tim.h"
-
+#define EXPOSE_MOTORS_PERIPHERAL
+#include "../../Context/PeripheralsEnv.hpp"
 #include "../../Context/RobotEnv.hpp"
 #include "../../Services/PID/PID.hpp"
 
 const Motors::Pin Motors::motorPins[N_MOTORS_] = {
     // Left
-    {motor2dir_GPIO_Port, motor2dir_Pin, &htim8, TIM_CHANNEL_1},
+    [Left] = {PeripheralsEnv::MOTOR_LEFT_DIRECTION_PORT,
+              PeripheralsEnv::MOTOR_LEFT_DIRECTION_PIN,
+              PeripheralsEnv::MOTOR_LEFT_TIMER,
+              PeripheralsEnv::MOTOR_LEFT_CHANNEL },
 
     // Right
-    {motor1dir_GPIO_Port, motor1dir_Pin, &htim8, TIM_CHANNEL_3}
+    [Right] = {PeripheralsEnv::MOTOR_RIGHT_DIRECTION_PORT,
+              PeripheralsEnv::MOTOR_RIGHT_DIRECTION_PIN,
+              PeripheralsEnv::MOTOR_RIGHT_TIMER,
+              PeripheralsEnv::MOTOR_RIGHT_CHANNEL}
 };
-float   Motors::motorSpeed[_N_MOTORS];
-int16_t Motors::motorPWM[_N_MOTORS];
+float   Motors::motorSpeed[N_MOTORS_];
+int16_t Motors::motorPWM[N_MOTORS_];
+
+void Motors::initialize() {
+  static bool initialized = false;
+
+  if(initialized) {
+    // TODO error
+  }
+
+  HAL_TIM_PWM_Start(PeripheralsEnv::MOTOR_LEFT_TIMER,
+                    PeripheralsEnv::MOTOR_LEFT_CHANNEL);
+  HAL_TIM_PWM_Start(PeripheralsEnv::MOTOR_RIGHT_TIMER,
+                    PeripheralsEnv::MOTOR_RIGHT_CHANNEL);
+
+  initialized = true;
+}
 
 void Motors::pwmOutputFor(Motor motor, int16_t duty) {
   if(motor == N_MOTORS_) {

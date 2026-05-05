@@ -1,31 +1,52 @@
 /*
- * EncoderDriver.cpp
+ * Encoders.cpp
  *
  *  Created on: Oct 25, 2025
  *      Author: Kelvin Novais
  */
 
-#include "tim.h"
-
-#include "../../Utils/Logger/Logger.hpp"
 #include "Encoders.hpp"
 
-static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
+#define EXPOSE_ENCODERS_PERIPHERAL
+#include "../../Context/PeripheralsEnv.hpp"
 
-/* 
+#include "../../Utils/Logger/Logger.hpp"
+
+/*
  * Here we declare static variables to make them "private" to this file, but
  * still visible to the C callback function
  */
-static uint32_t           encoderValues[Encoders::_N_ENCODERS]   = {0};
-static uint16_t           encoderOverflow[Encoders::_N_ENCODERS] = {0};
-static TIM_HandleTypeDef *encoders[Encoders::_N_ENCODERS] = {&htim4, &htim3};
+static uint32_t           encoderValues[Encoders::N_ENCODERS_]   = {0};
+static uint16_t           encoderOverflow[Encoders::N_ENCODERS_] = {0};
+static TIM_HandleTypeDef *encoders[Encoders::N_ENCODERS_] = {&htim4, &htim3};
+
+static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
+
+void Encoders::initialize() {
+  static bool initialized = false;
+
+  if(initialized) {
+    logger->error("Encoders already initialized, unexpected behaviour");
+  }
+
+  HAL_TIM_Encoder_Start(PeripheralsEnv::ENCODER_RIGHT_TIMER,
+                        PeripheralsEnv::ENCODER_RIGHT_CHANNEL);
+  HAL_TIM_Encoder_Start(PeripheralsEnv::ENCODER_LEFT_TIMER,
+                        PeripheralsEnv::ENCODER_LEFT_CHANNEL);
+
+  // Enables overflow/underflow interrupt
+  __HAL_TIM_ENABLE_IT(PeripheralsEnv::ENCODER_LEFT_TIMER, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(PeripheralsEnv::ENCODER_LEFT_TIMER, TIM_IT_UPDATE);
+
+  initialized = true;
+}
 
 int32_t Encoders::getAverage() {
   return ((getCounter(Left) + getCounter(Right)) / 2);
 }
 
 int32_t Encoders::getCounter(Encoder index) {
-  if(index >= _N_ENCODERS) {
+  if(index >= N_ENCODERS_) {
     logger->error("Invalid encoder");
     index = Left;
   }
@@ -37,7 +58,7 @@ int32_t Encoders::getCounter(Encoder index) {
 }
 
 void Encoders::setCounter(Encoder index, uint32_t value) {
-  if(index >= _N_ENCODERS) {
+  if(index >= N_ENCODERS_) {
     logger->error("Invalid encoder");
     index = Left;
   }
@@ -49,7 +70,7 @@ void Encoders::setCounter(Encoder index, uint32_t value) {
 }
 
 void Encoders::reset() {
-  for(uint8_t index = 0; index < _N_ENCODERS; index++) {
+  for(uint8_t index = 0; index < N_ENCODERS_; index++) {
     __HAL_TIM_SET_COUNTER(encoders[index], 0);
     encoderValues[index]   = 0;
     encoderOverflow[index] = 0;
@@ -66,7 +87,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
    * "encoders" array, in order to find out which is the index of the array
    */
   int index = 0;
-  for(index = 0; index < Encoders::_N_ENCODERS; index++) {
+  for(index = 0; index < Encoders::N_ENCODERS_; index++) {
     if(encoders[index] == htim) break;
   }
 

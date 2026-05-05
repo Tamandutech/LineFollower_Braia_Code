@@ -10,7 +10,8 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "adc.h"
+#define EXPOSE_IR_SENSORS_PERIPHERALS
+#include "../../Context/PeripheralsEnv.hpp"
 
 #include "../../Utils/Timer/Timer.hpp"
 #include "../Leds/Leds.hpp"
