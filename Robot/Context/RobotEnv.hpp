@@ -22,6 +22,8 @@ const uint16_t PULSES_PER_REVOLUTION = 1024;                  // pulses/rev
 const double   WHEEL_RADIUS          = WHEEL_DIAMETER / 2.0;  // m
 const double   WHEEL_CIRCUMFERENCE   = M_PI * WHEEL_DIAMETER; // m
 const double   MM_PER_PULSE = WHEEL_CIRCUMFERENCE / PULSES_PER_REVOLUTION; // mm
+const float    GRAVITY      = 9.80665;            // m/s²
+const float    MILLI_GRAVITY = GRAVITY / 1000.0F; // m/s²
 
 // Tolerance for floating point comparisons
 constexpr float EPSILON_TOLERANCE = 1e-6F;
