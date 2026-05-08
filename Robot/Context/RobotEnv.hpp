@@ -52,6 +52,7 @@ const int16_t MOTOR_MAX_PWM            = 1000;            // ‰
 const float   MOTOR_MAX_SPEED          = 4;               // m/s
 const int32_t MOTOR_MAX_DECELERATION   = 4;               // m/s
 const int32_t MOTOR_MAX_ROTATION_SPEED = 4;               // m/s
+const uint8_t MOTOR_BRAKE_TIME         = 75;              // ms
 
 const uint16_t VACUUM_BASE_PWM                    = 150;  // ‰
 const uint16_t VACUUM_MIN_PWM                     = 100;  // ‰

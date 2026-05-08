@@ -25,6 +25,7 @@ public:
   static void pwmOutput(float duty);
   static void pwmOutputFor(Motor motor, int16_t duty);
   static void stop();
+  static void brake();
 
 private:
   struct Pin {

@@ -15,6 +15,7 @@
 #include "../../Context/PeripheralsEnv.hpp"
 #include "../../Context/RobotEnv.hpp"
 #include "../../Services/PID/PID.hpp"
+#include "../../Utils/Timer/Timer.hpp"
 
 const Motors::Pin Motors::motorPins[N_MOTORS_] = {
     // Left
@@ -87,4 +88,13 @@ void Motors::pwmOutput(float desiredSpeed) {
 void Motors::stop() {
   pwmOutputFor(Left, 0);
   pwmOutputFor(Right, 0);
+}
+
+void Motors::brake() {
+  pwmOutputFor(Left, -RobotEnv::MOTOR_MAX_PWM);
+  pwmOutputFor(Right, -RobotEnv::MOTOR_MAX_PWM);
+
+  Timer::delayMiliseconds(RobotEnv::MOTOR_BRAKE_TIME);
+
+  stop();
 }
