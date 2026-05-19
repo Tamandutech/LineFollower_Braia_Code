@@ -10,20 +10,14 @@
 #define DRIVERS_MOTORS_MOTORS_HPP_
 
 #include "stm32g4xx_hal.h"
-#include <cstdint>
+
+#include "../../Context/Definitions.hpp"
 
 class Motors {
 public:
-  enum Motor : uint8_t {
-    Left = 0,
-    Right,
-
-    N_MOTORS_
-  };
-
   static void initialize();
   static void pwmOutput(float duty);
-  static void pwmOutputFor(Motor motor, int16_t duty);
+  static void pwmOutputFor(Side side, int16_t duty);
   static void stop();
   static void brake();
 
@@ -38,9 +32,9 @@ private:
     uint32_t pwmChannel;
   };
 
-  const static Pin motorPins[N_MOTORS_];
-  static float     motorSpeed[N_MOTORS_];
-  static int16_t   motorPWM[N_MOTORS_];
+  const static Pin motorPins[N_SIDES_];
+  static float     motorSpeed[N_SIDES_];
+  static int16_t   motorPWM[N_SIDES_];
 };
 
 #endif /* DRIVERS_MOTORS_MOTORS_HPP_ */

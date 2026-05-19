@@ -16,9 +16,9 @@
  * Here we declare static variables to make them "private" to this file, but
  * still visible to the C callback function
  */
-static uint32_t           encoderValues[Encoders::N_ENCODERS_]   = {0};
-static uint16_t           encoderOverflow[Encoders::N_ENCODERS_] = {0};
-static TIM_HandleTypeDef *encoders[Encoders::N_ENCODERS_] = {&htim4, &htim3};
+static uint32_t           encoderValues[N_SIDES_]   = {0};
+static uint16_t           encoderOverflow[N_SIDES_] = {0};
+static TIM_HandleTypeDef *encoders[N_SIDES_]        = {&htim4, &htim3};
 
 static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
 
@@ -45,8 +45,8 @@ int32_t Encoders::getAverage() {
   return ((getCounter(Left) + getCounter(Right)) / 2);
 }
 
-int32_t Encoders::getCounter(Encoder index) {
-  if(index >= N_ENCODERS_) {
+int32_t Encoders::getCounter(Side index) {
+  if(index >= N_SIDES_) {
     logger->error("Invalid encoder");
     index = Left;
   }
@@ -57,8 +57,8 @@ int32_t Encoders::getCounter(Encoder index) {
   return static_cast<int32_t>(encoderValues[index]);
 }
 
-void Encoders::setCounter(Encoder index, uint32_t value) {
-  if(index >= N_ENCODERS_) {
+void Encoders::setCounter(Side index, uint32_t value) {
+  if(index >= N_SIDES_) {
     logger->error("Invalid encoder");
     index = Left;
   }
@@ -70,7 +70,7 @@ void Encoders::setCounter(Encoder index, uint32_t value) {
 }
 
 void Encoders::reset() {
-  for(uint8_t index = 0; index < N_ENCODERS_; index++) {
+  for(uint8_t index = 0; index < N_SIDES_; index++) {
     __HAL_TIM_SET_COUNTER(encoders[index], 0);
     encoderValues[index]   = 0;
     encoderOverflow[index] = 0;
@@ -87,7 +87,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
    * "encoders" array, in order to find out which is the index of the array
    */
   int index = 0;
-  for(index = 0; index < Encoders::N_ENCODERS_; index++) {
+  for(index = 0; index < N_SIDES_; index++) {
     if(encoders[index] == htim) break;
   }
 

@@ -17,10 +17,10 @@
 enum Action : uint8_t { None = 0, Run, Map, CustomAction };
 
 struct MapPoint {
-  int32_t          encoderAverage;
-  float            baseMotorPWM;
-  float            baseVacuumPWM;
-  Leds::ColorIndex colorIndex;
+  int32_t    encoderAverage;
+  float      baseMotorPWM;
+  float      baseVacuumPWM;
+  ColorIndex colorIndex;
 };
 
 struct GlobalData {

@@ -8,21 +8,15 @@
 #ifndef DRIVERS_ENCODERS_ENCODERS_HPP_
 #define DRIVERS_ENCODERS_ENCODERS_HPP_
 
-#include <cstdint>
+
+#include "../../Context/Definitions.hpp"
 
 class Encoders {
 public:
-  enum Encoder : uint8_t {
-    Left = 0,
-    Right,
-
-    N_ENCODERS_
-  };
-
   static void    initialize();
   static int32_t getAverage();
-  static int32_t getCounter(Encoder encoder);
-  static void    setCounter(Encoder encoder, uint32_t value);
+  static int32_t getCounter(Side side);
+  static void    setCounter(Side side, uint32_t value);
   static void    reset();
 };
 

@@ -22,17 +22,17 @@
 // (ARR=4, CCR=5)
 #define PWM_LOW  5
 
-const Leds::PredefinedColors Leds::color[Leds::N_COLORS_] = {
-    [Leds::Red]     = {{128, 0, 0},     "red"    },
-    [Leds::Blue]    = {{0, 0, 128},     "blue"   },
-    [Leds::Green]   = {{0, 128, 0},     "green"  },
-    [Leds::Magenta] = {{128, 0, 128},   "magenta"},
-    [Leds::Indigo]  = {{64, 0, 128},    "indigo" },
-    [Leds::Orange]  = {{128, 24, 0},    "orange" },
-    [Leds::White]   = {{128, 128, 128}, "white"  },
-    [Leds::Cyan]    = {{0, 128, 128},   "cyan"   },
-    [Leds::Yellow]  = {{128, 64, 0},    "yellow" },
-    [Leds::Black]   = {{0, 0, 0},       "black"  }
+const Leds::PredefinedColors Leds::color[N_COLOR_INDEXES_] = {
+    [Red]     = {{128, 0, 0},     "red"    },
+    [Blue]    = {{0, 0, 128},     "blue"   },
+    [Green]   = {{0, 128, 0},     "green"  },
+    [Magenta] = {{128, 0, 128},   "magenta"},
+    [Indigo]  = {{64, 0, 128},    "indigo" },
+    [Orange]  = {{128, 24, 0},    "orange" },
+    [Cyan]    = {{0, 128, 128},   "cyan"   },
+    [Yellow]  = {{128, 64, 0},    "yellow" },
+    [White]   = {{128, 128, 128}, "white"  },
+    [Black]   = {{0, 0, 0},       "black"  }
 };
 
 Leds::RGB Leds::ledsColors[N_LEDS_]                                = {{0}};
@@ -49,7 +49,7 @@ void Leds::outputColors() {
   }
 
   // 1. Loop through each LED
-  for(uint16_t i = 0; i < Leds::N_LEDS_; i++) {
+  for(uint16_t i = 0; i < N_LEDS_; i++) {
     // Garante que os valores sejam pares pois por algum motivo valores ímpares
     // causam problemas
     uint8_t r = ledsColors[i].r % 2 ? ledsColors[i].r - 1 : ledsColors[i].r;
@@ -98,7 +98,7 @@ void Leds::outputColors() {
   // 4. Send data via DMA
   // The total size of data to be sent is the initial reset, the LEDs, and the
   // final reset.
-  uint32_t data_len          = Leds::N_LEDS_ * LED_BITS * PWM_CYCLES_PER_BIT;
+  uint32_t data_len          = N_LEDS_ * LED_BITS * PWM_CYCLES_PER_BIT;
   uint32_t total_buffer_size = RESET_CYCLES + data_len + RESET_CYCLES;
 
   // Starts DMA transfer
@@ -108,15 +108,10 @@ void Leds::outputColors() {
                         PeripheralsEnv::LEDS_CHANNEL,
                         static_cast<uint32_t *>(pwmBuffer), total_buffer_size);
 }
-void Leds::setColorForAll(ColorIndex idx) {
-  for(uint8_t i = 0; i < N_LEDS_; i++) {
-    ledsColors[i] = color[idx].rgb;
-  }
-
-  outputColors();
-}
 
 void Leds::setColorForAll(RGB rgb) {
+  // TODO constrain RGB
+
   for(uint8_t i = 0; i < N_LEDS_; i++) {
     ledsColors[i] = rgb;
   }
@@ -124,13 +119,39 @@ void Leds::setColorForAll(RGB rgb) {
   outputColors();
 }
 
-void Leds::setColorFor(RGB rgb, Led led) {
-  if(led == N_LEDS_) {
+void Leds::setColorForAll(ColorIndex index) {
+  if(index >= N_COLOR_INDEXES_) {
     // TODO warning
     return;
   }
-  
+
+  for(uint8_t i = 0; i < N_LEDS_; i++) {
+    ledsColors[i] = color[index].rgb;
+  }
+
+  outputColors();
+}
+
+void Leds::setColorFor(Led led, RGB rgb) {
+  if(led >= N_LEDS_) {
+    // TODO warning
+    return;
+  }
+
+  // TODO constrain RGB
+
   ledsColors[led] = rgb;
+
+  outputColors();
+}
+
+void Leds::setColorFor(Led led, ColorIndex colorIndex) {
+  if(colorIndex >= N_COLOR_INDEXES_ || led >= N_LEDS_) {
+    // TODO warning
+    return;
+  }
+
+  ledsColors[led] = color[colorIndex].rgb;
 
   outputColors();
 }

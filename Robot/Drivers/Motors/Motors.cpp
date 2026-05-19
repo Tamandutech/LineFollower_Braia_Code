@@ -17,7 +17,7 @@
 #include "../../Services/PID/PID.hpp"
 #include "../../Utils/Timer/Timer.hpp"
 
-const Motors::Pin Motors::motorPins[N_MOTORS_] = {
+const Motors::Pin Motors::motorPins[N_SIDES_] = {
     // Left
     [Left] = {PeripheralsEnv::MOTOR_LEFT_DIRECTION_PORT,
               PeripheralsEnv::MOTOR_LEFT_DIRECTION_PIN,
@@ -30,8 +30,8 @@ const Motors::Pin Motors::motorPins[N_MOTORS_] = {
               PeripheralsEnv::MOTOR_RIGHT_TIMER,
               PeripheralsEnv::MOTOR_RIGHT_CHANNEL}
 };
-float   Motors::motorSpeed[N_MOTORS_];
-int16_t Motors::motorPWM[N_MOTORS_];
+float   Motors::motorSpeed[N_SIDES_];
+int16_t Motors::motorPWM[N_SIDES_];
 
 void Motors::initialize() {
   static bool initialized = false;
@@ -48,19 +48,19 @@ void Motors::initialize() {
   initialized = true;
 }
 
-void Motors::pwmOutputFor(Motor motor, int16_t duty) {
-  if(motor == N_MOTORS_) {
+void Motors::pwmOutputFor(Side side, int16_t duty) {
+  if(side >= N_SIDES_) {
     // TODO warning
     return;
   }
 
   if(duty >= 0) {
     // Defines the direction
-    HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin,
+    HAL_GPIO_WritePin(motorPins[side].dirPort, motorPins[side].dirPin,
                       GPIO_PIN_RESET);
   } else {
     // Inverts the direction
-    HAL_GPIO_WritePin(motorPins[motor].dirPort, motorPins[motor].dirPin,
+    HAL_GPIO_WritePin(motorPins[side].dirPort, motorPins[side].dirPin,
                       GPIO_PIN_SET);
     // Makes the duty positive
     duty = -duty;
@@ -68,8 +68,8 @@ void Motors::pwmOutputFor(Motor motor, int16_t duty) {
 
   // Make sure the duty is within the allowed interval
   duty            = std::min(duty, RobotEnv::MOTOR_MAX_PWM);
-  motorPWM[motor] = duty;
-  __HAL_TIM_SET_COMPARE(motorPins[motor].pwmhtim, motorPins[motor].pwmChannel,
+  motorPWM[side] = duty;
+  __HAL_TIM_SET_COMPARE(motorPins[side].pwmhtim, motorPins[side].pwmChannel,
                         duty);
 }
 

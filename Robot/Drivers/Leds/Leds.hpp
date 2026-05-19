@@ -39,6 +39,41 @@
  */
 #define RESET_CYCLES 330
 
+/*
+ * Driver configuration:
+ * Define a mnemonic for each LED and, by consequence, the number of LEDs your
+ * strip will have.
+ * The memory buffer will be statically allocated for this size.
+ */
+enum Led : uint8_t {
+  MainBoardLed = 0,
+  CenterLed,
+  RightLed,
+  LeftLed,
+
+  N_LEDS_
+};
+
+enum ColorIndex : uint8_t {
+  // Rotatable colors
+  First = 0,
+  Red   = First,
+  Blue,
+  Green,
+  Magenta,
+  Indigo,
+  Orange,
+  Cyan,
+  Yellow,
+  LastRotatable = Yellow,
+
+  // Not rotatable colors
+  White,
+  Black,
+
+  N_COLOR_INDEXES_
+};
+
 class Leds {
 public:
   // Defining a color type
@@ -48,51 +83,18 @@ public:
     uint8_t b;
   };
 
-  enum ColorIndex : uint8_t {
-    // Rotatable colors
-    First = 0,
-    Red   = First,
-    Blue,
-    Green,
-    Magenta,
-    Indigo,
-    Orange,
-    White,
-    Cyan,
-    Yellow,
-    LastRotatable = Yellow,
-
-    // Not rotatable colors
-    Black,
-
-    N_COLORS_
-  };
-
   struct PredefinedColors {
     RGB         rgb;
     const char *name;
   };
 
-  static const PredefinedColors color[N_COLORS_];
-
-  /*
-   * Driver configuration:
-   * Define a mnemonic for each LED and, by consequence, the number of LEDs your
-   * strip will have.
-   * The memory buffer will be statically allocated for this size.
-   */
-  enum Led : uint8_t {
-    MainBoard = 0,
-    Center,
-    Right,
-    Left,
-
-    N_LEDS_
-  };
+  static const PredefinedColors color[N_COLOR_INDEXES_];
 
   static void setColorForAll(RGB rgb);
   static void setColorForAll(ColorIndex name);
-  static void setColorFor(RGB rgb, Led led);
+
+  static void setColorFor(Led led, RGB rgb);
+  static void setColorFor(Led led, ColorIndex name);
 
 private:
   static RGB ledsColors[N_LEDS_];

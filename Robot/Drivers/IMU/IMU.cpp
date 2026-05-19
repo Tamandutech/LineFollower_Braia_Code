@@ -23,22 +23,20 @@
 static Logger *logger = new Logger("IMU", true, Logger::None);
 
 // Private
-uint8_t      IMU::whoAmI                                  = 0;
-uint8_t      IMU::reset                                   = 0;
-stmdev_ctx_t IMU::context                                 = {0};
-int16_t      IMU::rawAcceleration[N_ACCELERATION_AXES_]   = {0};
-int16_t      IMU::rawAngularRate[N_ANGULAR_RATE_AXES_]    = {0};
-int16_t      IMU::rawTemperature                          = 0;
-float        IMU::acceleration_mg_[N_ACCELERATION_AXES_]  = {0};
-float        IMU::angularRate_mdps_[N_ANGULAR_RATE_AXES_] = {0};
-float        IMU::temperature_                            = 0;
+uint8_t      IMU::whoAmI                           = 0;
+uint8_t      IMU::reset                            = 0;
+stmdev_ctx_t IMU::context                          = {0};
+int16_t      IMU::rawAcceleration[N_AXES_]         = {0};
+int16_t      IMU::rawAngularRate[N_ROTATION_AXES_] = {0};
+int16_t      IMU::rawTemperature                   = 0;
+float        IMU::acceleration_[N_AXES_]           = {0};
+float        IMU::angularRate_[N_ROTATION_AXES_]   = {0};
+float        IMU::temperature_                     = 0;
 
 // Public
-const volatile float (&IMU::acceleration)[N_ACCELERATION_AXES_] =
-    acceleration_mg_;
-const volatile float (&IMU::angularRate)[N_ACCELERATION_AXES_] =
-    angularRate_mdps_;
-const volatile float &IMU::temperature = temperature_;
+const float (&IMU::acceleration)[N_AXES_] = acceleration_;
+const float (&IMU::angularRate)[N_AXES_]  = angularRate_;
+const float &IMU::temperature             = temperature_;
 
 int32_t IMU::write(void *handle, uint8_t reg, const uint8_t *bufp,
                    uint16_t len) {
@@ -126,15 +124,15 @@ void IMU::update() {
      * The default value is in mg (milli-g), which is g/1000
      * Multipling by MILLI_GRAVITY, we get the value in m/s²
      */
-    acceleration_mg_[X] =
+    acceleration_[X] =
         lsm6dsr_from_fs2g_to_mg(rawAcceleration[X]) * RobotEnv::MILLI_GRAVITY;
-    acceleration_mg_[Y] =
+    acceleration_[Y] =
         lsm6dsr_from_fs2g_to_mg(rawAcceleration[Y]) * RobotEnv::MILLI_GRAVITY;
-    acceleration_mg_[Z] =
+    acceleration_[Z] =
         lsm6dsr_from_fs2g_to_mg(rawAcceleration[Z]) * RobotEnv::MILLI_GRAVITY;
 
-    logger->debug("Acceleration [g]: %4.2f, %4.2f, %4.2f", acceleration_mg_[X],
-                  acceleration_mg_[Y], acceleration_mg_[Z]);
+    logger->debug("Acceleration [g]: %4.2f, %4.2f, %4.2f", acceleration_[X],
+                  acceleration_[Y], acceleration_[Z]);
   }
 
   // Read output only if new gy value is available
@@ -149,16 +147,15 @@ void IMU::update() {
      * The default value is in mdps (milli degrees per second)
      * Dividing by 1000, we get the value in dps (°/s)
      */
-    angularRate_mdps_[Omega_P] =
-        lsm6dsr_from_fs2000dps_to_mdps(rawAngularRate[Omega_P]) / 1000.0F;
-    angularRate_mdps_[Omega_R] =
-        lsm6dsr_from_fs2000dps_to_mdps(rawAngularRate[Omega_R]) / 1000.0F;
-    angularRate_mdps_[Omega_Y] =
-        lsm6dsr_from_fs2000dps_to_mdps(rawAngularRate[Omega_Y]) / 1000.0F;
+    angularRate_[Pitch] =
+        lsm6dsr_from_fs2000dps_to_mdps(rawAngularRate[Pitch]) / 1000.0F;
+    angularRate_[Row] =
+        lsm6dsr_from_fs2000dps_to_mdps(rawAngularRate[Row]) / 1000.0F;
+    angularRate_[Yaw] =
+        lsm6dsr_from_fs2000dps_to_mdps(rawAngularRate[Yaw]) / 1000.0F;
 
     logger->debug("Angular rate [mdps]: %4.2f, %4.2f, %4.2f",
-                  angularRate_mdps_[Omega_P], angularRate_mdps_[Omega_R],
-                  angularRate_mdps_[Omega_Y]);
+                  angularRate_[Pitch], angularRate_[Row], angularRate_[Yaw]);
   }
 
   // Read output only if new temperature value is available
