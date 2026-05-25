@@ -6,13 +6,16 @@
 !.settings/org.eclipse.core.resources.prefs
 !.settings/org.eclipse.cdt.codan.core.prefs
 
+# Do not update header with BLE Pin
+**/BLEPin.h
+
 .idea
 
 .cache
 .metadata
 
-# This file has paths specific to the develper's system,
-# not realitve to the projet
+# This file has paths specific to the developer's filesystem,
+# not relative to the project
 compile_commands.json
 
 Release
