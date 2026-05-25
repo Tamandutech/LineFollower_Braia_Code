@@ -5,6 +5,8 @@
  *      Author: Kelvin Novais
  */
 
+/******************************************************************************/
+// INCLUDES
 #include "Encoders.hpp"
 
 #define EXPOSE_ENCODERS_PERIPHERAL
@@ -12,15 +14,27 @@
 
 #include "../../Utils/Logger/Logger.hpp"
 
+
+/******************************************************************************/
+// VARIABLES
+
+// (I) C compatible private variables
 /*
  * Here we declare static variables to make them "private" to this file, but
  * still visible to the C callback function
  */
-static uint32_t           encoderValues[N_SIDES_]   = {0};
+static uint32_t           encoderValue[N_SIDES_]    = {0};
 static uint16_t           encoderOverflow[N_SIDES_] = {0};
-static TIM_HandleTypeDef *encoders[N_SIDES_]        = {&htim4, &htim3};
+static TIM_HandleTypeDef *encoderHandle[N_SIDES_]   = {&htim4, &htim3};
 
-static Logger *logger = new Logger("EncoderDriver", true, Logger::Level::All);
+// (II) C++ Private
+static Logger *logger = new Logger("Encoders", true, Logger::Level::All);
+int32_t        Encoders::average_           = 0;
+int32_t        Encoders::counter_[N_SIDES_] = {0};
+
+// (III) C++ Public
+const int32_t &Encoders::average             = average_;
+const int32_t (&Encoders::counter)[N_SIDES_] = counter_;
 
 void Encoders::initialize() {
   static bool initialized = false;
@@ -29,32 +43,32 @@ void Encoders::initialize() {
     logger->error("Encoders already initialized, unexpected behaviour");
   }
 
-  HAL_TIM_Encoder_Start(PeripheralsEnv::ENCODER_RIGHT_TIMER,
-                        PeripheralsEnv::ENCODER_RIGHT_CHANNEL);
   HAL_TIM_Encoder_Start(PeripheralsEnv::ENCODER_LEFT_TIMER,
                         PeripheralsEnv::ENCODER_LEFT_CHANNEL);
+  HAL_TIM_Encoder_Start(PeripheralsEnv::ENCODER_RIGHT_TIMER,
+                        PeripheralsEnv::ENCODER_RIGHT_CHANNEL);
 
   // Enables overflow/underflow interrupt
   __HAL_TIM_ENABLE_IT(PeripheralsEnv::ENCODER_LEFT_TIMER, TIM_IT_UPDATE);
-  __HAL_TIM_ENABLE_IT(PeripheralsEnv::ENCODER_LEFT_TIMER, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(PeripheralsEnv::ENCODER_RIGHT_TIMER, TIM_IT_UPDATE);
 
   initialized = true;
 }
 
-int32_t Encoders::getAverage() {
-  return ((getCounter(Left) + getCounter(Right)) / 2);
-}
+void Encoders::update() {
+  average_ = 0;
 
-int32_t Encoders::getCounter(Side index) {
-  if(index >= N_SIDES_) {
-    logger->error("Invalid encoder");
-    index = Left;
+  // Get individual encoder values
+  for(uint8_t i = 0; i < N_SIDES_; i++) {
+    encoderValue[i] = ((uint32_t)encoderOverflow[i] << 16) +
+                      (uint16_t)__HAL_TIM_GET_COUNTER(encoderHandle[i]);
+
+    counter_[i] = encoderValue[i];
+    average_ += encoderValue[i];
   }
 
-  encoderValues[index] = ((uint32_t)encoderOverflow[index] << 16) +
-                         (uint16_t)__HAL_TIM_GET_COUNTER(encoders[index]);
-
-  return static_cast<int32_t>(encoderValues[index]);
+  // Compute average
+  average_ /= N_SIDES_;
 }
 
 void Encoders::setCounter(Side index, uint32_t value) {
@@ -63,18 +77,24 @@ void Encoders::setCounter(Side index, uint32_t value) {
     index = Left;
   }
 
-  encoderValues[index]   = value;
+  encoderValue[index]    = value;
   encoderOverflow[index] = value >> 16;
 
-  __HAL_TIM_SET_COUNTER(encoders[index], (uint16_t)(value & 0xFFFF));
+  __HAL_TIM_SET_COUNTER(encoderHandle[index], (uint16_t)(value & 0xFFFF));
+
+  // Update to reflect the changes on exposed variables
+  update();
 }
 
 void Encoders::reset() {
   for(uint8_t index = 0; index < N_SIDES_; index++) {
-    __HAL_TIM_SET_COUNTER(encoders[index], 0);
-    encoderValues[index]   = 0;
+    __HAL_TIM_SET_COUNTER(encoderHandle[index], 0);
+    encoderValue[index]    = 0;
     encoderOverflow[index] = 0;
   }
+
+  // Update to reflect the changes on exposed variables
+  update();
 }
 
 // The callback must be at C scope
@@ -86,9 +106,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
    * We run a loop comparing the the received pointer and the pointers stored on
    * "encoders" array, in order to find out which is the index of the array
    */
-  int index = 0;
+  uint8_t index = 0;
   for(index = 0; index < N_SIDES_; index++) {
-    if(encoders[index] == htim) break;
+    if(encoderHandle[index] == htim) break;
   }
 
   // Checks whether it is overflow (counting up) or underflow (counting down)
@@ -100,7 +120,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     encoderOverflow[index]++;
   }
 
-  encoderValues[index] = ((uint32_t)encoderOverflow[index] << 16) +
-                         (uint16_t)__HAL_TIM_GET_COUNTER(htim);
+  encoderValue[index] = ((uint32_t)encoderOverflow[index] << 16) +
+                        (uint16_t)__HAL_TIM_GET_COUNTER(htim);
 }
 }

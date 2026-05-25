@@ -13,11 +13,17 @@
 
 class Encoders {
 public:
-  static void    initialize();
-  static int32_t getAverage();
-  static int32_t getCounter(Side side);
-  static void    setCounter(Side side, uint32_t value);
-  static void    reset();
+  static const int32_t &average;
+  static const int32_t (&counter)[N_SIDES_];
+
+  static void initialize();
+  static void reset();
+  static void update();
+  static void setCounter(Side side, uint32_t value);
+
+private:
+  static int32_t average_;
+  static int32_t counter_[N_SIDES_];
 };
 
 #endif /* DRIVERS_ENCODERS_ENCODERS_HPP_ */
