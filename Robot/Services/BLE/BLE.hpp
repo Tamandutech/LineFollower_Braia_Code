@@ -10,9 +10,13 @@
 
 class BLE {
 public:
+  static const char &lastCharacter;
+
   static void initialize();
   static void start();
   static void restart();
+  static void setup();
+  static void resetLastCharacter();
 };
 
 #endif /* SERVICES_BLE_BLE_HPP_ */
