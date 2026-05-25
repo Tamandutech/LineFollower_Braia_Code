@@ -39,6 +39,11 @@
  */
 #define RESET_CYCLES 330
 
+#define WAVE_AMPLITUDE Leds::maxColorValue
+#define WAVE_PERIOD    (WAVE_AMPLITUDE * 2)
+#define TRIANGULAR_WAVE(x) \
+  ((uint8_t)abs(((x += 2) % WAVE_PERIOD) - WAVE_AMPLITUDE))
+
 /*
  * Driver configuration:
  * Define a mnemonic for each LED and, by consequence, the number of LEDs your
@@ -56,8 +61,8 @@ enum Led : uint8_t {
 
 enum ColorIndex : uint8_t {
   // Rotatable colors
-  First = 0,
-  Red   = First,
+  FirstRotatableColor = 0,
+  Red                 = FirstRotatableColor,
   Blue,
   Green,
   Magenta,
@@ -65,7 +70,7 @@ enum ColorIndex : uint8_t {
   Orange,
   Cyan,
   Yellow,
-  LastRotatable = Yellow,
+  LastRotatableColor,
 
   // Not rotatable colors
   White,
@@ -83,18 +88,25 @@ public:
     uint8_t b;
   };
 
+  struct WavingColor {
+    int16_t r;
+    int16_t g;
+    int16_t b;
+  };
+
   struct PredefinedColors {
     RGB         rgb;
     const char *name;
   };
 
   static const PredefinedColors color[N_COLOR_INDEXES_];
+  static const uint8_t          maxColorValue;
 
   static void setColorForAll(RGB rgb);
-  static void setColorForAll(ColorIndex name);
+  static void setColorForAll(ColorIndex color);
 
   static void setColorFor(Led led, RGB rgb);
-  static void setColorFor(Led led, ColorIndex name);
+  static void setColorFor(Led led, ColorIndex color);
 
 private:
   static RGB ledsColors[N_LEDS_];

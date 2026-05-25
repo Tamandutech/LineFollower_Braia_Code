@@ -8,10 +8,13 @@
 
 #include "Leds.hpp"
 
+#include <algorithm>
 #include <cstdint>
 
 #define EXPOSE_LEDS_PERIPHERAL
 #include "../../Context/PeripheralsEnv.hpp"
+
+#include "../../Utils/Logger/Logger.hpp"
 
 /*
  * CCR register values ​​to generate logic levels on channel N (inverted)
@@ -22,21 +25,25 @@
 // (ARR=4, CCR=5)
 #define PWM_LOW  5
 
+static Logger *logger = new Logger("Leds", true, Logger::Level::All);
+
 const Leds::PredefinedColors Leds::color[N_COLOR_INDEXES_] = {
-    [Red]     = {{128, 0, 0},     "red"    },
-    [Blue]    = {{0, 0, 128},     "blue"   },
-    [Green]   = {{0, 128, 0},     "green"  },
-    [Magenta] = {{128, 0, 128},   "magenta"},
-    [Indigo]  = {{64, 0, 128},    "indigo" },
-    [Orange]  = {{128, 24, 0},    "orange" },
-    [Cyan]    = {{0, 128, 128},   "cyan"   },
-    [Yellow]  = {{128, 64, 0},    "yellow" },
-    [White]   = {{128, 128, 128}, "white"  },
-    [Black]   = {{0, 0, 0},       "black"  }
+    [Red]                = {{128, 0, 0},     "red"           },
+    [Blue]               = {{0, 0, 128},     "blue"          },
+    [Green]              = {{0, 128, 0},     "green"         },
+    [Magenta]            = {{128, 0, 128},   "magenta"       },
+    [Indigo]             = {{64, 0, 128},    "indigo"        },
+    [Orange]             = {{128, 24, 0},    "orange"        },
+    [Cyan]               = {{0, 128, 128},   "cyan"          },
+    [Yellow]             = {{128, 64, 0},    "yellow"        },
+    [LastRotatableColor] = {{0, 0, 0},       "last_rotatable"},
+    [White]              = {{128, 128, 128}, "white"         },
+    [Black]              = {{0, 0, 0},       "black"         }
 };
 
-Leds::RGB Leds::ledsColors[N_LEDS_]                                = {{0}};
-uint32_t  Leds::pwmBuffer[RESET_CYCLES + RESET_CYCLES +
+const uint8_t Leds::maxColorValue                                      = 128;
+Leds::RGB     Leds::ledsColors[N_LEDS_]                                = {{0}};
+uint32_t      Leds::pwmBuffer[RESET_CYCLES + RESET_CYCLES +
                          N_LEDS_ * LED_BITS * PWM_CYCLES_PER_BIT] = {0};
 
 void Leds::outputColors() {
@@ -110,7 +117,9 @@ void Leds::outputColors() {
 }
 
 void Leds::setColorForAll(RGB rgb) {
-  // TODO constrain RGB
+  rgb.r = std::min(rgb.r, maxColorValue);
+  rgb.g = std::min(rgb.g, maxColorValue);
+  rgb.b = std::min(rgb.b, maxColorValue);
 
   for(uint8_t i = 0; i < N_LEDS_; i++) {
     ledsColors[i] = rgb;
@@ -121,7 +130,7 @@ void Leds::setColorForAll(RGB rgb) {
 
 void Leds::setColorForAll(ColorIndex index) {
   if(index >= N_COLOR_INDEXES_) {
-    // TODO warning
+    logger->error("Invalid ColorIndex: %d", index);
     return;
   }
 
@@ -134,11 +143,13 @@ void Leds::setColorForAll(ColorIndex index) {
 
 void Leds::setColorFor(Led led, RGB rgb) {
   if(led >= N_LEDS_) {
-    // TODO warning
+    logger->error("Invalid Led: %d", led);
     return;
   }
 
-  // TODO constrain RGB
+  rgb.r = std::min(rgb.r, maxColorValue);
+  rgb.g = std::min(rgb.g, maxColorValue);
+  rgb.b = std::min(rgb.b, maxColorValue);
 
   ledsColors[led] = rgb;
 
@@ -147,7 +158,7 @@ void Leds::setColorFor(Led led, RGB rgb) {
 
 void Leds::setColorFor(Led led, ColorIndex colorIndex) {
   if(colorIndex >= N_COLOR_INDEXES_ || led >= N_LEDS_) {
-    // TODO warning
+    logger->error("Invalid Led (%d) or ColorIndex (%d)", led, colorIndex);
     return;
   }
 
