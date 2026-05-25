@@ -39,10 +39,6 @@ void Timer::reset() { tickStart = getTickByType(); }
 
 uint32_t Timer::getMiliseconds() { return HAL_GetTick(); }
 
-uint32_t Timer::getMicroseconds() {
-  return ((TIM2->CNT) / 10U); // NOLINT
-}
-
 uint32_t Timer::getNanoseconds() {
   return ((TIM2->CNT) * 100U); // NOLINT
 }
@@ -55,13 +51,6 @@ void Timer::delayMiliseconds(uint32_t miliseconds) {
      * Cosumes 1 extra cycle per iteration (1 / clock frequency)
      */
     __NOP();
-  }
-}
-
-void Timer::delayMicroseconds(uint32_t microseconds) {
-  uint32_t tickStart = getMicroseconds();
-  while((getMicroseconds() - tickStart) < microseconds) {
-    // Do nothing
   }
 }
 
