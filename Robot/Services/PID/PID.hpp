@@ -8,9 +8,11 @@
 #ifndef SERVICES_PID_PID_HPP_
 #define SERVICES_PID_PID_HPP_
 
+#include <cstdint>
+
 class PID {
 public:
-  static float getPID();
+  static float evaluate(const int16_t irSensorError);
 
 private:
   static float lastError;

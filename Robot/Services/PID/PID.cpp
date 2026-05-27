@@ -12,14 +12,12 @@
 
 float PID::lastError = 0;
 
-float PID::getPID() {
-  float arrayError = IRSensors::getError();
-
-  float P   = arrayError;
-  float D   = arrayError - lastError;
+float PID::evaluate(const int16_t irSensorError) {
+  float P   = irSensorError;
+  float D   = irSensorError - lastError;
   float PID = (RobotEnv::kp * P) + (RobotEnv::kd * D);
 
-  lastError = arrayError;
+  lastError = irSensorError;
 
   return PID;
 }
