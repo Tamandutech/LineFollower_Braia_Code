@@ -10,8 +10,6 @@
 
 #include "stm32g4xx_hal.h"
 
-#include <cstdint>
-
 class Vacuum {
 public:
   static void initialize();
@@ -28,7 +26,6 @@ private:
   };
 
   static Pin      pin;
-  static uint16_t lastPWM;
 };
 
 #endif /* DRIVERS_VACUUM_VACUUM_HPP_ */
