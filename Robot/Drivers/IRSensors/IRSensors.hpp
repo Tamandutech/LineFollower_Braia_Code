@@ -8,8 +8,8 @@
 #ifndef DRIVERS_IRSENSORS_IRSENSORS_HPP_
 #define DRIVERS_IRSENSORS_IRSENSORS_HPP_
 
+#include "../../Context/Definitions.hpp"
 #include "../../Utils/Logger/Logger.hpp"
-#include <cstdint>
 
 class IRSensors {
 public:
@@ -41,26 +41,33 @@ public:
     N_SENSORS_
   };
 
+  static const uint16_t (&sensorValues)[N_SENSORS_];
+  static const uint16_t &position;
+  static const int16_t  &error;
+  static const bool (&mark)[N_SIDES_];
+  static const bool &isOnLine;
+  static const bool &isOnCross;
 
-  static void     calibrateSensors();
-  static uint16_t readLine();
-  static int16_t  getError();
-  static void     setArraySensorCenter(uint16_t center);
-
-protected:
-  static uint16_t sensorValues[N_SENSORS_];
-  static void     readCalibrated();
+  static void update();
+  static void calibrate();
 
 private:
-  static const volatile uint32_t *const rawSensorValues[N_SENSORS_];
-  static uint32_t                       maxValues[N_SENSORS_];
-  static uint32_t                       minValues[N_SENSORS_];
-  static bool                           calibrated;
-  static uint16_t                       lastPosition;
-  static uint16_t                       arraySensorCenter;
+  static void readCalibrated();
+
+  static const volatile uint32_t *const rawValues[N_SENSORS_];
+  static uint16_t                       sensorValue_[N_SENSORS_];
+  static uint32_t                       markDetecionTime_[N_SIDES_];
+  static uint32_t                       maxRawValues_[N_SENSORS_];
+  static uint32_t                       minRawValues_[N_SENSORS_];
+  static uint16_t                       previousPosition_;
+  static uint16_t                       position_;
+  static int16_t                        error_;
+  static bool                           previousMark_[N_SIDES_];
+  static bool                           mark_[N_SIDES_];
+  static bool                           isOnLine_;
+  static bool                           isOnCross_;
+  static bool                           calibrated_;
   static Logger                        *logger;
-  const static Sensor                   firstCentralSensor;
-  const static Sensor                   lastCentralSensor;
 };
 
 #endif /* DRIVERS_IRSENSORS_IRSENSORS_HPP_ */
