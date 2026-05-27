@@ -16,7 +16,6 @@
 class Motors {
 public:
   static void initialize();
-  static void pwmOutput(float duty);
   static void pwmOutputFor(Side side, int16_t duty);
   static void stop();
   static void brake();
@@ -32,9 +31,9 @@ private:
     uint32_t pwmChannel;
   };
 
-  const static Pin motorPins[N_SIDES_];
-  static float     motorSpeed[N_SIDES_];
-  static int16_t   motorPWM[N_SIDES_];
+  const static Pin motorPins_[N_SIDES_];
+  static float     motorSpeed_[N_SIDES_];
+  static int16_t   motorPWM_[N_SIDES_];
 };
 
 #endif /* DRIVERS_MOTORS_MOTORS_HPP_ */
