@@ -44,6 +44,9 @@
 #define TRIANGULAR_WAVE(x) \
   ((uint8_t)abs(((x += 2) % WAVE_PERIOD) - WAVE_AMPLITUDE))
 
+#define ROTATE_COLOR(colorIndex) \
+  colorIndex = ColorIndex((colorIndex + 1) % LastRotatableColor)
+
 /*
  * Driver configuration:
  * Define a mnemonic for each LED and, by consequence, the number of LEDs your
