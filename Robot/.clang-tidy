@@ -22,4 +22,4 @@ CheckOptions:
   - key: readability-identifier-naming.MemberCase
     value: 'camelBack'
   - key: readability-identifier-naming.PrivateMemberSuffix
-    value: '_'
+    value: StaticPrivate: '_' Global: '_'
