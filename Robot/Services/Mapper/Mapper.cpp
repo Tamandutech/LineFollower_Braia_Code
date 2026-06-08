@@ -8,180 +8,219 @@
 #include "Mapper.hpp"
 
 // Standard headers
-#include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <vector>
 
 // Headers from our code base
 #include "../../Context/GlobalData.hpp"
 #include "../../Context/RobotEnv.hpp"
 #include "../../Drivers/Encoders/Encoders.hpp"
+#include "../../Drivers/IMU/IMU.hpp"
+#include "../../Drivers/IRSensors/IRSensors.hpp"
 #include "../../Drivers/Leds/Leds.hpp"
 #include "../../Drivers/Motors/Motors.hpp"
 #include "../../Drivers/Vacuum/Vacuum.hpp"
+#include "../../Services/PID/PID.hpp"
 #include "../../Utils/Timer/Timer.hpp"
 
-// Returns ~1000 if reading BLACK
-// Returns ~0    if reading WHITE
-#define NOT_READING_LINE_THRESHOLD 800
-#define READING_LINE_THRESHOLD     200
 
-uint8_t Mapper::qtdLeftMark        = 0;
-uint8_t Mapper::qtdRightMark       = 0;
-bool    Mapper::readRightBefore    = false;
-bool    Mapper::readLeftBefore     = false;
-bool    Mapper::readIntersecBefore = false;
-bool    Mapper::firstTimeRight     = true;
+struct MappingData {
+  // FLOATS
+  /*
+   * 32 bits each float
+   */
+  float x;
+  float y;
+  float omega;
+
+
+  // WORD 1
+  /*
+   * Can hold up to:       2³⁰ - 1 = 1,073,741,823 µs
+   * which is              1,073.7 s
+   * which is              17.9 min
+   */
+  uint32_t timestamp   : 30;
+  uint32_t isLeftMark  : 1;
+  uint32_t isRightMark : 1;
+
+
+  // WORD 2
+  /*
+   * Must hold up to TRACK_MAX_PULSES: 2²² - 1 = 4,194,303 pulses
+   */
+  uint32_t leftEncoder : 22;
+  /*
+   * Must hold up to LastRotatableColor
+   */
+  uint32_t colorIndex  : 3;
+  uint32_t padding1    : 7;
+
+
+  // WORD 3
+  /*
+   * Must hold up to TRACK_MAX_PULSES: 2²² - 1 = 4,194,303 pulses
+   */
+  uint32_t rightEncoder : 22;
+  uint32_t padding2     : 10;
+
+} __attribute__((packed));
+
+enum {TEST = sizeof(MappingData)};
+union AlignedPool {
+  MappingData as_elems[2000]; /* alignment and typed storage */
+  uint8_t as_bytes[50 * 5000];
+};
+
 Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
 
-void Mapper::readLateral() {
-  static Leds::ColorIndex colorIndex = Leds::ColorIndex::First;
-
-  readCalibrated();
-
-  bool readingLeft = sensorValues[L_1] < READING_LINE_THRESHOLD ||
-                     sensorValues[L_2] < READING_LINE_THRESHOLD;
-
-  bool readingRight = sensorValues[R_1] < READING_LINE_THRESHOLD ||
-                      sensorValues[R_2] < READING_LINE_THRESHOLD;
-
-  bool notReadingLeft = sensorValues[L_1] > NOT_READING_LINE_THRESHOLD &&
-                        sensorValues[L_2] > NOT_READING_LINE_THRESHOLD;
-
-  bool notReadingRight = sensorValues[R_1] > NOT_READING_LINE_THRESHOLD &&
-                         sensorValues[R_2] > NOT_READING_LINE_THRESHOLD;
-
-  logger->debug("[%03d %03d] [%03d %03d]", sensorValues[L_1], sensorValues[L_2],
-                sensorValues[R_1], sensorValues[R_2]);
-
-  // Reading a left mark
-  if(readingLeft && notReadingRight && !readLeftBefore) {
-    globalData.markCount++;
-    qtdLeftMark++;
-    readLeftBefore = true;
-
-    colorIndex = Leds::ColorIndex((colorIndex + 1) % Leds::LastRotatable);
-
-    globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
-                                  RobotEnv::VACUUM_BASE_PWM, colorIndex});
-
-    Leds::setColorForAll(colorIndex);
-
-    logger->info("#%03d Encoders: %07ld %s", globalData.markCount.load(),
-                 Encoders::getAverage(), // NOLINT
-                 Leds::color[colorIndex].name);
-  }
-  // Reading a right mark for the first time
-  else if(notReadingLeft && readingRight && !readRightBefore &&
-          firstTimeRight) {
-    qtdRightMark++;
-    readRightBefore = true;
-    firstTimeRight  = false;
-
-    globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
-                                  RobotEnv::VACUUM_BASE_PWM,
-                                  Leds::White});
-
-    logger->info("#%03d Start of the track", globalData.markCount.load());
-  }
-  // Reading an intersection
-  else if(readingLeft && readingRight && !readIntersecBefore) {
-    readIntersecBefore = true;
-    readRightBefore    = true;
-    readLeftBefore     = true;
-
-    logger->info("Intersection");
-  }
-  // Reading a right mark for the second time
-  else if(notReadingLeft && readingRight && !readRightBefore &&
-          !firstTimeRight) {
-    readRightBefore = true;
-    qtdRightMark++;
-    globalData.markCount++;
-
-    globalData.mapData.push_back({Encoders::getAverage(), calculatePWM(),
-                                  RobotEnv::VACUUM_BASE_PWM,
-                                  Leds::White});
-
-    logger->info("#%03d Encoders: %07ld [Right]", globalData.markCount.load(),
-                 Encoders::getAverage()); // NOLINT
-  }
-  // Reading no marks
-  else if(notReadingLeft && notReadingRight) {
-    readIntersecBefore = false;
-    readRightBefore    = false;
-    readLeftBefore     = false;
-  }
-}
-
-/*
- * TODO
- * This function should calculate the PWM accordingly to the left and right
- * encoders (less speed on short curves, and high speed on straights)...
- */
-float Mapper::calculatePWM() { return 100; }
-
 void Mapper::map() {
-  uint32_t lastTime = 0;
+  /*
+   * [!] ATTENTION [!]
+   *
+   * Time is measured in MICROseconds here
+   */
+  uint32_t startTime    = 0;
+  uint32_t currentTime  = 0;
+  uint32_t lastTime     = 0;
+  uint32_t outStartTime = 0;
+  uint32_t dt           = 0;
 
-  // Reset variables
-  qtdLeftMark        = 0;
-  qtdRightMark       = 0;
-  readRightBefore    = false;
-  readLeftBefore     = false;
-  readIntersecBefore = false;
-  firstTimeRight     = true;
+  ColorIndex               colorIndex   = FirstRotatableColor;
+  MappingData              currentPoint = {0};
+  std::vector<MappingData> mapping;
+  float                    u = 0;
 
-  globalData.mapData.clear();
-  globalData.markCount = 0;
+  bool outWarning      = false;
+  bool previousMark[2] = {false};
 
-  Leds::setColorForAll(Leds::Magenta);
+  globalData.map.clear();
+  globalData.map.shrink_to_fit();
+  mapping.reserve(RobotEnv::TRACK_MAP_N_POINTS);
+  
   logger->info("Mapping...");
-  Encoders::reset();
 
-  Vacuum::pwmAcceleratedOutput(RobotEnv::MOTOR_BASE_PWM);
-  lastTime = Timer::getMicroseconds();
+  Vacuum::pwmAcceleratedOutput(RobotEnv::VACUUM_BASE_PWM);
+  IMU::calibrate();
+
+  Encoders::reset();
+  IMU::reset();
+
+  startTime = currentTime = lastTime = Timer::getMicroseconds();
 
   while(globalData.action == Action::Map) {
-    if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
-      Motors::pwmOutput(RobotEnv::MOTOR_BASE_PWM);
-      Vacuum::pwmOutput(RobotEnv::VACUUM_BASE_PWM);
-      readLateral();
+    currentTime = Timer::getMicroseconds();
 
-      lastTime = Timer::getMicroseconds();
+    if(currentTime - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
+      // UPDATE ROBOT STATE
+      dt = currentTime - lastTime;
+      IRSensors::update();
+      Encoders::update();
+      IMU::update(dt);
+
+      // SAVE STATE
+      currentPoint.timestamp = currentTime;
+
+      currentPoint.isLeftMark  = false;
+      currentPoint.isRightMark = false;
+
+      currentPoint.x     = IMU::position[X];
+      currentPoint.y     = IMU::position[Y];
+      currentPoint.omega = IMU::angularRate[Yaw];
+
+      currentPoint.leftEncoder  = Encoders::counter[Left];
+      currentPoint.rightEncoder = Encoders::counter[Right];
+
+      // CONTROL SIGNAL
+      u = PID::evaluate(IRSensors::error);
+      Motors::pwmOutputFor(Left, RobotEnv::MOTOR_MAPPING_PWM + u);
+      Motors::pwmOutputFor(Right, RobotEnv::MOTOR_MAPPING_PWM - u);
+
+      // OUT METHOD
+      if(IRSensors::isOnLine) {
+        // Reset warning
+        outWarning = false;
+      } else if(!IRSensors::isOnLine && !outWarning) {
+        // Register warning, and save time
+        outStartTime = currentTime;
+        outWarning   = true;
+      } else if(outWarning &&
+                (lastTime - outStartTime) >= RobotEnv::MAX_OUT_TIME_US) {
+        // Stop is out of line for MAX_OUT_TIME_US
+        logger->info("Stopped: out of line for %lu µs",
+                     lastTime - outStartTime); // NOLINT
+
+        globalData.action = Action::None;
+        break;
+      }
+
+      // RIGHT MARK
+      if(IRSensors::mark[Right] && !previousMark[Right]) {
+        // Start of the track
+        logger->info("Start of the track");
+        previousMark[Right] = true;
+
+        Encoders::reset();
+        IMU::reset();
+
+        currentPoint.isRightMark = true;
+        mapping.push_back(currentPoint);
+
+        Leds::setColorForAll(Green);
+        Leds::setColorFor(CenterLed, White);
+        Leds::setColorFor(MainBoardLed, White);
+      } else if(IRSensors::mark[Right] && previousMark[Right] &&
+                (currentTime - startTime) > RobotEnv::MIN_TRACK_TIME) {
+        // End of the track
+        logger->info("End of the track");
+
+        currentPoint.isRightMark = true;
+        mapping.push_back(currentPoint);
+
+        Leds::setColorForAll(Black);
+        Leds::setColorFor(CenterLed, White);
+        Leds::setColorFor(MainBoardLed, White);
+
+        globalData.action = Action::None;
+        break;
+      }
+
+      // LEFT MARK
+      if(IRSensors::mark[Left] && !previousMark[Left]) {
+        // Entering a left mark
+        previousMark[Left] = true;
+        colorIndex         = ColorIndex((colorIndex + 1) % LastRotatableColor);
+
+        currentPoint.isLeftMark = true;
+        currentPoint.colorIndex = colorIndex;
+
+        mapping.push_back(currentPoint);
+
+        Leds::setColorForAll(colorIndex);
+      } else if(!IRSensors::mark[Left] && previousMark[Left]) {
+        // Leaving a left mark
+        previousMark[Left] = false;
+      }
+
+      // INTERSECTION
+      if(IRSensors::isOnCross) {
+        Leds::setColorFor(CenterLed, Black);
+        Leds::setColorFor(MainBoardLed, Black);
+      }
+
+      // REGISTER POINT
+      if(Encoders::average >= METERS_TO_PULSES(RobotEnv::TRACK_MAP_DISTANCE)) {
+        mapping.push_back(currentPoint);
+      }
+
+      lastTime = currentTime;
     }
   }
 
   Motors::stop();
-  Vacuum::stopAfter(1500);
+  Vacuum::stopAfter(500);
 
-  logMap();
-}
-
-void Mapper::logMap() {
-  // #mmm eeeeeee ssss'\0' == 18 characters per line
-  const size_t lineLength = 18;
-  char         line[lineLength];
-
-  logger->info("\nMARK ENCODER PWM\n");
-  Timer::delayMiliseconds(20);
-
-  // Send each line of the mapping
-  for(size_t m = 0; m < globalData.mapData.size(); m++) {
-    int ret;
-    ret = snprintf(static_cast<char *>(line), lineLength, "#%03d %07ld %04.0f",
-                   m, globalData.mapData.at(m).encoderAverage, // NOLINT
-                   globalData.mapData.at(m).baseMotorPWM);
-
-    if(ret < 0) continue;
-
-    Logger::log("%s", static_cast<const char *>(line));
-    // TODO remove these delays after implementing a communication task
-    Timer::delayMiliseconds(20);
-  }
-
-  logger->info("Done!\n");
-  Timer::delayMiliseconds(20);
+  // TODO
+  // logMap(mapping);
 }
