@@ -14,7 +14,7 @@
 
 #include "../Drivers/Leds/Leds.hpp"
 
-enum Action : uint8_t { None = 0, Run, Map, CustomAction };
+enum class Action : uint8_t { None = 1, Run, Map };
 
 struct MapPoint {
   int32_t    encoderAverage;
@@ -25,9 +25,7 @@ struct MapPoint {
 
 struct GlobalData {
   volatile Action          action;
-  std::atomic<bool>        isReadyToRun;
-  std::atomic<int32_t>     finishLineCount;
-  std::vector<MapPoint>    mapData;
+  std::vector<MapPoint>    map;
   std::atomic<std::size_t> markCount;
 };
 

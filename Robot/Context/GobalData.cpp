@@ -7,8 +7,6 @@
 
 #include "GlobalData.hpp"
 
-GlobalData globalData = {.action = None,
-                         .isReadyToRun{false},
-                         .finishLineCount{0},
-                         .mapData{},
+GlobalData globalData = {.action = Action::None,
+                         .map{},
                          .markCount{0}};
