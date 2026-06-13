@@ -33,4 +33,29 @@ enum RotationAxis : uint8_t {
   N_ROTATION_AXES_
 };
 
+/*
+    Axis
+                                  Z
+                                  ⋮
+                                  ⋮      Y
+                                  ⋮   ⋰
+                                  ⋮ ⋰
+                                   O …………………………… X
+                                ⋰ 
+                              ⋰
+
+
+    Rotational Axis
+                                 Yaw
+                                  ⤻
+                                  ⋮
+                                  ⋮      Row
+                                  ⋮   ⋰
+                                  ⋮ ⋰
+                                   O …………………………… Pitch
+                                ⋰
+                              ⋰
+
+*/
+
 #endif /* CONTEXT_DEFINITIONS_HPP_ */

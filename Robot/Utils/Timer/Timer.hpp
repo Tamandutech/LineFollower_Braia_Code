@@ -10,7 +10,6 @@
 
 #include "tim.h"
 
-// TODO need to test all functions
 class Timer {
 public:
   enum Type : uint8_t { Miliseconds, Microseconds, Nanoseconds };
@@ -46,4 +45,4 @@ protected:
 
 #endif /* UTILS_TIMER_HPP_ */
 
-// Beethoven - Duet mit zwei obligaten Augengläsern, WoO 32
+// Beethoven: Duet mit zwei obligaten Augengläsern, WoO 32

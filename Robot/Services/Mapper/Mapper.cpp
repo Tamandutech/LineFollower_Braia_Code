@@ -67,12 +67,6 @@ struct MappingData {
 
 } __attribute__((packed));
 
-enum { TEST = sizeof(MappingData) };
-union AlignedPool {
-  MappingData as_elems[2000]; /* alignment and typed storage */
-  uint8_t     as_bytes[50 * 5000];
-};
-
 Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
 
 void Mapper::map() {
