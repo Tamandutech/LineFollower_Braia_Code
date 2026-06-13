@@ -69,7 +69,7 @@ void Motors::pwmOutputFor(Side side, int16_t duty) {
   }
 
   // Make sure the duty is within the allowed interval
-  duty            = std::min(duty, RobotEnv::MOTOR_MAX_PWM);
+  duty            = std::min(duty, (int16_t)MOTOR_MAX_PWM);
   motorPWM_[side] = duty;
   __HAL_TIM_SET_COMPARE(motorPins_[side].pwmhtim, motorPins_[side].pwmChannel,
                         duty);
@@ -81,10 +81,10 @@ void Motors::stop() {
 }
 
 void Motors::brake() {
-  pwmOutputFor(Left, -RobotEnv::MOTOR_MAX_PWM);
-  pwmOutputFor(Right, -RobotEnv::MOTOR_MAX_PWM);
+  pwmOutputFor(Left, -MOTOR_MAX_PWM);
+  pwmOutputFor(Right, -MOTOR_MAX_PWM);
 
-  Timer::delayMiliseconds(RobotEnv::MOTOR_BRAKE_TIME);
+  Timer::delayMiliseconds(MOTOR_BRAKE_TIME);
 
   stop();
 }

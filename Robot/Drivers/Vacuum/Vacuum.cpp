@@ -36,7 +36,7 @@ void Vacuum::initialize() {
 }
 
 void Vacuum::pwmOutput(uint16_t target) {
-  target = std::min(target, static_cast<uint16_t>(RobotEnv::VACUUM_MAX_PWM));
+  target = std::min(target, static_cast<uint16_t>(VACUUM_MAX_PWM));
 
   __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, target);
 }
@@ -47,8 +47,8 @@ void Vacuum::pwmAcceleratedOutput(uint16_t target) {
 
   Leds::setColorForAll(Black);
 
-  target = std::max(target, static_cast<uint16_t>(RobotEnv::VACUUM_MIN_PWM));
-  target = std::min(target, static_cast<uint16_t>(RobotEnv::VACUUM_MAX_PWM));
+  target = std::max(target, static_cast<uint16_t>(VACUUM_MIN_PWM));
+  target = std::min(target, static_cast<uint16_t>(VACUUM_MAX_PWM));
 
   for(uint16_t i = 1; i <= target; i++) {
     // Scale and set color proportionally to the target value
@@ -58,7 +58,7 @@ void Vacuum::pwmAcceleratedOutput(uint16_t target) {
     Leds::setColorForAll(color);
 
     __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, i);
-    Timer::delayMiliseconds(RobotEnv::VACUUM_INTERVAL_BETWEEN_INCREMENTS);
+    Timer::delayMiliseconds(VACUUM_INTERVAL_BETWEEN_INCREMENTS);
   }
 
   Timer::delayMiliseconds(1500);

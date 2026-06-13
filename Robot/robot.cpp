@@ -60,13 +60,13 @@ static void startRunning() {
 
   // Prepare
   Leds::setColorForAll(Magenta);
-  Vacuum::pwmAcceleratedOutput(RobotEnv::VACUUM_BASE_PWM);
+  Vacuum::pwmAcceleratedOutput(VACUUM_BASE_PWM);
   Encoders::reset();
   lastTime = Timer::getMicroseconds();
 
   // Start
   while(globalData.action == Action::Run && i < globalData.map.size()) {
-    if(Timer::getMicroseconds() - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
+    if(Timer::getMicroseconds() - lastTime >= BASE_LOOP_TIME_US) {
       Encoders::update();
       IRSensors::update();
 
@@ -118,7 +118,7 @@ static void startRunning() {
 
 //   // // Prepare
 //   // Leds::setColorForAll(Leds::Magenta);
-//   // Vacuum::pwmAcceleratedOutput(RobotEnv::VACUUM_BASE_PWM);
+//   // Vacuum::pwmAcceleratedOutput(VACUUM_BASE_PWM);
 //   // Encoders::reset();
 
 //   // while (globalData.action == Action::Run) {
@@ -225,12 +225,12 @@ void setup(void) {
 
   // Assign data
   globalData.map = {
-      {0,       RobotEnv::MOTOR_BASE_PWM, RobotEnv::VACUUM_BASE_PWM, White  },
+      {0,       MOTOR_BASE_PWM, VACUUM_BASE_PWM, White  },
 
-      {300000,  RobotEnv::MOTOR_BASE_PWM, RobotEnv::VACUUM_BASE_PWM, Green  },
+      {300000,  MOTOR_BASE_PWM, VACUUM_BASE_PWM, Green  },
 
       // Last point should be the end of the track
-      {1600000, 0,                        270,                       Magenta}
+      {1600000, 0,              270,             Magenta}
   };
   /****************************************************************************/
 }

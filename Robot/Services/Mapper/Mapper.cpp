@@ -67,10 +67,10 @@ struct MappingData {
 
 } __attribute__((packed));
 
-enum {TEST = sizeof(MappingData)};
+enum { TEST = sizeof(MappingData) };
 union AlignedPool {
   MappingData as_elems[2000]; /* alignment and typed storage */
-  uint8_t as_bytes[50 * 5000];
+  uint8_t     as_bytes[50 * 5000];
 };
 
 Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
@@ -97,11 +97,11 @@ void Mapper::map() {
 
   globalData.map.clear();
   globalData.map.shrink_to_fit();
-  mapping.reserve(RobotEnv::TRACK_MAP_N_POINTS);
-  
+  mapping.reserve(TRACK_MAP_N_POINTS);
+
   logger->info("Mapping...");
 
-  Vacuum::pwmAcceleratedOutput(RobotEnv::VACUUM_BASE_PWM);
+  Vacuum::pwmAcceleratedOutput(VACUUM_BASE_PWM);
   IMU::calibrate();
 
   Encoders::reset();
@@ -112,7 +112,7 @@ void Mapper::map() {
   while(globalData.action == Action::Map) {
     currentTime = Timer::getMicroseconds();
 
-    if(currentTime - lastTime >= RobotEnv::BASE_LOOP_TIME_US) {
+    if(currentTime - lastTime >= BASE_LOOP_TIME_US) {
       // UPDATE ROBOT STATE
       dt = currentTime - lastTime;
       IRSensors::update();
@@ -134,8 +134,8 @@ void Mapper::map() {
 
       // CONTROL SIGNAL
       u = PID::evaluate(IRSensors::error);
-      Motors::pwmOutputFor(Left, RobotEnv::MOTOR_MAPPING_PWM + u);
-      Motors::pwmOutputFor(Right, RobotEnv::MOTOR_MAPPING_PWM - u);
+      Motors::pwmOutputFor(Left, MOTOR_MAPPING_PWM + u);
+      Motors::pwmOutputFor(Right, MOTOR_MAPPING_PWM - u);
 
       // OUT METHOD
       if(IRSensors::isOnLine) {
@@ -145,8 +145,7 @@ void Mapper::map() {
         // Register warning, and save time
         outStartTime = currentTime;
         outWarning   = true;
-      } else if(outWarning &&
-                (lastTime - outStartTime) >= RobotEnv::MAX_OUT_TIME_US) {
+      } else if(outWarning && (lastTime - outStartTime) >= MAX_OUT_TIME_US) {
         // Stop is out of line for MAX_OUT_TIME_US
         logger->info("Stopped: out of line for %lu µs",
                      lastTime - outStartTime); // NOLINT
@@ -171,7 +170,7 @@ void Mapper::map() {
         Leds::setColorFor(CenterLed, White);
         Leds::setColorFor(MainBoardLed, White);
       } else if(IRSensors::mark[Right] && previousMark[Right] &&
-                (currentTime - startTime) > RobotEnv::MIN_TRACK_TIME) {
+                (currentTime - startTime) > MIN_TRACK_TIME) {
         // End of the track
         logger->info("End of the track");
 
@@ -210,7 +209,7 @@ void Mapper::map() {
       }
 
       // REGISTER POINT
-      if(Encoders::average >= METERS_TO_PULSES(RobotEnv::TRACK_MAP_DISTANCE)) {
+      if(Encoders::average >= METERS_TO_PULSES(TRACK_MAP_DISTANCE)) {
         mapping.push_back(currentPoint);
       }
 

@@ -162,7 +162,7 @@ void IMU::readRawValues() {
     lsm6dsr_angular_rate_raw_get(&context_,
                                  static_cast<int16_t *>(rawAngularRate_));
   }
-  
+
   // (III) TEMPERATURE
   // Read output only if new temperature value is available
   lsm6dsr_temp_flag_data_ready_get(&context_, &reg);
@@ -215,7 +215,7 @@ void IMU::update(const uint32_t dt) {
      */
     acceleration_[i] = lsm6dsr_from_fs2g_to_mg(rawAcceleration_[i] -
                                                rawAccelerationNoise_[i]) *
-                       RobotEnv::MILLI_GRAVITY;
+                       MILLI_GRAVITY;
 
     // vᵢ = ∫a·dt
     speed_[i] +=

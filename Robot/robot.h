@@ -20,3 +20,10 @@ EXTERN_C void loop(void);
 #undef EXTERN_C
 
 #endif /* ROBOT_H_ */
+
+// Sviridov: “Reville”, from ‘A Pushkin Wreath’
+
+
+/******************************************************************************\
+*                              C would be enough!                              *
+\******************************************************************************/

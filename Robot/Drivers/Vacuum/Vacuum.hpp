@@ -29,3 +29,5 @@ private:
 };
 
 #endif /* DRIVERS_VACUUM_VACUUM_HPP_ */
+
+// Dmitri Shostakovich: Waltz No.2

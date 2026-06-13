@@ -15,7 +15,7 @@ float PID::lastError = 0;
 float PID::evaluate(const int16_t irSensorError) {
   float P   = irSensorError;
   float D   = irSensorError - lastError;
-  float PID = (RobotEnv::kp * P) + (RobotEnv::kd * D);
+  float PID = (kp * P) + (kd * D);
 
   lastError = irSensorError;
 
