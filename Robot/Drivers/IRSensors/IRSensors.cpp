@@ -55,8 +55,8 @@
 #define RIGHT_MARK_WAITING_LEFT 100 // ms
 
 // (IV) Position
-#define MIN_POSITION 0
-#define MAX_POSITION ((LastCentral - FirstCentral) * 1000)
+#define MIN_POSITION     0
+#define MAX_POSITION     ((LastCentral - FirstCentral) * 1000)
 #define CENTRAL_POSITION ((LastCentral - FirstCentral) * 1000 / 2)
 
 
@@ -93,17 +93,11 @@ const volatile uint32_t *const IRSensors::rawValues[N_SENSORS_] = {
     [R_1] = &adc1_buffer[5],
     [R_2] = &adc1_buffer[4]};
 
-#define n MIN_EMPIRICAL_RAW_VALUE
-#define X MAX_EMPIRICAL_RAW_VALUE
 // Minimum values ​​measured in practice
-uint32_t IRSensors::minRawValues_[N_SENSORS_] = {n, n, n, n, n, n, n, n,
-                                                 n, n, n, n, n, n, n, n};
+uint32_t IRSensors::minRawValues_[N_SENSORS_] = {0};
 
 // Maximum values ​​measured in practice
-uint32_t IRSensors::maxRawValues_[N_SENSORS_] = {X, X, X, X, X, X, X, X,
-                                                 X, X, X, X, X, X, X, X};
-#undef n
-#undef X
+uint32_t IRSensors::maxRawValues_[N_SENSORS_] = {0};
 
 Logger *IRSensors::logger = new Logger("IRSensors", false, Logger::Level::Info);
 uint32_t IRSensors::markDetecionTime_[N_SIDES_] = {0};
@@ -125,6 +119,25 @@ const bool (&IRSensors::mark)[N_SIDES_]               = mark_;
 const bool &IRSensors::isOnLine                       = isOnLine_;
 const bool &IRSensors::isOnCross                      = isOnCross_;
 
+
+void IRSensors::initialize() {
+  static bool initialized = false;
+
+  if(initialized) {
+    logger->error("IRSensors already initialized, unexpected behaviour.");
+    return;
+  }
+
+  for(uint8_t i = 0; i < N_SENSORS_; i++) {
+    // Minimum values ​​measured in practice
+    minRawValues_[i] = MIN_EMPIRICAL_RAW_VALUE;
+
+    // Maximum values ​​measured in practice
+    maxRawValues_[i] = MAX_EMPIRICAL_RAW_VALUE;
+  }
+
+  initialized = true;
+}
 
 void IRSensors::calibrate() {
   // (I) RESET THE VALUES

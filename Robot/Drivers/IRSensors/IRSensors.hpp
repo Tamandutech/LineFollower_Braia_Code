@@ -48,6 +48,7 @@ public:
   static const bool &isOnLine;
   static const bool &isOnCross;
 
+  static void initialize();
   static void update();
   static void calibrate();
 

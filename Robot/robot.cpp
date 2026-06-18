@@ -157,11 +157,6 @@ void setup(void) {
   // Initialize base timer
   HAL_TIM_Base_Start(&BASE_TIMER);
 
-  // Initialize drivers
-  Motors::initialize();
-  Vacuum::initialize();
-  Encoders::initialize();
-
   // Initialize ADC (Needed for IRSensors and Battery)
   HAL_ADCEx_Calibration_Start(&ADC_1, ADC_SINGLE_ENDED);
   HAL_ADCEx_Calibration_Start(&ADC_2, ADC_SINGLE_ENDED);
@@ -174,8 +169,13 @@ void setup(void) {
                     ADC_BUFFER_SIZE);
   Timer::delayMiliseconds(50);
 
-  // Start DMA reception
+  // Initialize drivers
+  Motors::initialize();
+  Vacuum::initialize();
+  Encoders::initialize();
+  IRSensors::initialize();
   BLE::initialize();
+  IMU::initialize();
 
   // Print battery information
   Timer::delayMiliseconds(75);
@@ -184,9 +184,6 @@ void setup(void) {
   } else {
     logger->info("Battery voltage: %.2f V", Battery::getBatteryVoltage());
   }
-
-  // Initialize IMU
-  IMU::initialize();
 
   Timer::delayMiliseconds(75);
   logger->info("Robot started!");
