@@ -6,29 +6,30 @@
  *      Author: Kelvin Novais
  */
 
+/******************************************************************************/
+// INCLUDES
 #include "Motors.hpp"
 
 #include <algorithm>
 
-#define EXPOSE_MOTORS_PERIPHERAL
-#include "../../Context/PeripheralsEnv.hpp"
+#include "tim.h"
+
 #include "../../Context/RobotEnv.hpp"
 #include "../../Utils/Logger/Logger.hpp"
 #include "../../Utils/Timer/Timer.hpp"
 
-const Motors::Pin Motors::motorPins_[N_SIDES_] = {
+/******************************************************************************/
+// PERIPHERALS
+const Motors::Pin Motors::pins_[N_SIDES_] = {
     // Left
-    [Left] = {PeripheralsEnv::MOTOR_LEFT_DIRECTION_PORT,
-              PeripheralsEnv::MOTOR_LEFT_DIRECTION_PIN,
-              PeripheralsEnv::MOTOR_LEFT_TIMER,
-              PeripheralsEnv::MOTOR_LEFT_CHANNEL },
+    [Left] = {motor2dir_GPIO_Port, motor2dir_Pin, &htim8, TIM_CHANNEL_1},
 
     // Right
-    [Right] = {PeripheralsEnv::MOTOR_RIGHT_DIRECTION_PORT,
-              PeripheralsEnv::MOTOR_RIGHT_DIRECTION_PIN,
-              PeripheralsEnv::MOTOR_RIGHT_TIMER,
-              PeripheralsEnv::MOTOR_RIGHT_CHANNEL}
+    [Right] = {motor1dir_GPIO_Port, motor1dir_Pin, &htim8, TIM_CHANNEL_3}
 };
+
+/******************************************************************************/
+// VARIABLES
 float   Motors::motorSpeed_[N_SIDES_];
 int16_t Motors::motorPWM_[N_SIDES_];
 
@@ -42,10 +43,8 @@ void Motors::initialize() {
     return;
   }
 
-  HAL_TIM_PWM_Start(PeripheralsEnv::MOTOR_LEFT_TIMER,
-                    PeripheralsEnv::MOTOR_LEFT_CHANNEL);
-  HAL_TIM_PWM_Start(PeripheralsEnv::MOTOR_RIGHT_TIMER,
-                    PeripheralsEnv::MOTOR_RIGHT_CHANNEL);
+  HAL_TIM_PWM_Start(pins_[Left].pwmhtim, pins_[Left].pwmChannel);
+  HAL_TIM_PWM_Start(pins_[Right].pwmhtim, pins_[Right].pwmChannel);
 
   initialized = true;
 }
@@ -58,12 +57,10 @@ void Motors::pwmOutputFor(Side side, int16_t duty) {
 
   if(duty >= 0) {
     // Defines the direction
-    HAL_GPIO_WritePin(motorPins_[side].dirPort, motorPins_[side].dirPin,
-                      GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(pins_[side].dirPort, pins_[side].dirPin, GPIO_PIN_RESET);
   } else {
     // Inverts the direction
-    HAL_GPIO_WritePin(motorPins_[side].dirPort, motorPins_[side].dirPin,
-                      GPIO_PIN_SET);
+    HAL_GPIO_WritePin(pins_[side].dirPort, pins_[side].dirPin, GPIO_PIN_SET);
     // Makes the duty positive
     duty = -duty;
   }
@@ -71,8 +68,7 @@ void Motors::pwmOutputFor(Side side, int16_t duty) {
   // Make sure the duty is within the allowed interval
   duty            = std::min(duty, (int16_t)MOTOR_MAX_PWM);
   motorPWM_[side] = duty;
-  __HAL_TIM_SET_COMPARE(motorPins_[side].pwmhtim, motorPins_[side].pwmChannel,
-                        duty);
+  __HAL_TIM_SET_COMPARE(pins_[side].pwmhtim, pins_[side].pwmChannel, duty);
 }
 
 void Motors::stop() {

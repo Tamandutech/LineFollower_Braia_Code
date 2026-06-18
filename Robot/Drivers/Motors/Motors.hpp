@@ -31,7 +31,7 @@ private:
     uint32_t pwmChannel;
   };
 
-  const static Pin motorPins_[N_SIDES_];
+  const static Pin pins_[N_SIDES_];
   static float     motorSpeed_[N_SIDES_];
   static int16_t   motorPWM_[N_SIDES_];
 };

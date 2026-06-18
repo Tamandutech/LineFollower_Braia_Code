@@ -6,16 +6,25 @@
  *      Author: Samuel Oliveira
  */
 
+/******************************************************************************/
+// INCLUDES
 #include "Leds.hpp"
 
 #include <algorithm>
 #include <cstdint>
 
-#define EXPOSE_LEDS_PERIPHERAL
-#include "../../Context/PeripheralsEnv.hpp"
+#include "tim.h"
 
 #include "../../Utils/Logger/Logger.hpp"
 
+/******************************************************************************/
+// PERIPHERALS
+#define LEDS_TIMER   htim1
+#define LEDS_CHANNEL TIM_CHANNEL_1
+
+
+/******************************************************************************/
+// DEFINES
 /*
  * CCR register values ​​to generate logic levels on channel N (inverted)
  */
@@ -25,6 +34,9 @@
 // (ARR=4, CCR=5)
 #define PWM_LOW  5
 
+
+/******************************************************************************/
+// VARIABLES
 static Logger *logger = new Logger("Leds", true, Logger::Level::All);
 
 const Leds::PredefinedColors Leds::color[N_COLOR_INDEXES_] = {
@@ -109,10 +121,8 @@ void Leds::outputColors() {
   uint32_t total_buffer_size = RESET_CYCLES + data_len + RESET_CYCLES;
 
   // Starts DMA transfer
-  HAL_TIMEx_PWMN_Start(PeripheralsEnv::LEDS_TIMER,
-                       PeripheralsEnv::LEDS_CHANNEL);
-  HAL_TIM_PWM_Start_DMA(PeripheralsEnv::LEDS_TIMER,
-                        PeripheralsEnv::LEDS_CHANNEL,
+  HAL_TIMEx_PWMN_Start(&LEDS_TIMER, LEDS_CHANNEL);
+  HAL_TIM_PWM_Start_DMA(&LEDS_TIMER, LEDS_CHANNEL,
                         static_cast<uint32_t *>(pwmBuffer), total_buffer_size);
 }
 

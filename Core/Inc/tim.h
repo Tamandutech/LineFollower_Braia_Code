@@ -45,7 +45,7 @@ extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim8;
 
 /* USER CODE BEGIN Private defines */
-
+#define BASE_TIMER htim2
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);

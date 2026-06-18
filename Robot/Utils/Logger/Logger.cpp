@@ -7,12 +7,14 @@
 
 #include "../../Utils/Logger/Logger.hpp"
 
-#define EXPOSE_BLE_PERIPHERAL
-#include "../../Context/PeripheralsEnv.hpp"
+#include "usart.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+
+// TODO this should be owned by BLE class
+#define BLE_BUS huart1
 
 // Initialize class variables
 char      Logger::buffer[LOGGER_BUFFER_SIZE]            = {0};
@@ -64,7 +66,7 @@ void Logger::formatLog(const char *logLevelStamp) {
 
 void Logger::sendLog() {
   // TODO treat the return of the function to avoid messing the messages
-  HAL_UART_Transmit_DMA(PeripheralsEnv::BLE_BUS, (const uint8_t *)formatted,
+  HAL_UART_Transmit_DMA(&BLE_BUS, (const uint8_t *)formatted,
                         strlen(formatted));
 }
 

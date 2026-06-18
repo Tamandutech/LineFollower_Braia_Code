@@ -8,10 +8,12 @@
 // Base header
 #include "robot.h"
 
+// HAL headers
+#include "tim.h"
+#include "adc.h"
+
 // Headers from our code base
 #include "Context/GlobalData.hpp"
-#define EXPOSE_GLOBAL_PERIPHERALS
-#include "Context/PeripheralsEnv.hpp"
 #include "Context/RobotEnv.hpp"
 
 #include "Services/BLE/BLE.hpp"
@@ -153,7 +155,7 @@ void setup(void) {
               __DATE__, __TIME__);
 
   // Initialize base timer
-  HAL_TIM_Base_Start(PeripheralsEnv::BASE_TIMER);
+  HAL_TIM_Base_Start(&BASE_TIMER);
 
   // Initialize drivers
   Motors::initialize();
@@ -161,14 +163,14 @@ void setup(void) {
   Encoders::initialize();
 
   // Initialize ADC (Needed for IRSensors and Battery)
-  HAL_ADCEx_Calibration_Start(PeripheralsEnv::ADC_1, ADC_SINGLE_ENDED);
-  HAL_ADCEx_Calibration_Start(PeripheralsEnv::ADC_2, ADC_SINGLE_ENDED);
+  HAL_ADCEx_Calibration_Start(&ADC_1, ADC_SINGLE_ENDED);
+  HAL_ADCEx_Calibration_Start(&ADC_2, ADC_SINGLE_ENDED);
   Timer::delayMiliseconds(100);
 
   // Initialize DMA (Needed for IRSensors and Battery)
-  HAL_ADC_Start_DMA(PeripheralsEnv::ADC_1, (uint32_t *)adc1_buffer,
+  HAL_ADC_Start_DMA(&ADC_1, (uint32_t *)adc1_buffer,
                     ADC_BUFFER_SIZE);
-  HAL_ADC_Start_DMA(PeripheralsEnv::ADC_2, (uint32_t *)adc2_buffer,
+  HAL_ADC_Start_DMA(&ADC_2, (uint32_t *)adc2_buffer,
                     ADC_BUFFER_SIZE);
   Timer::delayMiliseconds(50);
 

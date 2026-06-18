@@ -12,8 +12,7 @@
 
 #include <algorithm>
 
-#define EXPOSE_IR_SENSORS_PERIPHERALS
-#include "../../Context/PeripheralsEnv.hpp"
+#include "adc.h"
 
 #include "../../Utils/Timer/Timer.hpp"
 #include "../Leds/Leds.hpp"

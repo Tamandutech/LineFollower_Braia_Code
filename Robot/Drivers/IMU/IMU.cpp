@@ -10,17 +10,18 @@
 #include "IMU.hpp"
 #include <cstring>
 
-#define EXPOSE_IMU_PERIPHERAL
-#include "../../Context/PeripheralsEnv.hpp"
-
 #include "../../Context/RobotEnv.hpp"
 
 #include "../../Drivers/Leds/Leds.hpp"
 #include "../../Utils/Logger/Logger.hpp"
 #include "../../Utils/Timer/Timer.hpp"
 
+#include "i2c.h"
 #include "stm32g4xx_hal.h"
 
+/******************************************************************************/
+// PERIPHERALS
+#define IMU_BUS hi2c1
 
 /******************************************************************************/
 // DEFINES
@@ -35,7 +36,7 @@
 // VARIABLES
 static Logger *logger = new Logger("IMU", true, Logger::None);
 
-// Private
+// (I) Private
 uint8_t      IMU::whoAmI_  = 0;
 stmdev_ctx_t IMU::context_ = {0};
 
@@ -57,7 +58,7 @@ float IMU::angle_[N_ROTATION_AXES_]               = {0};
 
 float IMU::temperature_ = 0;
 
-// Public
+// (II) Public
 const float (&IMU::acceleration)[N_AXES_] = acceleration_;
 const float (&IMU::speed)[N_AXES_]        = speed_;
 const float (&IMU::position)[N_AXES_]     = position_;
@@ -97,7 +98,7 @@ void IMU::initialize() {
   context_.write_reg = writeRegister;
   context_.read_reg  = readRegister;
   context_.mdelay    = delay;
-  context_.handle    = PeripheralsEnv::IMU_BUS;
+  context_.handle    = &IMU_BUS;
 
   while(1) {
     logger->info("Connecting with IMU...");

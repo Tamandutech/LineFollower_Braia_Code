@@ -5,19 +5,25 @@
  *      Author: Kelvin Novais
  */
 
+/******************************************************************************/
+// INCLUDES
 #include <cstring>
 
 #include "stm32g4xx_hal.h"
+#include "usart.h"
 
 #include "BLE.hpp"
 #include "BLEPin.h"
 
-#define EXPOSE_BLE_PERIPHERAL
-#include "../../Context/PeripheralsEnv.hpp"
-
 #include "../../Context/GlobalData.hpp"
 
+/******************************************************************************/
+// PERIPHERALS
+#define BLE_BUS huart1
 
+/******************************************************************************/
+// VARIABLES
+// Private
 static uint8_t rx_buffer[32]  = {0};
 static char    lastCharacter_ = ' ';
 
@@ -35,24 +41,21 @@ void BLE::setup() {
                                "\r\n";
 
   HAL_Delay(5000);
-  HAL_UART_Transmit(PeripheralsEnv::BLE_BUS, (uint8_t *)start, strlen(start),
-                    timeout);
+  HAL_UART_Transmit(&BLE_BUS, (uint8_t *)start, strlen(start), timeout);
 
   // (I) Set name
   HAL_Delay(1000);
 
-  HAL_UART_Transmit(PeripheralsEnv::BLE_BUS, (uint8_t *)setName,
-                    strlen(setName), timeout);
+  HAL_UART_Transmit(&BLE_BUS, (uint8_t *)setName, strlen(setName), timeout);
 
   // (II) Set pin
   HAL_Delay(1000);
-  HAL_UART_Transmit(PeripheralsEnv::BLE_BUS, (uint8_t *)setPin, strlen(setPin),
-                    timeout);
+  HAL_UART_Transmit(&BLE_BUS, (uint8_t *)setPin, strlen(setPin), timeout);
 
   // (III) Set baud rate
   HAL_Delay(1000);
-  HAL_UART_Transmit(PeripheralsEnv::BLE_BUS, (uint8_t *)setBaudRate,
-                    strlen(setBaudRate), timeout);
+  HAL_UART_Transmit(&BLE_BUS, (uint8_t *)setBaudRate, strlen(setBaudRate),
+                    timeout);
 
   HAL_Delay(1000);
 }
@@ -65,16 +68,14 @@ void BLE::initialize() {
   }
 
   // Initialize DMA reception
-  HAL_UART_Receive_DMA(PeripheralsEnv::BLE_BUS,
-                       static_cast<uint8_t *>(rx_buffer), 1);
+  HAL_UART_Receive_DMA(&BLE_BUS, static_cast<uint8_t *>(rx_buffer), 1);
 
   initilized = true;
 }
 
 void BLE::start() {
   // Call DMA reception function again
-  HAL_UART_Receive_DMA(PeripheralsEnv::BLE_BUS,
-                       static_cast<uint8_t *>(rx_buffer), 1);
+  HAL_UART_Receive_DMA(&BLE_BUS, static_cast<uint8_t *>(rx_buffer), 1);
 }
 
 void BLE::restart() {

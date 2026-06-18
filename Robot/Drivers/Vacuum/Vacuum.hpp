@@ -25,7 +25,7 @@ private:
     uint32_t pwmChannel;
   };
 
-  static Pin      pin;
+  static Pin pin_;
 };
 
 #endif /* DRIVERS_VACUUM_VACUUM_HPP_ */

@@ -9,15 +9,14 @@
 
 #include <algorithm>
 
-#define EXPOSE_VACUUM_PERIPHERAL
-#include "../../Context/PeripheralsEnv.hpp"
+#include "tim.h"
+
 #include "../../Context/RobotEnv.hpp"
 #include "../../Drivers/Leds/Leds.hpp"
 #include "../../Utils/Logger/Logger.hpp"
 #include "../../Utils/Timer/Timer.hpp"
 
-Vacuum::Pin Vacuum::pin = {PeripheralsEnv::VACUUM_TIMER,
-                           PeripheralsEnv::VACUUM_CHANNEL};
+Vacuum::Pin Vacuum::pin_ = {&htim5, TIM_CHANNEL_2};
 
 static Logger *logger = new Logger("Vacuum", true, Logger::Level::All);
 
@@ -29,8 +28,7 @@ void Vacuum::initialize() {
     return;
   }
 
-  HAL_TIM_PWM_Start(PeripheralsEnv::VACUUM_TIMER,
-                    PeripheralsEnv::VACUUM_CHANNEL);
+  HAL_TIM_PWM_Start(pin_.pwmhtim, pin_.pwmChannel);
 
   initialized = true;
 }
@@ -38,7 +36,7 @@ void Vacuum::initialize() {
 void Vacuum::pwmOutput(uint16_t target) {
   target = std::min(target, static_cast<uint16_t>(VACUUM_MAX_PWM));
 
-  __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, target);
+  __HAL_TIM_SET_COMPARE(pin_.pwmhtim, pin_.pwmChannel, target);
 }
 
 void Vacuum::pwmAcceleratedOutput(uint16_t target) {
@@ -57,7 +55,7 @@ void Vacuum::pwmAcceleratedOutput(uint16_t target) {
     color.r = color.b = Leds::maxColorValue * (1 - p); // decrease
     Leds::setColorForAll(color);
 
-    __HAL_TIM_SET_COMPARE(pin.pwmhtim, pin.pwmChannel, i);
+    __HAL_TIM_SET_COMPARE(pin_.pwmhtim, pin_.pwmChannel, i);
     Timer::delayMiliseconds(VACUUM_INTERVAL_BETWEEN_INCREMENTS);
   }
 
