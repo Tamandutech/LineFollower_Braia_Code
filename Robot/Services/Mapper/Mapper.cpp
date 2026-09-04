@@ -8,6 +8,7 @@
 #include "Mapper.hpp"
 
 // Standard headers
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <vector>
@@ -23,49 +24,6 @@
 #include "../../Drivers/Vacuum/Vacuum.hpp"
 #include "../../Services/PID/PID.hpp"
 #include "../../Utils/Timer/Timer.hpp"
-
-
-struct MappingData {
-  // FLOATS
-  /*
-   * 32 bits each float
-   */
-  float x;
-  float y;
-  float omega;
-
-
-  // WORD 1
-  /*
-   * Can hold up to:       2³⁰ - 1 = 1,073,741,823 µs
-   * which is              1,073.7 s
-   * which is              17.9 min
-   */
-  uint32_t timestamp   : 30;
-  uint32_t isLeftMark  : 1;
-  uint32_t isRightMark : 1;
-
-
-  // WORD 2
-  /*
-   * Must hold up to TRACK_MAX_PULSES: 2²² - 1 = 4,194,303 pulses
-   */
-  uint32_t leftEncoder : 22;
-  /*
-   * Must hold up to LastRotatableColor
-   */
-  uint32_t colorIndex  : 3;
-  uint32_t padding1    : 7;
-
-
-  // WORD 3
-  /*
-   * Must hold up to TRACK_MAX_PULSES: 2²² - 1 = 4,194,303 pulses
-   */
-  uint32_t rightEncoder : 22;
-  uint32_t padding2     : 10;
-
-} __attribute__((packed));
 
 Logger *Mapper::logger = new Logger("Mapper", false, Logger::Level::Info);
 
@@ -89,17 +47,17 @@ void Mapper::map() {
   bool outWarning      = false;
   bool previousMark[2] = {false};
 
-  globalData.map.clear();
-  globalData.map.shrink_to_fit();
-  mapping.reserve(TRACK_MAP_N_POINTS);
+  // globalData.map.clear();
+  // globalData.map.shrink_to_fit();
+  // mapping.reserve(TRACK_MAP_N_POINTS);
 
   logger->info("Mapping...");
 
   Vacuum::pwmAcceleratedOutput(VACUUM_BASE_PWM);
-  IMU::calibrate();
+  // IMU::calibrate();
 
   Encoders::reset();
-  IMU::reset();
+  // IMU::reset();
 
   startTime = currentTime = lastTime = Timer::getMicroseconds();
 
@@ -111,7 +69,8 @@ void Mapper::map() {
       dt = currentTime - lastTime;
       IRSensors::update();
       Encoders::update();
-      IMU::update(dt);
+      // IMU::update(dt);
+      (void)dt;
 
       // SAVE STATE
       currentPoint.timestamp = currentTime;
@@ -119,9 +78,9 @@ void Mapper::map() {
       currentPoint.isLeftMark  = false;
       currentPoint.isRightMark = false;
 
-      currentPoint.x     = IMU::position[X];
-      currentPoint.y     = IMU::position[Y];
-      currentPoint.omega = IMU::angularRate[Yaw];
+      // currentPoint.x     = IMU::position[X];
+      // currentPoint.y     = IMU::position[Y];
+      // currentPoint.omega = IMU::angularRate[Yaw];
 
       currentPoint.leftEncoder  = Encoders::counter[Left];
       currentPoint.rightEncoder = Encoders::counter[Right];
@@ -144,6 +103,7 @@ void Mapper::map() {
         logger->info("Stopped: out of line for %lu µs",
                      lastTime - outStartTime); // NOLINT
 
+        // Comment the 2 following lines to disable out method
         globalData.action = Action::None;
         break;
       }
@@ -175,8 +135,8 @@ void Mapper::map() {
         Leds::setColorFor(CenterLed, White);
         Leds::setColorFor(MainBoardLed, White);
 
-        globalData.action = Action::None;
-        break;
+        // globalData.action = Action::None;
+        // break;
       }
 
       // LEFT MARK
@@ -202,10 +162,10 @@ void Mapper::map() {
         Leds::setColorFor(MainBoardLed, Black);
       }
 
-      // REGISTER POINT
-      if(Encoders::average >= METERS_TO_PULSES(TRACK_MAP_DISTANCE)) {
-        mapping.push_back(currentPoint);
-      }
+      // REGISTER A POINT EVERY TRACK_MAP_DISTANCE
+      // if(Encoders::average >= METERS_TO_PULSES(TRACK_MAP_DISTANCE)) {
+      //   mapping.push_back(currentPoint);
+      // }
 
       lastTime = currentTime;
     }
@@ -214,6 +174,33 @@ void Mapper::map() {
   Motors::stop();
   Vacuum::stopAfter(500);
 
-  // TODO
-  // logMap(mapping);
+  logMap(mapping);
+
+  // Free mapping data, since currently we aren't using it
+  mapping.clear();
+  mapping.shrink_to_fit();
+}
+
+void Mapper::logMap(std::vector<MappingData> &mapping) {
+  /*
+   * Output format:
+   * {<Encoder average>, <Base motor PWM>, <Base vacuum PWM>, <Color name>},
+   */
+  ColorIndex colorIndex;
+  uint32_t   encoderAverage = 0;
+  size_t     nPoints        = mapping.size();
+
+  Logger::logSync("\n{");
+
+  for(size_t i = 0; i < nPoints; i++) {
+    encoderAverage = (mapping[i].leftEncoder + mapping[i].rightEncoder) / 2;
+    colorIndex     = ColorIndex(mapping[i].colorIndex);
+
+    Logger::logSync("{%06ld, %03d, %03d, %s},",
+                    encoderAverage, // NOLINT
+                    MOTOR_BASE_PWM, VACUUM_BASE_PWM,
+                    Leds::color[colorIndex].name);
+  }
+
+  Logger::logSync("}\n");
 }

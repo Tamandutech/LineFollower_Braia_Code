@@ -41,6 +41,8 @@ public:
   static void resetTimestamp();
   static void log(const char *format, ...)
       __attribute__((format(printf, 1, 2)));
+  static void logSync(const char *format, ...)
+      __attribute__((format(printf, 1, 2)));
 
   // Per instance methods
   void error(const char *format, ...) __attribute__((format(printf, 2, 3)));

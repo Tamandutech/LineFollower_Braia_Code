@@ -152,3 +152,21 @@ void Logger::log(const char *format, ...) {
 
   va_end(args);
 }
+
+void Logger::logSync(const char *format, ...) {
+  char    message[256];
+  int     length = 0;
+  va_list args;
+
+  va_start(args, format);
+  // Reducing two characters to add '\n' and '\0'
+  vsnprintf(message, 254, format, args);
+  va_end(args);
+
+  length              = strlen(message);
+  message[length]     = '\n';
+  message[length + 1] = '\0';
+
+  // Size is equal to (lenth + 1) because '\0' is not considered here
+  HAL_UART_Transmit(&BLE_BUS, (const uint8_t *)message, length + 1, 50);
+}
