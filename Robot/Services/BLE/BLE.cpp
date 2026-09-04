@@ -92,6 +92,8 @@ static void updateAction() {
     globalData.action = Action::Run;
   } else if(rx_buffer[0] == '3') {
     globalData.action = Action::Map;
+  } else if(rx_buffer[0] == '4') {
+    globalData.action = Action::Menu;
   }
 
   if(rx_buffer[0] != '\n' && rx_buffer[0] != '\r' && rx_buffer[0] != '\0')

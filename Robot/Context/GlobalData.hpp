@@ -14,7 +14,7 @@
 
 #include "../Drivers/Leds/Leds.hpp"
 
-enum class Action : uint8_t { None = 1, Run, Map };
+enum class Action : uint8_t { None = 1, Run, Map, Menu };
 
 struct MapPoint {
   int32_t    encoderAverage;

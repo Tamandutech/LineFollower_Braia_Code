@@ -9,8 +9,8 @@
 #include "robot.h"
 
 // HAL headers
-#include "tim.h"
 #include "adc.h"
+#include "tim.h"
 
 // Headers from our code base
 #include "Context/GlobalData.hpp"
@@ -48,11 +48,23 @@ static void stopRunning() {
 }
 
 static void startRunning() {
-  float    u        = 0;
-  uint8_t  i        = 1;
-  uint32_t lastTime = 0;
+  /*
+   * [!] ATTENTION [!]
+   *
+   * Time is measured in MICROseconds here
+   */
+  uint32_t startTime    = 0;
+  uint32_t currentTime  = 0;
+  uint32_t lastTime     = 0;
+  uint32_t outStartTime = 0;
 
-  // Assert
+  uint8_t i = 1;
+  float   u = 0;
+
+  bool outWarning      = false;
+  bool previousMark[2] = {false};
+
+  // ASSERT MAP SIZE
   if(globalData.map.size() < 3) {
     logger->error("Map is too small: %d points", globalData.map.size());
     return;
@@ -60,18 +72,22 @@ static void startRunning() {
 
   logger->info("Running...");
 
-  // Prepare
+  // PREPARE
   Leds::setColorForAll(Magenta);
   Vacuum::pwmAcceleratedOutput(VACUUM_BASE_PWM);
   Encoders::reset();
-  lastTime = Timer::getMicroseconds();
+  startTime = currentTime = lastTime = Timer::getMicroseconds();
 
-  // Start
+  // START
   while(globalData.action == Action::Run && i < globalData.map.size()) {
-    if(Timer::getMicroseconds() - lastTime >= BASE_LOOP_TIME_US) {
+    currentTime = Timer::getMicroseconds();
+
+    if(currentTime - lastTime >= BASE_LOOP_TIME_US) {
+      // UPDATE ROBOT STATE
       Encoders::update();
       IRSensors::update();
 
+      // CONTROL SIGNAL
       u = PID::evaluate(IRSensors::error);
 
       if(Encoders::average >= globalData.map[i - 1].encoderAverage &&
@@ -96,12 +112,58 @@ static void startRunning() {
         i++;
       }
 
+      // OUT METHOD
+      if(IRSensors::isOnLine) {
+        // Reset warning
+        outWarning = false;
+      } else if(!IRSensors::isOnLine && !outWarning) {
+        // Register warning, and save time
+        outStartTime = currentTime;
+        outWarning   = true;
+      } else if(outWarning && (lastTime - outStartTime) >= MAX_OUT_TIME_US) {
+        // Stop is out of line for MAX_OUT_TIME_US
+        logger->info("Stopped: out of line for %lu µs",
+                     lastTime - outStartTime); // NOLINT
+
+        // Comment the 2 following lines to disable out method
+        globalData.action = Action::None;
+        break;
+      }
+
+      // RIGHT MARK
+      if(IRSensors::mark[Right] && !previousMark[Right]) {
+        // Start of the track
+        logger->info("Start of the track");
+        previousMark[Right] = true;
+
+        // Uncoment the folowing if you want to set encoder to 0 at the start
+        // Encoders::reset();
+
+        Leds::setColorForAll(Green);
+        Leds::setColorFor(CenterLed, White);
+        Leds::setColorFor(MainBoardLed, White);
+      } else if(IRSensors::mark[Right] && previousMark[Right] &&
+                (currentTime - startTime) > MIN_TRACK_TIME) {
+        // End of the track
+        logger->info("End of the track");
+
+        Leds::setColorForAll(Black);
+        Leds::setColorFor(CenterLed, White);
+        Leds::setColorFor(MainBoardLed, White);
+
+        // Uncoment the following line to stop the robot if out of line
+        // break;
+      }
+
       lastTime = Timer::getMicroseconds();
     }
   }
 
-  // Stop graceffuly
-  // This action will be performed only if the stop command wasn't sent
+  /*
+   * STOP GRACEFULLY
+   * This action will be performed only if the stop command wasn't sent or if
+   * the robot didn't get out of line.
+   */
   if(globalData.action == Action::Run) {
     Motors::stop();
     Encoders::update();
@@ -111,28 +173,59 @@ static void startRunning() {
   }
 }
 
-// static void startRunningPolling() {
-//   // bool isEnabled = true;
+static void menu() {
+  int changeSpeed  = 0;
+  int changeVacuum = 0;
 
-//   // uint32_t startTime    = Timer::getMicroseconds();
-//   // uint32_t currentTime  = startTime;
-//   // uint32_t outStartTime = startTime;
+  Logger::logSync("Choose an option:\n"
+                  "[1] INcrease SPEED by 50\n"
+                  "[2] INcrease SPEED by 100\n"
+                  "[3] DEcrease SPEED by 50\n"
+                  "[4] DEcrease SPEED by 100\n"
+                  "-------------------------"
+                  "[5] INcrease VACUUM by 50\n"
+                  "[6] INcrease VACUUM by 100\n"
+                  "[7] DEcrease VACUUM by 50\n"
+                  "[8] DEcrease VACUUM by 100\n"
+                  "[9] Quit\n");
 
-//   // // Prepare
-//   // Leds::setColorForAll(Leds::Magenta);
-//   // Vacuum::pwmAcceleratedOutput(VACUUM_BASE_PWM);
-//   // Encoders::reset();
+  BLE::resetLastCharacter();
+  while(BLE::lastCharacter != 'q') {
+    BLE::resetLastCharacter();
+    Timer::delayMiliseconds(200);
 
-//   // while (globalData.action == Action::Run) {
-//   //   // After Update():
-//   //   /*
-//   //   1. position
-//   //   2. error
-//   //   3. isOnLine
-//   //   4. lateralMark
-//   //   */
-//   // }
-// }
+    switch(BLE::lastCharacter) {
+    case '1': changeSpeed = +50; break;
+
+    case '2': changeSpeed = +100; break;
+
+    case '3': changeSpeed = -50; break;
+
+    case '4': changeSpeed = -100; break;
+
+    case '5': changeVacuum = +50; break;
+
+    case '6': changeVacuum = +100; break;
+
+    case '7': changeVacuum = -50; break;
+
+    case '8': changeVacuum = -100; break;
+
+    default: break;
+    }
+  }
+
+  for(int i = 0; i < globalData.map.size() - 1; i++) {
+    globalData.map[i].baseMotorPWM += changeSpeed;
+    globalData.map[i].baseVacuumPWM += changeVacuum;
+  }
+
+  Logger::logSync("Added %03d to speed\n"
+                  "Added %03d to vacuum\n",
+                  changeSpeed, changeVacuum);
+
+  BLE::resetLastCharacter();
+}
 
 void setup(void) {
   /*
@@ -163,10 +256,8 @@ void setup(void) {
   Timer::delayMiliseconds(100);
 
   // Initialize DMA (Needed for IRSensors and Battery)
-  HAL_ADC_Start_DMA(&ADC_1, (uint32_t *)adc1_buffer,
-                    ADC_BUFFER_SIZE);
-  HAL_ADC_Start_DMA(&ADC_2, (uint32_t *)adc2_buffer,
-                    ADC_BUFFER_SIZE);
+  HAL_ADC_Start_DMA(&ADC_1, (uint32_t *)adc1_buffer, ADC_BUFFER_SIZE);
+  HAL_ADC_Start_DMA(&ADC_2, (uint32_t *)adc2_buffer, ADC_BUFFER_SIZE);
   Timer::delayMiliseconds(50);
 
   // Initialize drivers
@@ -229,7 +320,7 @@ void setup(void) {
       {300000,  MOTOR_BASE_PWM, VACUUM_BASE_PWM, Green  },
 
       // Last point should be the end of the track
-      {1600000, 0,              270,             Magenta}
+      {1600000, 0,              270,             Magenta},
   };
   /****************************************************************************/
 }
@@ -239,6 +330,8 @@ void loop(void) {
   case Action::Run: startRunning(); break;
 
   case Action::Map: Mapper::map(); break;
+
+  case Action::Menu: menu(); break;
 
   case Action::None:
   default: stopRunning();
