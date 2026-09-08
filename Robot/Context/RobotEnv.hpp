@@ -37,8 +37,8 @@
 #define MILLI_GRAVITY (GRAVITY / 1000.0F) // m/s²
 
 
-#define kp 0.1F
-#define kd 1.9F
+#define kp 0.207F
+#define kd 2.05F
 
 
 #define BASE_LOOP_TIME_US 1000  // µs
@@ -47,21 +47,21 @@
 #define MIN_TRACK_TIME    (2 * 1e6) // µs
 
 
-#define MOTOR_BASE_PWM           85    // ‰
+#define MOTOR_BASE_PWM           220   // ‰
 #define MOTOR_BASE_SPEED         0.75F // m/s
 #define MOTOR_MAX_PWM            1000  // ‰
 #define MOTOR_MAX_SPEED          4     // m/s
 #define MOTOR_MAX_DECELERATION   4     // m/s
 #define MOTOR_MAX_ROTATION_SPEED 4     // m/s
 #define MOTOR_BRAKE_TIME         75    // ms
-#define MOTOR_MAPPING_PWM        85    // ‰
+#define MOTOR_MAPPING_PWM        220   // ‰
 
 
-#define VACUUM_BASE_PWM                    150  // ‰
+#define VACUUM_BASE_PWM                    900  // ‰
 #define VACUUM_MIN_PWM                     100  // ‰
 #define VACUUM_MAX_PWM                     1000 // ‰
 #define VACUUM_INTERVAL_BETWEEN_INCREMENTS 2    // ms
-#define VACUUM_MAPPING_PWM                 130  // ‰
+#define VACUUM_MAPPING_PWM                 1000 // ‰
 
 
 #define METERS_TO_PULSES(m) \
