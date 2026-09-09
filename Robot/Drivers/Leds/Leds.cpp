@@ -40,17 +40,17 @@
 static Logger *logger = new Logger("Leds", true, Logger::Level::All);
 
 const Leds::PredefinedColors Leds::color[N_COLOR_INDEXES_] = {
-    [Red]                = {{128, 0, 0},     "red"           },
-    [Blue]               = {{0, 0, 128},     "blue"          },
-    [Green]              = {{0, 128, 0},     "green"         },
-    [Magenta]            = {{128, 0, 128},   "magenta"       },
-    [Indigo]             = {{64, 0, 128},    "indigo"        },
-    [Orange]             = {{128, 24, 0},    "orange"        },
-    [Cyan]               = {{0, 128, 128},   "cyan"          },
-    [Yellow]             = {{128, 64, 0},    "yellow"        },
-    [LastRotatableColor] = {{0, 0, 0},       "last_rotatable"},
-    [White]              = {{128, 128, 128}, "white"         },
-    [Black]              = {{0, 0, 0},       "black"         }
+    [Red]                = {{128, 0, 0},     "Red"               },
+    [Blue]               = {{0, 0, 128},     "Blue"              },
+    [Green]              = {{0, 128, 0},     "Green"             },
+    [Magenta]            = {{128, 0, 128},   "Magenta"           },
+    [Indigo]             = {{64, 0, 128},    "Indigo"            },
+    [Orange]             = {{128, 24, 0},    "Orange"            },
+    [Cyan]               = {{0, 128, 128},   "Cyan"              },
+    [Yellow]             = {{128, 64, 0},    "Yellow"            },
+    [LastRotatableColor] = {{0, 0, 0},       "LastRotatableColor"},
+    [White]              = {{128, 128, 128}, "White"             },
+    [Black]              = {{0, 0, 0},       "Black"             }
 };
 
 const uint8_t Leds::maxColorValue                                      = 128;

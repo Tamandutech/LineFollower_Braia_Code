@@ -196,7 +196,7 @@ void Mapper::logMap(std::vector<MappingData> &mapping) {
     encoderAverage = (mapping[i].leftEncoder + mapping[i].rightEncoder) / 2;
     colorIndex     = ColorIndex(mapping[i].colorIndex);
 
-    Logger::logSync("{%06ld, %03d, %03d, %s},",
+    Logger::logSync("{%ld, %d, %d, %s},",
                     encoderAverage, // NOLINT
                     MOTOR_BASE_PWM, VACUUM_BASE_PWM,
                     Leds::color[colorIndex].name);
